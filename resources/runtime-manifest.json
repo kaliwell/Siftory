@@ -1,0 +1,1241 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "floating-clock-runtime-resources",
+  "description": "Immutable inventory of external runtime models, tools, and native artifacts bundled by the Windows x64 build.",
+  "components": [
+    {
+      "id": "dinov2-vitb14-xenova-q4",
+      "componentType": "model",
+      "purpose": "DINOv2 global image embeddings and visual similarity search",
+      "upstream": {
+        "name": "Xenova/dinov2-base",
+        "version": "huggingface-revision:d623d125a29e343851bcedff293fdc8b6bda292b",
+        "sourceUrl": "https://huggingface.co/Xenova/dinov2-base",
+        "releasedAt": "2023-12-09"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/onnx/model_q4.onnx",
+          "sha256": "19f697cf7cddfbbaa4b146b813e726a1e4ed89aa5fd363cdc38d689a3b5f6018",
+          "sizeBytes": 56428185,
+          "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/onnx/model_q4.onnx"
+        },
+        {
+          "role": "model-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/config.json",
+          "sha256": "e8561e4241d2f331e086e5dcb179b6993b86e4f815c0a5f709aa4553369e75f4",
+          "sizeBytes": 899,
+          "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/config.json"
+        },
+        {
+          "role": "preprocessor-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/preprocessor_config.json",
+          "sha256": "14e780d86fa1861f8751f868d7f45425b5feb55c38ca26f152ca5097ab30f828",
+          "sizeBytes": 436,
+          "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/preprocessor_config.json"
+        }
+      ]
+    },
+    {
+      "id": "clip-vit-b32-xenova-q4",
+      "componentType": "model",
+      "purpose": "CLIP image and English text embeddings for semantic search",
+      "upstream": {
+        "name": "Xenova/clip-vit-base-patch32",
+        "version": "huggingface-revision:d15189d7028b43f1d3e65039190477f6af591c2a",
+        "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32",
+        "releasedAt": "2023-05-19"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "image-inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/onnx/model_q4.onnx",
+          "sha256": "1f518bedb1851294737a141e06149883cb289160760224f2da5498886e49d5cb",
+          "sizeBytes": 189403477,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/onnx/model_q4.onnx"
+        },
+        {
+          "role": "text-inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/onnx/text_model_q4.onnx",
+          "sha256": "e4ccd15d806b8af841a036884b42034535d58e04c52df00f56e73f72d3c166d5",
+          "sizeBytes": 125742108,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/onnx/text_model_q4.onnx"
+        },
+        {
+          "role": "model-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/config.json",
+          "sha256": "493ef57ff783e42d1530c91b53469b7fdf8db8a9c1408e86998fcb7899a4f495",
+          "sizeBytes": 4524,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/config.json"
+        },
+        {
+          "role": "preprocessor-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/preprocessor_config.json",
+          "sha256": "6f638fb9401a6d6296feff533ee7efe657b787c49f954f82f5906b36ef2a1b1f",
+          "sizeBytes": 520,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/preprocessor_config.json"
+        },
+        {
+          "role": "tokenizer",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/tokenizer.json",
+          "sha256": "f7f3b7af117d467b58374797691a6438d3e6b9e9cef800dfd5dced7f697a90cd",
+          "sizeBytes": 2224119,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/tokenizer.json"
+        },
+        {
+          "role": "tokenizer-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/tokenizer_config.json",
+          "sha256": "60ba2912bc6344c94bc16bbdec27fa1209409167b6f2fdf3cfe9e65462ea3967",
+          "sizeBytes": 775,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/tokenizer_config.json"
+        },
+        {
+          "role": "special-tokens",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/special_tokens_map.json",
+          "sha256": "c4864a9376a8401918425bed71fc14fc0e81f9b59ec45c1cf96cccb2df508eac",
+          "sizeBytes": 472,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/special_tokens_map.json"
+        },
+        {
+          "role": "vocabulary",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/vocab.json",
+          "sha256": "5047b556ce86ccaf6aa22b3ffccfc52d391ea4accdab9c2f2407da5b742d4363",
+          "sizeBytes": 862328,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/vocab.json"
+        },
+        {
+          "role": "merges",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/merges.txt",
+          "sha256": "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
+          "sizeBytes": 524619,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/merges.txt"
+        }
+      ]
+    },
+    {
+      "id": "multilingual-clip-vit-b32-text-quint8",
+      "componentType": "model",
+      "purpose": "Chinese and multilingual text embeddings aligned with CLIP ViT-B/32",
+      "upstream": {
+        "name": "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+        "version": "huggingface-revision:58edf8cada9e398793dca955574a48cbb7f18be2",
+        "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1",
+        "releasedAt": "2022-03-02"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "text-inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/onnx/model_quint8_avx2.onnx",
+          "sha256": "fbc8fbeaa5237d96bd1bf430057c70d34de8334a463e933a5faa305f6caeed9c",
+          "sizeBytes": 135377779,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/onnx/model_quint8_avx2.onnx"
+        },
+        {
+          "role": "dense-projection",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/2_Dense/model.safetensors",
+          "sha256": "d12568dc7300970a4d3dbb49068ad16cd89b99840b74b026f8e48071e9414f74",
+          "sizeBytes": 1572984,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/2_Dense/model.safetensors"
+        },
+        {
+          "role": "model-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/config.json",
+          "sha256": "edc12f518bfc445dedfe8a7c58374ea659525e0b6e67814686bd6cd57f90f8b3",
+          "sizeBytes": 572,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/config.json"
+        },
+        {
+          "role": "sentence-transformers-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/config_sentence_transformers.json",
+          "sha256": "b8c64b5cece00d8424b4896ea75b512b6008576088497609dfeb6bd63e6d36b8",
+          "sizeBytes": 122,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/config_sentence_transformers.json"
+        },
+        {
+          "role": "modules-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/modules.json",
+          "sha256": "f83ea5d68ac85ec15f650b350f0dc37b03d63abd60442f518e14c06f479beee6",
+          "sizeBytes": 341,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/modules.json"
+        },
+        {
+          "role": "sentence-bert-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/sentence_bert_config.json",
+          "sha256": "70f4448f31320443fe3557cacea5abf2dcc4915dda8c80646bec9f3bb0aa5a1f",
+          "sizeBytes": 53,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/sentence_bert_config.json"
+        },
+        {
+          "role": "special-tokens",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/special_tokens_map.json",
+          "sha256": "303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3",
+          "sizeBytes": 112,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/special_tokens_map.json"
+        },
+        {
+          "role": "tokenizer",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/tokenizer.json",
+          "sha256": "5b4e1a8171c81dfd666ae40265b9530c6e0b3d53923fe8ac493dcc84229adf81",
+          "sizeBytes": 1961847,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/tokenizer.json"
+        },
+        {
+          "role": "tokenizer-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/tokenizer_config.json",
+          "sha256": "8f66d0ad85be46afc77e0bbf48312cff326ddb9e7290926df96a8228d69a814e",
+          "sizeBytes": 371,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/tokenizer_config.json"
+        },
+        {
+          "role": "vocabulary",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/vocab.txt",
+          "sha256": "fe0fda7c425b48c516fc8f160d594c8022a0808447475c1a7c6d6479763f310c",
+          "sizeBytes": 995526,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/vocab.txt"
+        },
+        {
+          "role": "dense-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/2_Dense/config.json",
+          "sha256": "48f4dfaf605a6c2869cd200970e54911c6c15053781d2bdcf3e81e89e77662ed",
+          "sizeBytes": 115,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/2_Dense/config.json"
+        }
+      ]
+    },
+    {
+      "id": "ultralytics-yolov8n-coco-onnx",
+      "componentType": "model",
+      "purpose": "COCO subject detection for subject search",
+      "upstream": {
+        "name": "Ultralytics YOLOv8n COCO ONNX",
+        "version": "artifact-sha256:b2bc52f40e8e1c532427d5bde3575a5d5b571b739fab2c6df443733ed1589cbd",
+        "sourceUrl": "https://github.com/ultralytics/ultralytics",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "AGPL-3.0-only",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/ultralytics/ultralytics",
+          "sha256": "b2bc52f40e8e1c532427d5bde3575a5d5b571b739fab2c6df443733ed1589cbd",
+          "sizeBytes": 12851049,
+          "targetPath": "models/yolov8n/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "lindevs-yolov8n-face-onnx",
+      "componentType": "model",
+      "purpose": "Face bounding-box detection for subject search",
+      "upstream": {
+        "name": "lindevs/yolov8-face",
+        "version": "artifact-sha256:7202335c41e478b4feccdfd7f09d5cec71007d775e02964a8f115b1687f3db87",
+        "sourceUrl": "https://github.com/lindevs/yolov8-face",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/lindevs/yolov8-face",
+          "sha256": "7202335c41e478b4feccdfd7f09d5cec71007d775e02964a8f115b1687f3db87",
+          "sizeBytes": 12265790,
+          "targetPath": "models/yolov8n-face/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "cvlface-adaface-ir101-webface12m-onnx",
+      "componentType": "model",
+      "purpose": "Face identity embeddings",
+      "upstream": {
+        "name": "Evn9172/cvlface_adaface_ir101_webface12m_onnx",
+        "version": "huggingface-revision:3af39a8cf2f199127f34e247950df9c4d6f227e8",
+        "sourceUrl": "https://huggingface.co/Evn9172/cvlface_adaface_ir101_webface12m_onnx",
+        "releasedAt": "2026-06-15"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Evn9172/cvlface_adaface_ir101_webface12m_onnx/resolve/3af39a8cf2f199127f34e247950df9c4d6f227e8/adaface_ir101.onnx",
+          "sha256": "6168ed3961838a871e706e8e5ebbf963de2821ecb3f64da9d5c3fd373cc80c65",
+          "sizeBytes": 260701576,
+          "targetPath": "models/adaface/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "osnet-ain-x1-msmt17-onnx",
+      "componentType": "model",
+      "purpose": "Full-body person re-identification embeddings",
+      "upstream": {
+        "name": "LibreYOLO/LibreReID-osnet",
+        "version": "huggingface-revision:5c7c20e54ccf80c9889a64020748f148ad5f7634+local-onnx-export",
+        "sourceUrl": "https://huggingface.co/LibreYOLO/LibreReID-osnet",
+        "releasedAt": "2026-07-11"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "https://huggingface.co/LibreYOLO/LibreReID-osnet",
+          "sha256": "10a00de9cf285814f885b8f2f30aab59092d4bf3508416f6a20e8997717f1d3d",
+          "sizeBytes": 8742440,
+          "targetPath": "models/osnet/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "pulpcut-mobilesam-onnx",
+      "componentType": "model",
+      "purpose": "Point and box prompted subject segmentation",
+      "upstream": {
+        "name": "PulpCut/mobilesam-onnx",
+        "version": "huggingface-revision:1e774d8516a1e014803a6e06c749d144cea7b9be",
+        "sourceUrl": "https://huggingface.co/PulpCut/mobilesam-onnx",
+        "releasedAt": "2026-03-26"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "image-encoder",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/PulpCut/mobilesam-onnx/resolve/1e774d8516a1e014803a6e06c749d144cea7b9be/mobilesam.encoder.onnx",
+          "sha256": "4125037c5e24d6ea58e201b20e8d8fbbbd1135c0b881e34a8074b8c4f07e6918",
+          "sizeBytes": 28195125,
+          "targetPath": "models/mobilesam/encoder.onnx"
+        },
+        {
+          "role": "mask-decoder",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/PulpCut/mobilesam-onnx/resolve/1e774d8516a1e014803a6e06c749d144cea7b9be/mobilesam.decoder.onnx",
+          "sha256": "b0735abf07c7affddf20fffc3ce750f44af387ee6a7323880e909389ed15d279",
+          "sizeBytes": 16514086,
+          "targetPath": "models/mobilesam/decoder.onnx"
+        }
+      ]
+    },
+    {
+      "id": "gyan-ffmpeg-full-8-1-2",
+      "componentType": "tool",
+      "purpose": "Video metadata, frame extraction, thumbnails, and subtitle processing",
+      "upstream": {
+        "name": "Gyan.dev FFmpeg full build",
+        "version": "8.1.2-full_build-www.gyan.dev",
+        "sourceUrl": "https://www.gyan.dev/ffmpeg/builds/",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "GPL-3.0-or-later",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "ffmpeg-cli",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://www.gyan.dev/ffmpeg/builds/",
+          "sha256": "ad8f211bc894755e0061c55ab280ae00e8d3d4f15a8cc4372b24cfa247b5942e",
+          "sizeBytes": 242496512,
+          "targetPath": "tools/ffmpeg/bin/ffmpeg.exe"
+        },
+        {
+          "role": "ffprobe-cli",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://www.gyan.dev/ffmpeg/builds/",
+          "sha256": "9df3b0b5275e830961df6d94e1f7a71121a7abd5ff708e9fec8a0b6084a55015",
+          "sizeBytes": 242291712,
+          "targetPath": "tools/ffmpeg/bin/ffprobe.exe"
+        }
+      ]
+    },
+    {
+      "id": "microsoft-onnxruntime-gpu-windows-1-24-3",
+      "componentType": "optional-runtime",
+      "purpose": "Private ONNX Runtime CUDA execution provider for DINO and CLIP workers",
+      "upstream": {
+        "name": "Microsoft.ML.OnnxRuntime.Gpu.Windows",
+        "version": "nuget:1.24.3+commit:3a728b75062256951b6e19ce718907cf1a1d4cf0",
+        "sourceUrl": "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.24.3",
+        "releasedAt": "2026-03-05"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "onnx-runtime-core",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "7814ffc2de24d66777237adc25ebaa35304331ea55aa9ede7fafe356a32fc294",
+          "sizeBytes": 14431304,
+          "targetPath": "cuda-runtime/onnxruntime.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "runtimes/win-x64/native/onnxruntime.dll",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "onnx-runtime-cuda-provider",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "1b69aae69ea36c19a85ad48f175eef5169320f020436b685871a937cb091a4bd",
+          "sizeBytes": 275607072,
+          "targetPath": "cuda-runtime/onnxruntime_providers_cuda.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "runtimes/win-x64/native/onnxruntime_providers_cuda.dll",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "onnx-runtime-shared-provider",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "dded319c25b193c85a355d86c89c2a312250eadc2a8c643839b104e3564c1f93",
+          "sizeBytes": 22040,
+          "targetPath": "cuda-runtime/onnxruntime_providers_shared.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "runtimes/win-x64/native/onnxruntime_providers_shared.dll",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "license",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "sizeBytes": 1094,
+          "targetPath": "cuda-runtime/licenses/onnxruntime-LICENSE.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "LICENSE",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "third-party-notices",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "fb0af774b4d7cffc5b9d046f2aaeade2f37df2f80abf8033c95dfffcc77a8866",
+          "sizeBytes": 331175,
+          "targetPath": "cuda-runtime/licenses/onnxruntime-ThirdPartyNotices.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "ThirdPartyNotices.txt",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-12-8-embedding-runtime",
+      "componentType": "optional-runtime",
+      "purpose": "Private CUDA 12.8 libraries required by ONNX Runtime GPU on Windows",
+      "upstream": {
+        "name": "NVIDIA CUDA redistributable archives",
+        "version": "cuda:12.8.1+cudart:12.8.90+cublas:12.8.4.1+cufft:11.3.3.83+nvrtc:12.8.93",
+        "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.8.1.json",
+        "releasedAt": "2025-03-06"
+      },
+      "license": {
+        "spdx": "LicenseRef-NVIDIA-CUDA-Toolkit-SDK",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "acceptanceRequired": true,
+        "sourceUrl": "https://docs.nvidia.com/cuda/archive/12.8.1/eula/index.html"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "cuda-runtime",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-12.8.90-archive.zip",
+          "sha256": "c2c9a9c22a9bcba90e261825968836787b331038047a26770cffb7a583c28344",
+          "sizeBytes": 573952,
+          "targetPath": "cuda-runtime/cudart64_12.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_cudart-windows-x86_64-12.8.90-archive/bin/cudart64_12.dll",
+            "sha256": "4a39058fd8519444a81cfc7ae055d136f48d1a31ffa41ae255b35b2edd61e13b",
+            "sizeBytes": 3037735
+          }
+        },
+        {
+          "role": "cuda-blas",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/libcublas-windows-x86_64-12.8.4.1-archive.zip",
+          "sha256": "9513540e4ec4c51ee9e7304138c2cc255c29a8c181f9e80c38efa25738becd99",
+          "sizeBytes": 113716224,
+          "targetPath": "cuda-runtime/cublas64_12.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "libcublas-windows-x86_64-12.8.4.1-archive/bin/cublas64_12.dll",
+            "sha256": "57a470112cec7e112c95253dde8b3c7184d795dbd92b0bde77a4cb7f8c94c8aa",
+            "sizeBytes": 563660944
+          }
+        },
+        {
+          "role": "cuda-blas-lt",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/libcublas-windows-x86_64-12.8.4.1-archive.zip",
+          "sha256": "b199d1ff892a81b7fd3d57ba1781549609b41500b36008fef326038393ad46c7",
+          "sizeBytes": 674667520,
+          "targetPath": "cuda-runtime/cublasLt64_12.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "libcublas-windows-x86_64-12.8.4.1-archive/bin/cublasLt64_12.dll",
+            "sha256": "57a470112cec7e112c95253dde8b3c7184d795dbd92b0bde77a4cb7f8c94c8aa",
+            "sizeBytes": 563660944
+          }
+        },
+        {
+          "role": "cuda-fft",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/libcufft/windows-x86_64/libcufft-windows-x86_64-11.3.3.83-archive.zip",
+          "sha256": "f4fea9227b14843894ad5436725f9638b172171142c95291fc6ae7a493248221",
+          "sizeBytes": 276121600,
+          "targetPath": "cuda-runtime/cufft64_11.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "libcufft-windows-x86_64-11.3.3.83-archive/bin/cufft64_11.dll",
+            "sha256": "cc6e0ba958cf23387b462017a24464c72bd901549046133f3d1ebcc3d7444c90",
+            "sizeBytes": 190568498
+          }
+        },
+        {
+          "role": "cuda-runtime-compiler",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/cuda_nvrtc-windows-x86_64-12.8.93-archive.zip",
+          "sha256": "02d2d7ef4690bf1a55dda1d3ac94c86ce8d16920071c87bcd3e70e94ef346e93",
+          "sizeBytes": 86728192,
+          "targetPath": "cuda-runtime/nvrtc64_120_0.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_nvrtc-windows-x86_64-12.8.93-archive/bin/nvrtc64_120_0.dll",
+            "sha256": "a63302a077f0248a743a1a7caa7dbd80d0fac56c6cfa9c41fa05fac9b7e5eda5",
+            "sizeBytes": 305588898
+          }
+        },
+        {
+          "role": "cuda-runtime-compiler-builtins",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/cuda_nvrtc-windows-x86_64-12.8.93-archive.zip",
+          "sha256": "a7afa2a40cbd3f922a33d8bf71c13cb26ca707c7016a9bc5fcde36759ba668f5",
+          "sizeBytes": 6356480,
+          "targetPath": "cuda-runtime/nvrtc-builtins64_128.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_nvrtc-windows-x86_64-12.8.93-archive/bin/nvrtc-builtins64_128.dll",
+            "sha256": "a63302a077f0248a743a1a7caa7dbd80d0fac56c6cfa9c41fa05fac9b7e5eda5",
+            "sizeBytes": 305588898
+          }
+        },
+        {
+          "role": "license",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-12.8.90-archive.zip",
+          "sha256": "e2c71babfd18a8e69542dd7e9ca018f9caa438094001a58e6bc4d8c999bf0d07",
+          "sizeBytes": 63021,
+          "targetPath": "cuda-runtime/licenses/NVIDIA-CUDA-LICENSE.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_cudart-windows-x86_64-12.8.90-archive/LICENSE",
+            "sha256": "4a39058fd8519444a81cfc7ae055d136f48d1a31ffa41ae255b35b2edd61e13b",
+            "sizeBytes": 3037735
+          }
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cudnn-9-19-1-cuda12-runtime",
+      "componentType": "optional-runtime",
+      "purpose": "Private cuDNN 9 runtime used by DINO and CLIP CUDA convolution graphs",
+      "upstream": {
+        "name": "NVIDIA cuDNN",
+        "version": "9.19.1.2+cuda12",
+        "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/redistrib_9.19.1.json",
+        "releasedAt": "2026-02-24"
+      },
+      "license": {
+        "spdx": "LicenseRef-NVIDIA-cuDNN-SDK",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "acceptanceRequired": true,
+        "sourceUrl": "https://docs.nvidia.com/deeplearning/cudnn/backend/v9.19.0/reference/eula.html"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "cudnn-core",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "0b2f489572c495cce26f5ddaf0170056b5d14b37c133bf2bf5ea7da57e5353d9",
+          "sizeBytes": 264304,
+          "targetPath": "cuda-runtime/cudnn64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-graph",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "d3bbf6af703d1d8ef5d554211f5be4d5c7eb2157dbb2a9ef9818d67fe639aa6b",
+          "sizeBytes": 2493040,
+          "targetPath": "cuda-runtime/cudnn_graph64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_graph64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-ops",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "b4e970d8d0fe1f4f13e66fa57e3b81762ec91aa17886844dbd498e8babbaabf0",
+          "sizeBytes": 105604208,
+          "targetPath": "cuda-runtime/cudnn_ops64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_ops64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-precompiled-engines",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "14f9615d59a23368f61b58ea8f1e5247fe93b046e405fafe63ea6f407bc424fa",
+          "sizeBytes": 481015408,
+          "targetPath": "cuda-runtime/cudnn_engines_precompiled64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_engines_precompiled64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-runtime-compiled-engines",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "48f084b8ec703c0b5aa5d21bea06783cf3f3a2a8a44c8737c5e0a549db9cdb94",
+          "sizeBytes": 27760240,
+          "targetPath": "cuda-runtime/cudnn_engines_runtime_compiled64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_engines_runtime_compiled64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-heuristics",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "4be3cdecb63065380c900615b9bec4a7c815ba3373c7c50fbb048418639b01d6",
+          "sizeBytes": 58874992,
+          "targetPath": "cuda-runtime/cudnn_heuristic64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_heuristic64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "license",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "295a1b7118d3417f5d6a943e5f87b59e2a0631fb277129c3b15dee6248adc7cf",
+          "sizeBytes": 29574,
+          "targetPath": "cuda-runtime/licenses/NVIDIA-cuDNN-LICENSE.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/LICENSE",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        }
+      ]
+    },
+    {
+      "id": "floating-clock-cuda-embedding-worker",
+      "componentType": "optional-runtime",
+      "purpose": "Isolated native CUDA worker and fixed DINO and CLIP provider gates",
+      "upstream": {
+        "name": "Siftory CUDA embedding worker",
+        "version": "1.0.0+onnxruntime-1.24.3",
+        "sourceUrl": "native/cuda_embedding_worker/",
+        "releasedAt": "2026-08-08"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "licenseFiles": [],
+        "noticeRequired": false,
+        "reviewStatus": "project-license-pending"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "cuda-embedding-worker",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "native/cuda_embedding_worker/",
+          "sha256": "8d5e4b6d953a411e5df55c7513d4f53bee7875f47e44702f01f1265f55d5872d",
+          "sizeBytes": 88576,
+          "targetPath": "cuda-runtime/floating_clock_cuda_embedding_worker.exe"
+        },
+        {
+          "role": "cuda-provider-gates",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "resources/cuda-provider-gates.json",
+          "sha256": "d742ef77b8bedb9dc71cbe828923cbc5e70d58e8f2041b52988102a5ebcd7f1b",
+          "sizeBytes": 579,
+          "targetPath": "cuda-runtime/provider-gates.json"
+        }
+      ]
+    },
+    {
+      "id": "floating-clock-fast-scanner-electron",
+      "componentType": "native-addon",
+      "purpose": "Native image scanning, hashing, indexing, and thumbnail generation",
+      "upstream": {
+        "name": "Siftory fast_scanner",
+        "version": "0.5.38",
+        "sourceUrl": "native/",
+        "releasedAt": "2026-09-25"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "licenseFiles": [],
+        "noticeRequired": false,
+        "reviewStatus": "project-license-pending"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "electron-native-addon",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "native/",
+          "sha256": "c7096d2a6b58d5b52bd3b1b9f7fd5bda3563875f8eb09095b1cb924a19f9b621",
+          "sizeBytes": 1282048,
+          "targetPath": "native/build-electron/Release/fast_scanner.node"
+        }
+      ]
+    },
+    {
+      "id": "sensevoice-small-funasr-external-audio-semantic-model",
+      "componentType": "model",
+      "purpose": "User-approved local ASR, language, emotion, and bounded audio-event evaluation",
+      "upstream": {
+        "name": "FunAudioLLM SenseVoiceSmall",
+        "version": "hf-revision:3847d57b6bdf2dd8875cb1508d2af43d80a16bf7+model-sha256:833ca2dcfdf8ec91bd4f31cfac36d6124e0c459074d5e909aec9cabe6204a3ea",
+        "sourceUrl": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/tree/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "LicenseRef-FunASR-Model-License",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "sourceUrl": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/blob/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7/README.md"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/tree/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+          "sha256": "9e628dd04c6717615dffb80978c08f7bb8c203f5f3ddb3df7d749332730187d0",
+          "sizeBytes": 2842,
+          "targetPath": "resources/runtime-receipts/sensevoice-small-funasr.json"
+        }
+      ]
+    },
+    {
+      "id": "fsmn-vad-campplus-funasr-external-diarization-models",
+      "componentType": "model",
+      "purpose": "User-approved local voice activity detection and anonymous video-local speaker diarization",
+      "upstream": {
+        "name": "IIC FSMN-VAD v2.0.4 and CAM++ v2.0.2",
+        "version": "modelscope-tags:fsmn-vad@v2.0.4+model-sha256:b3be75be477f0780277f3bae0fe489f48718f585f3a6e45d7dd1fbb1a4255fc5;campplus@v2.0.2+model-sha256:3388cf5fd3493c9ac9c69851d8e7a8badcfb4f3dc631020c4961371646d5ada8",
+        "sourceUrl": "https://www.modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded",
+        "sourceUrl": "https://www.modelscope.cn/models/iic/speech_campplus_sv_zh-cn_16k-common/summary"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://www.modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary",
+          "sha256": "01140cf1be927d5f6291932b79078b8294a86cd69a1f014bfc671e63e6706f62",
+          "sizeBytes": 3570,
+          "targetPath": "resources/runtime-receipts/fsmn-vad-campplus-funasr.json"
+        }
+      ]
+    },
+    {
+      "id": "ollama-0-32-9-windows-x64-external-test-runtime",
+      "componentType": "optional-runtime",
+      "purpose": "User-approved external loopback runtime for video semantic evaluation",
+      "upstream": {
+        "name": "Ollama for Windows",
+        "version": "winget:Ollama.Ollama@0.32.9+exe-sha256:0482be1251251da2f8479ace70c4dd7d9f2892d11dde201ee2408a18806b924b",
+        "sourceUrl": "https://github.com/ollama/ollama/releases/tag/v0.32.9",
+        "releasedAt": "2026-08-11"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/ollama/ollama/releases/tag/v0.32.9",
+          "sha256": "3d8b7a7677609bf5040023605cc71955eaa76d0b187a9598fa1a648ad22f693d",
+          "sizeBytes": 1076,
+          "targetPath": "resources/runtime-receipts/ollama-0.32.9-windows-x64.json"
+        }
+      ]
+    },
+    {
+      "id": "qwen3-vl-2b-q4-k-m-ollama-external-test-model",
+      "componentType": "model",
+      "purpose": "Pinned external Qwen3-VL 2B evaluation model for video semantic indexing",
+      "upstream": {
+        "name": "Qwen3-VL-2B-Instruct via Ollama qwen3-vl:2b",
+        "version": "ollama-digest:0635d9d857d497aeadba3d7d27485746c50554446f9f6ec01ef39788221adbe8+gguf-sha256:ebabfa59b71a5b96e0281ec2994977e785284e0939807a99fc340dec3c6f10de",
+        "sourceUrl": "https://ollama.com/library/qwen3-vl:2b",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://ollama.com/library/qwen3-vl:2b",
+          "sha256": "3b4925c1d2f90dc6b1a874bc18d1890e1cace38ea631c25378bec024264c88ad",
+          "sizeBytes": 1348,
+          "targetPath": "resources/runtime-receipts/qwen3-vl-2b-q4-k-m-ollama.json"
+        }
+      ]
+    },
+    {
+      "id": "llama-cpp-b10441-windows-x64-managed-video-runtime-candidate",
+      "componentType": "optional-runtime",
+      "purpose": "Pinned managed loopback sidecar candidate for built-in GGUF video semantic inference",
+      "upstream": {
+        "name": "llama.cpp Windows x64",
+        "version": "release:b10441+commit:0177dcc7300bad8914bb838baabce87899812491",
+        "sourceUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b10441",
+        "releasedAt": "2026-08-15"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "sourceUrl": "https://github.com/ggml-org/llama.cpp/blob/0177dcc7300bad8914bb838baabce87899812491/LICENSE"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "release-candidate-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b10441",
+          "sha256": "4b98e6a225daa69a6438a2b021e858fcf5aa61c4898bfaf6f9bc00e43c828245",
+          "sizeBytes": 2284,
+          "targetPath": "resources/runtime-receipts/llama-cpp-b10441-windows-x64.json"
+        }
+      ]
+    },
+    {
+      "id": "qwen3-vl-2b-instruct-q4-k-m-gguf-managed-runtime-candidate",
+      "componentType": "model",
+      "purpose": "Pinned official Qwen3-VL GGUF and projector candidate for managed video semantic inference",
+      "upstream": {
+        "name": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+        "version": "huggingface-revision:52d6c8ffea26cc873ac5ad116f8631268d7eb503+Q4_K_M+mmproj-Q8_0",
+        "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+        "releasedAt": "2025-11-01"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/blob/52d6c8ffea26cc873ac5ad116f8631268d7eb503/README.md"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "release-candidate-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+          "sha256": "f1dcc7911a0caf09780f73a4450db9f1b19846ede7b0f218af54c17d95ae7d75",
+          "sizeBytes": 2262,
+          "targetPath": "resources/runtime-receipts/qwen3-vl-2b-instruct-gguf-official.json"
+        }
+      ]
+    },
+    {
+      "id": "adobe-source-han-sans-cn-vf-2-005",
+      "componentType": "font",
+      "purpose": "Bundled Simplified Chinese variable font for the application interface",
+      "upstream": {
+        "name": "Adobe Source Han Sans CN VF",
+        "version": "2.005R",
+        "sourceUrl": "https://github.com/adobe-fonts/source-han-sans/releases/tag/2.005R",
+        "releasedAt": "2025-06-18"
+      },
+      "license": {
+        "spdx": "OFL-1.1",
+        "licenseFiles": [
+          "legal/SourceHanSans-OFL-1.1.txt"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded",
+        "sourceUrl": "https://github.com/adobe-fonts/source-han-sans/blob/2.005R/LICENSE.txt"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "ui-font",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/2.005R/Variable/WOFF2/OTF/Subset/SourceHanSansCN-VF.otf.woff2",
+          "sha256": "7087698d52240614659957608d8c4ad446759aee3208409dc9f566412e7af8f4",
+          "sizeBytes": 7995716,
+          "targetPath": "src/assets/fonts/SourceHanSansCN-VF.otf.woff2"
+        }
+      ]
+    }
+  ]
+}

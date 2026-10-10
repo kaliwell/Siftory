@@ -1,0 +1,2023 @@
+{
+  "cacheCount": 326980,
+  "dim": 512,
+  "topK": 20,
+  "pairs": [
+    {
+      "zh": "一只猫",
+      "en": "a cat",
+      "overlapMulti": 9,
+      "overlapClip": 2,
+      "zhTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\dafe8f490c517e5d6c622bbce6293b57.jpeg",
+          "score": 0.3013562787214889
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\dafe8f490c517e5d6c622bbce6293b57_0.jpeg",
+          "score": 0.3011558514346677
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\personal_emoji\\Ori\\911F45EC7C76A185AFB8CC43850F193B.jpg",
+          "score": 0.2981178811277048
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696912.jpg",
+          "score": 0.2974436440589084
+        },
+        {
+          "path": "<DATASET>\\pxhere-000622\\745689.jpg",
+          "score": 0.29730554544213506
+        },
+        {
+          "path": "<DATASET>\\pxhere-000100\\1528973.jpg",
+          "score": 0.2967598394356469
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-05\\Thumb\\1150c735c7e52bed0a5ec8396569b0bb_0.png",
+          "score": 0.2967339856037094
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\e76bef86cddf133c5d39fe8cf5b2ea0e_0.png",
+          "score": 0.2966255219286584
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-05\\Thumb\\3eabd8f066063b57d862d1ab683e531a_0.png",
+          "score": 0.29646943427914974
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\6236aaf439e949b4421afcffee7ca662_0.jpg",
+          "score": 0.2964557654918912
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\2123bbc5389bd7024aa972a85f16d503_0.jpg",
+          "score": 0.29637617796338006
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\2123bbc5389bd7024aa972a85f16d503.jpg",
+          "score": 0.2962614084189698
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\2670d945e780262b238f905e4fa4ed0d_0.png",
+          "score": 0.296064100157817
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Ori\\6236aaf439e949b4421afcffee7ca662.jpg",
+          "score": 0.29571563744481255
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-06\\Ori\\55320241f7b5d786f1f9ff42de99d8a6.jpg",
+          "score": 0.29555622704432283
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Thumb\\cb17e8d39a331973015bc14888978929_720.jpg",
+          "score": 0.29555466468328495
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\cb17e8d39a331973015bc14888978929.jpg",
+          "score": 0.29555466468328495
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\e76bef86cddf133c5d39fe8cf5b2ea0e_720.png",
+          "score": 0.29485504205792484
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-06\\Ori\\46aef11b222db0c5882bcf284ab6038f.jpg",
+          "score": 0.2947897725584234
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\e36a905bd15569c09f977846d9c17260_720.png",
+          "score": 0.29469359606027246
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\b68ebf56f13963303e38ea9ec5aa16ce_720.jpg",
+          "score": 0.30490910455624154
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\b68ebf56f13963303e38ea9ec5aa16ce_0.jpg",
+          "score": 0.30105067653136086
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\97a4670a1f90278caf805d4056ca43df_720.jpg",
+          "score": 0.3004730017233862
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\6bd53dcc692b1b8f1cd79b19a8b2cdd2_720.jpg",
+          "score": 0.30016522318599875
+        },
+        {
+          "path": "<DATASET>\\pxhere-000100\\1528973.jpg",
+          "score": 0.2998181879170506
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\dafe8f490c517e5d6c622bbce6293b57_0.jpeg",
+          "score": 0.29907957808097335
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\dafe8f490c517e5d6c622bbce6293b57.jpeg",
+          "score": 0.2990684760205275
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\97a4670a1f90278caf805d4056ca43df_0.jpg",
+          "score": 0.29862552134545417
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\personal_emoji\\Ori\\911F45EC7C76A185AFB8CC43850F193B.jpg",
+          "score": 0.29858533425104206
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\e76bef86cddf133c5d39fe8cf5b2ea0e_0.png",
+          "score": 0.29836596876343885
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696912.jpg",
+          "score": 0.2979313953307854
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-07\\Ori\\4efa0a7346629a3a726eea27828e4082.jpg",
+          "score": 0.29753017911383317
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\6bd53dcc692b1b8f1cd79b19a8b2cdd2_0.jpg",
+          "score": 0.2971674820413146
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\2123bbc5389bd7024aa972a85f16d503_0.jpg",
+          "score": 0.297134710498646
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\fff44fa67d59fa377c7bdfa83989226f.jpg",
+          "score": 0.29667484697709695
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\2123bbc5389bd7024aa972a85f16d503.jpg",
+          "score": 0.29658024742505895
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-06\\Thumb\\7567ab6c9e8e884d80132f7dd2b879a7_720.jpg",
+          "score": 0.29634747517177507
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-06\\Ori\\7567ab6c9e8e884d80132f7dd2b879a7.jpg",
+          "score": 0.29634747517177507
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\e76bef86cddf133c5d39fe8cf5b2ea0e_720.png",
+          "score": 0.2962833978909452
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Thumb\\fff44fa67d59fa377c7bdfa83989226f_720.jpg",
+          "score": 0.2960467666187952
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\b68ebf56f13963303e38ea9ec5aa16ce_720.jpg",
+          "score": 0.3125997031495665
+        },
+        {
+          "path": "<DATASET>\\pxhere-000100\\1528973.jpg",
+          "score": 0.31172027958094306
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696912.jpg",
+          "score": 0.3086154971508301
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1694662.jpg",
+          "score": 0.3081587638397594
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\b68ebf56f13963303e38ea9ec5aa16ce_0.jpg",
+          "score": 0.3067814182484045
+        },
+        {
+          "path": "<DATASET>\\pxhere-000120\\1486205.jpg",
+          "score": 0.30546970263640233
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\806354.jpg",
+          "score": 0.3039445498810876
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1400681.jpg",
+          "score": 0.3038750073921523
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\2328da6a3f8a66640a85567c57e51d79_720.jpg",
+          "score": 0.3026502437772432
+        },
+        {
+          "path": "<DATASET>\\pxhere-000120\\1486769.jpg",
+          "score": 0.3025847228976763
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\97a4670a1f90278caf805d4056ca43df_720.jpg",
+          "score": 0.30220600382974777
+        },
+        {
+          "path": "<DATASET>\\pxhere-000980\\183534.jpg",
+          "score": 0.30210690509200294
+        },
+        {
+          "path": "<DATASET>\\pxhere-000096\\1536329.jpg",
+          "score": 0.3020836424979405
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1695622.jpg",
+          "score": 0.301942468196795
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-03\\Thumb\\2328da6a3f8a66640a85567c57e51d79_0.jpg",
+          "score": 0.30193466960737625
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\270449.jpg",
+          "score": 0.30184287698677453
+        },
+        {
+          "path": "<DATASET>\\pxhere-000216\\1336074.jpg",
+          "score": 0.30163128094881425
+        },
+        {
+          "path": "<DATASET>\\pxhere-000669\\687707.jpg",
+          "score": 0.3015332028222206
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1268721.jpg",
+          "score": 0.30126980406781495
+        },
+        {
+          "path": "<DATASET>\\pxhere-000503\\901008.jpg",
+          "score": 0.30116079464518647
+        }
+      ]
+    },
+    {
+      "zh": "红色连衣裙",
+      "en": "a red dress",
+      "overlapMulti": 14,
+      "overlapClip": 14,
+      "zhTop": [
+        {
+          "path": "<DATASET>\\pxhere-000001\\1694040.jpg",
+          "score": 0.31849176212345437
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\270762.jpg",
+          "score": 0.3129011614919006
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696558.jpg",
+          "score": 0.30980215626506835
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696540.jpg",
+          "score": 0.30761598367599285
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1095832.jpg",
+          "score": 0.3072632973782162
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696534.jpg",
+          "score": 0.3045492434824776
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3042669974128247
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3042669974128247
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3042669974128247
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3042669974128247
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616967.jpg",
+          "score": 0.30378176676549923
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\676a00ebdf46b8a65b768b48329bcbe1_720.png",
+          "score": 0.30135702374430784
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\75dac15b72d3df1c397e954d26f678bb983b5223.jpg",
+          "score": 0.3013100468240376
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\75dac15b72d3df1c397e954d26f678bb983b5223.jpg",
+          "score": 0.3013100468240376
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\75dac15b72d3df1c397e954d26f678bb983b5223.jpg",
+          "score": 0.3013100468240376
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\75dac15b72d3df1c397e954d26f678bb983b5223.jpg",
+          "score": 0.3013100468240376
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696542.jpg",
+          "score": 0.3004649179952054
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\676a00ebdf46b8a65b768b48329bcbe1_0.png",
+          "score": 0.30004516322402536
+        },
+        {
+          "path": "<DATASET>\\pxhere-000693\\653900.jpg",
+          "score": 0.2986176499093569
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\cf053259a5f01eeef77020d953cc0ab4_0.png",
+          "score": 0.2985265195629335
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<DATASET>\\pxhere-000001\\1694040.jpg",
+          "score": 0.33270614218302186
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696558.jpg",
+          "score": 0.3188972012345865
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696540.jpg",
+          "score": 0.317207940963052
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616967.jpg",
+          "score": 0.316985090235539
+        },
+        {
+          "path": "<DATASET>\\pxhere-000001\\1693984.jpg",
+          "score": 0.31515728641324325
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\270762.jpg",
+          "score": 0.31280018618577166
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696534.jpg",
+          "score": 0.31038489153357945
+        },
+        {
+          "path": "<DATASET>\\pxhere-000001\\1692848.jpg",
+          "score": 0.30820795662141937
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\676a00ebdf46b8a65b768b48329bcbe1_720.png",
+          "score": 0.3073527429536678
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696542.jpg",
+          "score": 0.3072988529901431
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1697024.jpg",
+          "score": 0.30691540932123024
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1095832.jpg",
+          "score": 0.30686861812951965
+        },
+        {
+          "path": "<DATASET>\\pxhere-001028\\26038.jpg",
+          "score": 0.30622322318014117
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.305146359681444
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.305146359681444
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.305146359681444
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.305146359681444
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\fea6ed602700f3f6e3054f3b92160f8a.jpg",
+          "score": 0.3049911124545394
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\cf053259a5f01eeef77020d953cc0ab4_0.png",
+          "score": 0.30409086676743696
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-07\\Thumb\\bc38b661bb5dd8caaa2e561be8ab4ea8_0.png",
+          "score": 0.30401333590878604
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<DATASET>\\pxhere-000001\\1694040.jpg",
+          "score": 0.3368077598580623
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696558.jpg",
+          "score": 0.3233468188871894
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696540.jpg",
+          "score": 0.3228109128100236
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696542.jpg",
+          "score": 0.32229819006123683
+        },
+        {
+          "path": "<DATASET>\\pxhere-000001\\1692848.jpg",
+          "score": 0.32206301085374944
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616967.jpg",
+          "score": 0.3214534871570579
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1697024.jpg",
+          "score": 0.3196170799725287
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3131121298075811
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3131121298075811
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3131121298075811
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\349e9043ead10d91b1f26002e93c4810106d3a89.jpg",
+          "score": 0.3131121298075811
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696538.jpg",
+          "score": 0.3125954520523986
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\fea6ed602700f3f6e3054f3b92160f8a.jpg",
+          "score": 0.31046233115126676
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-06\\Thumb\\3d26c0b9da2494fa0a553b49eeea876a_0.png",
+          "score": 0.31000144269565694
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-06\\Thumb\\7ece7a27542a28cff9a8655007297b86_0.png",
+          "score": 0.31000144269565694
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7635226154871868029_7635226154871868028\\tile_files\\13\\0_10.jpeg",
+          "score": 0.309793960933383
+        },
+        {
+          "path": "<DATASET>\\pxhere-000001\\1693984.jpg",
+          "score": 0.3088569935352011
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\cf053259a5f01eeef77020d953cc0ab4_0.png",
+          "score": 0.3083008407147578
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1696536.jpg",
+          "score": 0.3059677673952996
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\75dac15b72d3df1c397e954d26f678bb983b5223.jpg",
+          "score": 0.3057107975960323
+        }
+      ]
+    },
+    {
+      "zh": "美食",
+      "en": "delicious food",
+      "overlapMulti": 20,
+      "overlapClip": 10,
+      "zhTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\a981df61e3e63a1008e15636a5344df4_0.jpg",
+          "score": 0.27914361420378436
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-07\\Thumb\\42a10f7356e78f0921655ba55ab0a8b9_0.png",
+          "score": 0.2771304730150437
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\8f796c227e58f2027bc00939772959b7_720.jpg",
+          "score": 0.2767080970815347
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\a981df61e3e63a1008e15636a5344df4.jpg",
+          "score": 0.2765930401388873
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Thumb\\9de237223f19bf356024550c2687f136_720.jpg",
+          "score": 0.276581305755174
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\9de237223f19bf356024550c2687f136.jpg",
+          "score": 0.2764893265456398
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\c25f268f743b58559063e6dc2c8f7ad6.png",
+          "score": 0.2764893265456398
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\a981df61e3e63a1008e15636a5344df4_720.jpg",
+          "score": 0.27601423971387645
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\8f796c227e58f2027bc00939772959b7_0.jpg",
+          "score": 0.27547608602605855
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-03\\Thumb\\fa40750decfbdfe4e225844065c5f3f1_0.png",
+          "score": 0.2747197914571573
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\8f796c227e58f2027bc00939772959b7.jpg",
+          "score": 0.274320654515249
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.27358036787620454
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.27358036787620454
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.27358036787620454
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.27358036787620454
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2731761969893687
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2731761969893687
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2731761969893687
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2731761969893687
+        },
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2026-04\\2a7e72db39f1f649d8b40bdcf95ea355.jpg",
+          "score": 0.2717458155469837
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\8f796c227e58f2027bc00939772959b7_720.jpg",
+          "score": 0.2998460726149329
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\8f796c227e58f2027bc00939772959b7_0.jpg",
+          "score": 0.29863091412770576
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\8f796c227e58f2027bc00939772959b7.jpg",
+          "score": 0.29786911141013783
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-07\\Thumb\\42a10f7356e78f0921655ba55ab0a8b9_0.png",
+          "score": 0.2945219481105353
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\9de237223f19bf356024550c2687f136.jpg",
+          "score": 0.29444791893290123
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\c25f268f743b58559063e6dc2c8f7ad6.png",
+          "score": 0.29444791893290123
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\a981df61e3e63a1008e15636a5344df4_0.jpg",
+          "score": 0.2942103897794628
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Thumb\\9de237223f19bf356024550c2687f136_720.jpg",
+          "score": 0.2931146120126502
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-03\\Thumb\\fa40750decfbdfe4e225844065c5f3f1_0.png",
+          "score": 0.2926131997670896
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\a981df61e3e63a1008e15636a5344df4.jpg",
+          "score": 0.2920835914188184
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\a981df61e3e63a1008e15636a5344df4_720.jpg",
+          "score": 0.29096215244342716
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.28873142214961744
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.28873142214961744
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.28873142214961744
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\a1f28c5b9604eae8a66cab8780755a6554b8c19c.jpg",
+          "score": 0.28873142214961744
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2884945601777221
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2884945601777221
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2884945601777221
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\106891a69240ac7e8ded2ca6d2fe9fb65a73baaf\\9c1acf67ba4125173fbc757b887ffff8570ac40a.jpg",
+          "score": 0.2884945601777221
+        },
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2026-04\\2a7e72db39f1f649d8b40bdcf95ea355.jpg",
+          "score": 0.2883305559012523
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\8f796c227e58f2027bc00939772959b7.jpg",
+          "score": 0.322556000742416
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\8f796c227e58f2027bc00939772959b7_720.jpg",
+          "score": 0.32233427287520794
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\8f796c227e58f2027bc00939772959b7_0.jpg",
+          "score": 0.32215317468291726
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\a981df61e3e63a1008e15636a5344df4_0.jpg",
+          "score": 0.30564309100916826
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\4ea1d036dbae09ae6e3db58687cb55e1_720.jpg",
+          "score": 0.30445500743808435
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\a981df61e3e63a1008e15636a5344df4.jpg",
+          "score": 0.30445159034764024
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Ori\\4bc178376cd9277454541b11b550f4fb.jpg",
+          "score": 0.3042921510746379
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-03\\Thumb\\fa40750decfbdfe4e225844065c5f3f1_0.png",
+          "score": 0.303463599328264
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\9de237223f19bf356024550c2687f136.jpg",
+          "score": 0.3033636265403773
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\c25f268f743b58559063e6dc2c8f7ad6.png",
+          "score": 0.3033636265403773
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\a981df61e3e63a1008e15636a5344df4_720.jpg",
+          "score": 0.3030350158223017
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\4ea1d036dbae09ae6e3db58687cb55e1_0.jpg",
+          "score": 0.3020895809429386
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Thumb\\9de237223f19bf356024550c2687f136_720.jpg",
+          "score": 0.3017832897700503
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\12116202c0b3d1f83b680b971867e98d_720.jpg",
+          "score": 0.3014787284575325
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Ori\\12116202c0b3d1f83b680b971867e98d.jpg",
+          "score": 0.3014787284575325
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Thumb\\ae1600b4d2e922806482569197ea0780_720.jpg",
+          "score": 0.30088378468979887
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-05\\Ori\\ae1600b4d2e922806482569197ea0780.jpg",
+          "score": 0.30088378468979887
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\8702e95c9c4f5a6073a42e51c0c39af3_720.jpg",
+          "score": 0.3003699376405017
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-07\\Thumb\\3a3b3238733538765d06d01b8c124700_720.jpg",
+          "score": 0.2991005630978816
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Emoji\\emoji-recv\\2026-07\\Ori\\3a3b3238733538765d06d01b8c124700.jpg",
+          "score": 0.2991005630978816
+        }
+      ]
+    },
+    {
+      "zh": "夜晚的城市",
+      "en": "a city at night",
+      "overlapMulti": 9,
+      "overlapClip": 5,
+      "zhTop": [
+        {
+          "path": "<DATASET>\\pxhere-000382\\1067047.jpg",
+          "score": 0.31111156256623756
+        },
+        {
+          "path": "<DATASET>\\pxhere-001000\\160081.jpg",
+          "score": 0.3085573108772982
+        },
+        {
+          "path": "<DATASET>\\pxhere-000478\\935332.jpg",
+          "score": 0.30652177891147686
+        },
+        {
+          "path": "<DATASET>\\pxhere-001004\\155769.jpg",
+          "score": 0.29849363453427574
+        },
+        {
+          "path": "<DATASET>\\pxhere-000837\\480878.jpg",
+          "score": 0.29843063004087644
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\75613.jpg",
+          "score": 0.2982088541435954
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616084.jpg",
+          "score": 0.2982063362653127
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\271299.jpg",
+          "score": 0.29800188796772353
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47294.jpg",
+          "score": 0.29790235377452545
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1400543.jpg",
+          "score": 0.2975674444385406
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\271624.jpg",
+          "score": 0.29750056017588794
+        },
+        {
+          "path": "<DATASET>\\pxhere-000526\\869390.jpg",
+          "score": 0.29662762060464753
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\270876.jpg",
+          "score": 0.2962163624504731
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47782.jpg",
+          "score": 0.295663306812204
+        },
+        {
+          "path": "<DATASET>\\pxhere-001028\\26358.jpg",
+          "score": 0.29543074825272253
+        },
+        {
+          "path": "<DATASET>\\pxhere-000800\\531662.jpg",
+          "score": 0.2953976468713876
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1399905.jpg",
+          "score": 0.2949096759267339
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\76030.jpg",
+          "score": 0.2948634806898264
+        },
+        {
+          "path": "<DATASET>\\pxhere-001028\\25698.jpg",
+          "score": 0.29417293244949044
+        },
+        {
+          "path": "<DATASET>\\pxhere-000120\\1485753.jpg",
+          "score": 0.2941600544571674
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<DATASET>\\pxhere-000382\\1067047.jpg",
+          "score": 0.3434529025475672
+        },
+        {
+          "path": "<DATASET>\\pxhere-001000\\160081.jpg",
+          "score": 0.3384994317844749
+        },
+        {
+          "path": "<DATASET>\\pxhere-000287\\1188147.jpg",
+          "score": 0.3370197970613051
+        },
+        {
+          "path": "<DATASET>\\pxhere-000478\\935332.jpg",
+          "score": 0.3334371689879577
+        },
+        {
+          "path": "<DATASET>\\pxhere-001028\\26358.jpg",
+          "score": 0.3329376648919437
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1268931.jpg",
+          "score": 0.33255435489371765
+        },
+        {
+          "path": "<DATASET>\\pxhere-000526\\869390.jpg",
+          "score": 0.33220185749153786
+        },
+        {
+          "path": "<DATASET>\\pxhere-000263\\1223247.jpg",
+          "score": 0.3291102269557151
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1615917.jpg",
+          "score": 0.3284380888261767
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7520597244822926312_7520597244822926311\\tile_files\\12\\7_1.jpeg",
+          "score": 0.32824475180464263
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616779.jpg",
+          "score": 0.3276314949952628
+        },
+        {
+          "path": "D:\\pcl\\.minecraft\\versions\\1.20.1-Forge_47.4.16xxx1\\saves\\新的世界 (1)\\camera_images\\a8563300-8217-4562-970f-779d0cb4352a.jpg",
+          "score": 0.32748068320366913
+        },
+        {
+          "path": "D:\\$RECYCLE.BIN\\S-1-5-21-908780958-1534143177-3638885093-1001\\$R0RQAHD.16xxx1\\saves\\新的世界 (1)\\camera_images\\a8563300-8217-4562-970f-779d0cb4352a.jpg",
+          "score": 0.32748068320366913
+        },
+        {
+          "path": "<DATASET>\\pxhere-001028\\26544.jpg",
+          "score": 0.3271826129116219
+        },
+        {
+          "path": "<DATASET>\\pxhere-000837\\480878.jpg",
+          "score": 0.32715879011575877
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1399974.jpg",
+          "score": 0.3264316029437283
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7520597244822926312_7520597244822926311\\tile_files\\12\\3_1.jpeg",
+          "score": 0.32614356219708407
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616084.jpg",
+          "score": 0.3256258828721611
+        },
+        {
+          "path": "<DATASET>\\pxhere-000932\\271624.jpg",
+          "score": 0.3254005872154791
+        },
+        {
+          "path": "<DATASET>\\pxhere-001004\\155769.jpg",
+          "score": 0.32527280285586363
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<DATASET>\\pxhere-000287\\1188147.jpg",
+          "score": 0.32652054174067724
+        },
+        {
+          "path": "<DATASET>\\pxhere-000382\\1067047.jpg",
+          "score": 0.3203054817638677
+        },
+        {
+          "path": "<DATASET>\\pxhere-001028\\26358.jpg",
+          "score": 0.3169589359704232
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1399974.jpg",
+          "score": 0.31596436927775745
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\77b6a8df22916f5a986edc8a8023bf34_720.png",
+          "score": 0.3155436692598181
+        },
+        {
+          "path": "<DATASET>\\pxhere-001000\\160081.jpg",
+          "score": 0.3150917813964036
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1399965.jpg",
+          "score": 0.31418541167924446
+        },
+        {
+          "path": "<DATASET>\\pxhere-000263\\1223247.jpg",
+          "score": 0.3139288450170184
+        },
+        {
+          "path": "<DATASET>\\pxhere-000096\\1536905.jpg",
+          "score": 0.31341144149419564
+        },
+        {
+          "path": "<DATASET>\\pxhere-000526\\869355.jpg",
+          "score": 0.3123828634606166
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1268931.jpg",
+          "score": 0.31164625810955426
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1615917.jpg",
+          "score": 0.31163368666771846
+        },
+        {
+          "path": "<DATASET>\\pxhere-000526\\869390.jpg",
+          "score": 0.31138380814760164
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\77b6a8df22916f5a986edc8a8023bf34_0.png",
+          "score": 0.3083569588760591
+        },
+        {
+          "path": "<DATASET>\\pxhere-000837\\480878.jpg",
+          "score": 0.3082048545435431
+        },
+        {
+          "path": "<DATASET>\\pxhere-000765\\570263.jpg",
+          "score": 0.30817408405173935
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47032.jpg",
+          "score": 0.30813575033100393
+        },
+        {
+          "path": "<USER_HOME>\\AppData\\Local\\uv\\cache\\archive-v0\\araGQ4Ny8MnQvJiNyj5ld\\comfyui_workflow_templates_media_video\\templates\\template-Animation_Trajectory_Control_Wan_ATI-1.webp",
+          "score": 0.30802487181136246
+        },
+        {
+          "path": "<DATASET>\\pxhere-000431\\1000537.jpg",
+          "score": 0.30795641933453194
+        },
+        {
+          "path": "<DATASET>\\pxhere-000000\\1695876.jpg",
+          "score": 0.30683172505609685
+        }
+      ]
+    },
+    {
+      "zh": "海滩",
+      "en": "a beach",
+      "overlapMulti": 10,
+      "overlapClip": 9,
+      "zhTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Ori\\48d35686ff74f1abb511a4151beeb009.png",
+          "score": 0.31705162039056456
+        },
+        {
+          "path": "<DATASET>\\pxhere-000072\\1585233.jpg",
+          "score": 0.3162812007649793
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\48d35686ff74f1abb511a4151beeb009_720.png",
+          "score": 0.3161418404418833
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1269968.jpg",
+          "score": 0.31523398451335816
+        },
+        {
+          "path": "<DATASET>\\pxhere-000335\\1126479.jpg",
+          "score": 0.31407925040002427
+        },
+        {
+          "path": "<DATASET>\\pxhere-000597\\775411.jpg",
+          "score": 0.31363595436919334
+        },
+        {
+          "path": "<DATASET>\\pxhere-000765\\570669.jpg",
+          "score": 0.3131635440930841
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\76071.jpg",
+          "score": 0.31263379975149
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47345.jpg",
+          "score": 0.31225277049143596
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47806.jpg",
+          "score": 0.3122149706870036
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\48d35686ff74f1abb511a4151beeb009_0.png",
+          "score": 0.3110521620618385
+        },
+        {
+          "path": "<DATASET>\\pxhere-000335\\1126276.jpg",
+          "score": 0.31035156355955407
+        },
+        {
+          "path": "<DATASET>\\pxhere-000025\\1645175.jpg",
+          "score": 0.30991181548928853
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616109.jpg",
+          "score": 0.3098040440007766
+        },
+        {
+          "path": "<DATASET>\\pxhere-000622\\745841.jpg",
+          "score": 0.30972122013634673
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1400508.jpg",
+          "score": 0.3095146452460584
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1096140.jpg",
+          "score": 0.30893424552699417
+        },
+        {
+          "path": "<DATASET>\\pxhere-000335\\1126461.jpg",
+          "score": 0.30865667800152635
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1095415.jpg",
+          "score": 0.3085885965592275
+        },
+        {
+          "path": "<DATASET>\\pxhere-000669\\688029.jpg",
+          "score": 0.30844778758274527
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<DATASET>\\pxhere-000597\\775411.jpg",
+          "score": 0.32526795513183077
+        },
+        {
+          "path": "<DATASET>\\pxhere-000765\\570669.jpg",
+          "score": 0.3252126910959388
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1096140.jpg",
+          "score": 0.32459014489805543
+        },
+        {
+          "path": "<DATASET>\\pxhere-000168\\1400508.jpg",
+          "score": 0.32399839177599354
+        },
+        {
+          "path": "<DATASET>\\pxhere-000335\\1126479.jpg",
+          "score": 0.32364499873891933
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1269968.jpg",
+          "score": 0.3227456201872321
+        },
+        {
+          "path": "<DATASET>\\pxhere-000216\\1335139.jpg",
+          "score": 0.3227119565108928
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\76071.jpg",
+          "score": 0.32240070622494643
+        },
+        {
+          "path": "<DATASET>\\pxhere-000597\\775387.jpg",
+          "score": 0.32196610310009627
+        },
+        {
+          "path": "<DATASET>\\pxhere-000100\\1528463.jpg",
+          "score": 0.321076535500686
+        },
+        {
+          "path": "<DATASET>\\pxhere-000120\\1485327.jpg",
+          "score": 0.32082050814995255
+        },
+        {
+          "path": "<DATASET>\\pxhere-001004\\156292.jpg",
+          "score": 0.3207940332968829
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616109.jpg",
+          "score": 0.3207123027660173
+        },
+        {
+          "path": "<DATASET>\\pxhere-000503\\900288.jpg",
+          "score": 0.32064431623371636
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1095415.jpg",
+          "score": 0.32042277549858067
+        },
+        {
+          "path": "<DATASET>\\pxhere-000646\\716760.jpg",
+          "score": 0.3203393590733659
+        },
+        {
+          "path": "<DATASET>\\pxhere-000191\\1368894.jpg",
+          "score": 0.3202831223886277
+        },
+        {
+          "path": "<DATASET>\\pxhere-000765\\570954.jpg",
+          "score": 0.31998795773460426
+        },
+        {
+          "path": "<DATASET>\\pxhere-000072\\1585233.jpg",
+          "score": 0.31984107138342266
+        },
+        {
+          "path": "<DATASET>\\pxhere-000400\\1043699.jpg",
+          "score": 0.3195436152981162
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<DATASET>\\pxhere-000168\\1400508.jpg",
+          "score": 0.3215060582288004
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\76071.jpg",
+          "score": 0.3186979592015875
+        },
+        {
+          "path": "<DATASET>\\pxhere-001000\\160502.jpg",
+          "score": 0.31711403899909807
+        },
+        {
+          "path": "<DATASET>\\pxhere-000359\\1096140.jpg",
+          "score": 0.3163795045227695
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Ori\\48d35686ff74f1abb511a4151beeb009.png",
+          "score": 0.3163382736626353
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47345.jpg",
+          "score": 0.31566774118380053
+        },
+        {
+          "path": "<DATASET>\\pxhere-000909\\334452.jpg",
+          "score": 0.31506921000909394
+        },
+        {
+          "path": "<DATASET>\\pxhere-000789\\545573.jpg",
+          "score": 0.3149732198309742
+        },
+        {
+          "path": "<DATASET>\\pxhere-000120\\1485327.jpg",
+          "score": 0.3148996800809953
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\48d35686ff74f1abb511a4151beeb009_720.png",
+          "score": 0.3148063196747292
+        },
+        {
+          "path": "<DATASET>\\pxhere-000096\\1535343.jpg",
+          "score": 0.31477683752341507
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\47228.jpg",
+          "score": 0.31372528414025164
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\807797.jpg",
+          "score": 0.31368067856879267
+        },
+        {
+          "path": "<DATASET>\\pxhere-000597\\775387.jpg",
+          "score": 0.31366347325547544
+        },
+        {
+          "path": "<DATASET>\\pxhere-000072\\1585233.jpg",
+          "score": 0.312958841091641
+        },
+        {
+          "path": "<DATASET>\\pxhere-001004\\156292.jpg",
+          "score": 0.31183813928361864
+        },
+        {
+          "path": "<DATASET>\\pxhere-000765\\570669.jpg",
+          "score": 0.3113783915630232
+        },
+        {
+          "path": "<DATASET>\\pxhere-000646\\716760.jpg",
+          "score": 0.3107985927720995
+        },
+        {
+          "path": "<DATASET>\\pxhere-000622\\745841.jpg",
+          "score": 0.3104516894573923
+        },
+        {
+          "path": "<DATASET>\\pxhere-000980\\183103.jpg",
+          "score": 0.31041904645079516
+        }
+      ]
+    },
+    {
+      "zh": "高跟鞋",
+      "en": "high heels",
+      "overlapMulti": 8,
+      "overlapClip": 6,
+      "zhTop": [
+        {
+          "path": "<USER_HOME>\\picbz\\ham-kris-dkZdhArCDPw-unsplash.jpg",
+          "score": 0.2872239437883801
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\thibaut-santy-gK0pGWfeOlI-unsplash.jpg",
+          "score": 0.2862349087424299
+        },
+        {
+          "path": "<DATASET>\\pxhere-001004\\155024.jpg",
+          "score": 0.2844885450556578
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-33659069.jpg",
+          "score": 0.28394741524951206
+        },
+        {
+          "path": "<DATASET>\\pxhere-000263\\1223729.jpg",
+          "score": 0.28347052021172453
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\apostolos-vamvouras-LGOxxK9yON8-unsplash.jpg",
+          "score": 0.28335385004469743
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1269974.jpg",
+          "score": 0.28269191790728193
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\heels-5492851.jpg",
+          "score": 0.2824078594760593
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\75773.jpg",
+          "score": 0.2817565843789002
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7510447464564440532_7510447464564440531\\tile_files\\11\\2_3.jpeg",
+          "score": 0.28093035820056494
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-10686370.jpg",
+          "score": 0.2808573046130553
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\f91f43bdf08d7b31ed37a00ac849bb1426acd055.jpg",
+          "score": 0.2808138451321923
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-04\\Thumb\\60aa1673837560dd81de3aecf7f448fd_0.png",
+          "score": 0.28080447239801987
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1268227.jpg",
+          "score": 0.2800205968516676
+        },
+        {
+          "path": "<DATASET>\\pxhere-000100\\1528833.jpg",
+          "score": 0.27933947172197215
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7533812082384765098_7533812082384765097\\tile_files\\11\\1_3.jpeg",
+          "score": 0.27885696806160853
+        },
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2026-05\\80ab068da3cd11547995d3997d4bc661.jpg",
+          "score": 0.27876073753971703
+        },
+        {
+          "path": "<DATASET>\\pxhere-000789\\544706.jpg",
+          "score": 0.27806269392102523
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\05f233c74c87a0a3dcdf5d89c3532be4_720.jpg",
+          "score": 0.2780519526088121
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\konstantin-shmatov-IjSCuhYBc-8-unsplash.jpg",
+          "score": 0.2780098257686125
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<USER_HOME>\\picbz\\thibaut-santy-gK0pGWfeOlI-unsplash.jpg",
+          "score": 0.3183906116893429
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-10686370.jpg",
+          "score": 0.3170164510078682
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-04\\Thumb\\60aa1673837560dd81de3aecf7f448fd_0.png",
+          "score": 0.31558317378396145
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Ori\\05f233c74c87a0a3dcdf5d89c3532be4.jpg",
+          "score": 0.3151743407473152
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\05f233c74c87a0a3dcdf5d89c3532be4_720.jpg",
+          "score": 0.31434431079066916
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\ham-kris-dkZdhArCDPw-unsplash.jpg",
+          "score": 0.3131466207245496
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7635270874905013720_7635270874905013719\\tile_files\\13\\4_8.jpeg",
+          "score": 0.3128002341007922
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\e7fb5822615ecaed3fde009ac3bb9d1fb59f4556.jpg",
+          "score": 0.31258536685506333
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\woody-yan-2rSG24qrxEw-unsplash.jpg",
+          "score": 0.31183160464822945
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\apostolos-vamvouras-LGOxxK9yON8-unsplash.jpg",
+          "score": 0.3105680231652673
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-32285212.jpg",
+          "score": 0.30912139972640046
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\f91f43bdf08d7b31ed37a00ac849bb1426acd055.jpg",
+          "score": 0.3088656420258082
+        },
+        {
+          "path": "<DATASET>\\pxhere-000100\\1528825.jpg",
+          "score": 0.30683813871233506
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7635647444727799954_7635647444727799953\\tile_files\\14\\1_20.jpeg",
+          "score": 0.3066026403659889
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-33659069.jpg",
+          "score": 0.3061514451271275
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\8e00a6bf73514164a748c369f5ec78e4bcb44441\\0194cb8d73fd2f708ed4c0598639146053f59452.jpg",
+          "score": 0.3059344799063372
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\8e00a6bf73514164a748c369f5ec78e4bcb44441\\0194cb8d73fd2f708ed4c0598639146053f59452.jpg",
+          "score": 0.3059344799063372
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\8e00a6bf73514164a748c369f5ec78e4bcb44441\\0194cb8d73fd2f708ed4c0598639146053f59452.jpg",
+          "score": 0.3059344799063372
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\8e00a6bf73514164a748c369f5ec78e4bcb44441\\0194cb8d73fd2f708ed4c0598639146053f59452.jpg",
+          "score": 0.3059344799063372
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-06\\Thumb\\80c041cd0dc41bbe8533f274696cf748_0.png",
+          "score": 0.3052408752212017
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<USER_HOME>\\picbz\\ham-kris-dkZdhArCDPw-unsplash.jpg",
+          "score": 0.32858080348593144
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\thibaut-santy-gK0pGWfeOlI-unsplash.jpg",
+          "score": 0.3284393286431217
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-10686370.jpg",
+          "score": 0.3263112494390969
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\f91f43bdf08d7b31ed37a00ac849bb1426acd055.jpg",
+          "score": 0.32168815460910516
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\e7fb5822615ecaed3fde009ac3bb9d1fb59f4556.jpg",
+          "score": 0.3173583151845093
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-kowalievska-1360146.jpg",
+          "score": 0.31627921942390885
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-rankzl-192436742-17826424.jpg",
+          "score": 0.316075418632662
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\woody-yan-2rSG24qrxEw-unsplash.jpg",
+          "score": 0.31569451133690174
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nuta-sorokina-8514313.jpg",
+          "score": 0.3133554250253736
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\ksenia-gord-79uq9Ohs2jo-unsplash.jpg",
+          "score": 0.3130398863777785
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-04\\Thumb\\60aa1673837560dd81de3aecf7f448fd_0.png",
+          "score": 0.3128797053922435
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-jose-martin-segura-benites-1422456152-27100536.jpg",
+          "score": 0.31104800454771636
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-thelazyartist-1446524.jpg",
+          "score": 0.31074818731430137
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7635270874905013720_7635270874905013719\\tile_files\\13\\4_8.jpeg",
+          "score": 0.3105282031115866
+        },
+        {
+          "path": "<DATASET>\\pxhere-000240\\1269074.jpg",
+          "score": 0.3099102636226589
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\81de9a22ba9496d91d357d4206f6a36a_720.jpg",
+          "score": 0.3091013374818369
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\81de9a22ba9496d91d357d4206f6a36a.jpg",
+          "score": 0.3091013374818369
+        },
+        {
+          "path": "<DATASET>\\pxhere-000622\\745664.jpg",
+          "score": 0.30846889000932604
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\pexels-nadirvev-33659069.jpg",
+          "score": 0.30815404215645187
+        },
+        {
+          "path": "<USER_HOME>\\picbz\\femme-spirit-RGYBDUHYbyM-unsplash.jpg",
+          "score": 0.30813098304241593
+        }
+      ]
+    },
+    {
+      "zh": "动漫女孩",
+      "en": "anime girl",
+      "overlapMulti": 0,
+      "overlapClip": 0,
+      "zhTop": [
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2026-03\\048a0ecd41d1e5db49971c6ce1420204.jpg",
+          "score": 0.2708638828776262
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-04\\Thumb\\bae3302736c62cc7958d8e2238c2d06f_0.png",
+          "score": 0.2686071359532868
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-07\\Thumb\\a35d4d63e1037e22a66959a263f3bbcc_0.png",
+          "score": 0.2683953710830564
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-04\\Thumb\\9b8cad89f90f0d82e2463e0fa66892ec_0.png",
+          "score": 0.26676886174599296
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\ada5a4a49a11846989e05b08ab20feb4c2259914.jpg",
+          "score": 0.26675546010618745
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\ada5a4a49a11846989e05b08ab20feb4c2259914.jpg",
+          "score": 0.26675546010618745
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\ada5a4a49a11846989e05b08ab20feb4c2259914.jpg",
+          "score": 0.26675546010618745
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\ada5a4a49a11846989e05b08ab20feb4c2259914.jpg",
+          "score": 0.26675546010618745
+        },
+        {
+          "path": "<DATASET>\\pxhere-000884\\390675.jpg",
+          "score": 0.2657907262938955
+        },
+        {
+          "path": "<DATASET>\\pxhere-000191\\1370116.jpg",
+          "score": 0.2654167348525148
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\095c7f2f17757066b6902b5429936786b161deb2.jpg",
+          "score": 0.2653407312867165
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\095c7f2f17757066b6902b5429936786b161deb2.jpg",
+          "score": 0.2653407312867165
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\095c7f2f17757066b6902b5429936786b161deb2.jpg",
+          "score": 0.2653407312867165
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\806ebcef3b0a7ab67bf3d9cd18f4017bcbece553\\095c7f2f17757066b6902b5429936786b161deb2.jpg",
+          "score": 0.2653407312867165
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\0d0bb6fc3c45101aa43f60d4fe441722aa4525e9\\4b7db21275a5a36110d5bd9053ba45bf1b1f6173.jpg",
+          "score": 0.26513793994891216
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\0d0bb6fc3c45101aa43f60d4fe441722aa4525e9\\4b7db21275a5a36110d5bd9053ba45bf1b1f6173.jpg",
+          "score": 0.26513793994891216
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\0d0bb6fc3c45101aa43f60d4fe441722aa4525e9\\4b7db21275a5a36110d5bd9053ba45bf1b1f6173.jpg",
+          "score": 0.26513793994891216
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\0d0bb6fc3c45101aa43f60d4fe441722aa4525e9\\4b7db21275a5a36110d5bd9053ba45bf1b1f6173.jpg",
+          "score": 0.26513793994891216
+        },
+        {
+          "path": "<DATASET>\\pxhere-000191\\1369133.jpg",
+          "score": 0.26495449559878265
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\2fee6413e1e488f150295df34e30107ff497f237\\25a0ebdf236d29fa8d69ef3a7da4bf6647e6ecf2.jpg",
+          "score": 0.2647978366668695
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Ori\\da492e4b46b13a82f9b3223d27267a8c.jpg",
+          "score": 0.3176459469220648
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\baab93b7caf54b4e136918f1a26ea190_720.jpeg",
+          "score": 0.3138162918722084
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\da492e4b46b13a82f9b3223d27267a8c_0.jpg",
+          "score": 0.31370612310412593
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\4ff0aea39629e8c79c8ce566eac47bfb_720.jpg",
+          "score": 0.3126340725911763
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-07\\Thumb\\06b415fa48ecfdd1ccd004e570869a0d_0.png",
+          "score": 0.3100051060393952
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-06\\Thumb\\16aae1244972222e783aeb7b2bb31acb_0.png",
+          "score": 0.30991943039310554
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\31eeb3c4be2e6eac13f9b15626dc8fba_720.jpg",
+          "score": 0.30986992199996344
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\4ff0aea39629e8c79c8ce566eac47bfb_0.jpg",
+          "score": 0.309422752678868
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\641748f191a14a908f10165a36813c02b4f9ac86.jpg",
+          "score": 0.30935146602707586
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\641748f191a14a908f10165a36813c02b4f9ac86.jpg",
+          "score": 0.30935146602707586
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\641748f191a14a908f10165a36813c02b4f9ac86.jpg",
+          "score": 0.30935146602707586
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\641748f191a14a908f10165a36813c02b4f9ac86.jpg",
+          "score": 0.30935146602707586
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\1f7abc48a011db0bce716f70f890951c5d0e19eb.jpg",
+          "score": 0.30860652234294117
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\1f7abc48a011db0bce716f70f890951c5d0e19eb.jpg",
+          "score": 0.30860652234294117
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\1f7abc48a011db0bce716f70f890951c5d0e19eb.jpg",
+          "score": 0.30860652234294117
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\1f7abc48a011db0bce716f70f890951c5d0e19eb.jpg",
+          "score": 0.30860652234294117
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\61b61d908086d94d5d2a999b983f9f5791fdcbb3\\76d3bc2b53f3c028ba6bd7206f4a7f8b322e2324.jpg",
+          "score": 0.3085695926657084
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\61b61d908086d94d5d2a999b983f9f5791fdcbb3\\76d3bc2b53f3c028ba6bd7206f4a7f8b322e2324.jpg",
+          "score": 0.3085695926657084
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\61b61d908086d94d5d2a999b983f9f5791fdcbb3\\76d3bc2b53f3c028ba6bd7206f4a7f8b322e2324.jpg",
+          "score": 0.3085695926657084
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\61b61d908086d94d5d2a999b983f9f5791fdcbb3\\76d3bc2b53f3c028ba6bd7206f4a7f8b322e2324.jpg",
+          "score": 0.3085695926657084
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Video\\2026-07\\Thumb\\51c48da07d2527603ed4c182128ff167_0.png",
+          "score": 0.3070504417806006
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\6501a2926d97aa6df955b37e56d0b3cb_0.jpg",
+          "score": 0.3058719292881042
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Ori\\7aedef13adf8ef8c8f12c4e40ac3514b.jpg",
+          "score": 0.30562827585347024
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\6cdb79f7b97b6029f4bfe5ac471f1fca_720.jpg",
+          "score": 0.30551489516226427
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-06\\Thumb\\7aedef13adf8ef8c8f12c4e40ac3514b_0.jpg",
+          "score": 0.3052835634927033
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\6501a2926d97aa6df955b37e56d0b3cb_720.jpg",
+          "score": 0.3031647266925845
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\6cdb79f7b97b6029f4bfe5ac471f1fca_0.jpg",
+          "score": 0.30312213319340525
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\977651a4582e2ecf93b42919568b992c_0.jpg",
+          "score": 0.30239737954795
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\b41341f20a407fd243b3f7df4e36914b_0.jpg",
+          "score": 0.302170782444948
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\b41341f20a407fd243b3f7df4e36914b_720.jpg",
+          "score": 0.3015471821707223
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-04\\Thumb\\977651a4582e2ecf93b42919568b992c_720.jpg",
+          "score": 0.3014864557651758
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Ori\\d13e6e73eaf589ee8e113b7b000940cf.jpg",
+          "score": 0.301412820786174
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\f237c66ddfa627346cfd4704f0fe030f_720.jpg",
+          "score": 0.300684818532689
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-05\\Thumb\\d13e6e73eaf589ee8e113b7b000940cf_720.jpg",
+          "score": 0.30049410133173865
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\e44f95deebc16e74e5a045455db49f97_720.jpg",
+          "score": 0.29995939899572704
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\e44f95deebc16e74e5a045455db49f97.jpg",
+          "score": 0.29995939899572704
+        },
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2024-08\\91866523ed6e01a9adf401236254b767_thumb.jpg",
+          "score": 0.2993410126681336
+        },
+        {
+          "path": "<WECHAT_DATA>\\FileStorage\\Video\\2024-08\\03d766abfa19c94471436d347f6cf92d.jpg",
+          "score": 0.2993410126681336
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\958c3d447a2b12ff9bf4e1106dd808e2311fb833.jpg",
+          "score": 0.29759454221831566
+        },
+        {
+          "path": "<APP_DATA>\\media-search\\frames\\49ad33590d7e670489db93dd8922462593aef359\\958c3d447a2b12ff9bf4e1106dd808e2311fb833.jpg",
+          "score": 0.29759454221831566
+        }
+      ]
+    },
+    {
+      "zh": "汽车",
+      "en": "a car",
+      "overlapMulti": 9,
+      "overlapClip": 11,
+      "zhTop": [
+        {
+          "path": "<DATASET>\\pxhere-000909\\334473.jpg",
+          "score": 0.28501406329221524
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\d9b1ee2ce4cdd68c97a7067e811afc27.png",
+          "score": 0.28464583570897906
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\46871.jpg",
+          "score": 0.2841371143176275
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Thumb\\d9b1ee2ce4cdd68c97a7067e811afc27_720.png",
+          "score": 0.2836091700479106
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\75302.jpg",
+          "score": 0.28346472542950557
+        },
+        {
+          "path": "<DATASET>\\pxhere-000025\\1645857.jpg",
+          "score": 0.2829933342362132
+        },
+        {
+          "path": "<DATASET>\\pxhere-000382\\1067191.jpg",
+          "score": 0.2825530957149909
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\75276.jpg",
+          "score": 0.28228888597697865
+        },
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2026-07\\2c10c082f4e71f7af44f3bb6fc7ca53b.jpg",
+          "score": 0.2820981499846693
+        },
+        {
+          "path": "<DATASET>\\pxhere-000300\\1170378.jpg",
+          "score": 0.28111321855988136
+        },
+        {
+          "path": "<DATASET>\\pxhere-001052\\100464.jpg",
+          "score": 0.28076538413304153
+        },
+        {
+          "path": "<DATASET>\\pxhere-000500\\904801.jpg",
+          "score": 0.2804237093748804
+        },
+        {
+          "path": "<DATASET>\\pxhere-000407\\1031393.jpg",
+          "score": 0.280090336327354
+        },
+        {
+          "path": "<DATASET>\\pxhere-001052\\100586.jpg",
+          "score": 0.28005306358332227
+        },
+        {
+          "path": "<DATASET>\\pxhere-000860\\439224.jpg",
+          "score": 0.2797417314534152
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\806814.jpg",
+          "score": 0.27937764593258985
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616188.jpg",
+          "score": 0.2790822544571148
+        },
+        {
+          "path": "<DATASET>\\pxhere-000431\\1000389.jpg",
+          "score": 0.27878599910769236
+        },
+        {
+          "path": "<WECHAT_DATA>\\msg\\video\\2026-03\\1448e9a75bab06f3791982006e5f9e20.jpg",
+          "score": 0.2786838537978588
+        },
+        {
+          "path": "<DATASET>\\pxhere-000263\\1223390.jpg",
+          "score": 0.2785024391462745
+        }
+      ],
+      "enMultiTop": [
+        {
+          "path": "<DATASET>\\pxhere-000500\\904801.jpg",
+          "score": 0.30447662185035324
+        },
+        {
+          "path": "<DATASET>\\pxhere-000526\\869112.jpg",
+          "score": 0.30031245269819407
+        },
+        {
+          "path": "<DATASET>\\pxhere-001075\\75302.jpg",
+          "score": 0.2988989105071484
+        },
+        {
+          "path": "<DATASET>\\pxhere-000909\\334473.jpg",
+          "score": 0.2982379213001314
+        },
+        {
+          "path": "<DATASET>\\pxhere-000622\\745805.jpg",
+          "score": 0.2978686606186887
+        },
+        {
+          "path": "<DATASET>\\pxhere-000001\\1694032.jpg",
+          "score": 0.2936442502260706
+        },
+        {
+          "path": "<DATASET>\\pxhere-000813\\509600.jpg",
+          "score": 0.2931966496811232
+        },
+        {
+          "path": "<DATASET>\\pxhere-000400\\1044426.jpg",
+          "score": 0.2927661630128563
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\806814.jpg",
+          "score": 0.2921596759770934
+        },
+        {
+          "path": "<DATASET>\\pxhere-000741\\600288.jpg",
+          "score": 0.2921436624950986
+        },
+        {
+          "path": "<DATASET>\\pxhere-000860\\439224.jpg",
+          "score": 0.29079941214356897
+        },
+        {
+          "path": "<DATASET>\\pxhere-000407\\1031393.jpg",
+          "score": 0.2907262667251899
+        },
+        {
+          "path": "<DATASET>\\pxhere-000025\\1645098.jpg",
+          "score": 0.29038618246648806
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\806815.jpg",
+          "score": 0.29021417056307525
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\46871.jpg",
+          "score": 0.29021235234010884
+        },
+        {
+          "path": "<DATASET>\\pxhere-000622\\745844.jpg",
+          "score": 0.2896100716203128
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_temp\\7462730506583272277_7462730506583272276\\tile_files\\13\\3_5.jpeg",
+          "score": 0.28891062700754444
+        },
+        {
+          "path": "<DATASET>\\pxhere-000382\\1067191.jpg",
+          "score": 0.28881009595249313
+        },
+        {
+          "path": "<QQ_DATA>\\nt_qq\\nt_data\\Pic\\2026-07\\Ori\\d9b1ee2ce4cdd68c97a7067e811afc27.png",
+          "score": 0.28833214110151745
+        },
+        {
+          "path": "<DATASET>\\pxhere-000860\\439951.jpg",
+          "score": 0.28828614321193596
+        }
+      ],
+      "enClipTop": [
+        {
+          "path": "<DATASET>\\pxhere-001075\\75302.jpg",
+          "score": 0.31351666168556486
+        },
+        {
+          "path": "<DATASET>\\pxhere-000500\\904801.jpg",
+          "score": 0.3101164919185515
+        },
+        {
+          "path": "<DATASET>\\pxhere-001100\\46871.jpg",
+          "score": 0.3072928813689088
+        },
+        {
+          "path": "<DATASET>\\pxhere-000144\\1435063.jpg",
+          "score": 0.3037334458748966
+        },
+        {
+          "path": "<DATASET>\\pxhere-000001\\1694032.jpg",
+          "score": 0.30337093228755035
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\806814.jpg",
+          "score": 0.3031338373483661
+        },
+        {
+          "path": "<DATASET>\\pxhere-000860\\439224.jpg",
+          "score": 0.3023376419502796
+        },
+        {
+          "path": "<DATASET>\\pxhere-000300\\1170468.jpg",
+          "score": 0.3020831077457193
+        },
+        {
+          "path": "<DATASET>\\pxhere-000400\\1044426.jpg",
+          "score": 0.3019077808297404
+        },
+        {
+          "path": "<DATASET>\\pxhere-000813\\509539.jpg",
+          "score": 0.3010535121824747
+        },
+        {
+          "path": "<DATASET>\\pxhere-001052\\100586.jpg",
+          "score": 0.3009143396224689
+        },
+        {
+          "path": "<DATASET>\\pxhere-000025\\1645857.jpg",
+          "score": 0.30030694570353367
+        },
+        {
+          "path": "<DATASET>\\pxhere-000300\\1170378.jpg",
+          "score": 0.2994976798462717
+        },
+        {
+          "path": "<DATASET>\\pxhere-000574\\806815.jpg",
+          "score": 0.29948580393429713
+        },
+        {
+          "path": "<DATASET>\\pxhere-000909\\334473.jpg",
+          "score": 0.2990510032579804
+        },
+        {
+          "path": "<DATASET>\\pxhere-000980\\183261.jpg",
+          "score": 0.2984337416257727
+        },
+        {
+          "path": "<DATASET>\\pxhere-000407\\1031393.jpg",
+          "score": 0.29829435901971274
+        },
+        {
+          "path": "<DATASET>\\pxhere-000669\\687755.jpg",
+          "score": 0.2980440016377329
+        },
+        {
+          "path": "<DATASET>\\pxhere-000048\\1616659.jpg",
+          "score": 0.29784904493197994
+        },
+        {
+          "path": "<DATASET>\\pxhere-000431\\1000389.jpg",
+          "score": 0.2978372490728758
+        }
+      ]
+    }
+  ]
+}

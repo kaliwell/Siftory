@@ -1,0 +1,59 @@
+[
+  {
+    "id": "woman",
+    "en": "woman",
+    "zh": "女人",
+    "terms": ["woman", "girl", "female", "女人", "女孩", "女生"]
+  },
+  {
+    "id": "man",
+    "en": "man",
+    "zh": "男人",
+    "terms": ["man", "boy", "male", "男人", "男孩", "男生"]
+  },
+  { "id": "cat", "en": "cat", "zh": "猫", "terms": ["cat", "kitten", "猫", "小猫"] },
+  { "id": "dog", "en": "dog", "zh": "狗", "terms": ["dog", "puppy", "狗", "小狗"] },
+  { "id": "cow", "en": "cow", "zh": "牛", "terms": ["cow", "cattle", "牛", "奶牛"] },
+  {
+    "id": "anime",
+    "en": "anime character",
+    "zh": "动漫人物",
+    "terms": ["anime", "cartoon", "动漫", "动画", "二次元"]
+  },
+  {
+    "id": "gameplay",
+    "en": "video game gameplay",
+    "zh": "游戏画面",
+    "terms": ["game", "gameplay", "游戏", "实况"]
+  },
+  {
+    "id": "screenshot",
+    "en": "computer screenshot",
+    "zh": "电脑截图",
+    "terms": ["screenshot", "screen", "截图", "截屏"]
+  },
+  {
+    "id": "document",
+    "en": "document with text",
+    "zh": "文字文档",
+    "terms": ["document", "text", "文档", "文字"]
+  },
+  {
+    "id": "product",
+    "en": "product advertisement",
+    "zh": "产品广告",
+    "terms": ["product", "advertisement", "产品", "广告", "商品"]
+  },
+  {
+    "id": "food",
+    "en": "food on a table",
+    "zh": "桌上的食物",
+    "terms": ["food", "meal", "食物", "美食", "饭"]
+  },
+  {
+    "id": "landscape",
+    "en": "natural landscape",
+    "zh": "自然风景",
+    "terms": ["landscape", "nature", "风景", "自然", "景色"]
+  }
+]

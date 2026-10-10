@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NekoSearch Annotation</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #101210;
+        color: #e6eee6;
+        font:
+          14px/1.4 'Segoe UI',
+          sans-serif;
+        letter-spacing: 0;
+      }
+      header {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        border-bottom: 1px solid #354238;
+      }
+      select,
+      button {
+        height: 34px;
+        border: 1px solid #536658;
+        background: #1a211c;
+        color: inherit;
+        padding: 0 12px;
+      }
+      button:hover {
+        background: #29372d;
+      }
+      button:disabled {
+        opacity: 0.45;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        height: calc(100vh - 56px);
+      }
+      .viewer {
+        display: grid;
+        place-items: center;
+        min-width: 0;
+        padding: 20px;
+        background: #080a09;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+        max-height: calc(100vh - 110px);
+        object-fit: contain;
+      }
+      aside {
+        padding: 16px;
+        border-left: 1px solid #354238;
+        overflow: auto;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin: 16px 0;
+      }
+      .actions button {
+        height: 44px;
+      }
+      .relevant {
+        border-color: #28a768;
+      }
+      .not {
+        border-color: #c44c4c;
+      }
+      .unsure {
+        border-color: #b7963c;
+      }
+      .active {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+      }
+      .toolbar-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .meta {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+        color: #aeb9b0;
+      }
+      .progress {
+        margin-left: auto;
+        color: #aeb9b0;
+      }
+      .work-progress {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0;
+      }
+      progress {
+        width: 100%;
+        accent-color: #28a768;
+      }
+      kbd {
+        padding: 2px 5px;
+        border: 1px solid #536658;
+        background: #1a211c;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>NekoSearch Annotation</strong>
+      <select id="category"></select>
+      <button id="prev" title="Previous">←</button>
+      <button id="next" title="Next">→</button>
+      <label class="toolbar-check"><input id="priority" type="checkbox" checked />评测优先</label>
+      <span class="progress" id="progress"></span>
+    </header>
+    <main>
+      <section class="viewer"><img id="frame" alt="Candidate asset" /></section>
+      <aside>
+        <h2 id="query"></h2>
+        <div class="actions">
+          <button class="relevant" data-label="relevant">相关 <kbd>1</kbd></button>
+          <button class="not" data-label="not_relevant">不相关 <kbd>2</kbd></button>
+          <button class="unsure" data-label="unsure">不确定 <kbd>3</kbd></button>
+        </div>
+        <button id="clearLabel">清除当前标记 <kbd>0</kbd></button>
+        <button id="undo">撤销上次标记 <kbd>Ctrl+Z</kbd></button>
+        <div class="work-progress">
+          <progress id="overall" value="0" max="1"></progress><span id="percent">0%</span>
+        </div>
+        <div class="meta" id="stage"></div>
+        <div class="meta" id="eta"></div>
+        <p>
+          判断图片是否属于当前分类。预填标签来自素材库已确认/已拒绝关系，可直接改判。标记后自动进入下一张。
+        </p>
+        <div class="meta" id="message"></div>
+        <div class="meta" id="readiness"></div>
+        <div class="meta" id="meta"></div>
+      </aside>
+    </main>
+    <script>
+      let state,
+        categoryIndex = 0,
+        itemIndex = 0,
+        saving = false,
+        history = [],
+        decisionTimes = []
+      const benchmarkClassNames = {
+        people_characters: '人物/角色',
+        screenshots_text_ui: '截图与文字界面',
+        products_objects: '产品/物品',
+        animals: '动物',
+        scenes_environments: '场景/环境',
+      }
+      const $ = (id) => document.getElementById(id)
+      const categoryTitle = (category) =>
+        `${benchmarkClassNames[category.benchmarkClass] || '未映射语义类'} · ${category.name}`
+      async function load() {
+        state = await fetch('/api/state').then((response) => response.json())
+        refreshCategoryOptions()
+        jumpToNextUnjudged(true)
+        render()
+      }
+      function entriesFor(category) {
+        return state.judgments.judgments[String(category.id)] || {}
+      }
+      function labelOf(entry) {
+        return typeof entry === 'string' ? entry : entry && entry.label
+      }
+      function labelsFor(category) {
+        const entries = entriesFor(category)
+        const result = {}
+        Object.keys(entries).forEach((id) => (result[id] = labelOf(entries[id])))
+        return result
+      }
+      function countsFor(category) {
+        const values = Object.values(labelsFor(category))
+        return {
+          decided: values.filter((label) => label === 'relevant' || label === 'not_relevant')
+            .length,
+          unsure: values.filter((label) => label === 'unsure').length,
+        }
+      }
+      function refreshCategoryOptions() {
+        const selected = categoryIndex
+        $('category').replaceChildren()
+        state.dataset.categories.forEach((category, index) => {
+          const count = countsFor(category)
+          $('category').add(
+            new Option(
+              `${categoryTitle(category)} (${count.decided}/${category.candidates.length}${count.unsure ? ` · ?${count.unsure}` : ''})`,
+              index,
+            ),
+          )
+        })
+        $('category').value = String(selected)
+      }
+      function current() {
+        const category = state.dataset.categories[categoryIndex]
+        return { category, item: category.candidates[itemIndex] }
+      }
+      function isDecided(label) {
+        return label === 'relevant' || label === 'not_relevant'
+      }
+      function needsManualReview(category, item) {
+        return (state.reviewQueue?.[String(category.id)] || []).includes(item.id)
+      }
+      function needsWork(category, item) {
+        return !isDecided(labelsFor(category)[item.id]) || needsManualReview(category, item)
+      }
+      function candidateTier(item) {
+        const ranks = item.sources
+          .filter((source) => source.source === 'clip' || source.source === 'dino')
+          .map((source) => source.rank || Number.POSITIVE_INFINITY)
+        const rank = Math.min(...ranks)
+        if (rank <= 10) return 0
+        if (rank <= 20) return 1
+        if (rank <= 50) return 2
+        return 3
+      }
+      function tierStats() {
+        const tiers = [
+          { name: 'Top10', total: 0, decided: 0 },
+          { name: 'Top20', total: 0, decided: 0 },
+          { name: 'Top50', total: 0, decided: 0 },
+          { name: '候选池', total: 0, decided: 0 },
+        ]
+        state.dataset.categories.forEach((category) => {
+          const labels = labelsFor(category)
+          category.candidates.forEach((item) => {
+            const tier = tiers[candidateTier(item)]
+            tier.total += 1
+            if (isDecided(labels[item.id])) tier.decided += 1
+          })
+        })
+        return tiers
+      }
+      function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) return '计算中'
+        if (seconds < 60) return `${Math.ceil(seconds)} 秒`
+        if (seconds < 3600) return `${Math.ceil(seconds / 60)} 分钟`
+        return `${(seconds / 3600).toFixed(1)} 小时`
+      }
+      function readinessFor(category, k) {
+        const labels = labelsFor(category)
+        const ids = new Set(
+          [...category.rankings.clip.slice(0, k), ...category.rankings.dino.slice(0, k)].map(
+            (item) => item.id,
+          ),
+        )
+        const decided = [...ids].filter((id) => isDecided(labels[id])).length
+        return `${decided}/${ids.size}`
+      }
+      function render() {
+        const { category, item } = current()
+        $('frame').src = `/image?category=${encodeURIComponent(category.id)}&id=${item.id}`
+        $('query').textContent = categoryTitle(category)
+        const labels = labelsFor(category)
+        const categoryCounts = countsFor(category)
+        const total = state.dataset.categories.reduce(
+          (sum, entry) => sum + entry.candidates.length,
+          0,
+        )
+        const totalJudged = state.dataset.categories.reduce(
+          (sum, entry) => sum + countsFor(entry).decided,
+          0,
+        )
+        $('progress').textContent =
+          `${itemIndex + 1}/${category.candidates.length} · 本组 ${categoryCounts.decided}${categoryCounts.unsure ? ` (?${categoryCounts.unsure})` : ''} · 总计 ${totalJudged}/${total}`
+        $('overall').max = total
+        $('overall').value = totalJudged
+        $('percent').textContent = `${((totalJudged / Math.max(1, total)) * 100).toFixed(1)}%`
+        const stages = tierStats()
+        const activeStage = stages.find((stage) => stage.decided < stage.total)
+        $('stage').textContent = activeStage
+          ? `当前阶段：${activeStage.name} ${activeStage.decided}/${activeStage.total}`
+          : '全部候选已明确判断'
+        const remaining = total - totalJudged
+        if (decisionTimes.length >= 2) {
+          const elapsed = (decisionTimes.at(-1) - decisionTimes[0]) / 1000
+          const rate = (decisionTimes.length - 1) / Math.max(1, elapsed)
+          $('eta').textContent =
+            `速度 ${(rate * 60).toFixed(1)} 项/分钟 · ETA ${formatDuration(remaining / rate)}`
+        } else $('eta').textContent = remaining > 0 ? '完成 2 项后显示速度和 ETA' : '已完成'
+        const entries = entriesFor(category)
+        const manual = Object.values(entries).filter(
+          (entry) =>
+            entry &&
+            typeof entry === 'object' &&
+            entry.origin === 'manual' &&
+            isDecided(entry.label),
+        ).length
+        const manualRatio = manual / Math.max(1, categoryCounts.decided)
+        $('readiness').textContent =
+          `评测覆盖：Top10 ${readinessFor(category, 10)} · Top20 ${readinessFor(category, 20)} · Top50 ${readinessFor(category, 50)}\n` +
+          `人工复核：${manual}/${categoryCounts.decided} (${(manualRatio * 100).toFixed(1)}%，ACC-02 目标 ≥70%)`
+        document
+          .querySelectorAll('[data-label]')
+          .forEach((button) =>
+            button.classList.toggle('active', button.dataset.label === labels[item.id]),
+          )
+        $('clearLabel').disabled = !labels[item.id] || saving
+        $('undo').disabled = history.length === 0 || saving
+        const entry = entriesFor(category)[item.id]
+        const origin =
+          entry && typeof entry === 'object' && entry.origin === 'seeded'
+            ? '预填（素材库）'
+            : entry
+              ? '人工'
+              : '未标注'
+        $('meta').textContent =
+          `${labels[item.id] || '未标注'} · ${origin}\n${item.path}\n${JSON.stringify(item.sources)}`
+        prefetchNext()
+      }
+      function move(delta) {
+        const count = current().category.candidates.length
+        itemIndex = (itemIndex + delta + count) % count
+        render()
+      }
+      function findNextUnjudged(
+        startCategory = categoryIndex,
+        startItem = itemIndex + 1,
+        fromStart = false,
+      ) {
+        if ($('priority').checked) {
+          const categoryCount = state.dataset.categories.length
+          const pending = []
+          state.dataset.categories.forEach((category, nextCategory) => {
+            const labels = labelsFor(category)
+            category.candidates.forEach((item, nextItem) => {
+              if (isDecided(labels[item.id]) && !needsManualReview(category, item)) return
+              const categoryDistance = fromStart
+                ? nextCategory
+                : (nextCategory - categoryIndex + categoryCount) % categoryCount || categoryCount
+              pending.push({
+                nextCategory,
+                nextItem,
+                tier: candidateTier(item),
+                categoryDistance,
+              })
+            })
+          })
+          pending.sort(
+            (a, b) =>
+              a.tier - b.tier || a.categoryDistance - b.categoryDistance || a.nextItem - b.nextItem,
+          )
+          return pending.length > 0 ? [pending[0].nextCategory, pending[0].nextItem] : null
+        }
+        for (
+          let categoryOffset = 0;
+          categoryOffset < state.dataset.categories.length;
+          categoryOffset += 1
+        ) {
+          const nextCategory = (startCategory + categoryOffset) % state.dataset.categories.length
+          const category = state.dataset.categories[nextCategory]
+          const labels = labelsFor(category)
+          const first = categoryOffset === 0 ? startItem : 0
+          for (let offset = 0; offset < category.candidates.length; offset += 1) {
+            const nextItem = (first + offset) % category.candidates.length
+            if (needsWork(category, category.candidates[nextItem]))
+              return [nextCategory, nextItem]
+          }
+        }
+        return null
+      }
+      function jumpToNextUnjudged(fromStart = false) {
+        const match = findNextUnjudged(
+          fromStart ? 0 : categoryIndex,
+          fromStart ? 0 : itemIndex + 1,
+          fromStart,
+        )
+        if (!match) return false
+        ;[categoryIndex, itemIndex] = match
+        $('category').value = String(categoryIndex)
+        return true
+      }
+      function advance() {
+        if (jumpToNextUnjudged()) render()
+        else move(1)
+      }
+      function prefetchNext() {
+        const match = findNextUnjudged()
+        if (!match) return
+        const category = state.dataset.categories[match[0]]
+        const item = category.candidates[match[1]]
+        new Image().src = `/image?category=${encodeURIComponent(category.id)}&id=${item.id}`
+      }
+      async function saveLabel(category, item, label) {
+        const response = await fetch('/api/judgment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categoryId: category.id, id: item.id, label }),
+        })
+        if (!response.ok) throw new Error(`Save failed: ${response.status}`)
+      }
+      async function judge(label, options = {}) {
+        if (saving) return
+        saving = true
+        const { category, item } = current()
+        const labels = labelsFor(category)
+        const previous = labels[item.id]
+        try {
+          await saveLabel(category, item, label)
+          const bucket = (state.judgments.judgments[String(category.id)] ||= {})
+          if (label === 'unlabeled') delete bucket[item.id]
+          else bucket[item.id] = { label, origin: 'manual', updatedAt: new Date().toISOString() }
+          if (label !== 'unlabeled')
+            state.reviewQueue[String(category.id)] = (
+              state.reviewQueue[String(category.id)] || []
+            ).filter((id) => id !== item.id)
+          if (!isDecided(previous) && isDecided(label)) decisionTimes.push(Date.now())
+          if (!options.skipHistory)
+            history.push({ categoryIndex, itemIndex, previous: previous || 'unlabeled' })
+          $('message').textContent = '已保存'
+          refreshCategoryOptions()
+          if (options.stay) render()
+          else advance()
+        } catch (error) {
+          $('message').textContent = error.message
+        } finally {
+          saving = false
+          render()
+        }
+      }
+      async function undo() {
+        if (saving || history.length === 0) return
+        const entry = history.pop()
+        categoryIndex = entry.categoryIndex
+        itemIndex = entry.itemIndex
+        $('category').value = String(categoryIndex)
+        await judge(entry.previous, { skipHistory: true, stay: true })
+      }
+      $('category').onchange = (event) => {
+        categoryIndex = Number(event.target.value)
+        itemIndex = 0
+        const category = state.dataset.categories[categoryIndex]
+        const index = category.candidates.findIndex((item) => needsWork(category, item))
+        if (index >= 0) itemIndex = index
+        render()
+      }
+      $('priority').onchange = () => {
+        jumpToNextUnjudged()
+        render()
+      }
+      $('prev').onclick = () => move(-1)
+      $('next').onclick = () => move(1)
+      $('clearLabel').onclick = () => judge('unlabeled', { stay: true })
+      $('undo').onclick = undo
+      document
+        .querySelectorAll('[data-label]')
+        .forEach((button) => (button.onclick = () => judge(button.dataset.label)))
+      addEventListener('keydown', (event) => {
+        if (event.key === '1') judge('relevant')
+        else if (event.key === '2') judge('not_relevant')
+        else if (event.key === '3') judge('unsure')
+        else if (event.key === '0') judge('unlabeled', { stay: true })
+        else if (event.ctrlKey && event.key.toLowerCase() === 'z') {
+          event.preventDefault()
+          undo()
+        } else if (event.key === 'ArrowLeft') move(-1)
+        else if (event.key === 'ArrowRight') move(1)
+      })
+      load()
+    </script>
+  </body>
+</html>

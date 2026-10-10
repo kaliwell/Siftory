@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "dist-electron",
+    "tsBuildInfoFile": "node_modules/.cache/floating-clock/tsconfig.node.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "sharp": ["node_modules/sharp/lib/index.d.ts"]
+    }
+  },
+  "include": ["electron", "shared"]
+}

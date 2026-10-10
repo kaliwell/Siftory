@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; media-src file:; script-src 'self'; style-src 'unsafe-inline'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Siftory 媒体播放器</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        color-scheme: dark;
+        background: #080b10;
+      }
+      #player-stage {
+        position: relative;
+        display: grid;
+        width: 100%;
+        height: 100%;
+        place-items: center;
+      }
+      video {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        background: #000;
+      }
+      #player-overlay {
+        position: absolute;
+        z-index: 3;
+        top: 10px;
+        left: 50%;
+        display: flex;
+        width: min(880px, calc(100% - 20px));
+        max-height: calc(100% - 78px);
+        box-sizing: border-box;
+        flex-direction: column;
+        gap: 7px;
+        transform: translateX(-50%);
+        pointer-events: none;
+      }
+      .player-panel {
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        color: #eef5ff;
+        background: rgba(8, 11, 16, 0.82);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+        font:
+          12px/1.35 system-ui,
+          sans-serif;
+        backdrop-filter: blur(10px);
+        pointer-events: auto;
+      }
+      #hit-panel[hidden] {
+        display: none;
+      }
+      .hit-toolbar,
+      .hit-meta,
+      .clip-export-heading,
+      .clip-export-row,
+      .clip-precision-row,
+      .clip-range-row {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .hit-toolbar button,
+      .player-panel button {
+        min-height: 27px;
+        box-sizing: border-box;
+        padding: 3px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        color: inherit;
+        background: rgba(255, 255, 255, 0.08);
+        cursor: pointer;
+      }
+      .player-panel button:disabled,
+      .player-panel input:disabled,
+      .player-panel select:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      #hit-position {
+        min-width: 0;
+        font-weight: 650;
+      }
+      #hit-query,
+      #hit-text,
+      #hit-evidence {
+        margin-top: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #hit-query,
+      #hit-evidence,
+      #hit-hotkeys {
+        color: rgba(238, 245, 255, 0.67);
+      }
+      #hit-range-track {
+        position: relative;
+        height: 3px;
+        margin-top: 7px;
+        overflow: hidden;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+      #hit-range-marker {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        min-width: 3px;
+        border-radius: inherit;
+        background: #5fd7ff;
+      }
+      #hit-hotkeys {
+        margin-left: auto;
+        font-size: 10px;
+      }
+      .clip-export-heading strong {
+        font-size: 13px;
+      }
+      #selection-summary {
+        min-width: 0;
+        flex: 1 1 auto;
+        color: #8ee6ff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #toggle-export {
+        margin-left: auto;
+      }
+      #clip-export-panel.is-collapsed #clip-export-body {
+        display: none;
+      }
+      #clip-export-body {
+        display: grid;
+        margin-top: 7px;
+        gap: 6px;
+      }
+      #selection-timeline {
+        display: grid;
+        gap: 3px;
+      }
+      #selection-track {
+        position: relative;
+        height: 12px;
+        overflow: visible;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 7px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+      }
+      #selection-track:focus-visible {
+        border-color: #8ee6ff;
+        box-shadow: 0 0 0 2px rgba(95, 215, 255, 0.25);
+      }
+      #selection-range-fill {
+        position: absolute;
+        top: 1px;
+        bottom: 1px;
+        min-width: 2px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, rgba(44, 192, 225, 0.72), rgba(76, 226, 164, 0.8));
+        pointer-events: none;
+      }
+      #selection-track[data-looping='true'] #selection-range-fill {
+        background: linear-gradient(90deg, rgba(44, 192, 225, 0.92), rgba(76, 226, 164, 0.96));
+        box-shadow: 0 0 8px rgba(76, 226, 164, 0.42);
+      }
+      #selection-playhead,
+      .selection-edge-marker {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        border-radius: 2px;
+        transform: translateX(-1px);
+        pointer-events: none;
+      }
+      #selection-playhead {
+        z-index: 2;
+        background: #fff;
+        box-shadow: 0 0 4px rgba(255, 255, 255, 0.9);
+      }
+      .selection-edge-marker {
+        z-index: 1;
+        width: 3px;
+        transform: translateX(-1.5px);
+        background: #4ce2a4;
+      }
+      .selection-timeline-labels {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        color: rgba(238, 245, 255, 0.62);
+        font-size: 10px;
+      }
+      #selection-current-time {
+        color: #eef5ff;
+      }
+      #selection-total-time {
+        text-align: right;
+      }
+      .clip-time-field {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .clip-time-field input {
+        width: 108px;
+        font-variant-numeric: tabular-nums;
+      }
+      .clip-precision-row {
+        padding: 5px 6px;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+      .clip-frame-stepper {
+        display: inline-flex;
+        min-width: 0;
+        align-items: center;
+        gap: 4px;
+      }
+      .precision-label {
+        color: rgba(238, 245, 255, 0.76);
+        white-space: nowrap;
+      }
+      .frame-index-output {
+        min-width: 70px;
+        color: #8ee6ff;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+      .precision-hint {
+        min-width: 190px;
+        flex: 1 1 230px;
+        color: rgba(238, 245, 255, 0.56);
+        text-align: right;
+        font-size: 10px;
+      }
+      .clip-range-row label {
+        display: grid;
+        min-width: 180px;
+        flex: 1 1 260px;
+        grid-template-columns: 28px minmax(120px, 1fr);
+        align-items: center;
+        gap: 5px;
+      }
+      .clip-range-row input[type='range'] {
+        width: 100%;
+        accent-color: #55cdec;
+      }
+      .player-panel input,
+      .player-panel select {
+        min-height: 27px;
+        box-sizing: border-box;
+        padding: 3px 6px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        color: inherit;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .loop-selection-toggle {
+        display: inline-flex;
+        min-height: 27px;
+        align-items: center;
+        gap: 4px;
+        padding: 0 6px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+      }
+      .loop-selection-toggle input {
+        min-height: auto;
+        accent-color: #4ce2a4;
+      }
+      #export-status {
+        min-width: 0;
+        flex: 1 1 220px;
+        color: rgba(238, 245, 255, 0.72);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #export-status[data-state='error'] {
+        color: #ff9a9a;
+      }
+      #export-status[data-state='success'] {
+        color: #8cf0bd;
+      }
+      @media (max-width: 520px) {
+        #player-overlay {
+          top: 4px;
+          width: calc(100% - 8px);
+          max-height: calc(100% - 66px);
+          overflow-y: auto;
+        }
+        .player-panel {
+          padding: 6px;
+        }
+        #hit-hotkeys {
+          width: 100%;
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="player-stage">
+      <video controls autoplay preload="auto" aria-label="媒体播放器"></video>
+      <div id="player-overlay">
+        <section id="clip-export-panel" class="player-panel" aria-label="片段导出">
+          <div class="clip-export-heading">
+            <strong id="export-title">片段导出</strong>
+            <span id="selection-summary"></span>
+            <button id="toggle-export" type="button">收起</button>
+          </div>
+          <div id="clip-export-body">
+            <div class="clip-export-row">
+              <label class="clip-time-field">
+                <span id="start-label">开始</span>
+                <input
+                  id="clip-start"
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value="0.000"
+                  aria-describedby="precision-hint"
+                />
+              </label>
+              <button id="set-clip-start" type="button">设为当前</button>
+              <label class="clip-time-field">
+                <span id="end-label">结束</span>
+                <input
+                  id="clip-end"
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value="3.000"
+                  aria-describedby="precision-hint"
+                />
+              </label>
+              <button id="set-clip-end" type="button">设为当前</button>
+              <button id="use-hit-range" type="button" hidden>使用命中范围</button>
+            </div>
+            <div class="clip-precision-row">
+              <div class="clip-frame-stepper" role="group" aria-labelledby="start-precision-label">
+                <span id="start-precision-label" class="precision-label">入点精调</span>
+                <button id="start-frame-back" type="button">−1 帧</button>
+                <output id="start-frame-value" class="frame-index-output">F 000000</output>
+                <button id="start-frame-forward" type="button">+1 帧</button>
+              </div>
+              <div class="clip-frame-stepper" role="group" aria-labelledby="end-precision-label">
+                <span id="end-precision-label" class="precision-label">出点精调</span>
+                <button id="end-frame-back" type="button">−1 帧</button>
+                <output id="end-frame-value" class="frame-index-output">F 000075</output>
+                <button id="end-frame-forward" type="button">+1 帧</button>
+              </div>
+              <span id="precision-hint" class="precision-hint"
+                >数值框 ↑/↓：1 毫秒 · Shift+↑/↓：1 帧</span
+              >
+            </div>
+            <div id="selection-timeline">
+              <div
+                id="selection-track"
+                role="slider"
+                tabindex="0"
+                aria-label="视频选区进度"
+                aria-valuemin="0"
+                aria-valuemax="3"
+                aria-valuenow="0"
+              >
+                <div id="selection-range-fill"></div>
+                <div id="selection-start-marker" class="selection-edge-marker"></div>
+                <div id="selection-end-marker" class="selection-edge-marker"></div>
+                <div id="selection-playhead"></div>
+              </div>
+              <div class="selection-timeline-labels">
+                <span>0:00</span>
+                <span id="selection-current-time">0:00.000</span>
+                <span id="selection-total-time">0:03.000</span>
+              </div>
+            </div>
+            <div class="clip-range-row">
+              <label>
+                <span id="in-label">入点</span>
+                <input id="clip-start-range" type="range" min="0" max="3" step="0.001" value="0" />
+              </label>
+              <label>
+                <span id="out-label">出点</span>
+                <input id="clip-end-range" type="range" min="0" max="3" step="0.001" value="3" />
+              </label>
+            </div>
+            <div class="clip-export-row">
+              <label class="clip-time-field">
+                <span id="frame-rate-label">帧率</span>
+                <select id="timeline-frame-rate">
+                  <option value="23.976">23.976 fps</option>
+                  <option value="24">24 fps</option>
+                  <option value="25" selected>25 fps</option>
+                  <option value="29.97">29.97 fps</option>
+                  <option value="30">30 fps</option>
+                  <option value="50">50 fps</option>
+                  <option value="59.94">59.94 fps</option>
+                  <option value="60">60 fps</option>
+                </select>
+              </label>
+              <label class="loop-selection-toggle">
+                <input id="loop-selection" type="checkbox" />
+                <span id="loop-selection-label">循环选区</span>
+              </label>
+              <button id="export-video" type="button">导出 MP4</button>
+              <button id="export-edl" type="button">导出 EDL</button>
+              <button id="export-fcpxml" type="button">导出 FCPXML</button>
+              <output id="export-status" aria-live="polite"></output>
+            </div>
+          </div>
+        </section>
+        <section id="hit-panel" class="player-panel" hidden aria-live="polite">
+          <div class="hit-toolbar">
+            <button id="previous-hit" type="button">← 上一处</button>
+            <span id="hit-position"></span>
+            <button id="next-hit" type="button">下一处 →</button>
+            <span id="hit-hotkeys">Alt+← / Alt+→</span>
+          </div>
+          <div id="hit-query"></div>
+          <div id="hit-text"></div>
+          <div id="hit-evidence"></div>
+          <div id="hit-range-track"><div id="hit-range-marker"></div></div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/src/mediaPlayer.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "kind": "siftory-individual-software-copyright-registration-draft",
+  "jurisdiction": "CN",
+  "status": "review-candidate-not-submitted",
+  "confirmedByUser": {
+    "registrationType": "computer-software-copyright",
+    "rightsholderType": "individual",
+    "confirmedOn": "2026-09-24"
+  },
+  "software": {
+    "proposedFullName": "Siftory（寻藏）智能素材检索与管理软件",
+    "proposedShortName": "Siftory（寻藏）",
+    "version": "V1.0.0",
+    "nameConfirmed": false,
+    "developmentCompletedOn": null,
+    "publicationStatus": null,
+    "firstPublishedOn": null,
+    "firstPublishedCountryAndCity": null,
+    "developmentMethod": null,
+    "rightsAcquisitionMethod": null,
+    "rightsScope": null,
+    "originalSoftwareRegistration": null,
+    "sourceSelectionSha256": null
+  },
+  "individual": {
+    "legalName": null,
+    "nationality": null,
+    "identityDocumentReference": null,
+    "contactReference": null,
+    "storageInstruction": "Fill actual identity and contact evidence outside the source repository or directly in the official account. Do not commit identity scans, addresses or document numbers."
+  },
+  "ownershipEvidence": {
+    "employmentOrDutyRelated": null,
+    "coDevelopers": null,
+    "commissionedDevelopment": null,
+    "assignmentOrInheritance": null,
+    "writtenAgreementReferences": [],
+    "humanCreativeContributionStatement": null,
+    "aiAssistanceDescription": null,
+    "externalCodeOriginsReviewed": false,
+    "thirdPartyExclusionsReviewed": false
+  },
+  "technicalDraft": {
+    "platform": "Windows x64",
+    "programmingLanguages": ["TypeScript", "JavaScript", "C++", "CUDA C++", "CSS"],
+    "developmentEnvironment": "Node.js 24.16.0 / npm 11.13.0 / TypeScript 5.9 / Electron 42.8 / React 19 / Vite 7; native build uses MSVC and node-gyp",
+    "purpose": "为本地图片、视频和关联素材提供检索、分类、管理及检索结果导出。",
+    "mainFunctions": "来源目录与状态管理、统一文字与图片查询、图片视觉检索、视频抽帧及时间点定位、可选视频与音频语义检索、素材分类标签与集合、重复文件分析、播放器与片段导出、加密便携备份、文件管理和SSH/SFTP工具。",
+    "technicalCharacteristics": "Electron主进程与沙盒渲染进程通过类型化IPC通信；Native扫描、模型子进程和向量索引支撑本地检索；任务调度、原子提交、来源状态复核和权限边界保护文件与索引一致性。",
+    "codeLineCount": null,
+    "minimumHardware": "以候选版本实测范围填写；AI模型能力依赖相应内存、显存和运行时，不从开发机配置推定最低配置。"
+  },
+  "submission": {
+    "officialAccountVerified": false,
+    "officialFormGenerated": false,
+    "identityEvidenceReady": false,
+    "ownershipEvidenceReady": false,
+    "nameVersionAndDatesConfirmed": false,
+    "candidateMaterialsReviewed": false,
+    "signedByRightsholder": false,
+    "submitted": false,
+    "applicationNumber": null,
+    "note": "This draft is an information checklist, not an official application form, legal ownership determination or authorization."
+  }
+}

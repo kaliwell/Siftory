@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "kind": "floating-clock-commercial-release-decisions",
+  "brand": {
+    "status": "engineering-adopted-legal-clearance-pending",
+    "globalName": "Siftory",
+    "zhCNName": "寻藏",
+    "displayName": "Siftory · 寻藏",
+    "adoptedAt": "2026-08-17",
+    "trademarkClearanceStatus": "pending",
+    "domainDecisionStatus": "pending",
+    "legacyCompatibilityIdentifiers": [
+      "com.floating-clock.electron",
+      "floating-clock-electron",
+      "floating_clock_settings.json",
+      "FLOATING_CLOCK_*"
+    ],
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidence": [
+      "docs/current/2026-08-17-commercial-release-readiness.md#2-品牌命名方案"
+    ],
+    "pendingReason": "The engineering rename is complete, but target-market trademark clearance, domain selection and legal approval are pending."
+  },
+  "publisher": {
+    "status": "selected",
+    "type": "individual",
+    "selectedAt": "2026-08-17",
+    "selectionEvidence": ["docs/current/2026-08-17-commercial-release-readiness.md#1-当前判定"],
+    "publicPublisherName": null,
+    "publicContact": null,
+    "releaseTerritories": [],
+    "signingIdentity": null,
+    "identityEvidenceRef": null,
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidence": [],
+    "pendingReason": "Individual publisher mode is selected; public identity, secure off-repository identity evidence, territories and signing identity are pending."
+  },
+  "policies": {
+    "privacy": {
+      "status": "pending",
+      "file": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "pendingReason": "Publisher identity, territories, privacy contact and final policy review are pending."
+    },
+    "securityAndSupport": {
+      "status": "pending",
+      "file": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "pendingReason": "Security contact, update channel, support lifecycle and final policy review are pending."
+    }
+  }
+}

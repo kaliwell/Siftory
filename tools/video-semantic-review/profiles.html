@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080c12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>VID-016 多类型视频样本验收</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="profile-review-page">
+    <div id="fatal" class="fatal" hidden></div>
+    <header class="profile-header">
+      <div>
+        <p id="pageEyebrow" class="eyebrow">VID-016 · 真实素材分层验收</p>
+        <h1 id="pageTitle">多类型视频样本库</h1>
+        <p id="pageLede" class="lede">
+          播放中间 20 秒，确认它属于哪一类。每类满 10 条后，才会进入 Qwen 召回、幻觉和时间点基准。
+        </p>
+      </div>
+      <div class="profile-header-actions">
+        <button id="exportSummary" class="ghost-button" type="button">导出匿名样本集</button>
+      </div>
+    </header>
+
+    <section class="profile-overview" aria-label="验收进度">
+      <div class="overview-total">
+        <span id="completionLabel">0 / 0 已处理</span>
+        <strong id="readyLabel">0 / 8 类就绪</strong>
+        <div class="progress-track"><span id="progressBar"></span></div>
+      </div>
+      <div id="profileCounters" class="profile-counters"></div>
+    </section>
+
+    <section id="benchmarkStatus" class="benchmark-status" hidden aria-live="polite">
+      <div>
+        <p class="eyebrow">Qwen 部分覆盖基准</p>
+        <strong id="benchmarkProgress">正在准备…</strong>
+      </div>
+      <div class="benchmark-metrics">
+        <span id="benchmarkParse">严格 JSON 0</span>
+        <span id="benchmarkFailed">失败 0</span>
+        <span id="benchmarkLatency">平均耗时 —</span>
+      </div>
+      <div class="progress-track"><span id="benchmarkProgressBar"></span></div>
+    </section>
+
+    <main class="profile-workspace">
+      <aside class="profile-sidebar">
+        <div class="sidebar-toolbar">
+          <div>
+            <p class="eyebrow">候选队列</p>
+            <strong id="filterCount">0 条</strong>
+          </div>
+          <label
+            ><span class="sr-only">筛选</span
+            ><select id="filterSelect">
+              <option value="unreviewed">未分类</option>
+              <option value="all">全部候选</option>
+              <option value="accepted">已归类</option>
+              <option value="skipped">已跳过</option>
+            </select></label
+          >
+        </div>
+        <div id="sampleList" class="profile-sample-list"></div>
+      </aside>
+
+      <section class="profile-stage">
+        <div class="profile-stage-heading">
+          <div>
+            <p id="samplePosition" class="eyebrow">尚未选择</p>
+            <h2 id="sampleTitle">候选样本</h2>
+          </div>
+          <div class="stage-nav">
+            <button id="previousSample" class="ghost-button" type="button">上一条</button
+            ><button id="nextSample" class="primary-button" type="button">下一条</button>
+          </div>
+        </div>
+        <div id="playerShell" class="player-shell profile-player-shell">
+          <video id="video" controls preload="metadata" playsinline></video>
+          <div id="playerEmpty" class="player-empty">选择左侧样本后播放</div>
+        </div>
+        <div class="segment-controls">
+          <button id="playSegment" class="primary-button" type="button">播放中间 20 秒</button
+          ><span id="segmentRange">—</span><span id="saveStatus" class="save-status">尚未保存</span>
+        </div>
+        <div id="sampleMeta" class="profile-meta-grid"></div>
+
+        <section class="profile-classifier" aria-labelledby="classifierTitle">
+          <div class="classifier-heading">
+            <div>
+              <p class="eyebrow">人工真值</p>
+              <h3 id="classifierTitle">这段视频属于哪一类？</h3>
+            </div>
+            <button id="acceptSuggestion" class="suggestion-button" type="button"></button>
+          </div>
+          <p id="suggestionReason" class="suggestion-reason"></p>
+          <div id="profileButtons" class="profile-button-grid"></div>
+          <div class="profile-review-footer">
+            <label class="notes-field"
+              ><span>备注（可选，不进入匿名导出）</span
+              ><textarea
+                id="notes"
+                rows="2"
+                maxlength="1000"
+                placeholder="例如：前半段是片头，主体是课程录屏"
+              ></textarea>
+            </label>
+            <button id="skipSample" class="danger-ghost-button" type="button">
+              无效 / 暂不适合，跳过
+            </button>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/profile-app.mjs"></script>
+  </body>
+</html>

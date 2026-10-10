@@ -1,0 +1,252 @@
+{
+  "phase": "phase0-discovery-baseline",
+  "generatedAt": "2026-08-11T12:39:06.151Z",
+  "corpusCount": 1000000,
+  "corpusRoot": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-corpus-1000k",
+  "environment": {
+    "platform": "win32 x64",
+    "osRelease": "10.0.22631",
+    "node": "v24.16.0",
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12700H",
+    "logicalProcessors": 20,
+    "totalMemoryBytes": 16781979648,
+    "physicalDisks": [
+      {
+        "DeviceId": "1",
+        "FriendlyName": "NVMe Samsung SSD 980 500GB",
+        "MediaType": "SSD",
+        "BusType": "NVMe",
+        "Size": 500107862016,
+        "HealthStatus": "Healthy"
+      },
+      {
+        "DeviceId": "0",
+        "FriendlyName": "NVMe Micron_2450_MTFDKBA512TFK",
+        "MediaType": "SSD",
+        "BusType": "NVMe",
+        "Size": 512110190592,
+        "HealthStatus": "Healthy"
+      }
+    ],
+    "volumes": [
+      {
+        "DriveLetter": "D",
+        "FileSystemType": "NTFS",
+        "FileSystemLabel": "0x2",
+        "Size": 500090007552,
+        "SizeRemaining": 101243367424
+      },
+      {
+        "DriveLetter": "C",
+        "FileSystemType": "NTFS",
+        "FileSystemLabel": "OS",
+        "Size": 487200198656,
+        "SizeRemaining": 75425062912
+      }
+    ],
+    "corpusDrive": "C:\\"
+  },
+  "corpus": {
+    "reused": false,
+    "root": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-corpus-1000k",
+    "requested": 1000000,
+    "written": 1000000,
+    "filesPerDirectory": 500,
+    "directories": 2000,
+    "variants": 8,
+    "elapsedMs": 550175,
+    "rootEntries": 10
+  },
+  "nativeVersion": "fast_scanner 0.5.29",
+  "usnAvailability": {
+    "ok": true,
+    "volume": "C:",
+    "isNtfs": true,
+    "canOpenVolume": false,
+    "journalOk": false,
+    "requiresAdmin": true,
+    "reason": "cannot open volume C: (access denied — run as administrator)",
+    "usnStateLoaded": false,
+    "usnLastUsn": -1,
+    "usnJournalId": 0
+  },
+  "discovery": {
+    "label": "discovery-metaonly-enum",
+    "mode": "metaOnly",
+    "backend": "enum",
+    "fallbackCode": null,
+    "fallbackReason": null,
+    "indexedCount": 1000000,
+    "failedCount": 0,
+    "totalBytes": 0,
+    "wallMs": 12919.6,
+    "totalScanMs": 12904,
+    "enumMs": 12886,
+    "statMs": 0,
+    "decodeMsTotal": 0,
+    "hashMsTotal": 0,
+    "enumDirCount": 2011,
+    "enumFileCount": 1000000,
+    "enumImageCount": 1000000,
+    "usnReadMs": 0,
+    "usnRecordsRead": 0,
+    "filesPerSecond": 77401.8,
+    "firstPathMs": 30.1
+  },
+  "fullDiscovery": {
+    "label": "discovery-full-usn-or-fallback",
+    "mode": "full",
+    "backend": "enum",
+    "fallbackCode": "volume-access-denied",
+    "fallbackReason": "cannot open volume C: (access denied)",
+    "indexedCount": 1000000,
+    "failedCount": 0,
+    "totalBytes": 69000000,
+    "wallMs": 197456,
+    "totalScanMs": 197440,
+    "enumMs": 197421,
+    "statMs": 0,
+    "decodeMsTotal": 3090,
+    "hashMsTotal": 43620,
+    "enumDirCount": 2011,
+    "enumFileCount": 1000000,
+    "enumImageCount": 1000000,
+    "usnReadMs": 0,
+    "usnRecordsRead": 0,
+    "filesPerSecond": 5064.4
+  },
+  "thumbnails": {
+    "subsetFiles": 500,
+    "subsetSource": "tests/fixtures/faces jpg variants (desensitized real assets)",
+    "thumbnailCompleted": 500,
+    "thumbnailFailed": 0,
+    "thumbnailDropped": 0,
+    "wallMs": 2595.8,
+    "drainWaitMs": 0,
+    "totalMsWithDrain": 2595.8,
+    "avgMsPerThumbnail": 5.192
+  },
+  "hashMicro": {
+    "rounds": 20,
+    "samples": [
+      {
+        "file": "obama-variant.jpg",
+        "bytes": 14555,
+        "rounds": 20,
+        "avgMs": 11.43,
+        "diffHash": "e07212e4c48e0e1e"
+      },
+      {
+        "file": "obama.jpg",
+        "bytes": 205817,
+        "rounds": 20,
+        "avgMs": 12.669,
+        "diffHash": "e07212e4c48e0e1e"
+      },
+      {
+        "file": "trump.jpg",
+        "bytes": 260041,
+        "rounds": 20,
+        "avgMs": 12.608,
+        "diffHash": "0f8dc62731253f1e"
+      }
+    ]
+  },
+  "search": {
+    "indexDir": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-index-SO7qvo",
+    "load": {
+      "ok": true,
+      "recordCount": 500,
+      "segmentCount": 1,
+      "loadMs": 4.2,
+      "rssDeltaMiB": 2.19,
+      "heapDeltaMiB": 0.07,
+      "externalDeltaMiB": 0
+    },
+    "index": {
+      "mode": "segment_mmap",
+      "manifestPath": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-index-SO7qvo",
+      "version": 4,
+      "segmentCount": 1,
+      "schemaVersion": 2,
+      "recordCount": 500,
+      "pathIndexMapSize": 500,
+      "overlayCount": 0,
+      "replacedCount": 0,
+      "deletedCount": 0,
+      "pathMapHealthy": true
+    },
+    "searches": [
+      {
+        "label": "zero-skew",
+        "mode": "fast",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 0.237,
+        "averageMs": 0.0024,
+        "averageScanned": 0,
+        "averageCandidates": 0,
+        "fallbacks": 0
+      },
+      {
+        "label": "zero-skew",
+        "mode": "balanced",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 0.229,
+        "averageMs": 0.0023,
+        "averageScanned": 500,
+        "averageCandidates": 0,
+        "fallbacks": 100
+      },
+      {
+        "label": "zero-skew",
+        "mode": "recall",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 0.225,
+        "averageMs": 0.0022,
+        "averageScanned": 500,
+        "averageCandidates": 0,
+        "fallbacks": 100
+      },
+      {
+        "label": "sampled-index",
+        "mode": "fast",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 17.874,
+        "averageMs": 0.1787,
+        "averageScanned": 281.92,
+        "averageCandidates": 281.92,
+        "fallbacks": 0
+      },
+      {
+        "label": "sampled-index",
+        "mode": "balanced",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 16.76,
+        "averageMs": 0.1676,
+        "averageScanned": 500,
+        "averageCandidates": 281.92,
+        "fallbacks": 100
+      },
+      {
+        "label": "sampled-index",
+        "mode": "recall",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 18.026,
+        "averageMs": 0.1803,
+        "averageScanned": 500,
+        "averageCandidates": 281.92,
+        "fallbacks": 100
+      }
+    ]
+  },
+  "embedding": {
+    "skipped": true,
+    "reason": "--skip-embedding"
+  }
+}

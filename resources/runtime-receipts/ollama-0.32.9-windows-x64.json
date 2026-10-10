@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-08-14",
+  "purpose": "External loopback-only video semantic evaluation runtime; not bundled or auto-installed",
+  "installation": {
+    "packageManager": "winget",
+    "packageId": "Ollama.Ollama",
+    "version": "0.32.9",
+    "command": "winget install --id Ollama.Ollama --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity"
+  },
+  "executable": {
+    "pathTemplate": "%LOCALAPPDATA%\\Programs\\Ollama\\ollama.exe",
+    "sha256": "0482be1251251da2f8479ace70c4dd7d9f2892d11dde201ee2408a18806b924b",
+    "sizeBytes": 36342664
+  },
+  "network": {
+    "apiOrigin": "http://127.0.0.1:11434",
+    "observedListeners": ["127.0.0.1:11434"],
+    "lanListenerObserved": false
+  },
+  "license": {
+    "openSourceRepository": "https://github.com/ollama/ollama",
+    "repositorySpdx": "MIT",
+    "installedWindowsAppDistributionReview": "legal-review-required"
+  },
+  "distribution": {
+    "defaultBundled": false,
+    "applicationMayInstallOrUpdate": false,
+    "userApprovalRequired": true
+  }
+}

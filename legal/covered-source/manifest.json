@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "siftory-covered-source-payload",
+  "preparedOn": "2026-09-25",
+  "approvalGranted": false,
+  "completeNativeInventory": false,
+  "containsSiftoryProprietarySource": false,
+  "scope": "Nineteen identified original Rust source archives plus complete upstream source of cssparser 0.37.0, cssparser-color 0.5.0 and cssparser-macros 0.7.0. Binary strings identify seventeen; fixed dependency constraints, default features and publication chronology support the other two. Not a full native inventory or proof of every historical compiler input.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2207,
+      "sha256": "936892efd10e2737a143a5b4aa21afe422832e9a00b2c12cc2ac4dbdddd41f72"
+    },
+    {
+      "path": "canvas-rust-sources.zip",
+      "bytes": 3341429,
+      "sha256": "22d7c34a95cbbc3aca6402f218fe60d6ee1b5d1fa8b55c30a0eb88448e84a5ae"
+    }
+  ],
+  "bindings": [
+    {
+      "package": "@napi-rs/canvas-win32-x64-msvc",
+      "version": "1.0.3",
+      "binaryPath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node",
+      "bytes": 27331584,
+      "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787"
+    }
+  ],
+  "sources": [
+    {
+      "name": "cssparser",
+      "version": "0.37.0",
+      "license": "MPL-2.0"
+    },
+    {
+      "name": "cssparser-color",
+      "version": "0.5.0",
+      "license": "MPL-2.0"
+    },
+    {
+      "name": "cssparser-macros",
+      "version": "0.7.0",
+      "license": "MPL-2.0"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "generatedAt": "2026-07-30T07:34:55.947Z",
+  "primaryVariant": "hybrid",
+  "variants": {
+    "clip": {
+      "precisionAt20": 1,
+      "precisionAt50": 1,
+      "recallAt50": 0.641,
+      "ndcgAt20": 1,
+      "rejectIntrusionAt20": 0
+    },
+    "dino": {
+      "precisionAt20": 1,
+      "precisionAt50": 1,
+      "recallAt50": 0.641,
+      "ndcgAt20": 1,
+      "rejectIntrusionAt20": 0
+    },
+    "hybrid": {
+      "precisionAt20": 1,
+      "precisionAt50": 1,
+      "recallAt50": 0.641,
+      "ndcgAt20": 1,
+      "rejectIntrusionAt20": 0
+    },
+    "hybrid_feedback": {
+      "precisionAt20": 1,
+      "precisionAt50": 1,
+      "recallAt50": 0.641,
+      "ndcgAt20": 1,
+      "rejectIntrusionAt20": 0
+    }
+  },
+  "latency": {
+    "scanP95Ms": 20065.6,
+    "applicationColdP95Ms": 19014.4,
+    "warmP95Ms": 20065.6,
+    "minimumRunsPerCondition": 3,
+    "absoluteBudgetMs": 40000
+  },
+  "comparability": {
+    "annotationFingerprint": "01d8bf85b3857a6389475c854c67e83f956e5520c3a53f0eb349ed9534f86423",
+    "activeSetFingerprint": "15e0b1a90730ab83652f1ba3ffbe9f6e0fec76b3a980b55f602daa7eb2ab4153",
+    "activeSetCount": 245171
+  },
+  "cluster": {
+    "purityMedianWeighted": 0.8059
+  }
+}

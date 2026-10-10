@@ -1,0 +1,125 @@
+:root {
+  /* ── Matrix (index 0) ── */
+  --color-canvas: 4, 7, 9;
+  --color-surface: 12, 20, 17;
+  --color-surface-elevated: 20, 31, 26;
+  --color-text: 235, 255, 241;
+  --color-text-muted: 158, 196, 169;
+  --color-border: 74, 136, 91;
+  --color-accent: 0, 255, 64;
+  --color-focus: 0, 255, 120;
+  --color-success: 68, 214, 123;
+  --color-warning: 255, 190, 68;
+  --color-danger: 255, 94, 108;
+  --color-selection: 14, 76, 41;
+  --bg: var(--color-canvas);
+  --fg: var(--color-accent);
+  --date: var(--color-border);
+  --ui-radius-xs: 4px;
+  --ui-radius-sm: 6px;
+  --ui-radius-md: 9px;
+  --ui-radius-lg: 12px;
+  --ui-radius-pill: 999px;
+  --ui-control-height: 28px;
+  --ui-border: rgba(var(--color-border), 0.28);
+  --ui-border-strong: rgba(var(--color-border), 0.44);
+  --ui-surface-subtle: rgba(var(--color-surface-elevated), 0.46);
+  --ui-surface-hover: rgba(var(--color-accent), 0.09);
+  --ui-accent-soft: rgba(var(--color-accent), 0.14);
+  --ui-shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --ui-shadow-menu: 0 12px 28px rgba(0, 0, 0, 0.24);
+  --ui-motion-fast: 120ms;
+  --ui-motion-normal: 160ms;
+  --panel-radius: var(--ui-radius-lg);
+  --panel-border-width: 1px;
+  --panel-blur: 0px;
+  --panel-shadow: var(--ui-shadow-panel);
+  --panel-surface-alpha: 0.97;
+  --panel-glass-blur: 0px;
+  --panel-glass-saturation: 1;
+  --panel-header-height: 34px;
+  --panel-font: 'Source Han Sans CN', 'Noto Sans CJK SC', 'Microsoft YaHei UI', sans-serif;
+}
+
+html[data-effective-mode='light'] {
+  color-scheme: light;
+  --ui-border: rgba(var(--color-border), 0.24);
+  --ui-border-strong: rgba(var(--color-border), 0.4);
+  --ui-surface-subtle: rgba(var(--color-surface-elevated), 0.78);
+  --ui-shadow-panel: 0 8px 24px rgba(27, 39, 59, 0.1);
+  --ui-shadow-menu: 0 14px 32px rgba(27, 39, 59, 0.14);
+}
+
+html[data-effective-mode='dark'] {
+  color-scheme: dark;
+  --ui-border: rgba(var(--color-border), 0.26);
+  --ui-border-strong: rgba(var(--color-border), 0.42);
+  --ui-surface-subtle: rgba(var(--color-surface-elevated), 0.52);
+  --ui-shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --ui-shadow-menu: 0 14px 32px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme='1'] {
+  /* ── Midnight ── */
+  --bg: 23, 28, 48;
+  --fg: 125, 184, 255;
+  --date: 59, 79, 128;
+  --panel-radius: 12px;
+  --panel-border-width: 1px;
+  --panel-blur: 0px;
+  --panel-shadow: var(--ui-shadow-panel);
+  --panel-header-height: 36px;
+  --panel-font: 'Source Han Sans CN', 'Noto Sans CJK SC', 'Microsoft YaHei UI', sans-serif;
+}
+
+[data-theme='2'] {
+  /* ── Amber ── */
+  --bg: 26, 20, 5;
+  --fg: 255, 176, 0;
+  --date: 122, 84, 0;
+  --panel-radius: 10px;
+  --panel-border-width: 1px;
+  --panel-blur: 0px;
+  --panel-shadow: var(--ui-shadow-panel);
+  --panel-header-height: 32px;
+  --panel-font: 'Source Han Sans CN', 'Noto Sans CJK SC', 'Microsoft YaHei UI', sans-serif;
+}
+
+[data-theme='3'] {
+  /* ── Frost ── */
+  --bg: 10, 26, 23;
+  --fg: 0, 212, 212;
+  --date: 0, 97, 97;
+  --panel-radius: 12px;
+  --panel-border-width: 1px;
+  --panel-blur: 0px;
+  --panel-shadow: var(--ui-shadow-panel);
+  --panel-header-height: 36px;
+  --panel-font: 'Source Han Sans CN', 'Noto Sans CJK SC', 'Microsoft YaHei UI', sans-serif;
+}
+
+[data-theme='4'] {
+  /* ── Rose ── */
+  --bg: 26, 13, 20;
+  --fg: 255, 107, 140;
+  --date: 128, 48, 69;
+  --panel-radius: 12px;
+  --panel-border-width: 1px;
+  --panel-blur: 0px;
+  --panel-shadow: var(--ui-shadow-panel);
+  --panel-header-height: 36px;
+  --panel-font: 'Source Han Sans CN', 'Noto Sans CJK SC', 'Microsoft YaHei UI', sans-serif;
+}
+
+[data-theme='5'] {
+  /* ── Mono ── */
+  --bg: 18, 18, 18;
+  --fg: 255, 255, 255;
+  --date: 120, 120, 120;
+  --panel-radius: 10px;
+  --panel-border-width: 1px;
+  --panel-blur: 0px;
+  --panel-shadow: var(--ui-shadow-panel);
+  --panel-header-height: 32px;
+  --panel-font: 'Source Han Sans CN', 'Noto Sans CJK SC', 'Microsoft YaHei UI', sans-serif;
+}

@@ -1,0 +1,208 @@
+{
+  "version": 2,
+  "runtimeResourceManifest": "../resources/runtime-manifest.json",
+  "description": "Model manifest for Siftory（寻藏） - Layer 2 vector retrieval.",
+  "models": [
+    {
+      "name": "dinov2_vitb14",
+      "displayName": "DINOv2 Base (Transformers.js q4 ONNX)",
+      "version": "d623d125a29e343851bcedff293fdc8b6bda292b",
+      "upstreamName": "Xenova/dinov2-base",
+      "releaseDate": "2023-12-09",
+      "purpose": "DINOv2 global image embeddings and visual similarity search",
+      "url": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/onnx/model_q4.onnx",
+      "filename": "Xenova/dinov2-base/onnx/model_q4.onnx",
+      "sha256": "19f697cf7cddfbbaa4b146b813e726a1e4ed89aa5fd363cdc38d689a3b5f6018",
+      "sizeBytes": 56428185,
+      "requiredFiles": [
+        {
+          "filename": "Xenova/dinov2-base/config.json",
+          "url": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/config.json",
+          "sha256": "e8561e4241d2f331e086e5dcb179b6993b86e4f815c0a5f709aa4553369e75f4",
+          "sizeBytes": 899
+        },
+        {
+          "filename": "Xenova/dinov2-base/preprocessor_config.json",
+          "url": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/preprocessor_config.json",
+          "sha256": "14e780d86fa1861f8751f868d7f45425b5feb55c38ca26f152ca5097ab30f828",
+          "sizeBytes": 436
+        }
+      ],
+      "license": "Apache-2.0",
+      "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
+      "noticeRequired": true,
+      "firstRunRequired": false,
+      "defaultBundled": true,
+      "platforms": ["win32"],
+      "architectures": ["x64"],
+      "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/onnx/model_q4.onnx",
+      "commercialFriendly": true,
+      "dim": 768,
+      "inputSize": 224,
+      "framework": "onnx",
+      "description": "Transformers.js ONNX q4 export of facebook/dinov2-base. Produces 768-dim global embeddings for local image similarity."
+    },
+    {
+      "name": "clip_vit_base_patch32",
+      "displayName": "CLIP ViT-B/32 (Transformers.js q4 ONNX)",
+      "version": "d15189d7028b43f1d3e65039190477f6af591c2a",
+      "upstreamName": "Xenova/clip-vit-base-patch32",
+      "releaseDate": "2023-05-19",
+      "purpose": "CLIP image and English text embeddings for semantic search",
+      "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/onnx/model_q4.onnx",
+      "filename": "Xenova/clip-vit-base-patch32/onnx/model_q4.onnx",
+      "sha256": "1f518bedb1851294737a141e06149883cb289160760224f2da5498886e49d5cb",
+      "sizeBytes": 189403477,
+      "requiredFiles": [
+        {
+          "filename": "Xenova/clip-vit-base-patch32/onnx/text_model_q4.onnx",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/onnx/text_model_q4.onnx",
+          "sha256": "e4ccd15d806b8af841a036884b42034535d58e04c52df00f56e73f72d3c166d5",
+          "sizeBytes": 125742108
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/config.json",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/config.json",
+          "sha256": "493ef57ff783e42d1530c91b53469b7fdf8db8a9c1408e86998fcb7899a4f495",
+          "sizeBytes": 4524
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/preprocessor_config.json",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/preprocessor_config.json",
+          "sha256": "6f638fb9401a6d6296feff533ee7efe657b787c49f954f82f5906b36ef2a1b1f",
+          "sizeBytes": 520
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/tokenizer.json",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/tokenizer.json",
+          "sha256": "f7f3b7af117d467b58374797691a6438d3e6b9e9cef800dfd5dced7f697a90cd",
+          "sizeBytes": 2224119
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/tokenizer_config.json",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/tokenizer_config.json",
+          "sha256": "60ba2912bc6344c94bc16bbdec27fa1209409167b6f2fdf3cfe9e65462ea3967",
+          "sizeBytes": 775
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/special_tokens_map.json",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/special_tokens_map.json",
+          "sha256": "c4864a9376a8401918425bed71fc14fc0e81f9b59ec45c1cf96cccb2df508eac",
+          "sizeBytes": 472
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/vocab.json",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/vocab.json",
+          "sha256": "5047b556ce86ccaf6aa22b3ffccfc52d391ea4accdab9c2f2407da5b742d4363",
+          "sizeBytes": 862328
+        },
+        {
+          "filename": "Xenova/clip-vit-base-patch32/merges.txt",
+          "url": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/merges.txt",
+          "sha256": "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
+          "sizeBytes": 524619
+        }
+      ],
+      "license": "MIT",
+      "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
+      "noticeRequired": true,
+      "firstRunRequired": false,
+      "defaultBundled": true,
+      "platforms": ["win32"],
+      "architectures": ["x64"],
+      "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/onnx/model_q4.onnx",
+      "commercialFriendly": true,
+      "dim": 512,
+      "inputSize": 224,
+      "framework": "onnx",
+      "description": "Transformers.js ONNX q4 export of OpenAI CLIP ViT-B/32. Produces 512-dim image/text embeddings for semantic text-to-image search."
+    },
+    {
+      "name": "clip_vit_b32_multilingual_v1_text",
+      "displayName": "Multilingual CLIP Text Encoder (ViT-B/32 space, ONNX quint8)",
+      "version": "58edf8cada9e398793dca955574a48cbb7f18be2",
+      "upstreamName": "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+      "releaseDate": "2022-03-02",
+      "purpose": "Chinese and multilingual text embeddings aligned with CLIP ViT-B/32",
+      "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/onnx/model_quint8_avx2.onnx",
+      "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/onnx/model_quint8_avx2.onnx",
+      "sha256": "fbc8fbeaa5237d96bd1bf430057c70d34de8334a463e933a5faa305f6caeed9c",
+      "sizeBytes": 135377779,
+      "requiredFiles": [
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/2_Dense/model.safetensors",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/2_Dense/model.safetensors",
+          "sha256": "d12568dc7300970a4d3dbb49068ad16cd89b99840b74b026f8e48071e9414f74",
+          "sizeBytes": 1572984
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/config.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/config.json",
+          "sha256": "edc12f518bfc445dedfe8a7c58374ea659525e0b6e67814686bd6cd57f90f8b3",
+          "sizeBytes": 572
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/config_sentence_transformers.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/config_sentence_transformers.json",
+          "sha256": "b8c64b5cece00d8424b4896ea75b512b6008576088497609dfeb6bd63e6d36b8",
+          "sizeBytes": 122
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/modules.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/modules.json",
+          "sha256": "f83ea5d68ac85ec15f650b350f0dc37b03d63abd60442f518e14c06f479beee6",
+          "sizeBytes": 341
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/sentence_bert_config.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/sentence_bert_config.json",
+          "sha256": "70f4448f31320443fe3557cacea5abf2dcc4915dda8c80646bec9f3bb0aa5a1f",
+          "sizeBytes": 53
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/special_tokens_map.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/special_tokens_map.json",
+          "sha256": "303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3",
+          "sizeBytes": 112
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/tokenizer.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/tokenizer.json",
+          "sha256": "5b4e1a8171c81dfd666ae40265b9530c6e0b3d53923fe8ac493dcc84229adf81",
+          "sizeBytes": 1961847
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/tokenizer_config.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/tokenizer_config.json",
+          "sha256": "8f66d0ad85be46afc77e0bbf48312cff326ddb9e7290926df96a8228d69a814e",
+          "sizeBytes": 371
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/vocab.txt",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/vocab.txt",
+          "sha256": "fe0fda7c425b48c516fc8f160d594c8022a0808447475c1a7c6d6479763f310c",
+          "sizeBytes": 995526
+        },
+        {
+          "filename": "sentence-transformers/clip-ViT-B-32-multilingual-v1/2_Dense/config.json",
+          "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/2_Dense/config.json",
+          "sha256": "48f4dfaf605a6c2869cd200970e54911c6c15053781d2bdcf3e81e89e77662ed",
+          "sizeBytes": 115
+        }
+      ],
+      "license": "Apache-2.0",
+      "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
+      "noticeRequired": true,
+      "firstRunRequired": false,
+      "defaultBundled": true,
+      "platforms": ["win32"],
+      "architectures": ["x64"],
+      "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/onnx/model_quint8_avx2.onnx",
+      "commercialFriendly": true,
+      "dim": 512,
+      "inputSize": 0,
+      "framework": "onnx",
+      "description": "Text-only multilingual DistilBERT encoder (50+ languages incl. Chinese) distilled into the OpenAI CLIP ViT-B/32 embedding space. Produces 512-dim text embeddings directly comparable with clip_vit_base_patch32 image embeddings; no image re-embedding required."
+    }
+  ]
+}

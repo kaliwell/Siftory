@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>音频说话人验收台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="audio-review-page">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">SENSEVOICE · LOCAL REVIEW</p>
+        <h1>音频说话人验收台</h1>
+      </div>
+      <div class="header-progress" aria-live="polite">
+        <div><span id="completedCount">0</span>/<span id="totalCount">0</span> 已复核</div>
+        <progress id="overallProgress" max="1" value="0"></progress>
+      </div>
+      <div class="toolbar">
+        <a id="videoReviewLink" class="button-like" href="/">视频语义验收</a>
+        <button id="exportSummary" type="button">导出脱敏汇总</button>
+        <button id="exportFull" type="button">导出完整备份</button>
+        <label class="button-like" for="importBackup">导入备份</label>
+        <input id="importBackup" type="file" accept="application/json,.json" hidden />
+      </div>
+    </header>
+
+    <div id="fatal" class="fatal" hidden></div>
+
+    <main class="workspace audio-workspace">
+      <aside class="sample-rail" aria-label="音频片段列表">
+        <div class="rail-head">
+          <strong>匿名语义片段</strong>
+          <button id="nextIncomplete" class="quiet" type="button">下一个未完成</button>
+        </div>
+        <div id="segmentList" class="sample-list audio-segment-list"></div>
+        <section class="privacy-card">
+          <strong>隐私边界</strong>
+          <p>原视频仅经本机 127.0.0.1 播放。页面不显示真实文件名或路径，导出不包含转写原文。</p>
+        </section>
+      </aside>
+
+      <section class="review-stage">
+        <div class="sample-heading">
+          <div>
+            <p id="segmentPosition" class="eyebrow"></p>
+            <h2 id="segmentTitle">载入中…</h2>
+          </div>
+          <span id="speakerBadge" class="badge"></span>
+        </div>
+
+        <div id="segmentMeta" class="meta-grid"></div>
+
+        <section class="reference-card">
+          <div>
+            <p class="eyebrow">SPEAKER REFERENCES</p>
+            <h3>先听参考声纹，再判断当前标签</h3>
+            <p>参考片段自动选择每个说话人标签下时长最长的一条，只用于保持前后一致。</p>
+          </div>
+          <div id="referenceButtons" class="reference-buttons"></div>
+        </section>
+
+        <div id="playerShell" class="player-shell audio-player-shell">
+          <video id="video" controls playsinline preload="metadata"></video>
+          <div id="videoEmpty" class="video-empty">权威转写或原视频当前不可用</div>
+        </div>
+        <div class="player-controls">
+          <button id="playExact" class="primary" type="button">
+            播放当前语音 <kbd>Space</kbd>
+          </button>
+          <button id="playContext" type="button">播放前后文</button>
+          <button id="seekStart" type="button">回到语音开始</button>
+          <label>
+            速度
+            <select id="playbackRate">
+              <option value="0.75">0.75×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.25">1.25×</option>
+              <option value="1.5">1.5×</option>
+            </select>
+          </label>
+          <span id="targetRange" class="mono"></span>
+        </div>
+
+        <section class="quick-review audio-quick-review" aria-labelledby="quickReviewTitle">
+          <div>
+            <p class="eyebrow">HUMAN SPEAKER CHECK</p>
+            <h3 id="quickReviewTitle">当前语音与说话人标签是否一致？</h3>
+            <p>点击后自动保存并进入下一条。键盘 1–4 可快速判定，右方括号进入下一个未完成。</p>
+          </div>
+          <div class="segmented audio-rating" id="verdictButtons">
+            <button type="button" data-value="correct">✓ 标签正确 <kbd>1</kbd></button>
+            <button type="button" data-value="wrong-speaker">✕ 说话人错 <kbd>2</kbd></button>
+            <button type="button" data-value="wrong-boundary">边界有误 <kbd>3</kbd></button>
+            <button type="button" data-value="unusable">无法判断 <kbd>4</kbd></button>
+          </div>
+        </section>
+
+        <form id="reviewForm" class="review-form audio-review-form">
+          <div class="form-title wide">
+            <div>
+              <p class="eyebrow">OPTIONAL DETAIL</p>
+              <h3>修正与备注（可选）</h3>
+            </div>
+            <label class="watch-confirm">
+              <input id="listenedFullSegment" type="checkbox" />
+              已完整听完当前语音
+            </label>
+          </div>
+          <label class="field">
+            <span>修正后的说话人</span>
+            <select id="correctedSpeaker">
+              <option value="">不填写</option>
+              <option value="speaker-1">speaker-1</option>
+              <option value="speaker-2">speaker-2</option>
+              <option value="unknown">未知 / 其他人</option>
+            </select>
+          </label>
+          <label class="field wide">
+            <span>备注</span>
+            <textarea
+              id="notes"
+              maxlength="1000"
+              placeholder="例如：两人重叠、音乐过强、语音切断"
+            ></textarea>
+          </label>
+          <div class="form-actions wide">
+            <span id="saveStatus" aria-live="polite">尚未修改</span>
+            <button id="saveReview" type="button">保存</button>
+            <button id="completeAndNext" class="primary" type="button">保存并进入下一条</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="candidate-panel">
+        <div class="candidate-title">
+          <div>
+            <p class="eyebrow">MODEL OUTPUT</p>
+            <h3>SenseVoice 候选信息</h3>
+          </div>
+          <span id="authorityBadge" class="badge"></span>
+        </div>
+        <p class="candidate-warning">
+          转写文字和情绪只用于定位，不代表人工真值；请以实际听感判断说话人。
+        </p>
+        <div class="candidate-field transcript-card">
+          <strong>模型转写</strong>
+          <button id="toggleTranscript" class="quiet" type="button">显示转写</button>
+          <pre id="transcriptText" hidden></pre>
+        </div>
+        <div id="candidateMeta" class="candidate-view"></div>
+
+        <section class="summary-card">
+          <p class="eyebrow">LIVE SUMMARY</p>
+          <h3>当前汇总</h3>
+          <div id="summaryGrid" class="summary-grid"></div>
+          <p id="gateMessage" class="gate-message"></p>
+        </section>
+      </aside>
+    </main>
+
+    <script type="module" src="/audio-app.mjs"></script>
+  </body>
+</html>

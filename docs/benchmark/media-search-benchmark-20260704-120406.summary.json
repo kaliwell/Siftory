@@ -1,0 +1,40 @@
+﻿{
+    "targetRoot":  "<DATASET>",
+    "limit":  5,
+    "files":  {
+                  "benchmarkJson":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-benchmark-20260704-120406.json",
+                  "samplesJsonl":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-perf-samples-20260704-120406.jsonl",
+                  "summaryJson":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-benchmark-20260704-120406.summary.json"
+              },
+    "totalMs":  12396.96,
+    "videos":  5,
+    "phasePercent":  {
+                         "enumerate":  0.07,
+                         "thumbnails":  56.02,
+                         "metadata":  43.88
+                     },
+    "phaseMs":  {
+                    "enumerate":  8.37,
+                    "thumbnails":  6944.59,
+                    "metadata":  5439.87
+                },
+    "perVideoMs":  {
+                       "thumbnailsAvg":  1388.92,
+                       "metadataAvg":  1087.97
+                   },
+    "performance":  {
+                        "peakNodeWorkingSetMb":  40.03,
+                        "sampleCount":  6,
+                        "avgMemoryCommittedPercent":  50.56,
+                        "avgGpuPercent":  3.52,
+                        "avgCpuPercent":  2.84,
+                        "peakGpuPercent":  3.98,
+                        "peakCpuPercent":  4.77,
+                        "peakMemoryCommittedPercent":  50.77
+                    },
+    "failures":  {
+                     "enumerate":  0,
+                     "thumbnails":  0,
+                     "metadata":  0
+                 }
+}

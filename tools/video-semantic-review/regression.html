@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#080c12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Qwen V1 / V7 回归对照</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="profile-review-page regression-review-page">
+    <div id="fatal" class="fatal" hidden></div>
+    <header class="profile-header regression-header">
+      <div>
+        <p id="pageEyebrow" class="eyebrow">VID-016 · 六条定向回归</p>
+        <h1 id="pageTitle">V1 / V7 语义对照</h1>
+        <p id="pageLede" class="lede">
+          同一视频、同一验收片段并排比较。重点判断摘要和检索价值是否真正改善。
+        </p>
+      </div>
+      <div class="profile-header-actions">
+        <a id="backToBenchmark" class="ghost-button link-button" href="/benchmark"
+          >返回 44 条复核</a
+        >
+        <button id="exportReview" class="ghost-button" type="button">导出匿名对照结果</button>
+      </div>
+    </header>
+
+    <section class="profile-overview regression-overview" aria-label="回归验收进度">
+      <div class="overview-total">
+        <span id="reviewProgress">0 / 6 已判断</span>
+        <strong id="resultLabel">等待人工对照</strong>
+        <div class="progress-track"><span id="reviewProgressBar"></span></div>
+      </div>
+      <div class="benchmark-summary-chips">
+        <span id="improvedLabel">改善 0</span><span id="sameLabel">持平 0</span
+        ><span id="regressedLabel">退化 0</span><span id="fullWatchLabel">完整观看 0</span>
+      </div>
+    </section>
+
+    <main class="regression-workspace">
+      <nav id="sampleList" class="regression-sample-strip" aria-label="V1/V7对照样本"></nav>
+      <section class="regression-stage">
+        <div class="profile-stage-heading">
+          <div>
+            <p id="samplePosition" class="eyebrow">尚未选择</p>
+            <h2 id="sampleTitle">回归样本</h2>
+          </div>
+          <div class="stage-nav">
+            <button id="previousSample" class="ghost-button" type="button">上一条</button
+            ><button id="nextSample" class="primary-button" type="button">下一条</button>
+          </div>
+        </div>
+
+        <div class="regression-video-row">
+          <div id="videoShell" class="player-shell profile-player-shell regression-player-shell">
+            <video id="video" controls preload="metadata" playsinline></video>
+            <div id="playerEmpty" class="player-empty">选择可对照样本</div>
+          </div>
+          <div class="segment-controls regression-segment-controls">
+            <button id="playSegment" class="primary-button" type="button">播放完整验收片段</button>
+            <span id="segmentRange">—</span
+            ><span id="saveStatus" class="save-status">尚未判断</span>
+          </div>
+        </div>
+
+        <p id="archiveNote" class="regression-note"></p>
+        <div class="regression-compare-grid">
+          <article id="v1Card" class="semantic-result-card regression-result-card"></article>
+          <article
+            id="v7Card"
+            class="semantic-result-card regression-result-card candidate"
+          ></article>
+        </div>
+
+        <section
+          id="reviewPanel"
+          class="profile-classifier regression-classifier"
+          aria-labelledby="reviewTitle"
+        >
+          <div class="classifier-heading">
+            <div>
+              <p class="eyebrow">人工判断</p>
+              <h3 id="reviewTitle">V7 相对 V1 有改善吗？</h3>
+            </div>
+            <span class="keyboard-hint">键盘 1 / 2 / 3</span>
+          </div>
+          <div id="verdictButtons" class="verdict-grid regression-verdict-grid">
+            <button type="button" data-verdict="improved">
+              <strong>↑ 改善</strong><span>更准确或更适合检索</span>
+            </button>
+            <button type="button" data-verdict="same">
+              <strong>＝ 持平</strong><span>没有实质变化</span>
+            </button>
+            <button type="button" data-verdict="regressed">
+              <strong>↓ 退化</strong><span>新增错误或遗漏</span>
+            </button>
+          </div>
+          <fieldset class="regression-preference">
+            <legend>哪一版输出更值得保留？</legend>
+            <div id="preferenceButtons" class="segmented-buttons regression-preference-buttons">
+              <button type="button" data-value="v7">V7 更好</button
+              ><button type="button" data-value="equivalent">两版相当</button
+              ><button type="button" data-value="v1">V1 更好</button
+              ><button type="button" data-value="neither">两版都不理想</button>
+            </div>
+          </fieldset>
+          <label class="watched-check"
+            ><input id="watchedFullSegment" type="checkbox" /> 已完整观看该验收片段</label
+          >
+          <label class="notes-field"
+            ><span>私有备注（不进入匿名导出）</span
+            ><textarea
+              id="notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="例如：V7 去掉了人物性别臆测，但仍遗漏第二个镜头"
+            ></textarea>
+          </label>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/regression-app.mjs"></script>
+  </body>
+</html>

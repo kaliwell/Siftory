@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-08-04T13:38:03.411Z",
+  "reports": [
+    {
+      "modelName": "clip_vit_base_patch32",
+      "embeddingType": "global",
+      "dim": 512,
+      "generationCount": 273375,
+      "alignedCount": 273375,
+      "missingInJsonl": 0,
+      "malformedJsonlRows": 0,
+      "queryCount": 200,
+      "topK": 50,
+      "recallAtKMean": 0.9968999999999996,
+      "recallAtKMin": 0.96,
+      "selfTop1Rate": 0.88,
+      "selfInTopKRate": 1,
+      "top1GapP99": 0,
+      "top1GapMax": 9.97556481863171e-11,
+      "scoreErrorMedian": 0.000007596741732229795,
+      "scoreErrorP99": 0.0004727268863972123,
+      "scoreErrorMax": 0.005032194921662292,
+      "thresholds": {
+        "minRecallAtK": 0.99,
+        "minSelfInTopKRate": 0.995,
+        "maxTop1Gap": 0.001,
+        "maxMedianScoreError": 0.001,
+        "maxP99ScoreError": 0.005
+      },
+      "gatePassed": true,
+      "gateFailures": [],
+      "elapsedMs": 114560
+    },
+    {
+      "modelName": "dinov2_vitb14",
+      "embeddingType": "global",
+      "dim": 768,
+      "generationCount": 276534,
+      "alignedCount": 276534,
+      "missingInJsonl": 0,
+      "malformedJsonlRows": 0,
+      "queryCount": 200,
+      "topK": 50,
+      "recallAtKMean": 0.9964999999999999,
+      "recallAtKMin": 0.94,
+      "selfTop1Rate": 0.91,
+      "selfInTopKRate": 0.995,
+      "top1GapP99": 0,
+      "top1GapMax": 3.0549229812493195e-11,
+      "scoreErrorMedian": 0.000004080660650496171,
+      "scoreErrorP99": 0.0006365059409852991,
+      "scoreErrorMax": 0.007584941261004174,
+      "thresholds": {
+        "minRecallAtK": 0.99,
+        "minSelfInTopKRate": 0.995,
+        "maxTop1Gap": 0.001,
+        "maxMedianScoreError": 0.001,
+        "maxP99ScoreError": 0.005
+      },
+      "gatePassed": true,
+      "gateFailures": [],
+      "elapsedMs": 211272
+    }
+  ]
+}

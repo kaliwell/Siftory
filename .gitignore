@@ -1,0 +1,56 @@
+node_modules/
+dist/
+dist-electron/
+release/
+artifacts/
+.model-cache-test/
+ai-models/
+crash-dumps/
+tools/ffmpeg/bin/*.exe
+*.tmp
+# Backup directories (generated at runtime)
+cppbackup/
+demobackup/
+backup/
+native/build/
+native/build-electron/
+native/build-node/
+*.tsbuildinfo
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+tmp-dl/
+.venv-parity/
+models/*
+!models/manifest.json
+tmp-sam-mask.png
+/kimi/k.txt
+# Local scratch data (contains machine-specific file paths)
+tmp/
+# OS-level cache directories accidentally created in repo root
+Microsoft/
+# Keep version-pinned license texts under the reviewed legal directory.
+!/legal/third-party/microsoft/
+NVIDIA Corporation/
+# Local tooling / credentials scratch dir
+kimi/
+# Local logs and personal launch scripts
+logs/
+start.bat
+
+# Local credentials and personal registration materials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+/personal-materials/
+/copyright-materials/
+/legal/copyright-registration.local.*
+.DS_Store
+Thumbs.db

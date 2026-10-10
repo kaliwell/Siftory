@@ -1,0 +1,46 @@
+name: Controlled release verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Package profile to verify
+        required: true
+        type: choice
+        default: online
+        options:
+          - online
+          - offline
+
+permissions:
+  contents: read
+
+jobs:
+  packaged-runtime:
+    runs-on: [self-hosted, Windows, X64, floating-clock-models]
+    environment: controlled-release
+    timeout-minutes: 120
+    env:
+      FLOATING_CLOCK_KEEP_UNPACKED: '1'
+      FLOATING_CLOCK_PACKAGE_PROFILE: ${{ inputs.profile }}
+      RUNTIME_RESOURCE_CACHE: ${{ vars.RUNTIME_RESOURCE_CACHE }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Restore reviewed runtime resources
+        shell: powershell
+        run: |
+          if (-not $env:RUNTIME_RESOURCE_CACHE) { throw 'RUNTIME_RESOURCE_CACHE is required' }
+          npm run resources:fetch -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE" "--cache-dir=$env:RUNTIME_RESOURCE_CACHE" "--target-dir=$env:GITHUB_WORKSPACE" --offline
+      - run: npm run resources:verify -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"
+      - run: npm run licenses:gate -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"
+      - run: npm run ci:verify
+      - shell: powershell
+        run: npm run "build:$env:FLOATING_CLOCK_PACKAGE_PROFILE"
+      - run: npm run smoke:packaged:resources -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"
+      - run: npm run smoke:ui:packaged:locales
+      - run: npm run smoke:installer:archive -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"

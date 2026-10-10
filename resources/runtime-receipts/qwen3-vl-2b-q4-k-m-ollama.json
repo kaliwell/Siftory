@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-08-14",
+  "purpose": "Pinned external Qwen3-VL 2B evaluation model for the loopback Ollama adapter",
+  "ollamaTag": "qwen3-vl:2b",
+  "tagIdentity": {
+    "digest": "0635d9d857d497aeadba3d7d27485746c50554446f9f6ec01ef39788221adbe8",
+    "sizeBytes": 1889519687
+  },
+  "model": {
+    "family": "qwen3vl",
+    "parameterSize": "2.1B",
+    "quantization": "Q4_K_M",
+    "format": "gguf",
+    "contextLength": 262144,
+    "embeddingLength": 2048,
+    "capabilities": ["vision", "completion", "tools", "thinking"]
+  },
+  "ollamaManifest": {
+    "mainModelBlobSha256": "ebabfa59b71a5b96e0281ec2994977e785284e0939807a99fc340dec3c6f10de",
+    "mainModelBlobSizeBytes": 1889496384,
+    "licenseLayerSha256": "7339fa418c9ad3e8e12e74ad0fd26a9cc4be8703f9c110728a992b193be85cb2",
+    "licenseLayerSizeBytes": 11355,
+    "parametersLayerSha256": "f6417cb1e26962991f8e875a93f3cb0f92bc9b4955e004881251ccbf934a19d2",
+    "parametersLayerSizeBytes": 42
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct"
+  },
+  "distribution": {
+    "defaultBundled": false,
+    "applicationMayPullOrUpdate": false,
+    "userApprovalRequired": true
+  },
+  "verification": {
+    "projectAdapterState": "ready",
+    "inferenceExecuted": false,
+    "realMediaRead": false
+  }
+}

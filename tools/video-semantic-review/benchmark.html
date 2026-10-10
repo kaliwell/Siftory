@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080c12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Qwen 多类型语义复核</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="profile-review-page benchmark-review-page">
+    <div id="fatal" class="fatal" hidden></div>
+    <header class="profile-header benchmark-header">
+      <div>
+        <p class="eyebrow">VID-016 · VAL-207 深度真值验收</p>
+        <h1>完整观看、幻觉与时间点复核</h1>
+        <p class="lede">
+          完整观看每个验收片段，复核模型幻觉和事件时间点，最后勾选“已完整观看”进入下一条；原有“像/部分像/不像”结论会保留。
+        </p>
+      </div>
+      <div class="profile-header-actions benchmark-header-actions">
+        <a id="backToProfiles" class="ghost-button link-button" href="/profiles">素材归类</a>
+        <button id="exportReview" class="ghost-button" type="button" disabled>
+          完整观看后导出（0/44）
+        </button>
+      </div>
+    </header>
+
+    <section class="profile-overview benchmark-overview" aria-label="语义复核进度">
+      <div class="overview-total">
+        <span id="reviewProgress">0 / 0 已复核</span>
+        <strong id="acceptanceLabel">语义接受率 —</strong>
+        <div class="progress-track"><span id="reviewProgressBar"></span></div>
+      </div>
+      <div class="benchmark-summary-chips">
+        <span id="generatedLabel">已生成 0 / 0</span>
+        <span id="consistentLabel">像 0</span>
+        <span id="partialLabel">部分像 0</span>
+        <span id="inconsistentLabel">不像 0</span>
+        <span id="hallucinationLabel">明显幻觉 0</span>
+      </div>
+    </section>
+
+    <main class="profile-workspace benchmark-workspace">
+      <aside class="profile-sidebar">
+        <div class="sidebar-toolbar benchmark-toolbar">
+          <div>
+            <p class="eyebrow">复核队列</p>
+            <strong id="filterCount">0 条</strong>
+          </div>
+          <select id="filterSelect" aria-label="筛选复核样本">
+            <option value="deep-unreviewed">待深度验收（未判定或未完整观看）</option>
+            <option value="unreviewed">待复核（已生成）</option>
+            <option value="ready">全部已生成</option>
+            <option value="all">全部计划</option>
+            <option value="consistent">像</option>
+            <option value="partial">部分像</option>
+            <option value="inconsistent">不像</option>
+          </select>
+          <select id="profileFilter" aria-label="筛选视频类型">
+            <option value="all">全部类型</option>
+          </select>
+        </div>
+        <div id="sampleList" class="profile-sample-list"></div>
+      </aside>
+
+      <section class="profile-stage benchmark-stage">
+        <div class="profile-stage-heading">
+          <div>
+            <p id="samplePosition" class="eyebrow">尚未选择</p>
+            <h2 id="sampleTitle">基准样本</h2>
+          </div>
+          <div class="stage-nav">
+            <button id="previousSample" class="ghost-button" type="button">上一条</button
+            ><button id="nextSample" class="primary-button" type="button">下一条</button>
+          </div>
+        </div>
+        <div class="benchmark-columns">
+          <div>
+            <div class="player-shell profile-player-shell benchmark-player-shell">
+              <video id="video" controls preload="metadata" playsinline></video>
+              <div id="playerEmpty" class="player-empty">等待模型结果或选择样本</div>
+            </div>
+            <div class="segment-controls">
+              <button id="playSegment" class="primary-button" type="button">播放验收片段</button>
+              <span id="segmentRange">—</span
+              ><span id="saveStatus" class="save-status">尚未复核</span>
+            </div>
+          </div>
+          <article class="semantic-result-card" aria-labelledby="semanticTitle">
+            <p class="eyebrow">Qwen3-VL 2B 输出</p>
+            <h3 id="semanticTitle">模型描述</h3>
+            <p id="semanticSummary" class="semantic-summary">结果生成后显示在这里。</p>
+            <div id="resultMeta" class="result-meta"></div>
+            <section>
+              <h4>场景</h4>
+              <div id="sceneTags" class="tag-list"></div>
+            </section>
+            <section>
+              <h4>事件与时间点</h4>
+              <div id="eventList" class="semantic-list"></div>
+            </section>
+            <details>
+              <summary>人物、物体、文字与检索词</summary>
+              <div id="semanticDetails" class="semantic-details"></div>
+            </details>
+            <div id="warningList" class="warning-list"></div>
+          </article>
+        </div>
+
+        <section
+          id="reviewPanel"
+          class="profile-classifier benchmark-classifier"
+          aria-labelledby="reviewTitle"
+        >
+          <div class="classifier-heading">
+            <div>
+              <p class="eyebrow">人工判断</p>
+              <h3 id="reviewTitle">模型描述与视频有多一致？</h3>
+            </div>
+            <span class="keyboard-hint">键盘 1 / 2 / 3</span>
+          </div>
+          <div id="verdictButtons" class="verdict-grid">
+            <button type="button" data-verdict="consistent">
+              <strong>✓ 像</strong><span>主要内容吻合</span>
+            </button>
+            <button type="button" data-verdict="partial">
+              <strong>≈ 部分像</strong><span>方向对但有偏差</span>
+            </button>
+            <button type="button" data-verdict="inconsistent">
+              <strong>× 不像</strong><span>主要内容错误</span>
+            </button>
+          </div>
+          <div class="secondary-review-grid">
+            <fieldset>
+              <legend>幻觉程度</legend>
+              <div id="hallucinationButtons" class="segmented-buttons">
+                <button type="button" data-value="none">无</button
+                ><button type="button" data-value="minor">轻微</button
+                ><button type="button" data-value="major">明显</button>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>事件时间点</legend>
+              <div id="timestampButtons" class="segmented-buttons">
+                <button type="button" data-value="not-applicable">不适用</button
+                ><button type="button" data-value="accurate">准确</button
+                ><button type="button" data-value="approximate">大致</button
+                ><button type="button" data-value="wrong">错误</button>
+              </div>
+            </fieldset>
+          </div>
+          <label class="watched-check"
+            ><input id="watchedFullSegment" type="checkbox" /> 已完整观看该验收片段</label
+          >
+          <label class="notes-field"
+            ><span>备注（可选，不进入匿名导出）</span
+            ><textarea
+              id="notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="记录错在哪里、遗漏了什么"
+            ></textarea>
+          </label>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/benchmark-app.mjs"></script>
+  </body>
+</html>

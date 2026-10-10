@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-08-15",
+  "purpose": "Pinned Windows x64 llama.cpp sidecar candidates for the managed video semantic runtime",
+  "upstream": {
+    "repository": "https://github.com/ggml-org/llama.cpp",
+    "release": "b10441",
+    "commit": "0177dcc7300bad8914bb838baabce87899812491",
+    "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b10441",
+    "publishedAt": "2026-08-15T11:24:40Z"
+  },
+  "archives": [
+    {
+      "variant": "cpu-x64",
+      "fileName": "llama-b10441-bin-win-cpu-x64.zip",
+      "sizeBytes": 18477134,
+      "sha256": "85a6e98ec57afc237c9b62f2af03e68e0d974fd90bf43a3a35eaf02e8f256045"
+    },
+    {
+      "variant": "vulkan-x64",
+      "fileName": "llama-b10441-bin-win-vulkan-x64.zip",
+      "sizeBytes": 34580767,
+      "sha256": "7fdbac5860ad1c64bf1e5703e4491612562e953a709a9f190affd6141147c6aa"
+    },
+    {
+      "variant": "cuda-12.4-x64",
+      "fileName": "llama-b10441-bin-win-cuda-12.4-x64.zip",
+      "sizeBytes": 250792863,
+      "sha256": "0de3ea2c22b6de3eb0831300bf142a49b1c38f135f73a80648865e2f8d890287"
+    },
+    {
+      "variant": "cuda-12.4-runtime-x64",
+      "fileName": "cudart-llama-bin-win-cuda-12.4-x64.zip",
+      "sizeBytes": 391443627,
+      "sha256": "8c79a9b226de4b3cacfd1f83d24f962d0773be79f1e7b75c6af4ded7e32ae1d6"
+    }
+  ],
+  "license": {
+    "spdx": "MIT",
+    "sourceUrl": "https://github.com/ggml-org/llama.cpp/blob/0177dcc7300bad8914bb838baabce87899812491/LICENSE",
+    "redistributionReview": "legal-review-required"
+  },
+  "distribution": {
+    "defaultBundled": false,
+    "applicationMayDownloadOrUpdate": false,
+    "archiveVariantDecision": "vulkan-x64-local-evaluation-only",
+    "userApprovalRequired": true
+  },
+  "verification": {
+    "releaseMetadataRecorded": true,
+    "archivesDownloaded": true,
+    "archiveSizeAndSha256Verified": true,
+    "downloadScope": "local-evaluation-only",
+    "extractedFileCount": 52,
+    "extractedExecutableSha256Recorded": true,
+    "llamaServerSizeBytes": 9216,
+    "llamaServerSha256": "4a118c0892482e738b19ebcd201d3fc9d687ab0dd2f841d2b0d7272ab909655a",
+    "realSidecarIdentityReady": true,
+    "localSoakExecuted": true,
+    "localSoakRounds": 6,
+    "localSoakSidecarStopped": true,
+    "packagedSmokeExecuted": false
+  }
+}

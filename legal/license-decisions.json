@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "kind": "floating-clock-license-decisions",
+  "project": {
+    "status": "pending",
+    "releaseMode": "proprietary",
+    "licenseExpression": "UNLICENSED",
+    "licenseFile": null,
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidence": [
+      "docs/current/2026-07-28-project-audit-remediation.md#第七十七批专有发布模式预配置",
+      "docs/current/2026-08-17-commercial-release-readiness.md#1-当前判定"
+    ],
+    "pendingReason": "Individual publisher mode is selected; public publisher identity, final EULA terms, territories and authorized approval remain pending."
+  },
+  "components": {
+    "dinov2-vitb14-xenova-q4": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "clip-vit-b32-xenova-q4": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "multilingual-clip-vit-b32-text-quint8": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "ultralytics-yolov8n-coco-onnx": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "lindevs-yolov8n-face-onnx": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "cvlface-adaface-ir101-webface12m-onnx": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "osnet-ain-x1-msmt17-onnx": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "pulpcut-mobilesam-onnx": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "gyan-ffmpeg-full-8-1-2": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "microsoft-onnxruntime-gpu-windows-1-24-3": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.24.3",
+        "https://github.com/microsoft/onnxruntime/blob/v1.24.3/LICENSE"
+      ],
+      "licenseFiles": []
+    },
+    "nvidia-cuda-12-8-embedding-runtime": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://docs.nvidia.com/cuda/archive/12.8.1/eula/index.html#attachment-a",
+        "https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.8.1.json"
+      ],
+      "licenseFiles": []
+    },
+    "nvidia-cudnn-9-19-1-cuda12-runtime": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://docs.nvidia.com/deeplearning/cudnn/backend/v9.19.0/reference/eula.html",
+        "https://developer.download.nvidia.com/compute/cudnn/redist/redistrib_9.19.1.json"
+      ],
+      "licenseFiles": []
+    },
+    "floating-clock-cuda-embedding-worker": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": ["docs/benchmarks/2026-08-07-dino-clip-cuda-poc.md"],
+      "licenseFiles": []
+    },
+    "floating-clock-fast-scanner-electron": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [],
+      "licenseFiles": []
+    },
+    "sensevoice-small-funasr-external-audio-semantic-model": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/tree/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+        "https://www.modelscope.cn/models/iic/SenseVoiceSmall"
+      ],
+      "licenseFiles": []
+    },
+    "fsmn-vad-campplus-funasr-external-diarization-models": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://www.modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary",
+        "https://www.modelscope.cn/models/iic/speech_campplus_sv_zh-cn_16k-common/summary"
+      ],
+      "licenseFiles": []
+    },
+    "ollama-0-32-9-windows-x64-external-test-runtime": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": ["https://github.com/ollama/ollama/releases/tag/v0.32.9"],
+      "licenseFiles": []
+    },
+    "qwen3-vl-2b-q4-k-m-ollama-external-test-model": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://ollama.com/library/qwen3-vl:2b",
+        "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct"
+      ],
+      "licenseFiles": []
+    },
+    "llama-cpp-b10441-windows-x64-managed-video-runtime-candidate": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://github.com/ggml-org/llama.cpp/releases/tag/b10441",
+        "https://github.com/ggml-org/llama.cpp/blob/0177dcc7300bad8914bb838baabce87899812491/LICENSE"
+      ],
+      "licenseFiles": []
+    },
+    "qwen3-vl-2b-instruct-q4-k-m-gguf-managed-runtime-candidate": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+        "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct"
+      ],
+      "licenseFiles": []
+    },
+    "adobe-source-han-sans-cn-vf-2-005": {
+      "status": "pending",
+      "resolution": null,
+      "permittedProfiles": [],
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidence": [
+        "https://github.com/adobe-fonts/source-han-sans/releases/tag/2.005R",
+        "https://github.com/adobe-fonts/source-han-sans/blob/2.005R/LICENSE.txt"
+      ],
+      "licenseFiles": ["legal/SourceHanSans-OFL-1.1.txt"]
+    }
+  }
+}

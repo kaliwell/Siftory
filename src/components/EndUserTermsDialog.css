@@ -1,0 +1,151 @@
+.end-user-terms-dialog {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  color: #e9edf4;
+  background: #171c30;
+  font-family: system-ui, 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color-scheme: dark;
+  overflow: auto;
+  -webkit-app-region: no-drag;
+}
+
+.end-user-terms-dialog *,
+.end-user-terms-dialog *::before,
+.end-user-terms-dialog *::after {
+  box-sizing: border-box;
+}
+
+.end-user-terms-header,
+.end-user-terms-footer {
+  flex: 0 0 auto;
+}
+
+.end-user-terms-header h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.end-user-terms-header p {
+  margin: 8px 0 0;
+}
+
+.end-user-terms-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  color: #b9c3d4;
+  overflow-wrap: anywhere;
+}
+
+.end-user-terms-body {
+  flex: 1 1 200px;
+  min-height: 120px;
+  padding: 16px;
+  border: 1px solid #66718a;
+  border-radius: 8px;
+  background: #111626;
+  overflow: auto;
+  overscroll-behavior: contain;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  tab-size: 4;
+}
+
+.end-user-terms-agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.end-user-terms-agreement input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: #91b9ff;
+}
+
+.end-user-terms-error {
+  margin: 10px 0 0;
+  color: #ffb7b7;
+  overflow-wrap: anywhere;
+}
+
+.end-user-terms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.end-user-terms-actions button {
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 1px solid #7d8aa3;
+  border-radius: 6px;
+  color: #e9edf4;
+  background: #252e44;
+  font: inherit;
+  cursor: pointer;
+}
+
+.end-user-terms-actions .end-user-terms-primary {
+  color: #111b30;
+  background: #a2c5ff;
+  border-color: #a2c5ff;
+}
+
+.end-user-terms-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.end-user-terms-dialog :focus-visible {
+  outline: 3px solid #b4d0ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px), (max-height: 520px) {
+  .end-user-terms-dialog {
+    padding: 12px;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .end-user-terms-header h1 {
+    font-size: 18px;
+  }
+
+  .end-user-terms-body {
+    min-height: 48px;
+    padding: 10px;
+  }
+
+  .end-user-terms-actions {
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .end-user-terms-actions button {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+}
+
+@media (forced-colors: active) {
+  .end-user-terms-dialog :focus-visible {
+    outline-color: Highlight;
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "targetRoot": "<DATASET>",
+  "limit": 5,
+  "ffprobe": "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\tools\\ffmpeg\\bin\\ffprobe.exe",
+  "ffmpeg": "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\tools\\ffmpeg\\bin\\ffmpeg.exe",
+  "totalMs": 12396.96,
+  "enumerate": {
+    "entries": 65,
+    "dirs": 3,
+    "failed": 0,
+    "videos": 5,
+    "elapsedMs": 8.37,
+    "percentOfTotal": 0.07
+  },
+  "metadata": {
+    "ok": 5,
+    "failed": 0,
+    "elapsedMs": 5439.87,
+    "avgMs": 1087.97,
+    "percentOfTotal": 43.88
+  },
+  "thumbnails": {
+    "ok": 5,
+    "failed": 0,
+    "elapsedMs": 6944.59,
+    "avgMs": 1388.92,
+    "percentOfTotal": 56.02
+  },
+  "process": {
+    "nodeCpuSeconds": 0.046,
+    "childCpuSeconds": 0,
+    "childCpuToWallRatio": 0,
+    "nodePeakMemoryMbApprox": 38.72,
+    "childPeakMemoryMb": 0
+  },
+  "rows": [
+    {
+      "name": "0001-0013.mp4",
+      "sizeMb": 3.33,
+      "metadataMs": 1121.02,
+      "thumbnailMs": 1183.28,
+      "metadataOk": true,
+      "thumbnailOk": true,
+      "childCpuSeconds": 0,
+      "peakChildMemMb": 0,
+      "width": 1080,
+      "height": 1920,
+      "durationMs": 4333,
+      "path": "<DATASET>\\0001-0013.mp4"
+    },
+    {
+      "name": "118ac768c6aa14dd2f3b57ca8ba5f9bd.mp4",
+      "sizeMb": 2.7,
+      "metadataMs": 1071.23,
+      "thumbnailMs": 1211.38,
+      "metadataOk": true,
+      "thumbnailOk": true,
+      "childCpuSeconds": 0,
+      "peakChildMemMb": 0,
+      "width": 576,
+      "height": 1280,
+      "durationMs": 12028,
+      "path": "<DATASET>\\118ac768c6aa14dd2f3b57ca8ba5f9bd.mp4"
+    },
+    {
+      "name": "1_4927129681028711617.mp4",
+      "sizeMb": 6.75,
+      "metadataMs": 1068,
+      "thumbnailMs": 1158.3,
+      "metadataOk": true,
+      "thumbnailOk": true,
+      "childCpuSeconds": 0,
+      "peakChildMemMb": 0,
+      "width": 720,
+      "height": 1280,
+      "durationMs": 30418,
+      "path": "<DATASET>\\1_4927129681028711617.mp4"
+    },
+    {
+      "name": "20240531_160108.mp4",
+      "sizeMb": 15.61,
+      "metadataMs": 1089.05,
+      "thumbnailMs": 1142.45,
+      "metadataOk": true,
+      "thumbnailOk": true,
+      "childCpuSeconds": 0,
+      "peakChildMemMb": 0,
+      "width": 1920,
+      "height": 1080,
+      "durationMs": 16600,
+      "path": "<DATASET>\\20240531_160108.mp4"
+    },
+    {
+      "name": "2026-03-31 11-18-26.mp4",
+      "sizeMb": 31.53,
+      "metadataMs": 1090.57,
+      "thumbnailMs": 2249.18,
+      "metadataOk": true,
+      "thumbnailOk": true,
+      "childCpuSeconds": 0,
+      "peakChildMemMb": 0,
+      "width": 1920,
+      "height": 1080,
+      "durationMs": 45667,
+      "path": "<DATASET>\\2026-03-31 11-18-26.mp4"
+    }
+  ]
+}

@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MediaSearch Text Annotation</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #101210;
+        color: #e6eee6;
+        font:
+          14px/1.4 'Segoe UI',
+          sans-serif;
+        letter-spacing: 0;
+      }
+      header {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        border-bottom: 1px solid #354238;
+      }
+      select,
+      button {
+        height: 34px;
+        border: 1px solid #536658;
+        background: #1a211c;
+        color: inherit;
+        padding: 0 12px;
+      }
+      button:hover {
+        background: #29372d;
+      }
+      button:disabled {
+        opacity: 0.45;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        height: calc(100vh - 56px);
+      }
+      .viewer {
+        display: grid;
+        place-items: center;
+        min-width: 0;
+        padding: 20px;
+        background: #080a09;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+        max-height: calc(100vh - 110px);
+        object-fit: contain;
+      }
+      aside {
+        padding: 16px;
+        border-left: 1px solid #354238;
+        overflow: auto;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin: 16px 0;
+      }
+      .actions button {
+        height: 44px;
+      }
+      .relevant {
+        border-color: #28a768;
+      }
+      .not {
+        border-color: #c44c4c;
+      }
+      .unsure {
+        border-color: #b7963c;
+      }
+      .active {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+      }
+      .toolbar-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .meta {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+        color: #aeb9b0;
+      }
+      .progress {
+        margin-left: auto;
+        color: #aeb9b0;
+      }
+      .work-progress {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0;
+      }
+      progress {
+        width: 100%;
+        accent-color: #28a768;
+      }
+      kbd {
+        padding: 2px 5px;
+        border: 1px solid #536658;
+        background: #1a211c;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Text Semantic Annotation</strong>
+      <select id="concept"></select>
+      <button id="prev" title="Previous">←</button>
+      <button id="next" title="Next">→</button>
+      <label class="toolbar-check"><input id="priority" type="checkbox" checked />评测优先</label>
+      <span class="progress" id="progress"></span>
+    </header>
+    <main>
+      <section class="viewer"><img id="frame" alt="Candidate frame" /></section>
+      <aside>
+        <h2 id="query"></h2>
+        <div class="actions">
+          <button class="relevant" data-label="relevant">相关 <kbd>1</kbd></button>
+          <button class="not" data-label="not_relevant">不相关 <kbd>2</kbd></button>
+          <button class="unsure" data-label="unsure">不确定 <kbd>3</kbd></button>
+        </div>
+        <button id="clearLabel">清除当前标记 <kbd>0</kbd></button>
+        <button id="undo">撤销上次标记 <kbd>Ctrl+Z</kbd></button>
+        <div class="work-progress">
+          <progress id="overall" value="0" max="1"></progress><span id="percent">0%</span>
+        </div>
+        <div class="meta" id="stage"></div>
+        <div class="meta" id="eta"></div>
+        <p>判断图片是否符合概念本身，不判断文件名。标记后自动进入下一张。</p>
+        <div class="meta" id="message"></div>
+        <div class="meta" id="readiness"></div>
+        <div class="meta" id="meta"></div>
+      </aside>
+    </main>
+    <script>
+      let state,
+        conceptIndex = 0,
+        itemIndex = 0,
+        saving = false,
+        history = [],
+        decisionTimes = []
+      const $ = (id) => document.getElementById(id)
+      async function load() {
+        state = await fetch('/api/state').then((response) => response.json())
+        refreshConceptOptions()
+        jumpToNextUnjudged(true)
+        render()
+      }
+      function labelsFor(concept) {
+        return state.judgments.judgments[concept.id] || {}
+      }
+      function countsFor(concept) {
+        const values = Object.values(labelsFor(concept))
+        return {
+          decided: values.filter((label) => label === 'relevant' || label === 'not_relevant')
+            .length,
+          unsure: values.filter((label) => label === 'unsure').length,
+        }
+      }
+      function refreshConceptOptions() {
+        const selected = conceptIndex
+        $('concept').replaceChildren()
+        state.dataset.concepts.forEach((concept, index) => {
+          const count = countsFor(concept)
+          $('concept').add(
+            new Option(
+              `${concept.en} / ${concept.zh} (${count.decided}/${concept.candidates.length}${count.unsure ? ` · ?${count.unsure}` : ''})`,
+              index,
+            ),
+          )
+        })
+        $('concept').value = String(selected)
+      }
+      function current() {
+        const concept = state.dataset.concepts[conceptIndex]
+        return { concept, item: concept.candidates[itemIndex] }
+      }
+      function isDecided(label) {
+        return label === 'relevant' || label === 'not_relevant'
+      }
+      function candidateTier(item) {
+        const ranks = item.sources
+          .filter((source) => source.source === 'clip_en' || source.source === 'clip_zh')
+          .map((source) => source.rank || Number.POSITIVE_INFINITY)
+        const rank = Math.min(...ranks)
+        if (rank <= 10) return 0
+        if (rank <= 20) return 1
+        if (rank <= 50) return 2
+        return 3
+      }
+      function tierStats() {
+        const tiers = [
+          { name: 'Top10', total: 0, decided: 0 },
+          { name: 'Top20', total: 0, decided: 0 },
+          { name: 'Top50', total: 0, decided: 0 },
+          { name: '候选池', total: 0, decided: 0 },
+        ]
+        state.dataset.concepts.forEach((concept) => {
+          const labels = labelsFor(concept)
+          concept.candidates.forEach((item) => {
+            const tier = tiers[candidateTier(item)]
+            tier.total += 1
+            if (isDecided(labels[item.id])) tier.decided += 1
+          })
+        })
+        return tiers
+      }
+      function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) return '计算中'
+        if (seconds < 60) return `${Math.ceil(seconds)} 秒`
+        if (seconds < 3600) return `${Math.ceil(seconds / 60)} 分钟`
+        return `${(seconds / 3600).toFixed(1)} 小时`
+      }
+      function readinessFor(concept, k) {
+        const labels = labelsFor(concept)
+        const ids = new Set(
+          [...concept.rankings.en.slice(0, k), ...concept.rankings.zh.slice(0, k)].map(
+            (item) => item.id,
+          ),
+        )
+        const decided = [...ids].filter((id) => isDecided(labels[id])).length
+        return `${decided}/${ids.size}`
+      }
+      function render() {
+        const { concept, item } = current()
+        $('frame').src = `/frame?concept=${encodeURIComponent(concept.id)}&id=${item.id}`
+        $('query').textContent = `${concept.en} / ${concept.zh}`
+        const labels = labelsFor(concept)
+        const conceptCounts = countsFor(concept)
+        const total = state.dataset.concepts.reduce(
+          (sum, entry) => sum + entry.candidates.length,
+          0,
+        )
+        const totalJudged = state.dataset.concepts.reduce(
+          (sum, entry) => sum + countsFor(entry).decided,
+          0,
+        )
+        $('progress').textContent =
+          `${itemIndex + 1}/${concept.candidates.length} · 本组 ${conceptCounts.decided}${conceptCounts.unsure ? ` (?${conceptCounts.unsure})` : ''} · 总计 ${totalJudged}/${total}`
+        $('overall').max = total
+        $('overall').value = totalJudged
+        $('percent').textContent = `${((totalJudged / Math.max(1, total)) * 100).toFixed(1)}%`
+        const stages = tierStats()
+        const activeStage = stages.find((stage) => stage.decided < stage.total)
+        $('stage').textContent = activeStage
+          ? `当前阶段：${activeStage.name} ${activeStage.decided}/${activeStage.total}`
+          : '全部候选已明确判断'
+        const remaining = total - totalJudged
+        if (decisionTimes.length >= 2) {
+          const elapsed = (decisionTimes.at(-1) - decisionTimes[0]) / 1000
+          const rate = (decisionTimes.length - 1) / Math.max(1, elapsed)
+          $('eta').textContent =
+            `速度 ${(rate * 60).toFixed(1)} 项/分钟 · ETA ${formatDuration(remaining / rate)}`
+        } else $('eta').textContent = remaining > 0 ? '完成 2 项后显示速度和 ETA' : '已完成'
+        $('readiness').textContent =
+          `评测覆盖：Top10 ${readinessFor(concept, 10)} · Top20 ${readinessFor(concept, 20)} · Top50 ${readinessFor(concept, 50)}\n`
+        document
+          .querySelectorAll('[data-label]')
+          .forEach((button) =>
+            button.classList.toggle('active', button.dataset.label === labels[item.id]),
+          )
+        $('clearLabel').disabled = !labels[item.id] || saving
+        $('undo').disabled = history.length === 0 || saving
+        $('meta').textContent =
+          `${labels[item.id] || '未标注'}\n${item.videoPath || ''}\n${Math.round((item.timestampMs || 0) / 1000)}s\n${JSON.stringify(item.sources)}`
+        prefetchNext()
+      }
+      function move(delta) {
+        const count = current().concept.candidates.length
+        itemIndex = (itemIndex + delta + count) % count
+        render()
+      }
+      function findNextUnjudged(
+        startConcept = conceptIndex,
+        startItem = itemIndex + 1,
+        fromStart = false,
+      ) {
+        if ($('priority').checked) {
+          const conceptCount = state.dataset.concepts.length
+          const pending = []
+          state.dataset.concepts.forEach((concept, nextConcept) => {
+            const labels = labelsFor(concept)
+            concept.candidates.forEach((item, nextItem) => {
+              if (isDecided(labels[item.id])) return
+              const conceptDistance = fromStart
+                ? nextConcept
+                : (nextConcept - conceptIndex + conceptCount) % conceptCount || conceptCount
+              pending.push({
+                nextConcept,
+                nextItem,
+                tier: candidateTier(item),
+                conceptDistance,
+              })
+            })
+          })
+          pending.sort(
+            (a, b) =>
+              a.tier - b.tier || a.conceptDistance - b.conceptDistance || a.nextItem - b.nextItem,
+          )
+          return pending.length > 0 ? [pending[0].nextConcept, pending[0].nextItem] : null
+        }
+        for (
+          let conceptOffset = 0;
+          conceptOffset < state.dataset.concepts.length;
+          conceptOffset += 1
+        ) {
+          const nextConcept = (startConcept + conceptOffset) % state.dataset.concepts.length
+          const concept = state.dataset.concepts[nextConcept]
+          const labels = labelsFor(concept)
+          const first = conceptOffset === 0 ? startItem : 0
+          for (let offset = 0; offset < concept.candidates.length; offset += 1) {
+            const nextItem = (first + offset) % concept.candidates.length
+            if (!isDecided(labels[concept.candidates[nextItem].id])) return [nextConcept, nextItem]
+          }
+        }
+        return null
+      }
+      function jumpToNextUnjudged(fromStart = false) {
+        const match = findNextUnjudged(
+          fromStart ? 0 : conceptIndex,
+          fromStart ? 0 : itemIndex + 1,
+          fromStart,
+        )
+        if (!match) return false
+        ;[conceptIndex, itemIndex] = match
+        $('concept').value = String(conceptIndex)
+        return true
+      }
+      function advance() {
+        if (jumpToNextUnjudged()) render()
+        else move(1)
+      }
+      function prefetchNext() {
+        const match = findNextUnjudged()
+        if (!match) return
+        const concept = state.dataset.concepts[match[0]]
+        const item = concept.candidates[match[1]]
+        new Image().src = `/frame?concept=${encodeURIComponent(concept.id)}&id=${item.id}`
+      }
+      async function saveLabel(concept, item, label) {
+        const response = await fetch('/api/judgment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conceptId: concept.id, id: item.id, label }),
+        })
+        if (!response.ok) throw new Error(`Save failed: ${response.status}`)
+      }
+      async function judge(label, options = {}) {
+        if (saving) return
+        saving = true
+        const { concept, item } = current()
+        const labels = labelsFor(concept)
+        const previous = labels[item.id]
+        try {
+          await saveLabel(concept, item, label)
+          state.judgments.judgments[concept.id] ||= {}
+          if (label === 'unlabeled') delete state.judgments.judgments[concept.id][item.id]
+          else state.judgments.judgments[concept.id][item.id] = label
+          if (!isDecided(previous) && isDecided(label)) decisionTimes.push(Date.now())
+          if (!options.skipHistory)
+            history.push({ conceptIndex, itemIndex, previous: previous || 'unlabeled' })
+          $('message').textContent = '已保存'
+          refreshConceptOptions()
+          if (options.stay) render()
+          else advance()
+        } catch (error) {
+          $('message').textContent = error.message
+        } finally {
+          saving = false
+          render()
+        }
+      }
+      async function undo() {
+        if (saving || history.length === 0) return
+        const entry = history.pop()
+        conceptIndex = entry.conceptIndex
+        itemIndex = entry.itemIndex
+        $('concept').value = String(conceptIndex)
+        await judge(entry.previous, { skipHistory: true, stay: true })
+      }
+      $('concept').onchange = (event) => {
+        conceptIndex = Number(event.target.value)
+        itemIndex = 0
+        const concept = state.dataset.concepts[conceptIndex]
+        const index = concept.candidates.findIndex(
+          (item) => !isDecided(labelsFor(concept)[item.id]),
+        )
+        if (index >= 0) itemIndex = index
+        render()
+      }
+      $('priority').onchange = () => {
+        jumpToNextUnjudged()
+        render()
+      }
+      $('prev').onclick = () => move(-1)
+      $('next').onclick = () => move(1)
+      $('clearLabel').onclick = () => judge('unlabeled', { stay: true })
+      $('undo').onclick = undo
+      document
+        .querySelectorAll('[data-label]')
+        .forEach((button) => (button.onclick = () => judge(button.dataset.label)))
+      addEventListener('keydown', (event) => {
+        if (event.key === '1') judge('relevant')
+        else if (event.key === '2') judge('not_relevant')
+        else if (event.key === '3') judge('unsure')
+        else if (event.key === '0') judge('unlabeled', { stay: true })
+        else if (event.ctrlKey && event.key.toLowerCase() === 'z') {
+          event.preventDefault()
+          undo()
+        } else if (event.key === 'ArrowLeft') move(-1)
+        else if (event.key === 'ArrowRight') move(1)
+      })
+      load()
+    </script>
+  </body>
+</html>

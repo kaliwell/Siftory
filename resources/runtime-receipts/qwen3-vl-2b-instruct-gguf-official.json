@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-08-15",
+  "purpose": "Pinned official GGUF and multimodal projector candidates for the managed llama.cpp video semantic runtime",
+  "upstream": {
+    "repository": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+    "revision": "52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+    "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/52d6c8ffea26cc873ac5ad116f8631268d7eb503"
+  },
+  "artifacts": [
+    {
+      "role": "inference-model",
+      "fileName": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+      "sizeBytes": 1107409952,
+      "sha256": "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae"
+    },
+    {
+      "role": "multimodal-projector",
+      "fileName": "mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf",
+      "sizeBytes": 445053216,
+      "sha256": "f9a68fabba69c3b81e153367b2c7521030b0fa8bb0de400c9599c8e6725f9c82"
+    },
+    {
+      "role": "multimodal-projector-alternate",
+      "fileName": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+      "sizeBytes": 819394848,
+      "sha256": "c3d5afbef5287953acd57b4043d2269456e5761a4eaccb3b71b062996970aea5"
+    }
+  ],
+  "selectedCandidate": {
+    "model": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+    "projector": "mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf",
+    "reason": "Smallest official Q4_K_M plus Q8_0 projector pairing for initial 4 GB VRAM/CPU acceptance"
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/blob/52d6c8ffea26cc873ac5ad116f8631268d7eb503/README.md",
+    "redistributionReview": "legal-review-required"
+  },
+  "distribution": {
+    "defaultBundled": false,
+    "applicationMayDownloadOrUpdate": false,
+    "projectorVariantDecision": "q8-0-local-evaluation-only",
+    "userApprovalRequired": true
+  },
+  "verification": {
+    "repositoryMetadataRecorded": true,
+    "artifactsDownloaded": true,
+    "artifactSizeAndSha256Verified": true,
+    "downloadScope": "local-evaluation-only",
+    "realInferenceExecuted": true,
+    "realInferenceStrictJson": true,
+    "realInferenceLatencyMs": 21185,
+    "localSoakStrictJsonRounds": 6,
+    "localSoakAverageLatencyMs": 10445,
+    "localSoakP95LatencyMs": 11831,
+    "localSoakMaximumGpuUsedMiB": 2774,
+    "packagedSmokeExecuted": false
+  }
+}

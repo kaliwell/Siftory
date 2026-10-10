@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "targetRoot": "<DATASET>",
+  "mode": "metadata",
+  "concurrency": "4",
+  "elapsedMs": 6018.98,
+  "elapsedSeconds": 6.02,
+  "task": {
+    "taskId": "media-1783138830751-1",
+    "type": "scan-video-files",
+    "state": "done",
+    "total": 14040,
+    "completed": 14040,
+    "failed": 0,
+    "percentage": 100,
+    "startedAt": 1783138830751,
+    "updatedAt": 1783138836617,
+    "message": "Scan done. 28 new, 0 updated, 0 unchanged."
+  },
+  "status": {
+    "state": "done",
+    "videoCount": 28,
+    "indexedFrameCount": 0,
+    "activeTaskId": "media-1783138830751-1",
+    "activeTaskType": "scan-video-files",
+    "message": "Scan done. 28 new, 0 updated, 0 unchanged.",
+    "ffmpegConfigured": true,
+    "ffprobeConfigured": true,
+    "ffmpegVersion": "ffmpeg version 8.1.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+    "ffprobeVersion": "ffprobe version 8.1.2-full_build-www.gyan.dev Copyright (c) 2007-2026 the FFmpeg developers",
+    "ffmpegCommand": "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\tools\\ffmpeg\\bin\\ffmpeg.exe",
+    "ffprobeCommand": "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\tools\\ffmpeg\\bin\\ffprobe.exe",
+    "cacheDir": "<TEMP_DATA>\\floating-clock-media-ipc-bench-KJYhGe\\media-search",
+    "updatedAt": 1783138836617
+  },
+  "progressEvents": 0,
+  "userDataDir": "<TEMP_DATA>\\floating-clock-media-ipc-bench-KJYhGe"
+}

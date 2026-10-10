@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "ortVersion": "1.24.3",
+  "models": [
+    {
+      "id": "dino",
+      "modelSha256": "19f697cf7cddfbbaa4b146b813e726a1e4ed89aa5fd363cdc38d689a3b5f6018",
+      "passed": true,
+      "minimumCosine": 0.999999999998,
+      "speedup": 1.896,
+      "performanceCriticalCpuOperations": []
+    },
+    {
+      "id": "clip-image",
+      "modelSha256": "1f518bedb1851294737a141e06149883cb289160760224f2da5498886e49d5cb",
+      "passed": true,
+      "minimumCosine": 0.999999999999,
+      "speedup": 2.264,
+      "performanceCriticalCpuOperations": []
+    }
+  ]
+}

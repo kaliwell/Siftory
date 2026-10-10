@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+npm run git:preflight
+
+if [ "${SNAPSHOT_COMMIT:-}" = "1" ]; then
+  branch="$(git symbolic-ref --quiet --short HEAD || true)"
+  case "$branch" in
+    snapshot/*)
+      echo "[pre-commit] snapshot branch: staged quality checks intentionally skipped"
+      exit 0
+      ;;
+    *)
+      echo "[pre-commit] SNAPSHOT_COMMIT=1 is only allowed on snapshot/* branches" >&2
+      exit 1
+      ;;
+  esac
+fi
+
+npm run git:validate-staged

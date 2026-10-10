@@ -1,0 +1,51 @@
+﻿{
+    "targetRoot":  "<DATASET>",
+    "mode":  "metadata",
+    "concurrency":  6,
+    "files":  {
+                  "stderr":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-ipc-scan-20260704-122235.json.stderr.txt",
+                  "benchmarkJson":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-ipc-scan-20260704-122235.json",
+                  "samplesJsonl":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-ipc-scan-perf-20260704-122235.jsonl",
+                  "summaryJson":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\docs\\benchmark\\media-search-ipc-scan-20260704-122235.summary.json"
+              },
+    "elapsedMs":  5273.27,
+    "elapsedSeconds":  5.27,
+    "task":  {
+                 "taskId":  "media-1783138955551-1",
+                 "type":  "scan-video-files",
+                 "state":  "done",
+                 "total":  14040,
+                 "completed":  14040,
+                 "failed":  0,
+                 "percentage":  100,
+                 "startedAt":  1783138955551,
+                 "updatedAt":  1783138960556,
+                 "message":  "Scan done. 28 new, 0 updated, 0 unchanged."
+             },
+    "status":  {
+                   "state":  "done",
+                   "videoCount":  28,
+                   "indexedFrameCount":  0,
+                   "activeTaskId":  "media-1783138955551-1",
+                   "activeTaskType":  "scan-video-files",
+                   "message":  "Scan done. 28 new, 0 updated, 0 unchanged.",
+                   "ffmpegConfigured":  true,
+                   "ffprobeConfigured":  true,
+                   "ffmpegVersion":  "ffmpeg version 8.1.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+                   "ffprobeVersion":  "ffprobe version 8.1.2-full_build-www.gyan.dev Copyright (c) 2007-2026 the FFmpeg developers",
+                   "ffmpegCommand":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\tools\\ffmpeg\\bin\\ffmpeg.exe",
+                   "ffprobeCommand":  "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046\\tools\\ffmpeg\\bin\\ffprobe.exe",
+                   "cacheDir":  "<TEMP_DATA>\\floating-clock-media-ipc-bench-GAAjrx\\media-search",
+                   "updatedAt":  1783138960556
+               },
+    "performance":  {
+                        "peakNodeWorkingSetMb":  65.07,
+                        "sampleCount":  3,
+                        "avgMemoryCommittedPercent":  51.39,
+                        "avgGpuPercent":  3.59,
+                        "avgCpuPercent":  1.95,
+                        "peakGpuPercent":  10.56,
+                        "peakCpuPercent":  3.94,
+                        "peakMemoryCommittedPercent":  52.78
+                    }
+}

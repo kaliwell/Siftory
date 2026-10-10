@@ -1,0 +1,2935 @@
+{
+  "schemaVersion": 1,
+  "title": "Siftory copyright preparation license research",
+  "researchedAt": "2026-09-24",
+  "timezone": "Asia/Shanghai",
+  "status": "research-only-no-approval",
+  "sourceRepository": "<USER_HOME>\\AppData\\Local\\Reasonix\\floating_clock_electron7\\s220260601_221046",
+  "outputDirectory": "<USER_HOME>/AppData/Local/Reasonix/floating_clock_electron7/siftory-copyright-20260924/legal-research",
+  "sources": [
+    {
+      "id": "registration-rules",
+      "title": "国家版权局：计算机软件著作权登记办法",
+      "url": "https://www.ncac.gov.cn/xxfb/flfg/bmgz/202410/t20241015_869486.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "2002-02-20 effective; government page path 2024-10-15",
+      "verification": "official-full-text",
+      "scope": "申请资格、鉴别材料、归属证明、签署、受理期限"
+    },
+    {
+      "id": "software-regulation",
+      "title": "中国网信网：计算机软件保护条例",
+      "url": "https://www.cac.gov.cn/2013-02/08/c_12648744.htm",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "2013-01-30 revised; published 2013-02-08",
+      "verification": "official-full-text",
+      "scope": "登记初步证据与自主、合作、委托、职务开发归属"
+    },
+    {
+      "id": "cpcc-online-notice",
+      "title": "湖北省版权保护与服务网转载 CPCC 网上办理公告",
+      "url": "https://www.ccct.net.cn/html/bqzx/2023/0531/4368.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "CPCC notice 2023-05-25; republished 2023-05-31; effective 2023-06-01",
+      "verification": "official-service-republication",
+      "scope": "网上填写、上传、提交，取消常规纸质交送"
+    },
+    {
+      "id": "shenzhen-filing-guide",
+      "title": "深圳市政府网站软件著作权办理说明 PDF 第103页",
+      "url": "https://www.sz.gov.cn/attachment/1/1500/1500482/11663811.pdf",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "publication date not independently established",
+      "verification": "official-search-index-and-initial-pdf-open; subsequent-timeout",
+      "scope": "确认签章页及扫描 PDF 上传；未使用其中企业证明推断个人实名细节"
+    },
+    {
+      "id": "beijing-faq-2026",
+      "title": "北京市投资促进服务局：著作权一问一答",
+      "url": "https://invest.beijing.gov.cn/sy/zt/qyrx/202604/t20260428_4620302.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "2026-04-28",
+      "verification": "official-full-text",
+      "scope": "登记基本流程与咨询电话；补证问题的专门步骤不当作首次登记规定"
+    },
+    {
+      "id": "shanghai-personal-account",
+      "title": "上海计算机软件技术开发中心办理说明",
+      "url": "https://sscenter.sh.cn/SoftwareCopyrightAgency/index.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": null,
+      "verification": "official-service-search-index",
+      "scope": "自然人选个人账户；代理邮箱和收费不是自行申报必经步骤"
+    },
+    {
+      "id": "cpcc-home",
+      "title": "中国版权保护中心官网",
+      "url": "https://www.ccopyright.com.cn/",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": null,
+      "verification": "attempted-timeout",
+      "scope": "未能访问实时登录表单"
+    },
+    {
+      "id": "cpcc-portal",
+      "title": "中国版权保护中心登记入口",
+      "url": "https://register.ccopyright.com.cn/",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": null,
+      "verification": "attempted-no-readable-page",
+      "scope": "未登录、未提交、未上传任何个人信息"
+    },
+    {
+      "id": "ultralytics-license",
+      "title": "Ultralytics 官方许可说明",
+      "url": "https://www.ultralytics.com/license",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live page",
+      "verification": "rights-holder-current-page",
+      "scope": "AGPL 与 Enterprise 路径；厂商解释不自动代替特定组合衍生判断"
+    },
+    {
+      "id": "lindevs-face",
+      "title": "Lindevs YOLOv8 Face",
+      "url": "https://github.com/lindevs/yolov8-face",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "default branch",
+      "verification": "rights-holder-current-repository",
+      "scope": "MIT 仓库及初始 YOLOv8 权重来源说明；未验证固定 ONNX 独立许可"
+    },
+    {
+      "id": "ffmpeg-legal",
+      "title": "FFmpeg Legal",
+      "url": "https://ffmpeg.org/legal.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live page",
+      "verification": "rights-holder-current-page",
+      "scope": "可选 GPL 组件改变许可；LGPL 构建要求及无替代商业许可"
+    },
+    {
+      "id": "gyan-builds",
+      "title": "Gyan FFmpeg builds",
+      "url": "https://www.gyan.dev/ffmpeg/builds/",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live page",
+      "verification": "build-publisher-page",
+      "scope": "来源；精确 GPL 构建状态以本地 8.1.2 二进制输出为证"
+    },
+    {
+      "id": "lgpl-3",
+      "title": "GNU LGPL v3",
+      "url": "https://www.gnu.org/licenses/lgpl-3.0.en.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "2007-06-29",
+      "verification": "official-search-index; open-timeout",
+      "scope": "组合程序、替换共享库或重链接材料及许可通知"
+    },
+    {
+      "id": "gpl-faq",
+      "title": "GNU GPL FAQ",
+      "url": "https://www.gnu.org/licenses/gpl-faq.en.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live page",
+      "verification": "official-search-index",
+      "scope": "聚合、链接和进程通信需实质判断"
+    },
+    {
+      "id": "dinov2-license",
+      "title": "Meta DINOv2 LICENSE",
+      "url": "https://raw.githubusercontent.com/facebookresearch/dinov2/main/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "main",
+      "verification": "rights-holder-full-license-live-branch",
+      "scope": "Apache-2.0；未取得 Xenova 固定 revision 完整许可"
+    },
+    {
+      "id": "xenova-dinov2",
+      "title": "Xenova dinov2-base",
+      "url": "https://huggingface.co/Xenova/dinov2-base",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "converter-model-card",
+      "scope": "来源映射；固定 revision raw/blob 未读取成功"
+    },
+    {
+      "id": "clip-license",
+      "title": "OpenAI CLIP LICENSE",
+      "url": "https://raw.githubusercontent.com/openai/CLIP/main/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "main",
+      "verification": "rights-holder-full-license-live-branch",
+      "scope": "MIT"
+    },
+    {
+      "id": "xenova-clip",
+      "title": "Xenova clip-vit-base-patch32",
+      "url": "https://huggingface.co/Xenova/clip-vit-base-patch32",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "converter-model-card",
+      "scope": "OpenAI 原模型转换；固定 revision raw/blob 未读取成功"
+    },
+    {
+      "id": "multilingual-clip",
+      "title": "Sentence Transformers multilingual CLIP",
+      "url": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "rights-holder-model-card-license-label",
+      "scope": "Apache-2.0；固定 quint8 工件待完整留证"
+    },
+    {
+      "id": "adaface-license",
+      "title": "AdaFace 原作者 LICENSE",
+      "url": "https://raw.githubusercontent.com/mk-minchul/AdaFace/master/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "master",
+      "verification": "rights-holder-full-license-live-branch",
+      "scope": "MIT；不是本地转换件所记 Apache-2.0 的直接证据"
+    },
+    {
+      "id": "cvlface",
+      "title": "CVLface 原作者仓库",
+      "url": "https://github.com/mk-minchul/CVLface",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "default branch",
+      "verification": "rights-holder-current-repository",
+      "scope": "代码 MIT；对应 WebFace12M 模型"
+    },
+    {
+      "id": "adaface-original-weights",
+      "title": "CVLface AdaFace IR101 WebFace12M 原模型卡",
+      "url": "https://huggingface.co/minchul/cvlface_adaface_ir101_webface12m",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "rights-holder-model-card",
+      "scope": "要求遵守训练数据许可；详细数据许可未核得"
+    },
+    {
+      "id": "adaface-conversion",
+      "title": "Evn9172 AdaFace ONNX 转换",
+      "url": "https://huggingface.co/Evn9172/cvlface_adaface_ir101_webface12m_onnx",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "local pin 3af39a8cf2f199127f34e247950df9c4d6f227e8",
+      "verification": "attempted-not-readable",
+      "scope": "不能凭本地 Apache 声明批准"
+    },
+    {
+      "id": "webface",
+      "title": "WebFace benchmark",
+      "url": "https://www.face-benchmark.org/",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": null,
+      "verification": "attempted-502",
+      "scope": "未以未读到的训练数据条款作肯定法律结论"
+    },
+    {
+      "id": "osnet-conversion",
+      "title": "LibreYOLO LibreReID OSNet 模型卡",
+      "url": "https://huggingface.co/LibreYOLO/LibreReID-osnet",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "converter-model-card",
+      "scope": "MIT 标签，Torchreid 权重与研究数据集来源"
+    },
+    {
+      "id": "torchreid",
+      "title": "Torchreid 原作者仓库",
+      "url": "https://github.com/KaiyangZhou/deep-person-reid",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "default branch",
+      "verification": "rights-holder-current-repository",
+      "scope": "代码 MIT，不等于数据集及所有权重条件消失"
+    },
+    {
+      "id": "mobilesam",
+      "title": "MobileSAM 原作者仓库",
+      "url": "https://github.com/ChaoningZhang/MobileSAM",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "default branch",
+      "verification": "rights-holder-current-repository",
+      "scope": "Apache-2.0"
+    },
+    {
+      "id": "mobilesam-conversion",
+      "title": "PulpCut MobileSAM ONNX",
+      "url": "https://huggingface.co/PulpCut/mobilesam-onnx",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "converter-page-sparse; no-explicit-license-verified",
+      "scope": "固定工件许可与导出链未完成"
+    },
+    {
+      "id": "ort-1.24.3",
+      "title": "ONNX Runtime v1.24.3 LICENSE",
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.3/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "v1.24.3",
+      "verification": "exact-tag-full-license",
+      "scope": "MIT；仍有 ThirdPartyNotices"
+    },
+    {
+      "id": "cuda-12.8.1",
+      "title": "NVIDIA CUDA 12.8.1 EULA",
+      "url": "https://docs.nvidia.com/cuda/archive/12.8.1/eula/index.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "12.8.1 archive; page updated 2025-01-07",
+      "verification": "exact-version-official-eula",
+      "scope": "SDK 与 Attachment A 指定组件再分发条款"
+    },
+    {
+      "id": "cudnn-9.19",
+      "title": "NVIDIA cuDNN backend 9.19.0 EULA",
+      "url": "https://docs.nvidia.com/deeplearning/cudnn/backend/v9.19.0/reference/eula.html",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "v9.19.0 family; updated 2026-02-03",
+      "verification": "version-family-official-eula",
+      "scope": "本地9.19.1.2需对照归档中的精确许可证"
+    },
+    {
+      "id": "llama-exact",
+      "title": "llama.cpp exact commit LICENSE",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/0177dcc7300bad8914bb838baabce87899812491/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "0177dcc7300bad8914bb838baabce87899812491",
+      "verification": "exact-commit-full-license",
+      "scope": "MIT；预编译包附加 DLL 分开核查"
+    },
+    {
+      "id": "ollama-exact",
+      "title": "Ollama v0.32.9 LICENSE",
+      "url": "https://raw.githubusercontent.com/ollama/ollama/v0.32.9/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "v0.32.9",
+      "verification": "exact-tag-full-license",
+      "scope": "MIT；未改变本地 NOASSERTION 或 pending"
+    },
+    {
+      "id": "qwen-gguf",
+      "title": "Qwen3-VL-2B-Instruct-GGUF official model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card; local pin 52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+      "verification": "rights-holder-model-card-license-label",
+      "scope": "Apache-2.0；精确量化和 mmproj 工件待归档"
+    },
+    {
+      "id": "qwen-original",
+      "title": "Qwen3-VL-2B-Instruct official model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live model card",
+      "verification": "rights-holder-model-card-license-label",
+      "scope": "Apache-2.0；不泛化至全部 Qwen 产品"
+    },
+    {
+      "id": "sensevoice-current",
+      "title": "SenseVoice current official README",
+      "url": "https://github.com/QwenAudio/SenseVoice",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "live README accessed 2026-09-24",
+      "verification": "readme-claim-superseded-by-pending-confirmation-status",
+      "scope": "源码 MIT；README 中早期商用澄清不能作最终授权。2026-09-22 评论更新明确仍待许可方/核心维护者确认，见 sensevoice-status-recheck。"
+    },
+    {
+      "id": "sensevoice-pinned",
+      "title": "SenseVoiceSmall pinned README",
+      "url": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/raw/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7/README.md",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+      "verification": "exact-revision-model-card",
+      "scope": "固定模型版本证据"
+    },
+    {
+      "id": "funasr-model-license",
+      "title": "FunASR Model License v1.1",
+      "url": "https://raw.githubusercontent.com/modelscope/FunASR/58830eca4012644aac0c3218c3ccc7d98f003fda/MODEL_LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "58830eca4012644aac0c3218c3ccc7d98f003fda; v1.1",
+      "verification": "exact-commit-full-license",
+      "scope": "自定义模型协议，署名、终止及更新机制；不能标为 Apache"
+    },
+    {
+      "id": "funasr-code-license",
+      "title": "FunASR source LICENSE",
+      "url": "https://raw.githubusercontent.com/modelscope/FunASR/main/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "main",
+      "verification": "rights-holder-full-license-live-branch",
+      "scope": "源码 MIT；固定1.3.29部署仍需环境 SBOM"
+    },
+    {
+      "id": "sensevoice-clarification-issue",
+      "title": "SenseVoice issue 334 linked by official README",
+      "url": "https://github.com/QwenAudio/SenseVoice/issues/334",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "opened 2026-07-26",
+      "verification": "official-comment-api-archived; issue-still-open",
+      "scope": "本轮已取得评论原文；早期商用回答不是许可方最终确认。不得继续仅据 README 判定已明确允许。"
+    },
+    {
+      "id": "fsmn-modelscope",
+      "title": "ModelScope official FSMN VAD model",
+      "url": "https://www.modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "local tag v2.0.4",
+      "verification": "attempted-not-readable",
+      "scope": "Apache 仅本地声明待补核"
+    },
+    {
+      "id": "campp-modelscope",
+      "title": "ModelScope official CAM++ model",
+      "url": "https://www.modelscope.cn/models/iic/speech_campplus_sv_zh-cn_16k-common",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "local tag v2.0.2",
+      "verification": "attempted-no-readable-text",
+      "scope": "Apache 仅本地声明待补核"
+    },
+    {
+      "id": "font-exact",
+      "title": "Adobe Source Han Sans 2.005R LICENSE",
+      "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/2.005R/LICENSE.txt",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "2.005R",
+      "verification": "exact-tag-full-license",
+      "scope": "OFL-1.1，Reserved Font Name Source"
+    },
+    {
+      "id": "sharp-exact",
+      "title": "sharp v0.35.0 LICENSE",
+      "url": "https://raw.githubusercontent.com/lovell/sharp/v0.35.0/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "v0.35.0",
+      "verification": "exact-tag-full-license",
+      "scope": "sharp Apache-2.0；Windows 二进制另有 LGPL"
+    },
+    {
+      "id": "stb-license",
+      "title": "stb LICENSE",
+      "url": "https://raw.githubusercontent.com/nothings/stb/master/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "master",
+      "verification": "rights-holder-full-license-live-branch; local-header-also-read",
+      "scope": "MIT 或公有领域路径"
+    },
+    {
+      "id": "electron-exact",
+      "title": "Electron v42.8.0 LICENSE",
+      "url": "https://raw.githubusercontent.com/electron/electron/v42.8.0/LICENSE",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "v42.8.0",
+      "verification": "exact-tag-full-license",
+      "scope": "MIT；实际附带 Chromium notices 分开保留"
+    },
+    {
+      "id": "sensevoice-status-recheck",
+      "title": "SenseVoice license confirmation remains pending",
+      "url": "https://github.com/QwenAudio/SenseVoice/issues/334#issuecomment-5083546605",
+      "accessedAt": "2026-09-24",
+      "versionOrDate": "comment updated 2026-09-22T06:08:37Z; PR 357 open",
+      "verification": "official-api-full-comment-and-pr-cross-check",
+      "scope": "商用、私有衍生件与 ONNX 再分发仍待许可方确认；不认定允许，也不反推禁止。",
+      "commentSha256": "ac9f6c04223ea520abe4762c685c1cc696b71ddfbd43c5255ac38050aa3dd078",
+      "documentationCorrectionUrl": "https://github.com/QwenAudio/SenseVoice/pull/357"
+    }
+  ],
+  "limitations": [
+    "No registration portal login, filing, signature, identity upload, license acceptance or commercial authorization was performed.",
+    "Exact local input snapshots and declared licenses are evidence, not clearance.",
+    "Full model weights were not downloaded or rehashed; artifact hashes in runtimeComponents are declared manifest values.",
+    "No final release unpacked SBOM audit or corresponding source archive completeness verification was performed.",
+    "Current upstream pages are distinguished from exact-tag licenses; inaccessible pinned model licenses remain pending.",
+    "AI-assisted and employment/collaboration/commission rights chains require user facts; author identity was not inferred."
+  ],
+  "localInputEvidence": [
+    {
+      "relativePath": "package.json",
+      "sizeBytes": 44185,
+      "sha256": "b7f9a0dfe4954c8e391d667eeb802e7343cceedcd8139a9a4af85efb4bb980b5"
+    },
+    {
+      "relativePath": "package-lock.json",
+      "sizeBytes": 250096,
+      "sha256": "95c577455448eadbbd04a4e3c9a8ac13e83b1eb1667bfed2a2c0771e4470ca85"
+    },
+    {
+      "relativePath": "legal/license-decisions.json",
+      "sizeBytes": 7303,
+      "sha256": "483b311fce5461bc08374f8f7839b2c8d05509bd233584c0d7f8a78ef7ed583d"
+    },
+    {
+      "relativePath": "legal/commercial-release-decisions.json",
+      "sizeBytes": 1993,
+      "sha256": "7a76eeeed57c6bbe6d459dce4a8f2af931b558dbbcc1e867c099aba9af5b4bdc"
+    },
+    {
+      "relativePath": "THIRD_PARTY_COMPONENTS.md",
+      "sizeBytes": 4832,
+      "sha256": "7d4e6edf1b1ee2a86c4e70ad8269e69fe9501a71480c1116053969d73b4bdba7"
+    },
+    {
+      "relativePath": "THIRD_PARTY_NOTICES.md",
+      "sizeBytes": 7751,
+      "sha256": "5bdc9c3967fb7ad5486b03f6e37520abc712654bcb9ea0096b0057e1feb6a5bb"
+    },
+    {
+      "relativePath": "NODE_THIRD_PARTY_COMPONENTS.md",
+      "sizeBytes": 9804,
+      "sha256": "70096f135db1a0afccc8073c33764f51dd8a0c61035c29ead789e08189ded9a1"
+    },
+    {
+      "relativePath": "models/manifest.json",
+      "sizeBytes": 11724,
+      "sha256": "31c0ab51cdfb482fc6ea40425499e80cd5efe9bcdaf0388c485e7a36da612f1b"
+    },
+    {
+      "relativePath": "resources/runtime-manifest.json",
+      "sizeBytes": 50501,
+      "sha256": "6311be104a30e83a012a824185dc155dbdbf80b8cc6443b099c6bc7f330e3e57"
+    },
+    {
+      "relativePath": "legal/SourceHanSans-OFL-1.1.txt",
+      "sizeBytes": 4463,
+      "sha256": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2"
+    },
+    {
+      "relativePath": "native/stb_image.h",
+      "sizeBytes": 283010,
+      "sha256": "594c2fe35d49488b4382dbfaec8f98366defca819d916ac95becf3e75f4200b3"
+    },
+    {
+      "relativePath": "native/stb_image_resize2.h",
+      "sizeBytes": 457839,
+      "sha256": "173e654634f6ccaad98f603e686ea212eec1fe8ea6d2a5e5e8056efa10ae3880"
+    },
+    {
+      "relativePath": "native/binding.gyp",
+      "sizeBytes": 589,
+      "sha256": "28aec3ed2db8d234b3b9541ec2650a068e4ba74db8b96306c77590c519a497a2"
+    },
+    {
+      "relativePath": "node_modules/@img/sharp-win32-x64/package.json",
+      "sizeBytes": 888,
+      "sha256": "2096274c14f501c6f29b4a292ddee3e17127254b6f64987405d4478423ef9927"
+    },
+    {
+      "relativePath": "node_modules/@img/sharp-win32-x64/LICENSE",
+      "sizeBytes": 10464,
+      "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693"
+    },
+    {
+      "relativePath": "node_modules/@img/sharp-win32-x64/versions.json",
+      "sizeBytes": 600,
+      "sha256": "5155cd67e4f2e5df99e26d2919458a21dbb8236eca2ca632d896dd49ba9c42fc"
+    },
+    {
+      "relativePath": "node_modules/electron/dist/LICENSE",
+      "sizeBytes": 1096,
+      "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d"
+    },
+    {
+      "relativePath": "node_modules/electron/dist/LICENSES.chromium.html",
+      "sizeBytes": 20367775,
+      "sha256": "5d545ce8065079f38a82472ab93bd62fcdf73cd319f0771ef51c45c7e243f1d4"
+    },
+    {
+      "relativePath": "resources/runtime-receipts/fsmn-vad-campplus-funasr.json",
+      "sizeBytes": 3570,
+      "sha256": "01140cf1be927d5f6291932b79078b8294a86cd69a1f014bfc671e63e6706f62"
+    },
+    {
+      "relativePath": "resources/runtime-receipts/llama-cpp-b10441-windows-x64.json",
+      "sizeBytes": 2284,
+      "sha256": "4b98e6a225daa69a6438a2b021e858fcf5aa61c4898bfaf6f9bc00e43c828245"
+    },
+    {
+      "relativePath": "resources/runtime-receipts/ollama-0.32.9-windows-x64.json",
+      "sizeBytes": 1076,
+      "sha256": "3d8b7a7677609bf5040023605cc71955eaa76d0b187a9598fa1a648ad22f693d"
+    },
+    {
+      "relativePath": "resources/runtime-receipts/qwen3-vl-2b-instruct-gguf-official.json",
+      "sizeBytes": 2262,
+      "sha256": "f1dcc7911a0caf09780f73a4450db9f1b19846ede7b0f218af54c17d95ae7d75"
+    },
+    {
+      "relativePath": "resources/runtime-receipts/qwen3-vl-2b-q4-k-m-ollama.json",
+      "sizeBytes": 1348,
+      "sha256": "3b4925c1d2f90dc6b1a874bc18d1890e1cace38ea631c25378bec024264c88ad"
+    },
+    {
+      "relativePath": "resources/runtime-receipts/sensevoice-small-funasr.json",
+      "sizeBytes": 2842,
+      "sha256": "9e628dd04c6717615dffb80978c08f7bb8c203f5f3ddb3df7d749332730187d0"
+    }
+  ],
+  "runtimeComponents": [
+    {
+      "id": "dinov2-vitb14-xenova-q4",
+      "componentType": "model",
+      "upstream": {
+        "name": "Xenova/dinov2-base",
+        "version": "huggingface-revision:d623d125a29e343851bcedff293fdc8b6bda292b",
+        "sourceUrl": "https://huggingface.co/Xenova/dinov2-base",
+        "releasedAt": "2023-12-09"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/onnx/model_q4.onnx",
+          "sha256": "19f697cf7cddfbbaa4b146b813e726a1e4ed89aa5fd363cdc38d689a3b5f6018",
+          "sizeBytes": 56428185,
+          "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/onnx/model_q4.onnx"
+        },
+        {
+          "role": "model-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/config.json",
+          "sha256": "e8561e4241d2f331e086e5dcb179b6993b86e4f815c0a5f709aa4553369e75f4",
+          "sizeBytes": 899,
+          "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/config.json"
+        },
+        {
+          "role": "preprocessor-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/dinov2-base/resolve/d623d125a29e343851bcedff293fdc8b6bda292b/preprocessor_config.json",
+          "sha256": "14e780d86fa1861f8751f868d7f45425b5feb55c38ca26f152ca5097ab30f828",
+          "sizeBytes": 436,
+          "targetPath": "ai-models/dinov2_vitb14/Xenova/dinov2-base/preprocessor_config.json"
+        }
+      ]
+    },
+    {
+      "id": "clip-vit-b32-xenova-q4",
+      "componentType": "model",
+      "upstream": {
+        "name": "Xenova/clip-vit-base-patch32",
+        "version": "huggingface-revision:d15189d7028b43f1d3e65039190477f6af591c2a",
+        "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32",
+        "releasedAt": "2023-05-19"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "image-inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/onnx/model_q4.onnx",
+          "sha256": "1f518bedb1851294737a141e06149883cb289160760224f2da5498886e49d5cb",
+          "sizeBytes": 189403477,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/onnx/model_q4.onnx"
+        },
+        {
+          "role": "text-inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/onnx/text_model_q4.onnx",
+          "sha256": "e4ccd15d806b8af841a036884b42034535d58e04c52df00f56e73f72d3c166d5",
+          "sizeBytes": 125742108,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/onnx/text_model_q4.onnx"
+        },
+        {
+          "role": "model-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/config.json",
+          "sha256": "493ef57ff783e42d1530c91b53469b7fdf8db8a9c1408e86998fcb7899a4f495",
+          "sizeBytes": 4524,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/config.json"
+        },
+        {
+          "role": "preprocessor-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/preprocessor_config.json",
+          "sha256": "6f638fb9401a6d6296feff533ee7efe657b787c49f954f82f5906b36ef2a1b1f",
+          "sizeBytes": 520,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/preprocessor_config.json"
+        },
+        {
+          "role": "tokenizer",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/tokenizer.json",
+          "sha256": "f7f3b7af117d467b58374797691a6438d3e6b9e9cef800dfd5dced7f697a90cd",
+          "sizeBytes": 2224119,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/tokenizer.json"
+        },
+        {
+          "role": "tokenizer-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/tokenizer_config.json",
+          "sha256": "60ba2912bc6344c94bc16bbdec27fa1209409167b6f2fdf3cfe9e65462ea3967",
+          "sizeBytes": 775,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/tokenizer_config.json"
+        },
+        {
+          "role": "special-tokens",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/special_tokens_map.json",
+          "sha256": "c4864a9376a8401918425bed71fc14fc0e81f9b59ec45c1cf96cccb2df508eac",
+          "sizeBytes": 472,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/special_tokens_map.json"
+        },
+        {
+          "role": "vocabulary",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/vocab.json",
+          "sha256": "5047b556ce86ccaf6aa22b3ffccfc52d391ea4accdab9c2f2407da5b742d4363",
+          "sizeBytes": 862328,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/vocab.json"
+        },
+        {
+          "role": "merges",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/merges.txt",
+          "sha256": "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a",
+          "sizeBytes": 524619,
+          "targetPath": "ai-models/clip_vit_base_patch32/Xenova/clip-vit-base-patch32/merges.txt"
+        }
+      ]
+    },
+    {
+      "id": "multilingual-clip-vit-b32-text-quint8",
+      "componentType": "model",
+      "upstream": {
+        "name": "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+        "version": "huggingface-revision:58edf8cada9e398793dca955574a48cbb7f18be2",
+        "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1",
+        "releasedAt": "2022-03-02"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "text-inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/onnx/model_quint8_avx2.onnx",
+          "sha256": "fbc8fbeaa5237d96bd1bf430057c70d34de8334a463e933a5faa305f6caeed9c",
+          "sizeBytes": 135377779,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/onnx/model_quint8_avx2.onnx"
+        },
+        {
+          "role": "dense-projection",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/2_Dense/model.safetensors",
+          "sha256": "d12568dc7300970a4d3dbb49068ad16cd89b99840b74b026f8e48071e9414f74",
+          "sizeBytes": 1572984,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/2_Dense/model.safetensors"
+        },
+        {
+          "role": "model-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/config.json",
+          "sha256": "edc12f518bfc445dedfe8a7c58374ea659525e0b6e67814686bd6cd57f90f8b3",
+          "sizeBytes": 572,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/config.json"
+        },
+        {
+          "role": "sentence-transformers-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/config_sentence_transformers.json",
+          "sha256": "b8c64b5cece00d8424b4896ea75b512b6008576088497609dfeb6bd63e6d36b8",
+          "sizeBytes": 122,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/config_sentence_transformers.json"
+        },
+        {
+          "role": "modules-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/modules.json",
+          "sha256": "f83ea5d68ac85ec15f650b350f0dc37b03d63abd60442f518e14c06f479beee6",
+          "sizeBytes": 341,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/modules.json"
+        },
+        {
+          "role": "sentence-bert-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/sentence_bert_config.json",
+          "sha256": "70f4448f31320443fe3557cacea5abf2dcc4915dda8c80646bec9f3bb0aa5a1f",
+          "sizeBytes": 53,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/sentence_bert_config.json"
+        },
+        {
+          "role": "special-tokens",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/special_tokens_map.json",
+          "sha256": "303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3",
+          "sizeBytes": 112,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/special_tokens_map.json"
+        },
+        {
+          "role": "tokenizer",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/tokenizer.json",
+          "sha256": "5b4e1a8171c81dfd666ae40265b9530c6e0b3d53923fe8ac493dcc84229adf81",
+          "sizeBytes": 1961847,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/tokenizer.json"
+        },
+        {
+          "role": "tokenizer-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/tokenizer_config.json",
+          "sha256": "8f66d0ad85be46afc77e0bbf48312cff326ddb9e7290926df96a8228d69a814e",
+          "sizeBytes": 371,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/tokenizer_config.json"
+        },
+        {
+          "role": "vocabulary",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/vocab.txt",
+          "sha256": "fe0fda7c425b48c516fc8f160d594c8022a0808447475c1a7c6d6479763f310c",
+          "sizeBytes": 995526,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/vocab.txt"
+        },
+        {
+          "role": "dense-config",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1/resolve/58edf8cada9e398793dca955574a48cbb7f18be2/2_Dense/config.json",
+          "sha256": "48f4dfaf605a6c2869cd200970e54911c6c15053781d2bdcf3e81e89e77662ed",
+          "sizeBytes": 115,
+          "targetPath": "ai-models/clip_vit_b32_multilingual_v1_text/sentence-transformers/clip-ViT-B-32-multilingual-v1/2_Dense/config.json"
+        }
+      ]
+    },
+    {
+      "id": "ultralytics-yolov8n-coco-onnx",
+      "componentType": "model",
+      "upstream": {
+        "name": "Ultralytics YOLOv8n COCO ONNX",
+        "version": "artifact-sha256:b2bc52f40e8e1c532427d5bde3575a5d5b571b739fab2c6df443733ed1589cbd",
+        "sourceUrl": "https://github.com/ultralytics/ultralytics",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "AGPL-3.0-only",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/ultralytics/ultralytics",
+          "sha256": "b2bc52f40e8e1c532427d5bde3575a5d5b571b739fab2c6df443733ed1589cbd",
+          "sizeBytes": 12851049,
+          "targetPath": "models/yolov8n/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "lindevs-yolov8n-face-onnx",
+      "componentType": "model",
+      "upstream": {
+        "name": "lindevs/yolov8-face",
+        "version": "artifact-sha256:7202335c41e478b4feccdfd7f09d5cec71007d775e02964a8f115b1687f3db87",
+        "sourceUrl": "https://github.com/lindevs/yolov8-face",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/lindevs/yolov8-face",
+          "sha256": "7202335c41e478b4feccdfd7f09d5cec71007d775e02964a8f115b1687f3db87",
+          "sizeBytes": 12265790,
+          "targetPath": "models/yolov8n-face/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "cvlface-adaface-ir101-webface12m-onnx",
+      "componentType": "model",
+      "upstream": {
+        "name": "Evn9172/cvlface_adaface_ir101_webface12m_onnx",
+        "version": "huggingface-revision:3af39a8cf2f199127f34e247950df9c4d6f227e8",
+        "sourceUrl": "https://huggingface.co/Evn9172/cvlface_adaface_ir101_webface12m_onnx",
+        "releasedAt": "2026-06-15"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/Evn9172/cvlface_adaface_ir101_webface12m_onnx/resolve/3af39a8cf2f199127f34e247950df9c4d6f227e8/adaface_ir101.onnx",
+          "sha256": "6168ed3961838a871e706e8e5ebbf963de2821ecb3f64da9d5c3fd373cc80c65",
+          "sizeBytes": 260701576,
+          "targetPath": "models/adaface/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "osnet-ain-x1-msmt17-onnx",
+      "componentType": "model",
+      "upstream": {
+        "name": "LibreYOLO/LibreReID-osnet",
+        "version": "huggingface-revision:5c7c20e54ccf80c9889a64020748f148ad5f7634+local-onnx-export",
+        "sourceUrl": "https://huggingface.co/LibreYOLO/LibreReID-osnet",
+        "releasedAt": "2026-07-11"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "inference-model",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "https://huggingface.co/LibreYOLO/LibreReID-osnet",
+          "sha256": "10a00de9cf285814f885b8f2f30aab59092d4bf3508416f6a20e8997717f1d3d",
+          "sizeBytes": 8742440,
+          "targetPath": "models/osnet/model.onnx"
+        }
+      ]
+    },
+    {
+      "id": "pulpcut-mobilesam-onnx",
+      "componentType": "model",
+      "upstream": {
+        "name": "PulpCut/mobilesam-onnx",
+        "version": "huggingface-revision:1e774d8516a1e014803a6e06c749d144cea7b9be",
+        "sourceUrl": "https://huggingface.co/PulpCut/mobilesam-onnx",
+        "releasedAt": "2026-03-26"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "image-encoder",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/PulpCut/mobilesam-onnx/resolve/1e774d8516a1e014803a6e06c749d144cea7b9be/mobilesam.encoder.onnx",
+          "sha256": "4125037c5e24d6ea58e201b20e8d8fbbbd1135c0b881e34a8074b8c4f07e6918",
+          "sizeBytes": 28195125,
+          "targetPath": "models/mobilesam/encoder.onnx"
+        },
+        {
+          "role": "mask-decoder",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://huggingface.co/PulpCut/mobilesam-onnx/resolve/1e774d8516a1e014803a6e06c749d144cea7b9be/mobilesam.decoder.onnx",
+          "sha256": "b0735abf07c7affddf20fffc3ce750f44af387ee6a7323880e909389ed15d279",
+          "sizeBytes": 16514086,
+          "targetPath": "models/mobilesam/decoder.onnx"
+        }
+      ]
+    },
+    {
+      "id": "gyan-ffmpeg-full-8-1-2",
+      "componentType": "tool",
+      "upstream": {
+        "name": "Gyan.dev FFmpeg full build",
+        "version": "8.1.2-full_build-www.gyan.dev",
+        "sourceUrl": "https://www.gyan.dev/ffmpeg/builds/",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "GPL-3.0-or-later",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "ffmpeg-cli",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://www.gyan.dev/ffmpeg/builds/",
+          "sha256": "ad8f211bc894755e0061c55ab280ae00e8d3d4f15a8cc4372b24cfa247b5942e",
+          "sizeBytes": 242496512,
+          "targetPath": "tools/ffmpeg/bin/ffmpeg.exe"
+        },
+        {
+          "role": "ffprobe-cli",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://www.gyan.dev/ffmpeg/builds/",
+          "sha256": "9df3b0b5275e830961df6d94e1f7a71121a7abd5ff708e9fec8a0b6084a55015",
+          "sizeBytes": 242291712,
+          "targetPath": "tools/ffmpeg/bin/ffprobe.exe"
+        }
+      ]
+    },
+    {
+      "id": "microsoft-onnxruntime-gpu-windows-1-24-3",
+      "componentType": "optional-runtime",
+      "upstream": {
+        "name": "Microsoft.ML.OnnxRuntime.Gpu.Windows",
+        "version": "nuget:1.24.3+commit:3a728b75062256951b6e19ce718907cf1a1d4cf0",
+        "sourceUrl": "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.Gpu.Windows/1.24.3",
+        "releasedAt": "2026-03-05"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "onnx-runtime-core",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "7814ffc2de24d66777237adc25ebaa35304331ea55aa9ede7fafe356a32fc294",
+          "sizeBytes": 14431304,
+          "targetPath": "cuda-runtime/onnxruntime.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "runtimes/win-x64/native/onnxruntime.dll",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "onnx-runtime-cuda-provider",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "1b69aae69ea36c19a85ad48f175eef5169320f020436b685871a937cb091a4bd",
+          "sizeBytes": 275607072,
+          "targetPath": "cuda-runtime/onnxruntime_providers_cuda.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "runtimes/win-x64/native/onnxruntime_providers_cuda.dll",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "onnx-runtime-shared-provider",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "dded319c25b193c85a355d86c89c2a312250eadc2a8c643839b104e3564c1f93",
+          "sizeBytes": 22040,
+          "targetPath": "cuda-runtime/onnxruntime_providers_shared.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "runtimes/win-x64/native/onnxruntime_providers_shared.dll",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "license",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "sizeBytes": 1094,
+          "targetPath": "cuda-runtime/licenses/onnxruntime-LICENSE.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "LICENSE",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        },
+        {
+          "role": "third-party-notices",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.gpu.windows/1.24.3/microsoft.ml.onnxruntime.gpu.windows.1.24.3.nupkg",
+          "sha256": "fb0af774b4d7cffc5b9d046f2aaeade2f37df2f80abf8033c95dfffcc77a8866",
+          "sizeBytes": 331175,
+          "targetPath": "cuda-runtime/licenses/onnxruntime-ThirdPartyNotices.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "ThirdPartyNotices.txt",
+            "sha256": "92564f79586e0a628e67643a9042afad637b1a205ca6d04968dbf2d5ba489162",
+            "sizeBytes": 172419186
+          }
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-12-8-embedding-runtime",
+      "componentType": "optional-runtime",
+      "upstream": {
+        "name": "NVIDIA CUDA redistributable archives",
+        "version": "cuda:12.8.1+cudart:12.8.90+cublas:12.8.4.1+cufft:11.3.3.83+nvrtc:12.8.93",
+        "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.8.1.json",
+        "releasedAt": "2025-03-06"
+      },
+      "license": {
+        "spdx": "LicenseRef-NVIDIA-CUDA-Toolkit-SDK",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "acceptanceRequired": true,
+        "sourceUrl": "https://docs.nvidia.com/cuda/archive/12.8.1/eula/index.html"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "cuda-runtime",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-12.8.90-archive.zip",
+          "sha256": "c2c9a9c22a9bcba90e261825968836787b331038047a26770cffb7a583c28344",
+          "sizeBytes": 573952,
+          "targetPath": "cuda-runtime/cudart64_12.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_cudart-windows-x86_64-12.8.90-archive/bin/cudart64_12.dll",
+            "sha256": "4a39058fd8519444a81cfc7ae055d136f48d1a31ffa41ae255b35b2edd61e13b",
+            "sizeBytes": 3037735
+          }
+        },
+        {
+          "role": "cuda-blas",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/libcublas-windows-x86_64-12.8.4.1-archive.zip",
+          "sha256": "9513540e4ec4c51ee9e7304138c2cc255c29a8c181f9e80c38efa25738becd99",
+          "sizeBytes": 113716224,
+          "targetPath": "cuda-runtime/cublas64_12.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "libcublas-windows-x86_64-12.8.4.1-archive/bin/cublas64_12.dll",
+            "sha256": "57a470112cec7e112c95253dde8b3c7184d795dbd92b0bde77a4cb7f8c94c8aa",
+            "sizeBytes": 563660944
+          }
+        },
+        {
+          "role": "cuda-blas-lt",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/libcublas-windows-x86_64-12.8.4.1-archive.zip",
+          "sha256": "b199d1ff892a81b7fd3d57ba1781549609b41500b36008fef326038393ad46c7",
+          "sizeBytes": 674667520,
+          "targetPath": "cuda-runtime/cublasLt64_12.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "libcublas-windows-x86_64-12.8.4.1-archive/bin/cublasLt64_12.dll",
+            "sha256": "57a470112cec7e112c95253dde8b3c7184d795dbd92b0bde77a4cb7f8c94c8aa",
+            "sizeBytes": 563660944
+          }
+        },
+        {
+          "role": "cuda-fft",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/libcufft/windows-x86_64/libcufft-windows-x86_64-11.3.3.83-archive.zip",
+          "sha256": "f4fea9227b14843894ad5436725f9638b172171142c95291fc6ae7a493248221",
+          "sizeBytes": 276121600,
+          "targetPath": "cuda-runtime/cufft64_11.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "libcufft-windows-x86_64-11.3.3.83-archive/bin/cufft64_11.dll",
+            "sha256": "cc6e0ba958cf23387b462017a24464c72bd901549046133f3d1ebcc3d7444c90",
+            "sizeBytes": 190568498
+          }
+        },
+        {
+          "role": "cuda-runtime-compiler",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/cuda_nvrtc-windows-x86_64-12.8.93-archive.zip",
+          "sha256": "02d2d7ef4690bf1a55dda1d3ac94c86ce8d16920071c87bcd3e70e94ef346e93",
+          "sizeBytes": 86728192,
+          "targetPath": "cuda-runtime/nvrtc64_120_0.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_nvrtc-windows-x86_64-12.8.93-archive/bin/nvrtc64_120_0.dll",
+            "sha256": "a63302a077f0248a743a1a7caa7dbd80d0fac56c6cfa9c41fa05fac9b7e5eda5",
+            "sizeBytes": 305588898
+          }
+        },
+        {
+          "role": "cuda-runtime-compiler-builtins",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/cuda_nvrtc-windows-x86_64-12.8.93-archive.zip",
+          "sha256": "a7afa2a40cbd3f922a33d8bf71c13cb26ca707c7016a9bc5fcde36759ba668f5",
+          "sizeBytes": 6356480,
+          "targetPath": "cuda-runtime/nvrtc-builtins64_128.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_nvrtc-windows-x86_64-12.8.93-archive/bin/nvrtc-builtins64_128.dll",
+            "sha256": "a63302a077f0248a743a1a7caa7dbd80d0fac56c6cfa9c41fa05fac9b7e5eda5",
+            "sizeBytes": 305588898
+          }
+        },
+        {
+          "role": "license",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-12.8.90-archive.zip",
+          "sha256": "e2c71babfd18a8e69542dd7e9ca018f9caa438094001a58e6bc4d8c999bf0d07",
+          "sizeBytes": 63021,
+          "targetPath": "cuda-runtime/licenses/NVIDIA-CUDA-LICENSE.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cuda_cudart-windows-x86_64-12.8.90-archive/LICENSE",
+            "sha256": "4a39058fd8519444a81cfc7ae055d136f48d1a31ffa41ae255b35b2edd61e13b",
+            "sizeBytes": 3037735
+          }
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cudnn-9-19-1-cuda12-runtime",
+      "componentType": "optional-runtime",
+      "upstream": {
+        "name": "NVIDIA cuDNN",
+        "version": "9.19.1.2+cuda12",
+        "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/redistrib_9.19.1.json",
+        "releasedAt": "2026-02-24"
+      },
+      "license": {
+        "spdx": "LicenseRef-NVIDIA-cuDNN-SDK",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "acceptanceRequired": true,
+        "sourceUrl": "https://docs.nvidia.com/deeplearning/cudnn/backend/v9.19.0/reference/eula.html"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "cudnn-core",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "0b2f489572c495cce26f5ddaf0170056b5d14b37c133bf2bf5ea7da57e5353d9",
+          "sizeBytes": 264304,
+          "targetPath": "cuda-runtime/cudnn64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-graph",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "d3bbf6af703d1d8ef5d554211f5be4d5c7eb2157dbb2a9ef9818d67fe639aa6b",
+          "sizeBytes": 2493040,
+          "targetPath": "cuda-runtime/cudnn_graph64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_graph64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-ops",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "b4e970d8d0fe1f4f13e66fa57e3b81762ec91aa17886844dbd498e8babbaabf0",
+          "sizeBytes": 105604208,
+          "targetPath": "cuda-runtime/cudnn_ops64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_ops64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-precompiled-engines",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "14f9615d59a23368f61b58ea8f1e5247fe93b046e405fafe63ea6f407bc424fa",
+          "sizeBytes": 481015408,
+          "targetPath": "cuda-runtime/cudnn_engines_precompiled64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_engines_precompiled64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-runtime-compiled-engines",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "48f084b8ec703c0b5aa5d21bea06783cf3f3a2a8a44c8737c5e0a549db9cdb94",
+          "sizeBytes": 27760240,
+          "targetPath": "cuda-runtime/cudnn_engines_runtime_compiled64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_engines_runtime_compiled64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "cudnn-heuristics",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "4be3cdecb63065380c900615b9bec4a7c815ba3373c7c50fbb048418639b01d6",
+          "sizeBytes": 58874992,
+          "targetPath": "cuda-runtime/cudnn_heuristic64_9.dll",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/bin/x64/cudnn_heuristic64_9.dll",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        },
+        {
+          "role": "license",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.19.1.2_cuda12-archive.zip",
+          "sha256": "295a1b7118d3417f5d6a943e5f87b59e2a0631fb277129c3b15dee6248adc7cf",
+          "sizeBytes": 29574,
+          "targetPath": "cuda-runtime/licenses/NVIDIA-cuDNN-LICENSE.txt",
+          "archive": {
+            "format": "zip",
+            "entryPath": "cudnn-windows-x86_64-9.19.1.2_cuda12-archive/LICENSE",
+            "sha256": "f4935f02b0512304139806ebb6275d8445fa873ade142b7672f631ed0995ae8a",
+            "sizeBytes": 634970602
+          }
+        }
+      ]
+    },
+    {
+      "id": "floating-clock-cuda-embedding-worker",
+      "componentType": "optional-runtime",
+      "upstream": {
+        "name": "Siftory CUDA embedding worker",
+        "version": "1.0.0+onnxruntime-1.24.3",
+        "sourceUrl": "native/cuda_embedding_worker/",
+        "releasedAt": "2026-08-08"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "licenseFiles": [],
+        "noticeRequired": false,
+        "reviewStatus": "project-license-pending"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "cuda-embedding-worker",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "native/cuda_embedding_worker/",
+          "sha256": "8d5e4b6d953a411e5df55c7513d4f53bee7875f47e44702f01f1265f55d5872d",
+          "sizeBytes": 88576,
+          "targetPath": "cuda-runtime/floating_clock_cuda_embedding_worker.exe"
+        },
+        {
+          "role": "cuda-provider-gates",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "resources/cuda-provider-gates.json",
+          "sha256": "d742ef77b8bedb9dc71cbe828923cbc5e70d58e8f2041b52988102a5ebcd7f1b",
+          "sizeBytes": 579,
+          "targetPath": "cuda-runtime/provider-gates.json"
+        }
+      ]
+    },
+    {
+      "id": "floating-clock-fast-scanner-electron",
+      "componentType": "native-addon",
+      "upstream": {
+        "name": "Siftory fast_scanner",
+        "version": "0.5.35",
+        "sourceUrl": "native/",
+        "releasedAt": "2026-08-30"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "licenseFiles": [],
+        "noticeRequired": false,
+        "reviewStatus": "project-license-pending"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "electron-native-addon",
+          "fetchPolicy": "local-build",
+          "sourceUrl": "native/",
+          "sha256": "a3fc85704c3d174c3b364fe599638a0105935d8b22fb1a0aafa565ce282dc73a",
+          "sizeBytes": 1243648,
+          "targetPath": "native/build-electron/Release/fast_scanner.node"
+        }
+      ]
+    },
+    {
+      "id": "sensevoice-small-funasr-external-audio-semantic-model",
+      "componentType": "model",
+      "upstream": {
+        "name": "FunAudioLLM SenseVoiceSmall",
+        "version": "hf-revision:3847d57b6bdf2dd8875cb1508d2af43d80a16bf7+model-sha256:833ca2dcfdf8ec91bd4f31cfac36d6124e0c459074d5e909aec9cabe6204a3ea",
+        "sourceUrl": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/tree/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "LicenseRef-FunASR-Model-License",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "sourceUrl": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/blob/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7/README.md"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/tree/3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+          "sha256": "9e628dd04c6717615dffb80978c08f7bb8c203f5f3ddb3df7d749332730187d0",
+          "sizeBytes": 2842,
+          "targetPath": "resources/runtime-receipts/sensevoice-small-funasr.json"
+        }
+      ]
+    },
+    {
+      "id": "fsmn-vad-campplus-funasr-external-diarization-models",
+      "componentType": "model",
+      "upstream": {
+        "name": "IIC FSMN-VAD v2.0.4 and CAM++ v2.0.2",
+        "version": "modelscope-tags:fsmn-vad@v2.0.4+model-sha256:b3be75be477f0780277f3bae0fe489f48718f585f3a6e45d7dd1fbb1a4255fc5;campplus@v2.0.2+model-sha256:3388cf5fd3493c9ac9c69851d8e7a8badcfb4f3dc631020c4961371646d5ada8",
+        "sourceUrl": "https://www.modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded",
+        "sourceUrl": "https://www.modelscope.cn/models/iic/speech_campplus_sv_zh-cn_16k-common/summary"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://www.modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary",
+          "sha256": "01140cf1be927d5f6291932b79078b8294a86cd69a1f014bfc671e63e6706f62",
+          "sizeBytes": 3570,
+          "targetPath": "resources/runtime-receipts/fsmn-vad-campplus-funasr.json"
+        }
+      ]
+    },
+    {
+      "id": "ollama-0-32-9-windows-x64-external-test-runtime",
+      "componentType": "optional-runtime",
+      "upstream": {
+        "name": "Ollama for Windows",
+        "version": "winget:Ollama.Ollama@0.32.9+exe-sha256:0482be1251251da2f8479ace70c4dd7d9f2892d11dde201ee2408a18806b924b",
+        "sourceUrl": "https://github.com/ollama/ollama/releases/tag/v0.32.9",
+        "releasedAt": "2026-08-11"
+      },
+      "license": {
+        "spdx": "NOASSERTION",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/ollama/ollama/releases/tag/v0.32.9",
+          "sha256": "3d8b7a7677609bf5040023605cc71955eaa76d0b187a9598fa1a648ad22f693d",
+          "sizeBytes": 1076,
+          "targetPath": "resources/runtime-receipts/ollama-0.32.9-windows-x64.json"
+        }
+      ]
+    },
+    {
+      "id": "qwen3-vl-2b-q4-k-m-ollama-external-test-model",
+      "componentType": "model",
+      "upstream": {
+        "name": "Qwen3-VL-2B-Instruct via Ollama qwen3-vl:2b",
+        "version": "ollama-digest:0635d9d857d497aeadba3d7d27485746c50554446f9f6ec01ef39788221adbe8+gguf-sha256:ebabfa59b71a5b96e0281ec2994977e785284e0939807a99fc340dec3c6f10de",
+        "sourceUrl": "https://ollama.com/library/qwen3-vl:2b",
+        "releasedAt": null
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "external-installation-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://ollama.com/library/qwen3-vl:2b",
+          "sha256": "3b4925c1d2f90dc6b1a874bc18d1890e1cace38ea631c25378bec024264c88ad",
+          "sizeBytes": 1348,
+          "targetPath": "resources/runtime-receipts/qwen3-vl-2b-q4-k-m-ollama.json"
+        }
+      ]
+    },
+    {
+      "id": "llama-cpp-b10441-windows-x64-managed-video-runtime-candidate",
+      "componentType": "optional-runtime",
+      "upstream": {
+        "name": "llama.cpp Windows x64",
+        "version": "release:b10441+commit:0177dcc7300bad8914bb838baabce87899812491",
+        "sourceUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b10441",
+        "releasedAt": "2026-08-15"
+      },
+      "license": {
+        "spdx": "MIT",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "sourceUrl": "https://github.com/ggml-org/llama.cpp/blob/0177dcc7300bad8914bb838baabce87899812491/LICENSE"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "release-candidate-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b10441",
+          "sha256": "4b98e6a225daa69a6438a2b021e858fcf5aa61c4898bfaf6f9bc00e43c828245",
+          "sizeBytes": 2284,
+          "targetPath": "resources/runtime-receipts/llama-cpp-b10441-windows-x64.json"
+        }
+      ]
+    },
+    {
+      "id": "qwen3-vl-2b-instruct-q4-k-m-gguf-managed-runtime-candidate",
+      "componentType": "model",
+      "upstream": {
+        "name": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+        "version": "huggingface-revision:52d6c8ffea26cc873ac5ad116f8631268d7eb503+Q4_K_M+mmproj-Q8_0",
+        "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+        "releasedAt": "2025-11-01"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "licenseFiles": [],
+        "noticeRequired": true,
+        "reviewStatus": "legal-review-required",
+        "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/blob/52d6c8ffea26cc873ac5ad116f8631268d7eb503/README.md"
+      },
+      "distribution": {
+        "firstRunRequired": true,
+        "defaultBundled": false,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "release-candidate-receipt",
+          "fetchPolicy": "manual-review",
+          "sourceUrl": "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/tree/52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+          "sha256": "f1dcc7911a0caf09780f73a4450db9f1b19846ede7b0f218af54c17d95ae7d75",
+          "sizeBytes": 2262,
+          "targetPath": "resources/runtime-receipts/qwen3-vl-2b-instruct-gguf-official.json"
+        }
+      ]
+    },
+    {
+      "id": "adobe-source-han-sans-cn-vf-2-005",
+      "componentType": "font",
+      "upstream": {
+        "name": "Adobe Source Han Sans CN VF",
+        "version": "2.005R",
+        "sourceUrl": "https://github.com/adobe-fonts/source-han-sans/releases/tag/2.005R",
+        "releasedAt": "2025-06-18"
+      },
+      "license": {
+        "spdx": "OFL-1.1",
+        "licenseFiles": [
+          "legal/SourceHanSans-OFL-1.1.txt"
+        ],
+        "noticeRequired": true,
+        "reviewStatus": "recorded",
+        "sourceUrl": "https://github.com/adobe-fonts/source-han-sans/blob/2.005R/LICENSE.txt"
+      },
+      "distribution": {
+        "firstRunRequired": false,
+        "defaultBundled": true,
+        "platforms": [
+          "win32"
+        ],
+        "architectures": [
+          "x64"
+        ]
+      },
+      "artifacts": [
+        {
+          "role": "ui-font",
+          "fetchPolicy": "download",
+          "sourceUrl": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/2.005R/Variable/WOFF2/OTF/Subset/SourceHanSansCN-VF.otf.woff2",
+          "sha256": "7087698d52240614659957608d8c4ad446759aee3208409dc9f566412e7af8f4",
+          "sizeBytes": 7995716,
+          "targetPath": "src/assets/fonts/SourceHanSansCN-VF.otf.woff2"
+        }
+      ]
+    }
+  ],
+  "existingDecisionState": {
+    "project": {
+      "status": "pending",
+      "releaseMode": "proprietary",
+      "licenseExpression": "UNLICENSED",
+      "licenseFile": null
+    },
+    "components": [
+      {
+        "id": "dinov2-vitb14-xenova-q4",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "clip-vit-b32-xenova-q4",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "multilingual-clip-vit-b32-text-quint8",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "ultralytics-yolov8n-coco-onnx",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "lindevs-yolov8n-face-onnx",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "cvlface-adaface-ir101-webface12m-onnx",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "osnet-ain-x1-msmt17-onnx",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "pulpcut-mobilesam-onnx",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "gyan-ffmpeg-full-8-1-2",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "microsoft-onnxruntime-gpu-windows-1-24-3",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "nvidia-cuda-12-8-embedding-runtime",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "nvidia-cudnn-9-19-1-cuda12-runtime",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "floating-clock-cuda-embedding-worker",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "floating-clock-fast-scanner-electron",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "sensevoice-small-funasr-external-audio-semantic-model",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "fsmn-vad-campplus-funasr-external-diarization-models",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "ollama-0-32-9-windows-x64-external-test-runtime",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "qwen3-vl-2b-q4-k-m-ollama-external-test-model",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "llama-cpp-b10441-windows-x64-managed-video-runtime-candidate",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "qwen3-vl-2b-instruct-q4-k-m-gguf-managed-runtime-candidate",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      },
+      {
+        "id": "adobe-source-han-sans-cn-vf-2-005",
+        "status": "pending",
+        "resolution": null,
+        "permittedProfiles": []
+      }
+    ],
+    "changedByThisResearch": false
+  },
+  "productionNpm": {
+    "count": 106,
+    "selection": "unique name@version; lock.packages entries with dev !== true, including platform optional entries; installed package metadata fallback",
+    "declarationOnly": true,
+    "entries": [
+      {
+        "name": "@emnapi/runtime",
+        "version": "1.11.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@huggingface/jinja",
+        "version": "0.5.9",
+        "license": "MIT",
+        "repository": "https://github.com/huggingface/huggingface.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@huggingface/tokenizers",
+        "version": "0.1.3",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/huggingface/tokenizers.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@huggingface/transformers",
+        "version": "4.2.0",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/huggingface/transformers.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@img/colour",
+        "version": "1.1.0",
+        "license": "MIT",
+        "repository": "https://github.com/lovell/colour",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@img/sharp-darwin-arm64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "darwin",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-darwin-x64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "darwin",
+        "cpu": "x64"
+      },
+      {
+        "name": "@img/sharp-freebsd-wasm32",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "freebsd",
+        "cpu": ""
+      },
+      {
+        "name": "@img/sharp-libvips-darwin-arm64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "darwin",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-libvips-darwin-x64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "darwin",
+        "cpu": "x64"
+      },
+      {
+        "name": "@img/sharp-libvips-linux-arm",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm"
+      },
+      {
+        "name": "@img/sharp-libvips-linux-arm64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-libvips-linux-ppc64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "ppc64"
+      },
+      {
+        "name": "@img/sharp-libvips-linux-riscv64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "riscv64"
+      },
+      {
+        "name": "@img/sharp-libvips-linux-s390x",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "s390x"
+      },
+      {
+        "name": "@img/sharp-libvips-linux-x64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "x64"
+      },
+      {
+        "name": "@img/sharp-libvips-linuxmusl-arm64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-libvips-linuxmusl-x64",
+        "version": "1.3.0",
+        "license": "LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "x64"
+      },
+      {
+        "name": "@img/sharp-linux-arm",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm"
+      },
+      {
+        "name": "@img/sharp-linux-arm64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-linux-ppc64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "ppc64"
+      },
+      {
+        "name": "@img/sharp-linux-riscv64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "riscv64"
+      },
+      {
+        "name": "@img/sharp-linux-s390x",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "s390x"
+      },
+      {
+        "name": "@img/sharp-linux-x64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "x64"
+      },
+      {
+        "name": "@img/sharp-linuxmusl-arm64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-linuxmusl-x64",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "x64"
+      },
+      {
+        "name": "@img/sharp-wasm32",
+        "version": "0.35.0",
+        "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
+        "repository": "",
+        "optional": true,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@img/sharp-webcontainers-wasm32",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "",
+        "optional": true,
+        "os": "",
+        "cpu": "wasm32"
+      },
+      {
+        "name": "@img/sharp-win32-arm64",
+        "version": "0.35.0",
+        "license": "Apache-2.0 AND LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "win32",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@img/sharp-win32-ia32",
+        "version": "0.35.0",
+        "license": "Apache-2.0 AND LGPL-3.0-or-later",
+        "repository": "",
+        "optional": true,
+        "os": "win32",
+        "cpu": "ia32"
+      },
+      {
+        "name": "@img/sharp-win32-x64",
+        "version": "0.35.0",
+        "license": "Apache-2.0 AND LGPL-3.0-or-later",
+        "repository": "https://github.com/lovell/sharp",
+        "optional": true,
+        "os": "win32",
+        "cpu": "x64"
+      },
+      {
+        "name": "@napi-rs/canvas-android-arm64",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "android",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@napi-rs/canvas-darwin-arm64",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "darwin",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@napi-rs/canvas-darwin-x64",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "darwin",
+        "cpu": "x64"
+      },
+      {
+        "name": "@napi-rs/canvas-linux-arm-gnueabihf",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm"
+      },
+      {
+        "name": "@napi-rs/canvas-linux-arm64-gnu",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@napi-rs/canvas-linux-arm64-musl",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@napi-rs/canvas-linux-riscv64-gnu",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "riscv64"
+      },
+      {
+        "name": "@napi-rs/canvas-linux-x64-gnu",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "x64"
+      },
+      {
+        "name": "@napi-rs/canvas-linux-x64-musl",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "linux",
+        "cpu": "x64"
+      },
+      {
+        "name": "@napi-rs/canvas-win32-arm64-msvc",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "",
+        "optional": true,
+        "os": "win32",
+        "cpu": "arm64"
+      },
+      {
+        "name": "@napi-rs/canvas-win32-x64-msvc",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "https://github.com/Brooooooklyn/canvas",
+        "optional": true,
+        "os": "win32",
+        "cpu": "x64"
+      },
+      {
+        "name": "@napi-rs/canvas",
+        "version": "1.0.3",
+        "license": "MIT",
+        "repository": "https://github.com/Brooooooklyn/canvas",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/aspromise",
+        "version": "1.1.2",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/base64",
+        "version": "1.1.2",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/codegen",
+        "version": "2.0.5",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/eventemitter",
+        "version": "1.1.1",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/fetch",
+        "version": "1.1.1",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/float",
+        "version": "1.0.2",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/path",
+        "version": "1.1.2",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/pool",
+        "version": "1.1.0",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@protobufjs/utf8",
+        "version": "1.1.1",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/dcodeIO/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@types/node",
+        "version": "24.13.2",
+        "license": "MIT",
+        "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@types/react",
+        "version": "19.2.18",
+        "license": "MIT",
+        "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@xterm/addon-fit",
+        "version": "0.11.0",
+        "license": "MIT",
+        "repository": "https://github.com/xtermjs/xterm.js/tree/master/addons/addon-fit",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "@xterm/xterm",
+        "version": "5.5.0",
+        "license": "MIT",
+        "repository": "https://github.com/xtermjs/xterm.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "adm-zip",
+        "version": "0.6.0",
+        "license": "MIT",
+        "repository": "https://github.com/cthackers/adm-zip",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "asn1",
+        "version": "0.2.6",
+        "license": "MIT",
+        "repository": "https://github.com/joyent/node-asn1",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "bcrypt-pbkdf",
+        "version": "1.0.2",
+        "license": "BSD-3-Clause",
+        "repository": "git://github.com/joyent/node-bcrypt-pbkdf",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "boolean",
+        "version": "3.2.0",
+        "license": "MIT",
+        "repository": "git://github.com/thenativeweb/boolean",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "buildcheck",
+        "version": "0.0.7",
+        "license": "MIT",
+        "repository": "http://github.com/mscdex/buildcheck",
+        "optional": true,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "cpu-features",
+        "version": "0.0.10",
+        "license": "MIT",
+        "repository": "https://github.com/mscdex/cpu-features",
+        "optional": true,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "csstype",
+        "version": "3.2.3",
+        "license": "MIT",
+        "repository": "https://github.com/frenic/csstype",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "define-data-property",
+        "version": "1.1.4",
+        "license": "MIT",
+        "repository": "https://github.com/ljharb/define-data-property",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "define-properties",
+        "version": "1.2.1",
+        "license": "MIT",
+        "repository": "git://github.com/ljharb/define-properties",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "detect-libc",
+        "version": "2.1.2",
+        "license": "Apache-2.0",
+        "repository": "git://github.com/lovell/detect-libc",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "detect-node",
+        "version": "2.1.0",
+        "license": "MIT",
+        "repository": "https://github.com/iliakan/detect-node",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "es-define-property",
+        "version": "1.0.1",
+        "license": "MIT",
+        "repository": "https://github.com/ljharb/es-define-property",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "es-errors",
+        "version": "1.3.0",
+        "license": "MIT",
+        "repository": "https://github.com/ljharb/es-errors",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "es6-error",
+        "version": "4.1.1",
+        "license": "MIT",
+        "repository": "https://github.com/bjyoungblood/es6-error",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "escape-string-regexp",
+        "version": "4.0.0",
+        "license": "MIT",
+        "repository": "sindresorhus/escape-string-regexp",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "flatbuffers",
+        "version": "25.9.23",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/google/flatbuffers",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "global-agent",
+        "version": "3.0.0",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/gajus/global-agent",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "globalthis",
+        "version": "1.0.4",
+        "license": "MIT",
+        "repository": "git://github.com/ljharb/System.global",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "gopd",
+        "version": "1.2.0",
+        "license": "MIT",
+        "repository": "https://github.com/ljharb/gopd",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "guid-typescript",
+        "version": "1.0.9",
+        "license": "ISC",
+        "repository": "https://github.com/NicolasDeveloper/guid-typescript",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "has-property-descriptors",
+        "version": "1.0.2",
+        "license": "MIT",
+        "repository": "https://github.com/inspect-js/has-property-descriptors",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "json-stringify-safe",
+        "version": "5.0.1",
+        "license": "ISC",
+        "repository": "git://github.com/isaacs/json-stringify-safe",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "long",
+        "version": "5.3.2",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/dcodeIO/long.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "matcher",
+        "version": "3.0.0",
+        "license": "MIT",
+        "repository": "sindresorhus/matcher",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "nan",
+        "version": "2.27.0",
+        "license": "MIT",
+        "repository": "git://github.com/nodejs/nan",
+        "optional": true,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "object-keys",
+        "version": "1.1.1",
+        "license": "MIT",
+        "repository": "git://github.com/ljharb/object-keys",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "onnxruntime-common",
+        "version": "1.24.0-dev.20251116-b39e144322",
+        "license": "MIT",
+        "repository": "https://github.com/Microsoft/onnxruntime",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "onnxruntime-common",
+        "version": "1.24.3",
+        "license": "MIT",
+        "repository": "https://github.com/Microsoft/onnxruntime",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "onnxruntime-node",
+        "version": "1.24.3",
+        "license": "MIT",
+        "repository": "https://github.com/Microsoft/onnxruntime",
+        "optional": false,
+        "os": "win32, darwin, linux",
+        "cpu": ""
+      },
+      {
+        "name": "onnxruntime-web",
+        "version": "1.26.0-dev.20260416-b7804b056c",
+        "license": "MIT",
+        "repository": "https://github.com/Microsoft/onnxruntime",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "pdfjs-dist",
+        "version": "6.2.108",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/mozilla/pdf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "platform",
+        "version": "1.3.6",
+        "license": "MIT",
+        "repository": "bestiejs/platform.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "protobufjs",
+        "version": "7.6.5",
+        "license": "BSD-3-Clause",
+        "repository": "protobufjs/protobuf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.8",
+        "license": "MIT",
+        "repository": "https://github.com/react/react",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "react",
+        "version": "19.2.8",
+        "license": "MIT",
+        "repository": "https://github.com/react/react",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "roarr",
+        "version": "2.15.4",
+        "license": "BSD-3-Clause",
+        "repository": "git@github.com:gajus/roarr",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "safer-buffer",
+        "version": "2.1.2",
+        "license": "MIT",
+        "repository": "https://github.com/ChALkeR/safer-buffer",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "scheduler",
+        "version": "0.27.0",
+        "license": "MIT",
+        "repository": "https://github.com/facebook/react",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "semver-compare",
+        "version": "1.0.0",
+        "license": "MIT",
+        "repository": "git://github.com/substack/semver-compare",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "semver",
+        "version": "7.8.4",
+        "license": "ISC",
+        "repository": "https://github.com/npm/node-semver",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "semver",
+        "version": "7.8.5",
+        "license": "ISC",
+        "repository": "https://github.com/npm/node-semver",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "serialize-error",
+        "version": "7.0.1",
+        "license": "MIT",
+        "repository": "sindresorhus/serialize-error",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "sharp",
+        "version": "0.35.0",
+        "license": "Apache-2.0",
+        "repository": "git://github.com/lovell/sharp",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "sprintf-js",
+        "version": "1.1.3",
+        "license": "BSD-3-Clause",
+        "repository": "https://github.com/alexei/sprintf.js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "ssh2",
+        "version": "1.17.0",
+        "license": "MIT",
+        "repository": "http://github.com/mscdex/ssh2",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "tslib",
+        "version": "2.8.1",
+        "license": "0BSD",
+        "repository": "https://github.com/Microsoft/tslib",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "tweetnacl",
+        "version": "0.14.5",
+        "license": "Unlicense",
+        "repository": "https://github.com/dchest/tweetnacl-js",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "type-fest",
+        "version": "0.13.1",
+        "license": "(MIT OR CC0-1.0)",
+        "repository": "sindresorhus/type-fest",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "undici-types",
+        "version": "7.18.2",
+        "license": "MIT",
+        "repository": "https://github.com/nodejs/undici",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      },
+      {
+        "name": "zustand",
+        "version": "5.0.14",
+        "license": "MIT",
+        "repository": "https://github.com/pmndrs/zustand",
+        "optional": false,
+        "os": "",
+        "cpu": ""
+      }
+    ]
+  },
+  "productionLicenseCounts": {
+    "MIT": 52,
+    "Apache-2.0": 19,
+    "LGPL-3.0-or-later": 10,
+    "Apache-2.0 AND LGPL-3.0-or-later AND MIT": 1,
+    "Apache-2.0 AND LGPL-3.0-or-later": 3,
+    "BSD-3-Clause": 14,
+    "ISC": 4,
+    "0BSD": 1,
+    "Unlicense": 1,
+    "(MIT OR CC0-1.0)": 1
+  },
+  "ffmpegBinaryEvidence": {
+    "relativePath": "tools/ffmpeg/bin/ffmpeg.exe",
+    "sha256": "ad8f211bc894755e0061c55ab280ae00e8d3d4f15a8cc4372b24cfa247b5942e",
+    "commands": [
+      "ffmpeg.exe -hide_banner -version",
+      "ffmpeg.exe -hide_banner -L"
+    ],
+    "versionOutput": "ffmpeg version 8.1.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers\r\nbuilt with gcc 16.1.0 (Rev2, Built by MSYS2 project)\r\nconfiguration: --enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-cairo --enable-fontconfig --enable-iconv --enable-gnutls --enable-lcms2 --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-libsnappy --enable-zlib --enable-librist --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-sdl2 --enable-libaribb24 --enable-libaribcaption --enable-libdav1d --enable-libdavs2 --enable-libopenjpeg --enable-libquirc --enable-libuavs3d --enable-libxevd --enable-libzvbi --enable-liboapv --enable-libqrencode --enable-librav1e --enable-libsvtav1 --enable-libvvenc --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxavs2 --enable-libxeve --enable-libxvid --enable-libaom --enable-libjxl --enable-libsvtjpegxs --enable-libvpx --enable-mediafoundation --enable-libass --enable-frei0r --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-liblensfun --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-libshaderc --enable-vulkan --enable-libplacebo --enable-opencl --enable-libcdio --enable-openal --enable-libgme --enable-libmodplug --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libshine --enable-libtheora --enable-libtwolame --enable-libvo-amrwbenc --enable-libcodec2 --enable-libilbc --enable-libgsm --enable-liblc3 --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-ladspa --enable-libbs2b --enable-libflite --enable-libmysofa --enable-librubberband --enable-libsoxr --enable-chromaprint --enable-whisper\r\nlibavutil      60. 26.102 / 60. 26.102\r\nlibavcodec     62. 28.102 / 62. 28.102\r\nlibavformat    62. 12.102 / 62. 12.102\r\nlibavdevice    62.  3.102 / 62.  3.102\r\nlibavfilter    11. 14.102 / 11. 14.102\r\nlibswscale      9.  5.102 /  9.  5.102\r\nlibswresample   6.  3.102 /  6.  3.102\r\n\r\nExiting with exit code 0\r\n",
+    "licenseOutput": "ffmpeg is free software; you can redistribute it and/or modify\r\nit under the terms of the GNU General Public License as published by\r\nthe Free Software Foundation; either version 3 of the License, or\r\n(at your option) any later version.\r\n\r\nffmpeg is distributed in the hope that it will be useful,\r\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\r\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\r\nGNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License\r\nalong with ffmpeg.  If not, see <http://www.gnu.org/licenses/>.\r\n",
+    "mutation": false
+  },
+  "nativeVendored": [
+    {
+      "relativePath": "native/stb_image.h",
+      "version": "2.30",
+      "licenseOptions": [
+        "MIT",
+        "public-domain/Unlicense"
+      ],
+      "classification": "third-party-vendored-source"
+    },
+    {
+      "relativePath": "native/stb_image_resize2.h",
+      "version": "2.18",
+      "licenseOptions": [
+        "MIT",
+        "public-domain/Unlicense"
+      ],
+      "classification": "third-party-vendored-source"
+    }
+  ],
+  "rightsChainPending": [
+    "actual natural person author and copyright holder",
+    "collaborator contributions and written ownership terms",
+    "commission/outsourcing contracts",
+    "employment/school/task ownership",
+    "third-party copied or adapted source authority",
+    "AI service terms and human contributions",
+    "completion/publication dates and registration version"
+  ],
+  "sameDayRecheck": {
+    "date": "2026-09-24",
+    "scope": "Corrects SenseVoice interpretation; original dependency/artifact observations remain the historical initial snapshot. New raw evidence is in the separate license-evidence annex. No license decision approved."
+  }
+}

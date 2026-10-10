@@ -1,0 +1,2479 @@
+{
+  "schemaVersion": 1,
+  "kind": "siftory-third-party-license-payload",
+  "status": "partial-text-evidence",
+  "preparedOn": "2026-09-24",
+  "approvalGranted": false,
+  "completeCorrespondingSource": false,
+  "completeRecursiveSbom": false,
+  "scope": "Selected shipped Windows npm/native license texts, including 17 binary-observed canvas Rust versions and two additional MPL dependencies supported by fixed constraints/default features/publication chronology. Three known MPL source packages are locally delivered; AOM 3.11.0 binary identifiers and conservative AVIF/allocator notices are separately bounded. Supplemental delivery is not a complete recursive SBOM, complete corresponding source for all components, or distribution approval.",
+  "packageBindings": [
+    {
+      "packagePath": "node_modules/onnxruntime-node",
+      "version": "1.24.3"
+    },
+    {
+      "packagePath": "node_modules/onnxruntime-common",
+      "version": "1.24.3"
+    },
+    {
+      "packagePath": "node_modules/onnxruntime-web",
+      "version": "1.26.0-dev.20260416-b7804b056c"
+    },
+    {
+      "packagePath": "node_modules/onnxruntime-web/node_modules/onnxruntime-common",
+      "version": "1.24.0-dev.20251116-b39e144322"
+    },
+    {
+      "packagePath": "node_modules/sharp",
+      "version": "0.35.4"
+    },
+    {
+      "packagePath": "node_modules/@img/sharp-win32-x64",
+      "version": "0.35.4"
+    },
+    {
+      "packagePath": "node_modules/@napi-rs/canvas",
+      "version": "1.0.3"
+    },
+    {
+      "packagePath": "node_modules/@napi-rs/canvas-win32-x64-msvc",
+      "version": "1.0.3"
+    },
+    {
+      "packagePath": "node_modules/electron",
+      "version": "42.8.0"
+    }
+  ],
+  "components": [
+    {
+      "id": "onnxruntime-1.24.3",
+      "name": "onnxruntime-node@1.24.3 / onnxruntime-common@1.24.3",
+      "revision": "v1.24.3",
+      "licenseScope": "MIT for ONNX Runtime code; upstream ThirdPartyNotices retain their own terms."
+    },
+    {
+      "id": "onnxruntime-web-b7804b056c",
+      "name": "onnxruntime-web@1.26.0-dev.20260416-b7804b056c",
+      "revision": "b7804b056c",
+      "licenseScope": "MIT for ONNX Runtime code; upstream ThirdPartyNotices retain their own terms."
+    },
+    {
+      "id": "onnxruntime-common-b39e144322",
+      "name": "onnxruntime-common@1.24.0-dev.20251116-b39e144322",
+      "revision": "b39e144322",
+      "licenseScope": "MIT for ONNX Runtime code; upstream ThirdPartyNotices retain their own terms."
+    },
+    {
+      "id": "canvas-1.0.3-1",
+      "name": "@napi-rs/canvas",
+      "revision": "2aa648fb4ed83fbe87af77922ecf89153184f8b5",
+      "licenseScope": "MIT (wrapper only)"
+    },
+    {
+      "id": "canvas-1.0.3-2",
+      "name": "Skia",
+      "revision": "7219df0fb0ff64f26adad448f94e8c001b964e6a",
+      "licenseScope": "BSD-3-Clause; does not replace third-party licenses"
+    },
+    {
+      "id": "canvas-1.0.3-3",
+      "name": "ICU",
+      "revision": "d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738",
+      "licenseScope": "Unicode-3.0 plus full bundled third-party notices"
+    },
+    {
+      "id": "canvas-1.0.3-4",
+      "name": "Expat",
+      "revision": "6154446fccefbf3ca644894f598969113b0c7bcd",
+      "licenseScope": "MIT"
+    },
+    {
+      "id": "canvas-1.0.3-5",
+      "name": "FreeType",
+      "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+      "licenseScope": "FTL OR GPL-2.0-or-later, plus file-specific notices; no license branch elected by this evidence task"
+    },
+    {
+      "id": "canvas-1.0.3-6",
+      "name": "HarfBuzz",
+      "revision": "9cb1fee51069b206effb4736e443b038d230789d",
+      "licenseScope": "Old MIT upstream text; subdirectory notices may also apply"
+    },
+    {
+      "id": "canvas-1.0.3-7",
+      "name": "libjpeg-turbo",
+      "revision": "e14cbfaa85529d47f9f55b0f104a579c1061f9ad",
+      "licenseScope": "IJG / BSD-3-Clause / zlib as scoped by upstream LICENSE.md"
+    },
+    {
+      "id": "canvas-1.0.3-8",
+      "name": "libpng",
+      "revision": "d5515b5b8be3901aac04e5bd8bd5c89f287bcd33",
+      "licenseScope": "Full libpng license text"
+    },
+    {
+      "id": "canvas-1.0.3-9",
+      "name": "libwebp",
+      "revision": "845d5476a866141ba35ac133f856fa62f0b7445f",
+      "licenseScope": "BSD-3-Clause with PATENTS grant"
+    },
+    {
+      "id": "canvas-1.0.3-10",
+      "name": "Wuffs",
+      "revision": "e3f919ccfe3ef542cfc983a82146070258fb57f8",
+      "licenseScope": "Apache-2.0 root LICENSE; generated-source scope not exhaustively audited"
+    },
+    {
+      "id": "canvas-1.0.3-11",
+      "name": "zlib",
+      "revision": "646b7f569718921d7d4b5b8e22572ff6c76f2596",
+      "licenseScope": "Zlib"
+    },
+    {
+      "id": "canvas-1.0.3-12",
+      "name": "Brotli",
+      "revision": "6d03dfbedda1615c4cba1211f8d81735575209c8",
+      "licenseScope": "MIT"
+    },
+    {
+      "id": "canvas-1.0.3-13",
+      "name": "JPEG XL",
+      "revision": "a205468bc5d3a353fb15dae2398a101dff52f2d3",
+      "licenseScope": "BSD-3-Clause with PATENTS grant"
+    },
+    {
+      "id": "canvas-1.0.3-14",
+      "name": "Highway",
+      "revision": "424360251cdcfc314cfc528f53c872ecd63af0f0",
+      "licenseScope": "Apache-2.0"
+    },
+    {
+      "id": "canvas-1.0.3-15",
+      "name": "skcms",
+      "revision": "7219df0fb0ff64f26adad448f94e8c001b964e6a",
+      "licenseScope": "BSD; source header refers to Skia root LICENSE"
+    },
+    {
+      "id": "sharp-win32-x64-0.35.4",
+      "name": "sharp / @img/sharp-win32-x64 0.35.4",
+      "revision": "7f1a0a22cc285fe180766f4935d50b55af6e8432",
+      "licenseScope": "Apache-2.0 for sharp; platform package declares Apache-2.0 AND LGPL-3.0-or-later."
+    },
+    {
+      "id": "libvips-8.18.6",
+      "name": "libvips 8.18.6 and recorded Windows platform dependencies",
+      "revision": "v8.18.6",
+      "licenseScope": "Upstream LGPL-2.1-or-later source text; actual Windows package README describes use via the later-version clause under LGPLv3. Dependency terms remain separate."
+    },
+    {
+      "id": "directml-1.15.4",
+      "name": "Microsoft.AI.DirectML 1.15.4 Windows x64 runtime",
+      "revision": "1.15.4",
+      "licenseScope": "LicenseRef-Microsoft-DirectML for bin/ runtime; LICENSE-CODE MIT is not the DLL license. Separate third-party notices apply."
+    },
+    {
+      "id": "ort-dxc-1.8.2502.8",
+      "name": "ORT DirectX compiler and validator 1.8.2502.8",
+      "revision": "1.8.2502.8",
+      "licenseScope": "NCSA in LICENSE-LLVM.txt, mapped to all files other than d3d12shader.h by the exact NuGet ReleaseNotes. Legacy LICENSE-MS is not asserted as this version's DLL license."
+    },
+    {
+      "id": "dawn-dxc-eb67a9085c",
+      "name": "Electron 42.8.0 Dawn custom DirectX compiler",
+      "revision": "eb67a9085c758516d940e1ce3fed0acfb6518209",
+      "licenseScope": "NCSA and complete third-party appendix in the pinned DXC LICENSE.TXT; linked through Electron/Chromium/Dawn source dependencies."
+    },
+    {
+      "id": "windows-sdk-10.0.26100.0",
+      "name": "Windows SDK redistributable terms and notices",
+      "revision": "10.0.26100.0 installed SDK license directory",
+      "licenseScope": "LicenseRef-Microsoft-Windows-SDK for eligible listed redistributables. The full SDK notice file is retained without claiming every SDK component is bundled."
+    },
+    {
+      "id": "canvas-rust-aho-corasick-1.1.4",
+      "name": "aho-corasick (canvas Rust dependency)",
+      "revision": "1.1.4",
+      "licenseScope": "Unlicense OR MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-base64-simd-0.8.0",
+      "name": "base64-simd (canvas Rust dependency)",
+      "revision": "0.8.0",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-cfb-0.14.0",
+      "name": "cfb (canvas Rust dependency)",
+      "revision": "0.14.0",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-color_quant-1.1.0",
+      "name": "color_quant (canvas Rust dependency)",
+      "revision": "1.1.0",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-cssparser-0.37.0",
+      "name": "cssparser (canvas Rust dependency)",
+      "revision": "0.37.0",
+      "licenseScope": "MPL-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-gif-0.14.2",
+      "name": "gif (canvas Rust dependency)",
+      "revision": "0.14.2",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-itoa-1.0.18",
+      "name": "itoa (canvas Rust dependency)",
+      "revision": "1.0.18",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-memchr-2.8.3",
+      "name": "memchr (canvas Rust dependency)",
+      "revision": "2.8.3",
+      "licenseScope": "Unlicense OR MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-napi-3.11.0",
+      "name": "napi (canvas Rust dependency)",
+      "revision": "3.11.0",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-napi-sys-3.3.0",
+      "name": "napi-sys (canvas Rust dependency)",
+      "revision": "3.3.0",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-nom-8.0.0",
+      "name": "nom (canvas Rust dependency)",
+      "revision": "8.0.0",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-regex-1.13.1",
+      "name": "regex (canvas Rust dependency)",
+      "revision": "1.13.1",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-regex-automata-0.4.16",
+      "name": "regex-automata (canvas Rust dependency)",
+      "revision": "0.4.16",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-regex-syntax-0.8.11",
+      "name": "regex-syntax (canvas Rust dependency)",
+      "revision": "0.8.11",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-smallvec-1.15.2",
+      "name": "smallvec (canvas Rust dependency)",
+      "revision": "1.15.2",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-tokio-1.53.1",
+      "name": "tokio (canvas Rust dependency)",
+      "revision": "1.53.1",
+      "licenseScope": "MIT; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-weezl-0.1.12",
+      "name": "weezl (canvas Rust dependency)",
+      "revision": "0.1.12",
+      "licenseScope": "MIT OR Apache-2.0; positive binary source-path evidence, not a complete native dependency closure."
+    },
+    {
+      "id": "canvas-rust-cssparser-color-0.5.0",
+      "name": "cssparser-color (canvas Rust dependency)",
+      "revision": "0.5.0",
+      "licenseScope": "MPL-2.0; fixed canvas dependency constraints, default features and release chronology support this version. Complete local upstream source is delivered in legal/covered-source/canvas-rust-sources.zip; not independent binary-path version identification."
+    },
+    {
+      "id": "canvas-rust-cssparser-macros-0.7.0",
+      "name": "cssparser-macros (canvas Rust dependency)",
+      "revision": "0.7.0",
+      "licenseScope": "MPL-2.0; fixed canvas dependency constraints, default features and release chronology support this version. Complete local upstream source is delivered in legal/covered-source/canvas-rust-sources.zip; not independent binary-path version identification."
+    },
+    {
+      "id": "canvas-aom-3.11.0-core",
+      "name": "AOM 3.11.0",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "BSD-2-Clause and Alliance for Open Media Patent License 1.0; actual reviewed binary contains encoder, decoder and inspector v3.11.0 identifiers.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-aom-3.11.0-fastfeat",
+      "name": "AOM bundled fastfeat",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "BSD-3-Clause; included in upstream AOM encoder source list; exact historical feature map not recovered.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-aom-3.11.0-vector",
+      "name": "AOM bundled vector",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "MIT; included in upstream AOM encoder source list; exact historical feature map not recovered.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-aom-3.11.0-x86inc",
+      "name": "AOM bundled x86inc",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "ISC; referenced by conditional x86 assembly sources, without asserting all historical SIMD features.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-aom-3.11.0-SVT-AV1",
+      "name": "AOM bundled SVT-AV1 code import",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "BSD-3-Clause-Clear package license, AOM patent text and per-file BSD-2-Clause notices retained together. CONFIG_SVT_AV1 defaults to 1; AVX2 sources reference these headers.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-aom-3.11.0-libwebm",
+      "name": "AOM bundled libwebm notice appendix",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "BSD-3-Clause plus original PATENTS/AUTHORS; conservative source appendix, not an assertion of actual binary linkage. Wrapper disables examples/tests/tools whose CMake branch integrates this dependency.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-aom-3.11.0-libyuv",
+      "name": "AOM bundled libyuv notice appendix",
+      "revision": "AOM v3.11.0 / registry libaom-sys 0.17.2+libaom.3.11.0",
+      "licenseScope": "BSD-3-Clause; conservative source appendix, not an assertion of actual binary linkage. Inspected application-target linkage is conditional on examples/tests/tools.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      },
+      "wrapperVersionStatus": "inferred candidate, not exact binary identification"
+    },
+    {
+      "id": "canvas-native-libavif-0.14.0-candidate",
+      "name": "libavif-0.14.0 (conservative notice appendix)",
+      "revision": "libavif-0.14.0 candidate",
+      "licenseScope": "BSD-2-Clause; Fixed canvas libavif ^0.14 range; not independently version-identified from binary.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    },
+    {
+      "id": "canvas-native-libavif-1.0.4-candidate",
+      "name": "libavif-1.0.4 (conservative notice appendix)",
+      "revision": "libavif-1.0.4 candidate",
+      "licenseScope": "BSD-2-Clause plus original per-file notices; Fixed canvas libavif-sys ^0.17 range; vendored libavif 1.0.4 is a candidate, not a recovered historical resolution. Full aggregate retained including optional app notices without asserting every optional path linked.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    },
+    {
+      "id": "canvas-native-mimalloc-safe-0.1.64-candidate",
+      "name": "mimalloc-safe-0.1.64 (conservative notice appendix)",
+      "revision": "mimalloc-safe-0.1.64 candidate",
+      "licenseScope": "MIT; Latest compatible mimalloc-safe before npm publish; candidate, not exact historical resolution.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    },
+    {
+      "id": "canvas-native-libmimalloc-sys2-0.1.60-candidate",
+      "name": "libmimalloc-sys2-0.1.60 (conservative notice appendix)",
+      "revision": "libmimalloc-sys2-0.1.60 candidate",
+      "licenseScope": "MIT; Candidate inferred from selected mimalloc-safe dependency and publish date, not binary-identified.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    },
+    {
+      "id": "canvas-native-mimalloc-native-candidate",
+      "name": "mimalloc-native (conservative notice appendix)",
+      "revision": "mimalloc-native candidate",
+      "licenseScope": "MIT; Microsoft original native allocator license, same bytes in bundled v2 and v3 trees; canvas fixed source chooses mimalloc but exact historical allocator version remains unknown.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    },
+    {
+      "id": "canvas-native-libavif-sys-0.17-candidate",
+      "name": "libavif-sys-0.17 (conservative notice appendix)",
+      "revision": "libavif-sys-0.17 candidate",
+      "licenseScope": "BSD-2-Clause; Supplemental repository root wrapper notice at crate VCS commit. Not used to replace registry archive or assert dirty crate source identity.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    },
+    {
+      "id": "canvas-native-libaom-sys-0.17.2-candidate",
+      "name": "libaom-sys-0.17.2 (conservative notice appendix)",
+      "revision": "libaom-sys-0.17.2 candidate",
+      "licenseScope": "BSD-2-Clause; Supplemental repository root wrapper notice at crate VCS commit. Not used to replace registry archive or assert dirty crate source identity.",
+      "reviewedBinary": {
+        "bytes": 27331584,
+        "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
+        "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "onnxruntime-1.24.3/LICENSE",
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+      "appliesTo": [
+        "onnxruntime-1.24.3"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.3/LICENSE",
+        "revision": "v1.24.3",
+        "retrievedAt": "2026-09-24T13:59:13.786219+00:00",
+        "evidencePath": "license-evidence/foundation-upstream/ort-1.24.3/LICENSE",
+        "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+      },
+      "scopeLimitations": "Upstream repository notices are preserved for this revision; they are not proof of the full binary dependency set and do not replace separate DirectML or other redistributable terms."
+    },
+    {
+      "path": "onnxruntime-1.24.3/ThirdPartyNotices.txt",
+      "bytes": 325054,
+      "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
+      "appliesTo": [
+        "onnxruntime-1.24.3"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.3/ThirdPartyNotices.txt",
+        "revision": "v1.24.3",
+        "retrievedAt": "2026-09-24T13:59:13.786998+00:00",
+        "evidencePath": "license-evidence/foundation-upstream/ort-1.24.3/ThirdPartyNotices.txt",
+        "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"
+      },
+      "scopeLimitations": "Upstream repository notices are preserved for this revision; they are not proof of the full binary dependency set and do not replace separate DirectML or other redistributable terms."
+    },
+    {
+      "path": "onnxruntime-web-b7804b056c/LICENSE",
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+      "appliesTo": [
+        "onnxruntime-web-b7804b056c"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b7804b056c30aa35c1748f8e4e239d0e2ff25d6d/LICENSE",
+        "revision": "b7804b056c30aa35c1748f8e4e239d0e2ff25d6d",
+        "retrievedAt": "2026-09-24T13:59:13.787136+00:00",
+        "evidencePath": "license-evidence/foundation-upstream/ort-web-b7804b056c/LICENSE",
+        "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+      },
+      "scopeLimitations": "Upstream repository notices are preserved for this revision; they are not proof of the full binary dependency set and do not replace separate DirectML or other redistributable terms."
+    },
+    {
+      "path": "onnxruntime-web-b7804b056c/ThirdPartyNotices.txt",
+      "bytes": 325054,
+      "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
+      "appliesTo": [
+        "onnxruntime-web-b7804b056c"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b7804b056c30aa35c1748f8e4e239d0e2ff25d6d/ThirdPartyNotices.txt",
+        "revision": "b7804b056c30aa35c1748f8e4e239d0e2ff25d6d",
+        "retrievedAt": "2026-09-24T13:59:13.787740+00:00",
+        "evidencePath": "license-evidence/foundation-upstream/ort-web-b7804b056c/ThirdPartyNotices.txt",
+        "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"
+      },
+      "scopeLimitations": "Upstream repository notices are preserved for this revision; they are not proof of the full binary dependency set and do not replace separate DirectML or other redistributable terms."
+    },
+    {
+      "path": "onnxruntime-common-b39e144322/LICENSE",
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+      "appliesTo": [
+        "onnxruntime-common-b39e144322"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b39e144322/LICENSE",
+        "revision": "b39e144322",
+        "retrievedAt": "2026-09-24T13:59:13.788158+00:00",
+        "evidencePath": "license-evidence/foundation-upstream/ort-common-b39e144322/LICENSE",
+        "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+      },
+      "scopeLimitations": "Upstream repository notices are preserved for this revision; they are not proof of the full binary dependency set and do not replace separate DirectML or other redistributable terms."
+    },
+    {
+      "path": "onnxruntime-common-b39e144322/ThirdPartyNotices.txt",
+      "bytes": 326866,
+      "sha256": "e9e90971a8e75a9a8ac0c6412e29c1202d079998389915aa485f46c816c3b4cc",
+      "appliesTo": [
+        "onnxruntime-common-b39e144322"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b39e144322/ThirdPartyNotices.txt",
+        "revision": "b39e144322",
+        "retrievedAt": "2026-09-24T13:59:13.920142+00:00",
+        "evidencePath": "license-evidence/foundation-upstream/ort-common-b39e144322/ThirdPartyNotices.txt",
+        "sha256": "e9e90971a8e75a9a8ac0c6412e29c1202d079998389915aa485f46c816c3b4cc"
+      },
+      "scopeLimitations": "Upstream repository notices are preserved for this revision; they are not proof of the full binary dependency set and do not replace separate DirectML or other redistributable terms."
+    },
+    {
+      "path": "canvas-1.0.3/canvas/LICENSE",
+      "bytes": 1075,
+      "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6",
+      "appliesTo": [
+        "canvas-1.0.3-1"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/Brooooooklyn/canvas/2aa648fb4ed83fbe87af77922ecf89153184f8b5/LICENSE",
+        "revision": "2aa648fb4ed83fbe87af77922ecf89153184f8b5",
+        "retrievedAt": "2026-09-24T14:33:22.505Z",
+        "evidencePath": "license-source-followup/canvas/canvas/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/skia/LICENSE",
+      "bytes": 1507,
+      "sha256": "5f787c1dee3c56547f09ccc2906ab5f5293c4d8dd6c8654e573216c38e908dbd",
+      "appliesTo": [
+        "canvas-1.0.3-2",
+        "canvas-1.0.3-15"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/google/skia/7219df0fb0ff64f26adad448f94e8c001b964e6a/LICENSE",
+        "revision": "7219df0fb0ff64f26adad448f94e8c001b964e6a",
+        "retrievedAt": "2026-09-24T14:26:52.849Z",
+        "evidencePath": "license-source-followup/canvas/skia/LICENSE",
+        "sha256": "5f787c1dee3c56547f09ccc2906ab5f5293c4d8dd6c8654e573216c38e908dbd"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/icu/LICENSE",
+      "bytes": 27718,
+      "sha256": "e55522d81edc687a341a4411e0776e54ca654e90147f354a90458aaced4116af",
+      "appliesTo": [
+        "canvas-1.0.3-3"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/deps/icu.git/+/d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738/LICENSE?format=TEXT",
+        "revision": "d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738",
+        "retrievedAt": "2026-09-24T14:28:02.501Z",
+        "evidencePath": "license-source-followup/canvas/icu/LICENSE",
+        "sha256": "e55522d81edc687a341a4411e0776e54ca654e90147f354a90458aaced4116af"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/icu/license.html",
+      "bytes": 622,
+      "sha256": "c62d7697c03979f5056d28b338fafc7a1152820f7b379adf4a9d88cd37160f96",
+      "appliesTo": [
+        "canvas-1.0.3-3"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/deps/icu.git/+/d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738/license.html?format=TEXT",
+        "revision": "d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738",
+        "retrievedAt": "2026-09-24T14:29:15.121Z",
+        "evidencePath": "license-source-followup/canvas/icu/license.html",
+        "sha256": "c62d7697c03979f5056d28b338fafc7a1152820f7b379adf4a9d88cd37160f96"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/expat-COPYING",
+      "bytes": 1144,
+      "sha256": "31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87",
+      "appliesTo": [
+        "canvas-1.0.3-4"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git/+/6154446fccefbf3ca644894f598969113b0c7bcd/COPYING?format=TEXT",
+        "revision": "6154446fccefbf3ca644894f598969113b0c7bcd",
+        "retrievedAt": "2026-09-24T14:30:58.013Z",
+        "evidencePath": "license-source-followup/canvas/embedded/expat-COPYING",
+        "sha256": "31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-LICENSE.TXT",
+      "bytes": 2149,
+      "sha256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/LICENSE.TXT?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:33:20.540Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-LICENSE.TXT",
+        "sha256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-FTL.TXT",
+      "bytes": 6743,
+      "sha256": "5a5ee54c5001bbad1cdc1a57cc3dd4c42199b2da09d39c7ee41fab002d02967f",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/docs/FTL.TXT?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:31:00.043Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-FTL.TXT",
+        "sha256": "5a5ee54c5001bbad1cdc1a57cc3dd4c42199b2da09d39c7ee41fab002d02967f"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-GPLv2.TXT",
+      "bytes": 17994,
+      "sha256": "c4120c6752c910c299e3bd9cb3a46ff262c268303ca2069b61f92f10a5656c18",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/docs/GPLv2.TXT?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:31:00.457Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-GPLv2.TXT",
+        "sha256": "c4120c6752c910c299e3bd9cb3a46ff262c268303ca2069b61f92f10a5656c18"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-bdf-README",
+      "bytes": 5972,
+      "sha256": "7984455e7e5a9faba3797c8bf095fbe10cc846316b7320aff8c58402e22b82fe",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/bdf/README?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:34:09.984Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-bdf-README",
+        "sha256": "7984455e7e5a9faba3797c8bf095fbe10cc846316b7320aff8c58402e22b82fe"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-pcf-README",
+      "bytes": 3311,
+      "sha256": "18d9782898d9eac04476e2f744678137b2a889689ed3e923e052fc396a86f86b",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/pcf/README?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:34:10.349Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-pcf-README",
+        "sha256": "18d9782898d9eac04476e2f744678137b2a889689ed3e923e052fc396a86f86b"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-fthash.c",
+      "bytes": 8406,
+      "sha256": "693e5a54b3ce30140975a94a3369dbe706eb1f280c69e80da426d39cc45b94ef",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/base/fthash.c?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:34:10.816Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-fthash.c",
+        "sha256": "693e5a54b3ce30140975a94a3369dbe706eb1f280c69e80da426d39cc45b94ef"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-gzip-zlib.h",
+      "bytes": 97499,
+      "sha256": "c86a25c27f74cb97b8fa07b175f479f063d5064ace9995b4684063643c81cf1b",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/gzip/zlib.h?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:34:11.407Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-gzip-zlib.h",
+        "sha256": "c86a25c27f74cb97b8fa07b175f479f063d5064ace9995b4684063643c81cf1b"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/freetype-autofit-ft-hb-ft.c",
+      "bytes": 3315,
+      "sha256": "84dd5ddff1cec222e1755b4962faf45836238dfa3a46854dabd969eb4e50f8be",
+      "appliesTo": [
+        "canvas-1.0.3-5"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/autofit/ft-hb-ft.c?format=TEXT",
+        "revision": "264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+        "retrievedAt": "2026-09-24T14:34:11.980Z",
+        "evidencePath": "license-source-followup/canvas/embedded/freetype-autofit-ft-hb-ft.c",
+        "sha256": "84dd5ddff1cec222e1755b4962faf45836238dfa3a46854dabd969eb4e50f8be"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/harfbuzz-COPYING",
+      "bytes": 1971,
+      "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64",
+      "appliesTo": [
+        "canvas-1.0.3-6"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git/+/9cb1fee51069b206effb4736e443b038d230789d/COPYING?format=TEXT",
+        "revision": "9cb1fee51069b206effb4736e443b038d230789d",
+        "retrievedAt": "2026-09-24T14:31:00.958Z",
+        "evidencePath": "license-source-followup/canvas/embedded/harfbuzz-COPYING",
+        "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libjpeg-turbo-LICENSE.md",
+      "bytes": 5620,
+      "sha256": "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430",
+      "appliesTo": [
+        "canvas-1.0.3-7"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad/LICENSE.md?format=TEXT",
+        "revision": "e14cbfaa85529d47f9f55b0f104a579c1061f9ad",
+        "retrievedAt": "2026-09-24T14:31:01.396Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libjpeg-turbo-LICENSE.md",
+        "sha256": "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libjpeg-turbo-README.ijg",
+      "bytes": 12799,
+      "sha256": "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6",
+      "appliesTo": [
+        "canvas-1.0.3-7"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad/README.ijg?format=TEXT",
+        "revision": "e14cbfaa85529d47f9f55b0f104a579c1061f9ad",
+        "retrievedAt": "2026-09-24T14:32:32.108Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libjpeg-turbo-README.ijg",
+        "sha256": "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libpng-LICENSE",
+      "bytes": 5345,
+      "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+      "appliesTo": [
+        "canvas-1.0.3-8"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://skia.googlesource.com/third_party/libpng.git/+/d5515b5b8be3901aac04e5bd8bd5c89f287bcd33/LICENSE?format=TEXT",
+        "revision": "d5515b5b8be3901aac04e5bd8bd5c89f287bcd33",
+        "retrievedAt": "2026-09-24T14:31:02.449Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libpng-LICENSE",
+        "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libwebp-COPYING",
+      "bytes": 1496,
+      "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
+      "appliesTo": [
+        "canvas-1.0.3-9"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f/COPYING?format=TEXT",
+        "revision": "845d5476a866141ba35ac133f856fa62f0b7445f",
+        "retrievedAt": "2026-09-24T14:31:02.967Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libwebp-COPYING",
+        "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libwebp-PATENTS",
+      "bytes": 1436,
+      "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+      "appliesTo": [
+        "canvas-1.0.3-9"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f/PATENTS?format=TEXT",
+        "revision": "845d5476a866141ba35ac133f856fa62f0b7445f",
+        "retrievedAt": "2026-09-24T14:31:03.330Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libwebp-PATENTS",
+        "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/wuffs-LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "appliesTo": [
+        "canvas-1.0.3-10"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git/+/e3f919ccfe3ef542cfc983a82146070258fb57f8/LICENSE?format=TEXT",
+        "revision": "e3f919ccfe3ef542cfc983a82146070258fb57f8",
+        "retrievedAt": "2026-09-24T14:31:04.277Z",
+        "evidencePath": "license-source-followup/canvas/embedded/wuffs-LICENSE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/zlib-LICENSE",
+      "bytes": 910,
+      "sha256": "e1cfcc55c325b3f78cf55df9664abaa066e2271dffe8213347d9fccdfbac8f2c",
+      "appliesTo": [
+        "canvas-1.0.3-11"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+/646b7f569718921d7d4b5b8e22572ff6c76f2596/LICENSE?format=TEXT",
+        "revision": "646b7f569718921d7d4b5b8e22572ff6c76f2596",
+        "retrievedAt": "2026-09-24T14:31:04.971Z",
+        "evidencePath": "license-source-followup/canvas/embedded/zlib-LICENSE",
+        "sha256": "e1cfcc55c325b3f78cf55df9664abaa066e2271dffe8213347d9fccdfbac8f2c"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/brotli-LICENSE",
+      "bytes": 1084,
+      "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+      "appliesTo": [
+        "canvas-1.0.3-12"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://skia.googlesource.com/external/github.com/google/brotli.git/+/6d03dfbedda1615c4cba1211f8d81735575209c8/LICENSE?format=TEXT",
+        "revision": "6d03dfbedda1615c4cba1211f8d81735575209c8",
+        "retrievedAt": "2026-09-24T14:31:05.446Z",
+        "evidencePath": "license-source-followup/canvas/embedded/brotli-LICENSE",
+        "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libjxl-LICENSE",
+      "bytes": 1508,
+      "sha256": "8405932022a556380c2d8c272eff154a923feb197233f348ce5f7334fb0a5ede",
+      "appliesTo": [
+        "canvas-1.0.3-13"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/external/gitlab.com/wg1/jpeg-xl.git/+/a205468bc5d3a353fb15dae2398a101dff52f2d3/LICENSE?format=TEXT",
+        "revision": "a205468bc5d3a353fb15dae2398a101dff52f2d3",
+        "retrievedAt": "2026-09-24T14:31:05.924Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libjxl-LICENSE",
+        "sha256": "8405932022a556380c2d8c272eff154a923feb197233f348ce5f7334fb0a5ede"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/libjxl-PATENTS",
+      "bytes": 1333,
+      "sha256": "91915f8ae056a68a3c5bdf05d9f6f78bb6903e27a8ca3a8434c9e4ac87300575",
+      "appliesTo": [
+        "canvas-1.0.3-13"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/external/gitlab.com/wg1/jpeg-xl.git/+/a205468bc5d3a353fb15dae2398a101dff52f2d3/PATENTS?format=TEXT",
+        "revision": "a205468bc5d3a353fb15dae2398a101dff52f2d3",
+        "retrievedAt": "2026-09-24T14:31:06.436Z",
+        "evidencePath": "license-source-followup/canvas/embedded/libjxl-PATENTS",
+        "sha256": "91915f8ae056a68a3c5bdf05d9f6f78bb6903e27a8ca3a8434c9e4ac87300575"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/embedded/highway-LICENSE",
+      "bytes": 11356,
+      "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+      "appliesTo": [
+        "canvas-1.0.3-14"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://chromium.googlesource.com/external/github.com/google/highway.git/+/424360251cdcfc314cfc528f53c872ecd63af0f0/LICENSE?format=TEXT",
+        "revision": "424360251cdcfc314cfc528f53c872ecd63af0f0",
+        "retrievedAt": "2026-09-24T14:31:06.932Z",
+        "evidencePath": "license-source-followup/canvas/embedded/highway-LICENSE",
+        "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/skia/skcms-README.chromium",
+      "bytes": 88,
+      "sha256": "dbbb44d5dc5ba4664fa68207c42799ef0c6652309a121e6a28921498a6fa1cd6",
+      "appliesTo": [
+        "canvas-1.0.3-15"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/google/skia/7219df0fb0ff64f26adad448f94e8c001b964e6a/modules/skcms/README.chromium",
+        "revision": "7219df0fb0ff64f26adad448f94e8c001b964e6a",
+        "retrievedAt": "2026-09-24T14:33:21.561Z",
+        "evidencePath": "license-source-followup/canvas/skia/skcms-README.chromium",
+        "sha256": "dbbb44d5dc5ba4664fa68207c42799ef0c6652309a121e6a28921498a6fa1cd6"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "canvas-1.0.3/skia/skcms.cc",
+      "bytes": 120924,
+      "sha256": "3cf8f1164d727563eeb8998f978d9b7779e166314ed37989def6283bdd905ce6",
+      "appliesTo": [
+        "canvas-1.0.3-15"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/google/skia/7219df0fb0ff64f26adad448f94e8c001b964e6a/modules/skcms/skcms.cc",
+        "revision": "7219df0fb0ff64f26adad448f94e8c001b964e6a",
+        "retrievedAt": "2026-09-24T14:33:22.143Z",
+        "evidencePath": "license-source-followup/canvas/skia/skcms.cc",
+        "sha256": "3cf8f1164d727563eeb8998f978d9b7779e166314ed37989def6283bdd905ce6"
+      },
+      "scopeLimitations": "Pinned canvas/Skia source configuration evidence. Only the ICU data identity was byte-verified against its source; complete native build inputs, all enabled sublibraries and file-specific obligations are not established. Retaining alternative license texts does not elect a license branch."
+    },
+    {
+      "path": "sharp-0.35.4/windows-package/README.md",
+      "bytes": 4913,
+      "sha256": "280e7d164420cfc1a1b192a582bf53e3dba97b86a5c3575f878b674ad1d41e13",
+      "appliesTo": [
+        "sharp-win32-x64-0.35.4"
+      ],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
+        "revision": "0.35.4",
+        "upstreamGitHead": "7f1a0a22cc285fe180766f4935d50b55af6e8432",
+        "retrievedAt": "2026-09-24T14:37:30.041745+00:00",
+        "archiveMember": "package/README.md",
+        "registryIntegrity": "sha512-XtmnYhBcrORsJ4XJngyzr/EWP0hRZLAZRFaApdKuviyqF78+ylxh2y06ZmtULAMOnObJ3ucpN0AcwSWnMowTRg==",
+        "evidencePath": "license-source-followup/sharp/local-package-snapshot/img-sharp-win32-x64/README.md",
+        "sha256": "280e7d164420cfc1a1b192a582bf53e3dba97b86a5c3575f878b674ad1d41e13"
+      },
+      "scopeLimitations": "Exact text retained from the installed 0.35.4 package and rehashed against the archived snapshot. Package archive was not independently downloaded in this task. The Windows build fetched notices from historical main; its exact notice commit is not established. The README table and versions.json are not complete license texts or a recursive SBOM."
+    },
+    {
+      "path": "sharp-0.35.4/windows-package/LICENSE",
+      "bytes": 10464,
+      "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693",
+      "appliesTo": [
+        "sharp-win32-x64-0.35.4"
+      ],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
+        "revision": "0.35.4",
+        "upstreamGitHead": "7f1a0a22cc285fe180766f4935d50b55af6e8432",
+        "retrievedAt": "2026-09-24T14:37:30.041745+00:00",
+        "archiveMember": "package/LICENSE",
+        "registryIntegrity": "sha512-XtmnYhBcrORsJ4XJngyzr/EWP0hRZLAZRFaApdKuviyqF78+ylxh2y06ZmtULAMOnObJ3ucpN0AcwSWnMowTRg==",
+        "evidencePath": "license-source-followup/sharp/local-package-snapshot/img-sharp-win32-x64/LICENSE",
+        "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693"
+      },
+      "scopeLimitations": "Exact text retained from the installed 0.35.4 package and rehashed against the archived snapshot. Package archive was not independently downloaded in this task. The Windows build fetched notices from historical main; its exact notice commit is not established. The README table and versions.json are not complete license texts or a recursive SBOM."
+    },
+    {
+      "path": "sharp-0.35.4/windows-package/versions.json",
+      "bytes": 597,
+      "sha256": "d551c859958f06b8088957f679c29be1ff53760191f7401e8183460fc5f58cf4",
+      "appliesTo": [
+        "sharp-win32-x64-0.35.4"
+      ],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
+        "revision": "0.35.4",
+        "upstreamGitHead": "7f1a0a22cc285fe180766f4935d50b55af6e8432",
+        "retrievedAt": "2026-09-24T14:37:30.041745+00:00",
+        "archiveMember": "package/versions.json",
+        "registryIntegrity": "sha512-XtmnYhBcrORsJ4XJngyzr/EWP0hRZLAZRFaApdKuviyqF78+ylxh2y06ZmtULAMOnObJ3ucpN0AcwSWnMowTRg==",
+        "evidencePath": "license-source-followup/sharp/local-package-snapshot/img-sharp-win32-x64/versions.json",
+        "sha256": "d551c859958f06b8088957f679c29be1ff53760191f7401e8183460fc5f58cf4"
+      },
+      "scopeLimitations": "Exact text retained from the installed 0.35.4 package and rehashed against the archived snapshot. Package archive was not independently downloaded in this task. The Windows build fetched notices from historical main; its exact notice commit is not established. The README table and versions.json are not complete license texts or a recursive SBOM."
+    },
+    {
+      "path": "sharp-0.35.4/LGPL-3.0.txt",
+      "bytes": 7652,
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "appliesTo": [
+        "libvips-8.18.6"
+      ],
+      "source": {
+        "kind": "official-license-text",
+        "officialUrl": "https://www.gnu.org/licenses/lgpl-3.0.txt",
+        "revision": "GNU license version 3, 29 June 2007",
+        "retrievedAt": "2026-09-24T14:41:11.613099+00:00",
+        "evidencePath": "license-source-followup/sharp/legal-text/LGPL-3.0.txt",
+        "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+      },
+      "scopeLimitations": "Legal terms referenced by the actual Windows package README; retaining the GPL text incorporated by LGPLv3 does not license the independent application under GPL or complete source-delivery/relinking obligations."
+    },
+    {
+      "path": "sharp-0.35.4/GPL-3.0.txt",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "appliesTo": [
+        "libvips-8.18.6"
+      ],
+      "source": {
+        "kind": "official-license-text",
+        "officialUrl": "https://www.gnu.org/licenses/gpl-3.0.txt",
+        "revision": "GNU license version 3, 29 June 2007",
+        "retrievedAt": "2026-09-24T14:41:11.613890+00:00",
+        "evidencePath": "license-source-followup/sharp/legal-text/GPL-3.0.txt",
+        "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+      },
+      "scopeLimitations": "Legal terms referenced by the actual Windows package README; retaining the GPL text incorporated by LGPLv3 does not license the independent application under GPL or complete source-delivery/relinking obligations."
+    },
+    {
+      "path": "sharp-0.35.4/libvips-LICENSE",
+      "bytes": 26530,
+      "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "appliesTo": [
+        "libvips-8.18.6"
+      ],
+      "source": {
+        "kind": "verified-source-archive-member",
+        "officialUrl": "https://github.com/libvips/libvips/releases/download/v8.18.6/vips-8.18.6.tar.xz",
+        "revision": "v8.18.6",
+        "archiveSha256": "3c41e1d5458081bfa4a5bc54e116c46259c75c6760a18027764555632b9dda3e",
+        "archiveMember": "vips-8.18.6/LICENSE",
+        "retrievedAt": "2026-09-24T14:31:22.719759+00:00",
+        "evidencePath": "license-source-followup/sharp/archive-text/libvips-source/LICENSE",
+        "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551"
+      },
+      "scopeLimitations": "Exact member from the verified libvips 8.18.6 source archive. Preserving this text is not delivery of the complete corresponding source of all statically embedded dependencies."
+    },
+    {
+      "path": "sharp-0.35.4/libnsgif-COPYING",
+      "bytes": 1133,
+      "sha256": "1469b759cf18e43c6e1b4ff892307d3962cbbb337ac497620d6690a219fad10c",
+      "appliesTo": [
+        "libvips-8.18.6"
+      ],
+      "source": {
+        "kind": "verified-source-archive-member",
+        "officialUrl": "https://github.com/libvips/libvips/releases/download/v8.18.6/vips-8.18.6.tar.xz",
+        "revision": "v8.18.6",
+        "archiveSha256": "3c41e1d5458081bfa4a5bc54e116c46259c75c6760a18027764555632b9dda3e",
+        "archiveMember": "vips-8.18.6/libvips/foreign/libnsgif/COPYING",
+        "retrievedAt": "2026-09-24T14:31:22.719759+00:00",
+        "evidencePath": "license-source-followup/sharp/archive-text/libvips-source/libvips/foreign/libnsgif/COPYING",
+        "sha256": "1469b759cf18e43c6e1b4ff892307d3962cbbb337ac497620d6690a219fad10c"
+      },
+      "scopeLimitations": "Exact member from the verified libvips 8.18.6 source archive. Preserving this text is not delivery of the complete corresponding source of all statically embedded dependencies."
+    },
+    {
+      "path": "microsoft/directml-1.15.4/LICENSE.txt",
+      "bytes": 10439,
+      "sha256": "a05138e3a085ff60a44881eedfa58dccb03ecc1d7b1f6ae888418e8c2fec4b8d",
+      "appliesTo": [
+        "directml-1.15.4"
+      ],
+      "source": {
+        "kind": "exact-nuget-archive-member",
+        "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
+        "revision": "1.15.4",
+        "retrievedAt": "2026-09-25T02:56:25.073242+00:00",
+        "archiveMember": "LICENSE.txt",
+        "archiveEtag": "0x8DCF76FB90FC55A",
+        "archiveSignatureVerified": false,
+        "evidencePath": "license-commercial-review-20260925/microsoft/microsoft.ai.directml-1.15.4/LICENSE.txt",
+        "sha256": "a05138e3a085ff60a44881eedfa58dccb03ecc1d7b1f6ae888418e8c2fec4b8d"
+      },
+      "scopeLimitations": "Raw exact-version NuGet text. The recorded packaged DLLs match official members only after excluding PE checksum/security-directory/certificate differences; raw SHA-256 differs. Full NuGet hash/signature was not verified. LICENSE.txt applies to bin/; README distinguishes MIT include/build files. Preserve applicable third-party terms."
+    },
+    {
+      "path": "microsoft/directml-1.15.4/ThirdPartyNotices.txt",
+      "bytes": 4577,
+      "sha256": "2c95795c13ff48a58b6ed916f37901c23d964b5d9d601af422f17ad2172e7950",
+      "appliesTo": [
+        "directml-1.15.4"
+      ],
+      "source": {
+        "kind": "exact-nuget-archive-member",
+        "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
+        "revision": "1.15.4",
+        "retrievedAt": "2026-09-25T02:56:25.073242+00:00",
+        "archiveMember": "ThirdPartyNotices.txt",
+        "archiveEtag": "0x8DCF76FB90FC55A",
+        "archiveSignatureVerified": false,
+        "evidencePath": "license-commercial-review-20260925/microsoft/microsoft.ai.directml-1.15.4/ThirdPartyNotices.txt",
+        "sha256": "2c95795c13ff48a58b6ed916f37901c23d964b5d9d601af422f17ad2172e7950"
+      },
+      "scopeLimitations": "Raw exact-version NuGet text. The recorded packaged DLLs match official members only after excluding PE checksum/security-directory/certificate differences; raw SHA-256 differs. Full NuGet hash/signature was not verified. LICENSE.txt applies to bin/; README distinguishes MIT include/build files. Preserve applicable third-party terms."
+    },
+    {
+      "path": "microsoft/directml-1.15.4/README.md",
+      "bytes": 346,
+      "sha256": "86e8e7c998791bc14d946044fa2feb9b5760b584cb4296fbd4fddadd35280a03",
+      "appliesTo": [
+        "directml-1.15.4"
+      ],
+      "source": {
+        "kind": "exact-nuget-archive-member",
+        "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
+        "revision": "1.15.4",
+        "retrievedAt": "2026-09-25T02:56:25.073242+00:00",
+        "archiveMember": "README.md",
+        "archiveEtag": "0x8DCF76FB90FC55A",
+        "archiveSignatureVerified": false,
+        "evidencePath": "license-commercial-review-20260925/microsoft/microsoft.ai.directml-1.15.4/README.md",
+        "sha256": "86e8e7c998791bc14d946044fa2feb9b5760b584cb4296fbd4fddadd35280a03"
+      },
+      "scopeLimitations": "Raw exact-version NuGet text. The recorded packaged DLLs match official members only after excluding PE checksum/security-directory/certificate differences; raw SHA-256 differs. Full NuGet hash/signature was not verified. LICENSE.txt applies to bin/; README distinguishes MIT include/build files. Preserve applicable third-party terms."
+    },
+    {
+      "path": "microsoft/dxc-1.8.2502.8/LICENSE-LLVM.txt",
+      "bytes": 1979,
+      "sha256": "729615317e28dd03907e46f0fc3b5e88f7853cee61d1a1471d2749335516b46f",
+      "appliesTo": [
+        "ort-dxc-1.8.2502.8"
+      ],
+      "source": {
+        "kind": "exact-nuget-archive-member",
+        "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.direct3d.dxc/1.8.2502.8/microsoft.direct3d.dxc.1.8.2502.8.nupkg",
+        "revision": "1.8.2502.8",
+        "retrievedAt": "2026-09-25T02:56:57.071907+00:00",
+        "archiveMember": "LICENSE-LLVM.txt",
+        "archiveEtag": "0x8DD52C4A0A3F7AB",
+        "archiveSignatureVerified": false,
+        "evidencePath": "license-commercial-review-20260925/microsoft/microsoft.direct3d.dxc-1.8.2502.8/LICENSE-LLVM.txt",
+        "sha256": "729615317e28dd03907e46f0fc3b5e88f7853cee61d1a1471d2749335516b46f"
+      },
+      "scopeLimitations": "Raw exact-version NuGet text. The recorded packaged DLLs match official members only after excluding PE checksum/security-directory/certificate differences; raw SHA-256 differs. Full NuGet hash/signature was not verified. ReleaseNotes maps LICENSE-LLVM.txt to this version's DLLs. Merely finding legacy LICENSE-MS.txt in the archive does not make it applicable. This does not cover Electron's separate Dawn/SDK DLLs."
+    },
+    {
+      "path": "microsoft/dxc-1.8.2502.8/ReleaseNotes.md",
+      "bytes": 10406,
+      "sha256": "6b936ea201429298d1e7b4ffa1ab670a4c3776a34c2ab0d6e901775916b77641",
+      "appliesTo": [
+        "ort-dxc-1.8.2502.8"
+      ],
+      "source": {
+        "kind": "exact-nuget-archive-member",
+        "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.direct3d.dxc/1.8.2502.8/microsoft.direct3d.dxc.1.8.2502.8.nupkg",
+        "revision": "1.8.2502.8",
+        "retrievedAt": "2026-09-25T02:56:57.071907+00:00",
+        "archiveMember": "ReleaseNotes.md",
+        "archiveEtag": "0x8DD52C4A0A3F7AB",
+        "archiveSignatureVerified": false,
+        "evidencePath": "license-commercial-review-20260925/microsoft/microsoft.direct3d.dxc-1.8.2502.8/ReleaseNotes.md",
+        "sha256": "6b936ea201429298d1e7b4ffa1ab670a4c3776a34c2ab0d6e901775916b77641"
+      },
+      "scopeLimitations": "Raw exact-version NuGet text. The recorded packaged DLLs match official members only after excluding PE checksum/security-directory/certificate differences; raw SHA-256 differs. Full NuGet hash/signature was not verified. ReleaseNotes maps LICENSE-LLVM.txt to this version's DLLs. Merely finding legacy LICENSE-MS.txt in the archive does not make it applicable. This does not cover Electron's separate Dawn/SDK DLLs."
+    },
+    {
+      "path": "microsoft/dawn-dxc-eb67a9085c/LICENSE.TXT",
+      "bytes": 29241,
+      "sha256": "27a49e35d1da96eba18fba54bc882667ff0ff8c0254f16f2b6e165d605ba7df8",
+      "appliesTo": [
+        "dawn-dxc-eb67a9085c"
+      ],
+      "source": {
+        "kind": "fixed-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/microsoft/DirectXShaderCompiler/eb67a9085c758516d940e1ce3fed0acfb6518209/LICENSE.TXT",
+        "revision": "eb67a9085c758516d940e1ce3fed0acfb6518209",
+        "retrievedAt": "2026-09-25",
+        "retrievedAtPrecision": "date-only; exact request time was not preserved",
+        "evidencePath": "license-commercial-review-20260925/microsoft/upstream/dawn-dxc-LICENSE.TXT",
+        "sha256": "27a49e35d1da96eba18fba54bc882667ff0ff8c0254f16f2b6e165d605ba7df8"
+      },
+      "scopeLimitations": "Pinned source dependency chain: Electron 42.8.0 -> Chromium 148.0.7778.280 -> Dawn bbf7b6b52742368f32634ca3f7210ddd28d149b5 -> this DXC commit. Actual DLL reports 1.9.2602.0 Google Dawn Custom Build. No reproducible binary comparison is claimed."
+    },
+    {
+      "path": "microsoft/windows-sdk-10.0.26100.0/sdk_license.rtf",
+      "bytes": 248573,
+      "sha256": "0f4a26ac9dc50066f8a1bfeaaf3f092d1b9e4791df5487b9f3c31e7c3dc4d7f5",
+      "appliesTo": [
+        "windows-sdk-10.0.26100.0"
+      ],
+      "source": {
+        "kind": "installed-sdk-original-text",
+        "officialUrl": "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/",
+        "revision": "installed Windows SDK licenses/10.0.26100.0",
+        "retrievedAt": "2026-09-25T05:24:26.863354+00:00",
+        "evidencePath": "license-commercial-review-20260925/microsoft/windows-sdk/sdk_license.rtf",
+        "sha256": "0f4a26ac9dc50066f8a1bfeaaf3f092d1b9e4791df5487b9f3c31e7c3dc4d7f5",
+        "installedSdkRelativePath": "Licenses/10.0.26100.0/sdk_license.rtf"
+      },
+      "scopeLimitations": "Exact original RTF from the installed SDK license directory, rechecked against the archived copy. Packaged dxil 1.8.2502.11 matches local SDK code after excluding PE signing metadata. Packaged d3dcompiler_47 10.0.26100.7705 DOES NOT match local SDK 10.0.26100.8249, even after that normalization; its exact patch provenance remains pending. No claim that this SDK notice lists only shipped components."
+    },
+    {
+      "path": "microsoft/windows-sdk-10.0.26100.0/sdk_third_party_notices.rtf",
+      "bytes": 22279,
+      "sha256": "ebb6640a8246b39b70322c5cec9aad7a71e86ea7b86c9c604d3a7f3ff1b30e89",
+      "appliesTo": [
+        "windows-sdk-10.0.26100.0"
+      ],
+      "source": {
+        "kind": "installed-sdk-original-text",
+        "officialUrl": "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/",
+        "revision": "installed Windows SDK licenses/10.0.26100.0",
+        "retrievedAt": "2026-09-25T05:24:26.863354+00:00",
+        "evidencePath": "license-commercial-review-20260925/microsoft/windows-sdk/sdk_third_party_notices.rtf",
+        "sha256": "ebb6640a8246b39b70322c5cec9aad7a71e86ea7b86c9c604d3a7f3ff1b30e89",
+        "installedSdkRelativePath": "Licenses/10.0.26100.0/sdk_third_party_notices.rtf"
+      },
+      "scopeLimitations": "Exact original RTF from the installed SDK license directory, rechecked against the archived copy. Packaged dxil 1.8.2502.11 matches local SDK code after excluding PE signing metadata. Packaged d3dcompiler_47 10.0.26100.7705 DOES NOT match local SDK 10.0.26100.8249, even after that normalization; its exact patch provenance remains pending. No claim that this SDK notice lists only shipped components."
+    },
+    {
+      "path": "microsoft/windows-sdk-10.0.26100.0/windows-sdk-redist.html",
+      "bytes": 38644,
+      "sha256": "8b8edea640ef6870df733dca357ecf061ceb82692c769e467ef0312854cc8cd4",
+      "appliesTo": [
+        "windows-sdk-10.0.26100.0"
+      ],
+      "source": {
+        "kind": "official-redistribution-list-snapshot",
+        "officialUrl": "https://learn.microsoft.com/en-us/legal/windows-sdk/redist",
+        "revision": "official page snapshot 2026-09-25",
+        "retrievedAt": "2026-09-25",
+        "retrievedAtPrecision": "date-only; exact request time was not preserved",
+        "evidencePath": "license-commercial-review-20260925/microsoft/upstream/windows-sdk-redist.html",
+        "sha256": "8b8edea640ef6870df733dca357ecf061ceb82692c769e467ef0312854cc8cd4"
+      },
+      "scopeLimitations": "Official list must be read together with the applicable SDK terms. A file name on the list is not evidence that a particular binary patch came from this installed SDK."
+    },
+    {
+      "path": "canvas-1.0.3/rust/aho-corasick-1.1.4/COPYING",
+      "bytes": 126,
+      "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
+      "appliesTo": [
+        "canvas-rust-aho-corasick-1.1.4"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/aho-corasick/aho-corasick-1.1.4.crate",
+        "revision": "1.1.4",
+        "retrievedAt": "2026-09-25T02:57:22Z",
+        "archiveSha256": "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301",
+        "archiveMember": "aho-corasick-1.1.4/COPYING",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/aho-corasick-1.1.4/COPYING",
+        "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/aho-corasick-1.1.4/LICENSE-MIT",
+      "bytes": 1081,
+      "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f",
+      "appliesTo": [
+        "canvas-rust-aho-corasick-1.1.4"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/aho-corasick/aho-corasick-1.1.4.crate",
+        "revision": "1.1.4",
+        "retrievedAt": "2026-09-25T02:57:22Z",
+        "archiveSha256": "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301",
+        "archiveMember": "aho-corasick-1.1.4/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/aho-corasick-1.1.4/LICENSE-MIT",
+        "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/cfb-0.14.0/LICENSE",
+      "bytes": 1074,
+      "sha256": "ebaac853b53fec0ed475796f533ce676912a4df9ad9d8a621fa76d5060591e10",
+      "appliesTo": [
+        "canvas-rust-cfb-0.14.0"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/cfb/cfb-0.14.0.crate",
+        "revision": "0.14.0",
+        "retrievedAt": "2026-09-25T02:57:22Z",
+        "archiveSha256": "a347dcabdae9c31b0825fd6a8bed285ec9c2acb89c47827126d52fa4f59cece3",
+        "archiveMember": "cfb-0.14.0/LICENSE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/cfb-0.14.0/LICENSE",
+        "sha256": "ebaac853b53fec0ed475796f533ce676912a4df9ad9d8a621fa76d5060591e10"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/color_quant-1.1.0/LICENSE",
+      "bytes": 1083,
+      "sha256": "592dc80f1a865d20d61a2006a2d29ce34a2bc28cd7e868ab300fdeed6da154ca",
+      "appliesTo": [
+        "canvas-rust-color_quant-1.1.0"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/color_quant/color_quant-1.1.0.crate",
+        "revision": "1.1.0",
+        "retrievedAt": "2026-09-25T02:57:22Z",
+        "archiveSha256": "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b",
+        "archiveMember": "color_quant-1.1.0/LICENSE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/color_quant-1.1.0/LICENSE",
+        "sha256": "592dc80f1a865d20d61a2006a2d29ce34a2bc28cd7e868ab300fdeed6da154ca"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/cssparser-0.37.0/LICENSE",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "appliesTo": [
+        "canvas-rust-cssparser-0.37.0"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/cssparser/cssparser-0.37.0.crate",
+        "revision": "0.37.0",
+        "retrievedAt": "2026-09-25T02:57:24Z",
+        "archiveSha256": "8c9cdaae01d5ed7882b04d795e7f752f46ff52d2fa3b50a20d28c464510bba98",
+        "archiveMember": "cssparser-0.37.0/LICENSE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/cssparser-0.37.0/LICENSE",
+        "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/gif-0.14.2/LICENSE-APACHE",
+      "bytes": 10846,
+      "sha256": "769f80b5bcb42ed0af4e4d2fd74e1ac9bf843cb80c5a29219d1ef3544428a6bb",
+      "appliesTo": [
+        "canvas-rust-gif-0.14.2"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/gif/gif-0.14.2.crate",
+        "revision": "0.14.2",
+        "retrievedAt": "2026-09-25T02:57:24Z",
+        "archiveSha256": "ee8cfcc411d9adbbaba82fb72661cc1bcca13e8bba98b364e62b2dba8f960159",
+        "archiveMember": "gif-0.14.2/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/gif-0.14.2/LICENSE-APACHE",
+        "sha256": "769f80b5bcb42ed0af4e4d2fd74e1ac9bf843cb80c5a29219d1ef3544428a6bb"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/gif-0.14.2/LICENSE-MIT",
+      "bytes": 1071,
+      "sha256": "77257f3d2181236b1aee78920238062ae64efe13c5d858b2db126e79c9e1b14f",
+      "appliesTo": [
+        "canvas-rust-gif-0.14.2"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/gif/gif-0.14.2.crate",
+        "revision": "0.14.2",
+        "retrievedAt": "2026-09-25T02:57:24Z",
+        "archiveSha256": "ee8cfcc411d9adbbaba82fb72661cc1bcca13e8bba98b364e62b2dba8f960159",
+        "archiveMember": "gif-0.14.2/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/gif-0.14.2/LICENSE-MIT",
+        "sha256": "77257f3d2181236b1aee78920238062ae64efe13c5d858b2db126e79c9e1b14f"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/itoa-1.0.18/LICENSE-APACHE",
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+      "appliesTo": [
+        "canvas-rust-itoa-1.0.18"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/itoa/itoa-1.0.18.crate",
+        "revision": "1.0.18",
+        "retrievedAt": "2026-09-25T02:57:24Z",
+        "archiveSha256": "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682",
+        "archiveMember": "itoa-1.0.18/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/itoa-1.0.18/LICENSE-APACHE",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/itoa-1.0.18/LICENSE-MIT",
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "appliesTo": [
+        "canvas-rust-itoa-1.0.18"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/itoa/itoa-1.0.18.crate",
+        "revision": "1.0.18",
+        "retrievedAt": "2026-09-25T02:57:24Z",
+        "archiveSha256": "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682",
+        "archiveMember": "itoa-1.0.18/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/itoa-1.0.18/LICENSE-MIT",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/memchr-2.8.3/COPYING",
+      "bytes": 126,
+      "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
+      "appliesTo": [
+        "canvas-rust-memchr-2.8.3"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/memchr/memchr-2.8.3.crate",
+        "revision": "2.8.3",
+        "retrievedAt": "2026-09-25T02:57:25Z",
+        "archiveSha256": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98",
+        "archiveMember": "memchr-2.8.3/COPYING",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/memchr-2.8.3/COPYING",
+        "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/memchr-2.8.3/LICENSE-MIT",
+      "bytes": 1081,
+      "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f",
+      "appliesTo": [
+        "canvas-rust-memchr-2.8.3"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/memchr/memchr-2.8.3.crate",
+        "revision": "2.8.3",
+        "retrievedAt": "2026-09-25T02:57:25Z",
+        "archiveSha256": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98",
+        "archiveMember": "memchr-2.8.3/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/memchr-2.8.3/LICENSE-MIT",
+        "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/nom-8.0.0/LICENSE",
+      "bytes": 1065,
+      "sha256": "4dbda04344456f09a7a588140455413a9ac59b6b26a1ef7cdf9c800c012d87f0",
+      "appliesTo": [
+        "canvas-rust-nom-8.0.0"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/nom/nom-8.0.0.crate",
+        "revision": "8.0.0",
+        "retrievedAt": "2026-09-25T02:57:27Z",
+        "archiveSha256": "df9761775871bdef83bee530e60050f7e54b1105350d6884eb0fb4f46c2f9405",
+        "archiveMember": "nom-8.0.0/LICENSE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/nom-8.0.0/LICENSE",
+        "sha256": "4dbda04344456f09a7a588140455413a9ac59b6b26a1ef7cdf9c800c012d87f0"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-1.13.1/LICENSE-APACHE",
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "appliesTo": [
+        "canvas-rust-regex-1.13.1"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex/regex-1.13.1.crate",
+        "revision": "1.13.1",
+        "retrievedAt": "2026-09-25T02:57:27Z",
+        "archiveSha256": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d",
+        "archiveMember": "regex-1.13.1/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-1.13.1/LICENSE-APACHE",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-1.13.1/LICENSE-MIT",
+      "bytes": 1071,
+      "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+      "appliesTo": [
+        "canvas-rust-regex-1.13.1"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex/regex-1.13.1.crate",
+        "revision": "1.13.1",
+        "retrievedAt": "2026-09-25T02:57:27Z",
+        "archiveSha256": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d",
+        "archiveMember": "regex-1.13.1/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-1.13.1/LICENSE-MIT",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-automata-0.4.16/LICENSE-APACHE",
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "appliesTo": [
+        "canvas-rust-regex-automata-0.4.16"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex-automata/regex-automata-0.4.16.crate",
+        "revision": "0.4.16",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "8fcfdb36bda0c880c5931cdc7a2bcdc8ba4556847b9d912bca70bc94708711ad",
+        "archiveMember": "regex-automata-0.4.16/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-automata-0.4.16/LICENSE-APACHE",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-automata-0.4.16/LICENSE-MIT",
+      "bytes": 1071,
+      "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+      "appliesTo": [
+        "canvas-rust-regex-automata-0.4.16"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex-automata/regex-automata-0.4.16.crate",
+        "revision": "0.4.16",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "8fcfdb36bda0c880c5931cdc7a2bcdc8ba4556847b9d912bca70bc94708711ad",
+        "archiveMember": "regex-automata-0.4.16/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-automata-0.4.16/LICENSE-MIT",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-syntax-0.8.11/LICENSE-APACHE",
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "appliesTo": [
+        "canvas-rust-regex-syntax-0.8.11"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.11.crate",
+        "revision": "0.8.11",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4",
+        "archiveMember": "regex-syntax-0.8.11/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-syntax-0.8.11/LICENSE-APACHE",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-syntax-0.8.11/LICENSE-MIT",
+      "bytes": 1071,
+      "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+      "appliesTo": [
+        "canvas-rust-regex-syntax-0.8.11"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.11.crate",
+        "revision": "0.8.11",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4",
+        "archiveMember": "regex-syntax-0.8.11/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-syntax-0.8.11/LICENSE-MIT",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/regex-syntax-0.8.11/src/unicode_tables/LICENSE-UNICODE",
+      "bytes": 2847,
+      "sha256": "74db5baf44a41b1000312c673544b3374e4198af5605c7f9080a402cec42cfa3",
+      "appliesTo": [
+        "canvas-rust-regex-syntax-0.8.11"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.11.crate",
+        "revision": "0.8.11",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4",
+        "archiveMember": "regex-syntax-0.8.11/src/unicode_tables/LICENSE-UNICODE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/regex-syntax-0.8.11/src/unicode_tables/LICENSE-UNICODE",
+        "sha256": "74db5baf44a41b1000312c673544b3374e4198af5605c7f9080a402cec42cfa3"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/smallvec-1.15.2/LICENSE-APACHE",
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "appliesTo": [
+        "canvas-rust-smallvec-1.15.2"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/smallvec/smallvec-1.15.2.crate",
+        "revision": "1.15.2",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90",
+        "archiveMember": "smallvec-1.15.2/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/smallvec-1.15.2/LICENSE-APACHE",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/smallvec-1.15.2/LICENSE-MIT",
+      "bytes": 1072,
+      "sha256": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9",
+      "appliesTo": [
+        "canvas-rust-smallvec-1.15.2"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/smallvec/smallvec-1.15.2.crate",
+        "revision": "1.15.2",
+        "retrievedAt": "2026-09-25T02:57:29Z",
+        "archiveSha256": "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90",
+        "archiveMember": "smallvec-1.15.2/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/smallvec-1.15.2/LICENSE-MIT",
+        "sha256": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/tokio-1.53.1/LICENSE",
+      "bytes": 1070,
+      "sha256": "253cd04c6714889df2d32f3f64d669179a1c95c76ac43c40882c52eb06bc3552",
+      "appliesTo": [
+        "canvas-rust-tokio-1.53.1"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/tokio/tokio-1.53.1.crate",
+        "revision": "1.53.1",
+        "retrievedAt": "2026-09-25T02:57:30Z",
+        "archiveSha256": "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed",
+        "archiveMember": "tokio-1.53.1/LICENSE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/tokio-1.53.1/LICENSE",
+        "sha256": "253cd04c6714889df2d32f3f64d669179a1c95c76ac43c40882c52eb06bc3552"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/weezl-0.1.12/LICENSE-APACHE",
+      "bytes": 10846,
+      "sha256": "769f80b5bcb42ed0af4e4d2fd74e1ac9bf843cb80c5a29219d1ef3544428a6bb",
+      "appliesTo": [
+        "canvas-rust-weezl-0.1.12"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/weezl/weezl-0.1.12.crate",
+        "revision": "0.1.12",
+        "retrievedAt": "2026-09-25T02:57:31Z",
+        "archiveSha256": "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88",
+        "archiveMember": "weezl-0.1.12/LICENSE-APACHE",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/weezl-0.1.12/LICENSE-APACHE",
+        "sha256": "769f80b5bcb42ed0af4e4d2fd74e1ac9bf843cb80c5a29219d1ef3544428a6bb"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/weezl-0.1.12/LICENSE-MIT",
+      "bytes": 1080,
+      "sha256": "573f5227db835cd30bbdd3aed3f82615f80119a4d5c82b4daf642dbfe2b6afde",
+      "appliesTo": [
+        "canvas-rust-weezl-0.1.12"
+      ],
+      "source": {
+        "kind": "verified-crates-archive-member",
+        "officialUrl": "https://static.crates.io/crates/weezl/weezl-0.1.12.crate",
+        "revision": "0.1.12",
+        "retrievedAt": "2026-09-25T02:57:31Z",
+        "archiveSha256": "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88",
+        "archiveMember": "weezl-0.1.12/LICENSE-MIT",
+        "evidencePath": "license-commercial-review-20260925/native/canvas/rust-licenses/weezl-0.1.12/LICENSE-MIT",
+        "sha256": "573f5227db835cd30bbdd3aed3f82615f80119a4d5c82b4daf642dbfe2b6afde"
+      },
+      "scopeLimitations": "Exact crates.io member from a registry-checksum-verified source archive. Version observed in the actual canvas native binary source-path strings. Text retention is not proof of unmodified binary inputs, full Rust lockfile/features, or completion of MPL source-delivery obligations. Alternative license texts are retained without selecting a branch."
+    },
+    {
+      "path": "canvas-1.0.3/rust/base64-simd-0.8.0/LICENSE",
+      "bytes": 1062,
+      "sha256": "71674605ec4c087fe9eb534e3e4f9e26eb2e4aabcd76a29fd156c6a844d44b3d",
+      "appliesTo": [
+        "canvas-rust-base64-simd-0.8.0"
+      ],
+      "source": {
+        "kind": "crate-vcs-pinned-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/Nugine/simd/d74c030d9dc4f3cae02146d1f497ff62726ef09a/LICENSE",
+        "revision": "d74c030d9dc4f3cae02146d1f497ff62726ef09a",
+        "retrievedAt": "2026-09-25T05:20:48.391809+00:00",
+        "crateVersion": "0.8.0",
+        "crateUrl": "https://static.crates.io/crates/base64-simd/base64-simd-0.8.0.crate",
+        "crateSha256": "339abbe78e73178762e23bea9dfd08e697eb3f3301cd4be981c0f78ba5859195",
+        "crateVcsMember": "base64-simd-0.8.0/.cargo_vcs_info.json",
+        "cratePathInVcs": "crates/base64-simd",
+        "evidencePath": "license-commercial-review-20260925/payload-followup/rust-upstream/base64-simd-0.8.0/LICENSE",
+        "sha256": "71674605ec4c087fe9eb534e3e4f9e26eb2e4aabcd76a29fd156c6a844d44b3d"
+      },
+      "scopeLimitations": "The published crate has no standalone LICENSE. This is the unmodified repository root LICENSE at the exact commit declared in its registry-checksum-verified .cargo_vcs_info.json. It is not a synthesized template. Version observed in actual canvas binary source paths; complete native closure remains pending."
+    },
+    {
+      "path": "canvas-1.0.3/rust/napi-3.11.0/LICENSE",
+      "bytes": 2138,
+      "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215",
+      "appliesTo": [
+        "canvas-rust-napi-3.11.0"
+      ],
+      "source": {
+        "kind": "crate-vcs-pinned-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/napi-rs/napi-rs/679eb79f5cf3c7c6b2850f4ab46092126f23dc5c/LICENSE",
+        "revision": "679eb79f5cf3c7c6b2850f4ab46092126f23dc5c",
+        "retrievedAt": "2026-09-25T05:20:48.240691+00:00",
+        "crateVersion": "3.11.0",
+        "crateUrl": "https://static.crates.io/crates/napi/napi-3.11.0.crate",
+        "crateSha256": "de33522036981030a75c231829566bc63414e08101a6f5ff4ac6cef19c8e0941",
+        "crateVcsMember": "napi-3.11.0/.cargo_vcs_info.json",
+        "cratePathInVcs": "crates/napi",
+        "evidencePath": "license-commercial-review-20260925/payload-followup/rust-upstream/napi-3.11.0/LICENSE",
+        "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215"
+      },
+      "scopeLimitations": "The published crate has no standalone LICENSE. This is the unmodified repository root LICENSE at the exact commit declared in its registry-checksum-verified .cargo_vcs_info.json. It is not a synthesized template. Version observed in actual canvas binary source paths; complete native closure remains pending."
+    },
+    {
+      "path": "canvas-1.0.3/rust/napi-sys-3.3.0/LICENSE",
+      "bytes": 2138,
+      "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215",
+      "appliesTo": [
+        "canvas-rust-napi-sys-3.3.0"
+      ],
+      "source": {
+        "kind": "crate-vcs-pinned-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/napi-rs/napi-rs/679eb79f5cf3c7c6b2850f4ab46092126f23dc5c/LICENSE",
+        "revision": "679eb79f5cf3c7c6b2850f4ab46092126f23dc5c",
+        "retrievedAt": "2026-09-25T05:20:48.397647+00:00",
+        "crateVersion": "3.3.0",
+        "crateUrl": "https://static.crates.io/crates/napi-sys/napi-sys-3.3.0.crate",
+        "crateSha256": "85fbf1fa9f1babfe396d74bbbf52b3643770243e8f5b0b46715d4caf7f0dfc9a",
+        "crateVcsMember": "napi-sys-3.3.0/.cargo_vcs_info.json",
+        "cratePathInVcs": "crates/sys",
+        "evidencePath": "license-commercial-review-20260925/payload-followup/rust-upstream/napi-sys-3.3.0/LICENSE",
+        "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215"
+      },
+      "scopeLimitations": "The published crate has no standalone LICENSE. This is the unmodified repository root LICENSE at the exact commit declared in its registry-checksum-verified .cargo_vcs_info.json. It is not a synthesized template. Version observed in actual canvas binary source paths; complete native closure remains pending."
+    },
+    {
+      "path": "canvas-1.0.3/rust/cssparser-color-0.5.0/LICENSE",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "appliesTo": [
+        "canvas-rust-cssparser-color-0.5.0"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/cssparser-color/cssparser-color-0.5.0.crate",
+        "revision": "0.5.0",
+        "retrievedAt": "2026-09-25T06:57:49.230582+00:00",
+        "crateVersion": "0.5.0",
+        "crateSha256": "bbaa233e1dcd9c13a5d3e3a8a2c0f5a727bac380398345dbcb31db4597edc86b",
+        "archiveMember": "cssparser-color-0.5.0/LICENSE",
+        "originalBytesPreserved": true,
+        "resolutionEvidencePath": "source-delivery-followup-20260925/canvas/source-payload/source-index.json",
+        "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+        "evidencePath": "source-delivery-followup-20260925/canvas/source-payload/source/cssparser-color-0.5.0/LICENSE"
+      },
+      "scopeLimitations": "Complete unmodified upstream MPL text. Version selection is supported by fixed dependency range/default features and registry publication dates; no historical canvas Cargo.lock is asserted. Complete covered upstream source is locally delivered with the reviewed source annex; actual MPL-file modifications, if introduced, must also be supplied."
+    },
+    {
+      "path": "canvas-1.0.3/rust/cssparser-macros-0.7.0/LICENSE",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "appliesTo": [
+        "canvas-rust-cssparser-macros-0.7.0"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/cssparser-macros/cssparser-macros-0.7.0.crate",
+        "revision": "0.7.0",
+        "retrievedAt": "2026-09-25T06:57:49.213279+00:00",
+        "crateVersion": "0.7.0",
+        "crateSha256": "10a2a99df6e410a8ff4245aa2006499ea662245f967cc7c0a38c83ef8eb44dbf",
+        "archiveMember": "cssparser-macros-0.7.0/LICENSE",
+        "originalBytesPreserved": true,
+        "resolutionEvidencePath": "source-delivery-followup-20260925/canvas/source-payload/source-index.json",
+        "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+        "evidencePath": "source-delivery-followup-20260925/canvas/source-payload/source/cssparser-macros-0.7.0/LICENSE"
+      },
+      "scopeLimitations": "Complete unmodified upstream MPL text. Version selection is supported by fixed dependency range/default features and registry publication dates; no historical canvas Cargo.lock is asserted. Complete covered upstream source is locally delivered with the reviewed source annex; actual MPL-file modifications, if introduced, must also be supplied."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/LICENSE",
+      "bytes": 1316,
+      "sha256": "4764a286d8b2faeaf42f4418e7d7a28d58fc8fd4d00a3d0a7f44b0a4099de7f2",
+      "appliesTo": [
+        "canvas-aom-3.11.0-core"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/LICENSE",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/LICENSE",
+        "sha256": "4764a286d8b2faeaf42f4418e7d7a28d58fc8fd4d00a3d0a7f44b0a4099de7f2",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/LICENSE"
+      },
+      "scopeLimitations": "Actual binary identifies AOM 3.11.0 encoder and decoder. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/PATENTS",
+      "bytes": 5701,
+      "sha256": "661fb8e504744e95587b556b94a58343448300606a41bea8c7a9b97125696e61",
+      "appliesTo": [
+        "canvas-aom-3.11.0-core"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/PATENTS",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/PATENTS",
+        "sha256": "661fb8e504744e95587b556b94a58343448300606a41bea8c7a9b97125696e61",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/PATENTS"
+      },
+      "scopeLimitations": "Patent notice accompanies AOM implementation; preserve full original. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/AUTHORS",
+      "bytes": 12121,
+      "sha256": "d6e0a5250dd67ab8106d32809dd71f2629f1205b570f7807487b5ea7b7964322",
+      "appliesTo": [
+        "canvas-aom-3.11.0-core"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/AUTHORS",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/AUTHORS",
+        "sha256": "d6e0a5250dd67ab8106d32809dd71f2629f1205b570f7807487b5ea7b7964322",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/AUTHORS"
+      },
+      "scopeLimitations": "Additional upstream attribution; retained without asserting every named contribution linked. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/fastfeat/LICENSE",
+      "bytes": 1506,
+      "sha256": "043dcfd059386f9facd376351b2bd79325778744aa442177390cdfcca54babed",
+      "appliesTo": [
+        "canvas-aom-3.11.0-fastfeat"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/fastfeat/LICENSE",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/fastfeat/LICENSE",
+        "sha256": "043dcfd059386f9facd376351b2bd79325778744aa442177390cdfcca54babed",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/fastfeat/LICENSE"
+      },
+      "scopeLimitations": "Listed in AOM_AV1_ENCODER_SOURCES; actual binary contains encoder 3.11.0 identifier. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/vector/LICENSE",
+      "bytes": 1084,
+      "sha256": "ff6c857ce2708e87701323078aef115c1872a1f80a9649f86dc899b48083bc60",
+      "appliesTo": [
+        "canvas-aom-3.11.0-vector"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/vector/LICENSE",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/vector/LICENSE",
+        "sha256": "ff6c857ce2708e87701323078aef115c1872a1f80a9649f86dc899b48083bc60",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/vector/LICENSE"
+      },
+      "scopeLimitations": "Listed in AOM_AV1_ENCODER_SOURCES; actual binary contains encoder 3.11.0 identifier. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/x86inc/LICENSE",
+      "bytes": 936,
+      "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+      "appliesTo": [
+        "canvas-aom-3.11.0-x86inc"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/x86inc/LICENSE",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/x86inc/LICENSE",
+        "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/x86inc/LICENSE"
+      },
+      "scopeLimitations": "Included by AOM x86 assembly sources used by conditional x86 SIMD targets; exact historical feature map not recovered. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/libwebm/LICENSE.TXT",
+      "bytes": 1496,
+      "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
+      "appliesTo": [
+        "canvas-aom-3.11.0-libwebm"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/libwebm/LICENSE.TXT",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/libwebm/LICENSE.TXT",
+        "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/libwebm/LICENSE.TXT"
+      },
+      "scopeLimitations": "CMake lines 758-790 restrict integration to examples/tests/tools; wrapper default disables these. Not asserted linked in current binary. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/libyuv/LICENSE",
+      "bytes": 1506,
+      "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+      "appliesTo": [
+        "canvas-aom-3.11.0-libyuv"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/libyuv/LICENSE",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/libyuv/LICENSE",
+        "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/libyuv/LICENSE"
+      },
+      "scopeLimitations": "CMake lines 758-765 add yuv objects to application targets; wrapper default disables examples/tests/tools. Other configurations not fully reconstructed; not asserted linked. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/LICENSE.md",
+      "bytes": 1709,
+      "sha256": "0acc2fcb27472bdc9aaf8b71f37055bbdac4f54671b7d922f241bd7fcd0dd3e6",
+      "appliesTo": [
+        "canvas-aom-3.11.0-SVT-AV1"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/LICENSE.md",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/SVT-AV1/LICENSE.md",
+        "sha256": "0acc2fcb27472bdc9aaf8b71f37055bbdac4f54671b7d922f241bd7fcd0dd3e6",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/SVT-AV1/LICENSE.md"
+      },
+      "scopeLimitations": "CONFIG_SVT_AV1 defaults to 1; AVX2 convolution sources include SVT-AV1 headers. Exact historical feature selection remains unknown. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/PATENTS.md",
+      "bytes": 5767,
+      "sha256": "20678ab10402659106dc4c147c97b2a6e94b5c0695415e15a8f195ebc3547922",
+      "appliesTo": [
+        "canvas-aom-3.11.0-SVT-AV1"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/PATENTS.md",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/SVT-AV1/PATENTS.md",
+        "sha256": "20678ab10402659106dc4c147c97b2a6e94b5c0695415e15a8f195ebc3547922",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/SVT-AV1/PATENTS.md"
+      },
+      "scopeLimitations": "Patent text accompanying the imported SVT-AV1 sources. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/README.libaom",
+      "bytes": 621,
+      "sha256": "2ee7c4c963a0792bd9a40b7d1a2eb2446dd548191af2d399fee8e6a7538f8c35",
+      "appliesTo": [
+        "canvas-aom-3.11.0-SVT-AV1"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/README.libaom",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/SVT-AV1/README.libaom",
+        "sha256": "2ee7c4c963a0792bd9a40b7d1a2eb2446dd548191af2d399fee8e6a7538f8c35",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/SVT-AV1/README.libaom"
+      },
+      "scopeLimitations": "Original upstream identifies imported revision, license and local source changes; retained verbatim. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/libwebm/PATENTS.TXT",
+      "bytes": 1436,
+      "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+      "appliesTo": [
+        "canvas-aom-3.11.0-libwebm"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/libwebm/PATENTS.TXT",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/libwebm/PATENTS.TXT",
+        "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/libwebm/PATENTS.TXT"
+      },
+      "scopeLimitations": "Accompanies conservatively retained libwebm license; current binary linkage is not asserted. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/libwebm/AUTHORS.TXT",
+      "bytes": 137,
+      "sha256": "3edb5f5496bfff3d6d4a62fa75fe996b814920d0d6e348c2e65c589e7ac5d177",
+      "appliesTo": [
+        "canvas-aom-3.11.0-libwebm"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": true,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/libwebm/AUTHORS.TXT",
+        "upstreamTagSource": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.11.0/third_party/libwebm/AUTHORS.TXT",
+        "sha256": "3edb5f5496bfff3d6d4a62fa75fe996b814920d0d6e348c2e65c589e7ac5d177",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/libwebm/AUTHORS.TXT"
+      },
+      "scopeLimitations": "Additional original libwebm attribution; linkage is not asserted. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/COPYRIGHT-HEADERS.txt",
+      "bytes": 3152,
+      "sha256": "bf1804693139d7731964c4d7fb0727694814314ac4687f5c7a8a8a0a5c45d900",
+      "appliesTo": [
+        "canvas-aom-3.11.0-SVT-AV1"
+      ],
+      "source": {
+        "kind": "labelled-verbatim-source-header-compilation",
+        "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
+        "revision": "libaom-sys-0.17.2+libaom.3.11.0 registry original",
+        "retrievedAt": "2026-09-25",
+        "crateSha256": "7c4fce8aaf0c2d8534529b0698ed98ec1da8d35319588d20b0d79ce6446e4194",
+        "originalBytesPreserved": false,
+        "wrapperVersionStatus": "inferred candidate; actual binary identifies embedded AOM v3.11.0",
+        "crateVcsDirty": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/aom-notices/notice-manifest.json",
+        "sourceMembers": [
+          {
+            "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/EbMemory_AVX2.h",
+            "startByte": 0,
+            "endByteExclusive": 534,
+            "sourceBytes": 4483,
+            "sourceSha256": "d8c8e1fc6042612d8953ab1a15decaabe649604f5c1d6f1e040242cc360b9625",
+            "headerSha256": "6201deacb7018ca1f499f000188663a09a2d4de3372cb6248858bfeb0338ac9a"
+          },
+          {
+            "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/EbMemory_SSE4_1.h",
+            "startByte": 0,
+            "endByteExclusive": 534,
+            "sourceBytes": 1482,
+            "sourceSha256": "37f48563f0b162bcdc6d7675e49318cb3be9fc773698f9d0fa46e09696c670d4",
+            "headerSha256": "6201deacb7018ca1f499f000188663a09a2d4de3372cb6248858bfeb0338ac9a"
+          },
+          {
+            "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/convolve_2d_avx2.h",
+            "startByte": 0,
+            "endByteExclusive": 528,
+            "sourceBytes": 39854,
+            "sourceSha256": "2df766ce6e787400296dc5213a0975c59b0b018fc988fb8449e6302c018a46bf",
+            "headerSha256": "ef22347dacf6d45957c0a794c7445e969aac325252ad1cf5428051b1491f5340"
+          },
+          {
+            "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/convolve_avx2.h",
+            "startByte": 0,
+            "endByteExclusive": 528,
+            "sourceBytes": 136835,
+            "sourceSha256": "5aa5a01a86db7845caa2b845148f8be3c02dc6e11ee1f6634a182292a5cd372f",
+            "headerSha256": "52c5d8bc92a698209c98b4e5d7c042b3189240d52fd319e51c782251d80fbfee"
+          },
+          {
+            "archiveMember": "libaom-sys-0.17.2+libaom.3.11.0/vendor/third_party/SVT-AV1/synonyms.h",
+            "startByte": 0,
+            "endByteExclusive": 528,
+            "sourceBytes": 1287,
+            "sourceSha256": "90b6561261a8c7cfa97527b6cfa1c24bf2d1661cb784c489d6d0e42f23f7cd36",
+            "headerSha256": "f892cd383c66f68e9ee678eacfe3ae79f688ccb21e9329f786288e1af2a36373"
+          }
+        ],
+        "originalHeaderBytesPreserved": true,
+        "generatedContent": "Only source-member labels and separators; each copyright header is copied verbatim at the recorded byte range.",
+        "sha256": "bf1804693139d7731964c4d7fb0727694814314ac4687f5c7a8a8a0a5c45d900",
+        "evidencePath": "source-delivery-followup-20260925/canvas/aom-notices/vendor/third_party/SVT-AV1/COPYRIGHT-HEADERS.txt"
+      },
+      "scopeLimitations": "Compilation of unchanged source header comments to retain Intel and Alliance copyright notices; see original full files in build-evidence. File labels are generated. Registry original is the primary extraction source because its VCS record is dirty; no Git commit is substituted for the published crate. This does not establish a full native SBOM or patent clearance."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/libavif-0.14.0-LICENSE",
+      "bytes": 1317,
+      "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
+      "appliesTo": [
+        "canvas-native-libavif-0.14.0-candidate"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libavif/libavif-0.14.0.crate",
+        "revision": "libavif-0.14.0",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "archiveMember": "libavif-0.14.0/LICENSE",
+        "crateSha256": "0b710faf0de92da0e32a9a9c89bbf849e37277fd447b4f17b0f0f798796ae1f2",
+        "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/libavif-0.14.0-LICENSE"
+      },
+      "scopeLimitations": "Fixed canvas libavif ^0.14 range; not independently version-identified from binary. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/libavif-1.0.4-aggregated-LICENSE",
+      "bytes": 18799,
+      "sha256": "10952217a6d404de8bf8a997fbea9b88f682df1fe98cb9b9f467ade641525639",
+      "appliesTo": [
+        "canvas-native-libavif-1.0.4-candidate"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libavif-sys/libavif-sys-0.17.0+libavif.1.0.4.crate",
+        "revision": "libavif-sys-0.17.0+libavif.1.0.4",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "archiveMember": "libavif-sys-0.17.0+libavif.1.0.4/libavif/LICENSE",
+        "crateSha256": "490ca74b61e773140bebb086c81facb23273a99364a9ab0c92ab1532b90ade35",
+        "sha256": "10952217a6d404de8bf8a997fbea9b88f682df1fe98cb9b9f467ade641525639",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/libavif-1.0.4-aggregated-LICENSE"
+      },
+      "scopeLimitations": "Fixed canvas libavif-sys ^0.17 range; vendored libavif 1.0.4 is a candidate, not a recovered historical resolution. Full aggregate retained including optional app notices without asserting every optional path linked. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/mimalloc-safe-0.1.64-LICENSE.txt",
+      "bytes": 1055,
+      "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
+      "appliesTo": [
+        "canvas-native-mimalloc-safe-0.1.64-candidate"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/mimalloc-safe/mimalloc-safe-0.1.64.crate",
+        "revision": "mimalloc-safe-0.1.64",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "archiveMember": "mimalloc-safe-0.1.64/LICENSE.txt",
+        "crateSha256": "afd082b59cfceeb3bf31dbff65e7b96e1f94fa9b918e131d02353e6867a12824",
+        "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/mimalloc-safe-0.1.64-LICENSE.txt"
+      },
+      "scopeLimitations": "Latest compatible mimalloc-safe before npm publish; candidate, not exact historical resolution. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/libmimalloc-sys2-0.1.60-LICENSE.txt",
+      "bytes": 1055,
+      "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
+      "appliesTo": [
+        "canvas-native-libmimalloc-sys2-0.1.60-candidate"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libmimalloc-sys2/libmimalloc-sys2-0.1.60.crate",
+        "revision": "libmimalloc-sys2-0.1.60",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "archiveMember": "libmimalloc-sys2-0.1.60/LICENSE.txt",
+        "crateSha256": "921641155d9dc4f434332abd912518e33c70e37c557434818b6cfd1fbbb6138d",
+        "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/libmimalloc-sys2-0.1.60-LICENSE.txt"
+      },
+      "scopeLimitations": "Candidate inferred from selected mimalloc-safe dependency and publish date, not binary-identified. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/mimalloc-native-LICENSE",
+      "bytes": 1096,
+      "sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9",
+      "appliesTo": [
+        "canvas-native-mimalloc-native-candidate"
+      ],
+      "source": {
+        "kind": "registry-crate-original",
+        "officialUrl": "https://static.crates.io/crates/libmimalloc-sys2/libmimalloc-sys2-0.1.60.crate",
+        "revision": "libmimalloc-sys2-0.1.60",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "archiveMember": "libmimalloc-sys2-0.1.60/c_src/mimalloc/LICENSE",
+        "crateSha256": "921641155d9dc4f434332abd912518e33c70e37c557434818b6cfd1fbbb6138d",
+        "sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/mimalloc-native-LICENSE"
+      },
+      "scopeLimitations": "Microsoft original native allocator license, same bytes in bundled v2 and v3 trees; canvas fixed source chooses mimalloc but exact historical allocator version remains unknown. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/libavif-sys-wrapper-LICENSE",
+      "bytes": 1317,
+      "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
+      "appliesTo": [
+        "canvas-native-libavif-sys-0.17-candidate"
+      ],
+      "source": {
+        "kind": "crate-vcs-pinned-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/njaard/libavif-rs/c39a91dbf6c9414298d0066e5335c5312287af02/LICENSE",
+        "revision": "c39a91dbf6c9414298d0066e5335c5312287af02",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/libavif-sys-wrapper-LICENSE"
+      },
+      "scopeLimitations": "Supplemental repository root wrapper notice at crate VCS commit. Not used to replace registry archive or assert dirty crate source identity. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "canvas-1.0.3/native-supplement/libaom-sys-wrapper-LICENSE",
+      "bytes": 1317,
+      "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
+      "appliesTo": [
+        "canvas-native-libaom-sys-0.17.2-candidate"
+      ],
+      "source": {
+        "kind": "crate-vcs-pinned-upstream-text",
+        "officialUrl": "https://raw.githubusercontent.com/njaard/libavif-rs/18304417e422120835c358cdd0721ee43e4c6d7c/LICENSE",
+        "revision": "18304417e422120835c358cdd0721ee43e4c6d7c",
+        "retrievedAt": "2026-09-25",
+        "originalBytesPreserved": true,
+        "identityEvidencePath": "source-delivery-followup-20260925/canvas/native-notices/notice-manifest.json",
+        "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
+        "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/libaom-sys-wrapper-LICENSE"
+      },
+      "scopeLimitations": "Supplemental repository root wrapper notice at crate VCS commit. Not used to replace registry archive or assert dirty crate source identity. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "directml-and-other-native-runtime-terms",
+      "status": "pending",
+      "detail": "All six reviewed Microsoft DLLs are byte-identical to official Electron 42.8.0 / ONNX Runtime 1.24.3 distribution members, with whole-archive hashes or registry SRI. The exact direct distribution provenance of d3dcompiler_47 10.0.26100.7705 is established; the installed SDK 8249 difference is not an unresolved provenance gap. SDK downstream protective terms, effective acceptance and publisher copyright information still require implementation for external distribution. This record does not accept terms or grant approval."
+    },
+    {
+      "id": "sharp-static-corresponding-source",
+      "status": "pending",
+      "detail": "Observed library modules, source modifications, interface templates and build/install rules are mapped. The self-contained source-delivery annex includes the prior source candidate plus all eight exact generated outputs; recipient-only offline extraction and manifest verification passed. No specifically identified missing required source input remains in this reviewed scope. Actual accompanied distribution, applicable recipient replacement conditions and final release terms must remain bound to the chosen distribution artifact; no blanket legal approval is asserted.",
+      "evidencePath": "source-delivery-followup-20260925/sharp/validation.json"
+    },
+    {
+      "id": "canvas-native-closure",
+      "status": "pending",
+      "detail": "Known MPL source access is delivered locally for cssparser 0.37.0, cssparser-color 0.5.0 and cssparser-macros 0.7.0, including complete original sources/licenses and reviewed integration context. Fixed source inspection found no override or patch of these packages; this does not prove every historical build-cache input. AOM 3.11.0 is identified in actual binary strings and its original notices are supplied, with AVIF/allocator candidate notices conservatively appended. Complete native dependency/features and any further file-specific obligations remain to be scoped; original CI logs, an entire historical compiler environment and bit-for-bit rebuilding are not treated as general copyright-registration or MPL conditions.",
+      "evidencePath": "source-delivery-followup-20260925/canvas/validation.json"
+    },
+    {
+      "id": "publisher-and-distribution-approval",
+      "status": "pending",
+      "detail": "Project/EULA/publisher/component profile decisions remain pending; retaining text is not approval, registration or submission."
+    }
+  ],
+  "projectNotes": [
+    {
+      "path": "README.md",
+      "bytes": 6591,
+      "sha256": "698bd9c142d4609f9c6c281cc7194b44968f4fbe9e656969f9b6fbae354d5e81"
+    }
+  ],
+  "updatedOn": "2026-09-25",
+  "resolvedForCurrentDistribution": [
+    {
+      "id": "guid-typescript-fixed-license",
+      "status": "excluded-from-reviewed-distribution",
+      "detail": "guid-typescript 1.0.9 original complete license evidence is still absent, but the standalone package and all reviewed bundled copies/source maps are excluded from current distribution. Pre/post build checks bind inspected package bytes and metadata. The development lockfile relationship remains; reintroduction requires renewed review.",
+      "evidencePath": "license-closure-20260925/guid/new-package-metadata-bound-check.json"
+    },
+    {
+      "id": "canvas-known-mpl-local-source-access",
+      "status": "local-source-delivery-for-known-scope",
+      "detail": "The local covered-source annex supplies 19 original crates and complete expanded upstream sources/licenses for the three known MPL crates (37 files), plus reviewed canvas integration context. Open legal/covered-source/README.md and canvas-rust-sources.zip without network, account, email or extra charge. No Siftory proprietary source is included. This resolves the stated source-access method for these known files, not the full native inventory or undiscovered modifications.",
+      "sourceArchivePath": "legal/covered-source/canvas-rust-sources.zip",
+      "bytes": 3341429,
+      "sha256": "22d7c34a95cbbc3aca6402f218fe60d6ee1b5d1fa8b55c30a0eb88448e84a5ae",
+      "evidencePath": "source-delivery-followup-20260925/canvas/validation.json"
+    }
+  ],
+  "currentEvidence": {
+    "scope": "Technical source delivery and exact Microsoft runtime distribution provenance; no acceptance or approval",
+    "evidencePath": "lgpl-distribution-followup-20260925",
+    "sharpSourceReview": "lgpl-distribution-followup-20260925/sharp/review.json",
+    "microsoftRuntimeReview": "lgpl-distribution-followup-20260925/microsoft-runtime/review.json"
+  }
+}

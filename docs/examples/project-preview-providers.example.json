@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "trusted-design-converter",
+      "version": "1",
+      "extensions": ["clip", "cdr", "indd"],
+      "executable": "C:\\Program Files\\TrustedConverter\\converter.exe",
+      "args": ["--input", "{input}", "--output", "{output}"],
+      "timeoutMs": 30000
+    }
+  ]
+}

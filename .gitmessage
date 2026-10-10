@@ -1,0 +1,17 @@
+# <type>(<scope>): <summary>
+#
+# Context:
+# - Why this change is needed.
+#
+# Changes:
+# - The bounded change made in this commit.
+#
+# Required trailers (replace every placeholder):
+Executor-System: <Codex|Kimi|Claude|Gemini|Human|Mixed>
+Executor-Model: <confirmed model family or unknown>
+Task: <task id or short task name>
+Validation: <commands and results, or not-run with reason>
+
+# Allowed types: feat, fix, perf, refactor, test, docs, build, ci, chore, revert
+# Header limit: 100 characters. Scope is required and uses lowercase kebab-case.
+# Do not use WIP on main. Do not claim another runtime's agent work as your own.

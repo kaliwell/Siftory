@@ -1,0 +1,260 @@
+{
+  "phase": "phase0-discovery-baseline",
+  "generatedAt": "2026-08-11T13:03:34.052Z",
+  "corpusCount": 100000,
+  "corpusRoot": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-corpus-100k",
+  "environment": {
+    "platform": "win32 x64",
+    "osRelease": "10.0.22631",
+    "node": "v24.16.0",
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12700H",
+    "logicalProcessors": 20,
+    "totalMemoryBytes": 16781979648,
+    "physicalDisks": [
+      {
+        "DeviceId": "1",
+        "FriendlyName": "NVMe Samsung SSD 980 500GB",
+        "MediaType": "SSD",
+        "BusType": "NVMe",
+        "Size": 500107862016,
+        "HealthStatus": "Healthy"
+      },
+      {
+        "DeviceId": "0",
+        "FriendlyName": "NVMe Micron_2450_MTFDKBA512TFK",
+        "MediaType": "SSD",
+        "BusType": "NVMe",
+        "Size": 512110190592,
+        "HealthStatus": "Healthy"
+      }
+    ],
+    "volumes": [
+      {
+        "DriveLetter": "D",
+        "FileSystemType": "NTFS",
+        "FileSystemLabel": "0x2",
+        "Size": 500090007552,
+        "SizeRemaining": 101276241920
+      },
+      {
+        "DriveLetter": "C",
+        "FileSystemType": "NTFS",
+        "FileSystemLabel": "OS",
+        "Size": 487200198656,
+        "SizeRemaining": 74386554880
+      }
+    ],
+    "corpusDrive": "C:\\"
+  },
+  "corpus": {
+    "reused": true,
+    "root": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-corpus-100k"
+  },
+  "nativeVersion": "fast_scanner 0.5.29",
+  "usnAvailability": {
+    "ok": true,
+    "volume": "C:",
+    "isNtfs": true,
+    "canOpenVolume": false,
+    "journalOk": false,
+    "requiresAdmin": true,
+    "reason": "cannot open volume C: (access denied — run as administrator)",
+    "usnStateLoaded": false,
+    "usnLastUsn": -1,
+    "usnJournalId": 0
+  },
+  "discovery": {
+    "label": "discovery-metaonly-enum",
+    "mode": "metaOnly",
+    "backend": "enum",
+    "fallbackCode": null,
+    "fallbackReason": null,
+    "indexedCount": 100000,
+    "failedCount": 0,
+    "totalBytes": 0,
+    "wallMs": 1869.8,
+    "totalScanMs": 1859,
+    "enumMs": 1845,
+    "statMs": 0,
+    "decodeMsTotal": 0,
+    "hashMsTotal": 0,
+    "enumDirCount": 211,
+    "enumFileCount": 100000,
+    "enumImageCount": 100000,
+    "usnReadMs": 0,
+    "usnRecordsRead": 0,
+    "filesPerSecond": 53481.7,
+    "firstPathMs": 71.3
+  },
+  "fullDiscovery": {
+    "label": "discovery-full-usn-or-fallback",
+    "mode": "full",
+    "backend": "enum",
+    "fallbackCode": "volume-access-denied",
+    "fallbackReason": "cannot open volume C: (access denied)",
+    "indexedCount": 100000,
+    "failedCount": 0,
+    "totalBytes": 6900000,
+    "wallMs": 17556.4,
+    "totalScanMs": 17542,
+    "enumMs": 17520,
+    "statMs": 0,
+    "decodeMsTotal": 331,
+    "hashMsTotal": 4473,
+    "enumDirCount": 211,
+    "enumFileCount": 100000,
+    "enumImageCount": 100000,
+    "usnReadMs": 0,
+    "usnRecordsRead": 0,
+    "filesPerSecond": 5695.9
+  },
+  "thumbnails": {
+    "subsetFiles": 500,
+    "subsetSource": "tests/fixtures/faces jpg variants (desensitized real assets)",
+    "thumbnailCompleted": 500,
+    "thumbnailFailed": 0,
+    "thumbnailDropped": 0,
+    "wallMs": 2715.8,
+    "drainWaitMs": 0,
+    "totalMsWithDrain": 2715.8,
+    "avgMsPerThumbnail": 5.432
+  },
+  "hashMicro": {
+    "rounds": 20,
+    "samples": [
+      {
+        "file": "obama-variant.jpg",
+        "bytes": 14555,
+        "rounds": 20,
+        "avgMs": 10.48,
+        "diffHash": "e07212e4c48e0e1e"
+      },
+      {
+        "file": "obama.jpg",
+        "bytes": 205817,
+        "rounds": 20,
+        "avgMs": 15.104,
+        "diffHash": "e07212e4c48e0e1e"
+      },
+      {
+        "file": "trump.jpg",
+        "bytes": 260041,
+        "rounds": 20,
+        "avgMs": 13.712,
+        "diffHash": "0f8dc62731253f1e"
+      }
+    ]
+  },
+  "search": {
+    "indexDir": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-index-4FaU8k",
+    "load": {
+      "ok": true,
+      "recordCount": 500,
+      "segmentCount": 1,
+      "loadMs": 5.52,
+      "rssDeltaMiB": 2.21,
+      "heapDeltaMiB": 0.07,
+      "externalDeltaMiB": 0
+    },
+    "index": {
+      "mode": "segment_mmap",
+      "manifestPath": "C:\\Users\\<user>\\AppData\\Local\\Temp\\phase0-index-4FaU8k",
+      "version": 4,
+      "segmentCount": 1,
+      "schemaVersion": 2,
+      "recordCount": 500,
+      "pathIndexMapSize": 500,
+      "overlayCount": 0,
+      "replacedCount": 0,
+      "deletedCount": 0,
+      "pathMapHealthy": true
+    },
+    "searches": [
+      {
+        "label": "zero-skew",
+        "mode": "fast",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 0.263,
+        "averageMs": 0.0026,
+        "averageScanned": 0,
+        "averageCandidates": 0,
+        "fallbacks": 0
+      },
+      {
+        "label": "zero-skew",
+        "mode": "balanced",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 0.299,
+        "averageMs": 0.003,
+        "averageScanned": 500,
+        "averageCandidates": 0,
+        "fallbacks": 100
+      },
+      {
+        "label": "zero-skew",
+        "mode": "recall",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 0.253,
+        "averageMs": 0.0025,
+        "averageScanned": 500,
+        "averageCandidates": 0,
+        "fallbacks": 100
+      },
+      {
+        "label": "sampled-index",
+        "mode": "fast",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 21.923,
+        "averageMs": 0.2192,
+        "averageScanned": 283.6,
+        "averageCandidates": 283.6,
+        "fallbacks": 0
+      },
+      {
+        "label": "sampled-index",
+        "mode": "balanced",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 17.097,
+        "averageMs": 0.171,
+        "averageScanned": 500,
+        "averageCandidates": 283.6,
+        "fallbacks": 100
+      },
+      {
+        "label": "sampled-index",
+        "mode": "recall",
+        "threshold": 10,
+        "rounds": 100,
+        "totalMs": 17.788,
+        "averageMs": 0.1779,
+        "averageScanned": 500,
+        "averageCandidates": 283.6,
+        "fallbacks": 100
+      }
+    ]
+  },
+  "embedding": {
+    "schemaVersion": 1,
+    "generatedAt": "2026-08-11T13:04:16.141Z",
+    "sample": 16,
+    "runs": [
+      {
+        "model": "dino",
+        "images": 16,
+        "jobs": 2,
+        "batchSize": 4,
+        "backend": "cpu",
+        "elapsedMs": 7183.39,
+        "imagesPerSecond": 2.23,
+        "workerWorkingSetMiB": 683.2,
+        "maxWorkerWorkingSetMiB": 344.28,
+        "digest": "e27984965505d345a68634a44e7f4473ed563ce260cca5bee990338dfde66d6e"
+      }
+    ]
+  }
+}
