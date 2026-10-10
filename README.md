@@ -43,7 +43,7 @@ npm test
 npm run build:renderer:checked
 ```
 
-这些命令针对桌面工程。完整 `npm run verify` 的视频测试还需要清单指定版本的 FFmpeg / FFprobe，手动准备至 `tools/ffmpeg/bin/`，并先执行下面的哈希验证；二进制不进入源码仓库。提交快照的完整验证会复制并再次核验这两个工具。
+这些命令针对桌面工程。完整 `npm run verify` 的视频测试还需要清单指定版本的 FFmpeg / FFprobe，手动准备至 `tools/ffmpeg/bin/`，并先执行下面的哈希验证；二进制不进入源码仓库。提交快照的完整验证会复制并再次核验这两个工具。完整许可证与资源测试还需要另行准备 `legal/covered-source/canvas-rust-sources.zip`，其哈希须匹配同目录清单；该第三方源码交付附件不进入普通源码提交，后续二进制分发仍须履行对应源码交付要求。
 
 ```powershell
 npm run resources:fetch -- --verify-only --component=gyan-ffmpeg-full-8-1-2

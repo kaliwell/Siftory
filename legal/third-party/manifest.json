@@ -26,11 +26,11 @@
     },
     {
       "packagePath": "node_modules/sharp",
-      "version": "0.35.4"
+      "version": "0.35.5"
     },
     {
       "packagePath": "node_modules/@img/sharp-win32-x64",
-      "version": "0.35.4"
+      "version": "0.35.5"
     },
     {
       "packagePath": "node_modules/@napi-rs/canvas",
@@ -42,7 +42,7 @@
     },
     {
       "packagePath": "node_modules/electron",
-      "version": "42.8.0"
+      "version": "42.11.12"
     }
   ],
   "components": [
@@ -464,6 +464,24 @@
         "sha256": "b31cbafcbcb7a55565889a991b00d39b85b84204f1776e08e90807bd1c3ae787",
         "packageRelativePath": "node_modules/@napi-rs/canvas-win32-x64-msvc/skia.win32-x64-msvc.node"
       }
+    },
+    {
+      "id": "sharp-node-0.35.5",
+      "name": "sharp 0.35.5",
+      "revision": "0.35.5",
+      "licenseScope": "Installed sharp package Apache-2.0 text; not a recursive native dependency inventory."
+    },
+    {
+      "id": "sharp-win32-x64-0.35.5",
+      "name": "@img/sharp-win32-x64 0.35.5",
+      "revision": "0.35.5",
+      "licenseScope": "Windows package declares Apache-2.0 AND LGPL-3.0-or-later; retained notices and version metadata do not establish complete corresponding source."
+    },
+    {
+      "id": "electron-42.11.12",
+      "name": "electron 42.11.12",
+      "revision": "42.11.12",
+      "licenseScope": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.12 distribution; not a complete independent binary SBOM."
     }
   ],
   "files": [
@@ -471,9 +489,7 @@
       "path": "onnxruntime-1.24.3/LICENSE",
       "bytes": 1073,
       "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
-      "appliesTo": [
-        "onnxruntime-1.24.3"
-      ],
+      "appliesTo": ["onnxruntime-1.24.3"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.3/LICENSE",
@@ -488,9 +504,7 @@
       "path": "onnxruntime-1.24.3/ThirdPartyNotices.txt",
       "bytes": 325054,
       "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
-      "appliesTo": [
-        "onnxruntime-1.24.3"
-      ],
+      "appliesTo": ["onnxruntime-1.24.3"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.3/ThirdPartyNotices.txt",
@@ -505,9 +519,7 @@
       "path": "onnxruntime-web-b7804b056c/LICENSE",
       "bytes": 1073,
       "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
-      "appliesTo": [
-        "onnxruntime-web-b7804b056c"
-      ],
+      "appliesTo": ["onnxruntime-web-b7804b056c"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b7804b056c30aa35c1748f8e4e239d0e2ff25d6d/LICENSE",
@@ -522,9 +534,7 @@
       "path": "onnxruntime-web-b7804b056c/ThirdPartyNotices.txt",
       "bytes": 325054,
       "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
-      "appliesTo": [
-        "onnxruntime-web-b7804b056c"
-      ],
+      "appliesTo": ["onnxruntime-web-b7804b056c"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b7804b056c30aa35c1748f8e4e239d0e2ff25d6d/ThirdPartyNotices.txt",
@@ -539,9 +549,7 @@
       "path": "onnxruntime-common-b39e144322/LICENSE",
       "bytes": 1073,
       "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
-      "appliesTo": [
-        "onnxruntime-common-b39e144322"
-      ],
+      "appliesTo": ["onnxruntime-common-b39e144322"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b39e144322/LICENSE",
@@ -556,9 +564,7 @@
       "path": "onnxruntime-common-b39e144322/ThirdPartyNotices.txt",
       "bytes": 326866,
       "sha256": "e9e90971a8e75a9a8ac0c6412e29c1202d079998389915aa485f46c816c3b4cc",
-      "appliesTo": [
-        "onnxruntime-common-b39e144322"
-      ],
+      "appliesTo": ["onnxruntime-common-b39e144322"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/b39e144322/ThirdPartyNotices.txt",
@@ -573,9 +579,7 @@
       "path": "canvas-1.0.3/canvas/LICENSE",
       "bytes": 1075,
       "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6",
-      "appliesTo": [
-        "canvas-1.0.3-1"
-      ],
+      "appliesTo": ["canvas-1.0.3-1"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/Brooooooklyn/canvas/2aa648fb4ed83fbe87af77922ecf89153184f8b5/LICENSE",
@@ -590,10 +594,7 @@
       "path": "canvas-1.0.3/skia/LICENSE",
       "bytes": 1507,
       "sha256": "5f787c1dee3c56547f09ccc2906ab5f5293c4d8dd6c8654e573216c38e908dbd",
-      "appliesTo": [
-        "canvas-1.0.3-2",
-        "canvas-1.0.3-15"
-      ],
+      "appliesTo": ["canvas-1.0.3-2", "canvas-1.0.3-15"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/google/skia/7219df0fb0ff64f26adad448f94e8c001b964e6a/LICENSE",
@@ -608,9 +609,7 @@
       "path": "canvas-1.0.3/icu/LICENSE",
       "bytes": 27718,
       "sha256": "e55522d81edc687a341a4411e0776e54ca654e90147f354a90458aaced4116af",
-      "appliesTo": [
-        "canvas-1.0.3-3"
-      ],
+      "appliesTo": ["canvas-1.0.3-3"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/deps/icu.git/+/d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738/LICENSE?format=TEXT",
@@ -625,9 +624,7 @@
       "path": "canvas-1.0.3/icu/license.html",
       "bytes": 622,
       "sha256": "c62d7697c03979f5056d28b338fafc7a1152820f7b379adf4a9d88cd37160f96",
-      "appliesTo": [
-        "canvas-1.0.3-3"
-      ],
+      "appliesTo": ["canvas-1.0.3-3"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/deps/icu.git/+/d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738/license.html?format=TEXT",
@@ -642,9 +639,7 @@
       "path": "canvas-1.0.3/embedded/expat-COPYING",
       "bytes": 1144,
       "sha256": "31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87",
-      "appliesTo": [
-        "canvas-1.0.3-4"
-      ],
+      "appliesTo": ["canvas-1.0.3-4"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git/+/6154446fccefbf3ca644894f598969113b0c7bcd/COPYING?format=TEXT",
@@ -659,9 +654,7 @@
       "path": "canvas-1.0.3/embedded/freetype-LICENSE.TXT",
       "bytes": 2149,
       "sha256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/LICENSE.TXT?format=TEXT",
@@ -676,9 +669,7 @@
       "path": "canvas-1.0.3/embedded/freetype-FTL.TXT",
       "bytes": 6743,
       "sha256": "5a5ee54c5001bbad1cdc1a57cc3dd4c42199b2da09d39c7ee41fab002d02967f",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/docs/FTL.TXT?format=TEXT",
@@ -693,9 +684,7 @@
       "path": "canvas-1.0.3/embedded/freetype-GPLv2.TXT",
       "bytes": 17994,
       "sha256": "c4120c6752c910c299e3bd9cb3a46ff262c268303ca2069b61f92f10a5656c18",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/docs/GPLv2.TXT?format=TEXT",
@@ -710,9 +699,7 @@
       "path": "canvas-1.0.3/embedded/freetype-bdf-README",
       "bytes": 5972,
       "sha256": "7984455e7e5a9faba3797c8bf095fbe10cc846316b7320aff8c58402e22b82fe",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/bdf/README?format=TEXT",
@@ -727,9 +714,7 @@
       "path": "canvas-1.0.3/embedded/freetype-pcf-README",
       "bytes": 3311,
       "sha256": "18d9782898d9eac04476e2f744678137b2a889689ed3e923e052fc396a86f86b",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/pcf/README?format=TEXT",
@@ -744,9 +729,7 @@
       "path": "canvas-1.0.3/embedded/freetype-fthash.c",
       "bytes": 8406,
       "sha256": "693e5a54b3ce30140975a94a3369dbe706eb1f280c69e80da426d39cc45b94ef",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/base/fthash.c?format=TEXT",
@@ -761,9 +744,7 @@
       "path": "canvas-1.0.3/embedded/freetype-gzip-zlib.h",
       "bytes": 97499,
       "sha256": "c86a25c27f74cb97b8fa07b175f479f063d5064ace9995b4684063643c81cf1b",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/gzip/zlib.h?format=TEXT",
@@ -778,9 +759,7 @@
       "path": "canvas-1.0.3/embedded/freetype-autofit-ft-hb-ft.c",
       "bytes": 3315,
       "sha256": "84dd5ddff1cec222e1755b4962faf45836238dfa3a46854dabd969eb4e50f8be",
-      "appliesTo": [
-        "canvas-1.0.3-5"
-      ],
+      "appliesTo": ["canvas-1.0.3-5"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git/+/264b5fbf5b912b39f98d038bf75d39be0a73f21b/src/autofit/ft-hb-ft.c?format=TEXT",
@@ -795,9 +774,7 @@
       "path": "canvas-1.0.3/embedded/harfbuzz-COPYING",
       "bytes": 1971,
       "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64",
-      "appliesTo": [
-        "canvas-1.0.3-6"
-      ],
+      "appliesTo": ["canvas-1.0.3-6"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git/+/9cb1fee51069b206effb4736e443b038d230789d/COPYING?format=TEXT",
@@ -812,9 +789,7 @@
       "path": "canvas-1.0.3/embedded/libjpeg-turbo-LICENSE.md",
       "bytes": 5620,
       "sha256": "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430",
-      "appliesTo": [
-        "canvas-1.0.3-7"
-      ],
+      "appliesTo": ["canvas-1.0.3-7"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad/LICENSE.md?format=TEXT",
@@ -829,9 +804,7 @@
       "path": "canvas-1.0.3/embedded/libjpeg-turbo-README.ijg",
       "bytes": 12799,
       "sha256": "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6",
-      "appliesTo": [
-        "canvas-1.0.3-7"
-      ],
+      "appliesTo": ["canvas-1.0.3-7"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git/+/e14cbfaa85529d47f9f55b0f104a579c1061f9ad/README.ijg?format=TEXT",
@@ -846,9 +819,7 @@
       "path": "canvas-1.0.3/embedded/libpng-LICENSE",
       "bytes": 5345,
       "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
-      "appliesTo": [
-        "canvas-1.0.3-8"
-      ],
+      "appliesTo": ["canvas-1.0.3-8"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://skia.googlesource.com/third_party/libpng.git/+/d5515b5b8be3901aac04e5bd8bd5c89f287bcd33/LICENSE?format=TEXT",
@@ -863,9 +834,7 @@
       "path": "canvas-1.0.3/embedded/libwebp-COPYING",
       "bytes": 1496,
       "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
-      "appliesTo": [
-        "canvas-1.0.3-9"
-      ],
+      "appliesTo": ["canvas-1.0.3-9"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f/COPYING?format=TEXT",
@@ -880,9 +849,7 @@
       "path": "canvas-1.0.3/embedded/libwebp-PATENTS",
       "bytes": 1436,
       "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
-      "appliesTo": [
-        "canvas-1.0.3-9"
-      ],
+      "appliesTo": ["canvas-1.0.3-9"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/webm/libwebp.git/+/845d5476a866141ba35ac133f856fa62f0b7445f/PATENTS?format=TEXT",
@@ -897,9 +864,7 @@
       "path": "canvas-1.0.3/embedded/wuffs-LICENSE",
       "bytes": 11358,
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "appliesTo": [
-        "canvas-1.0.3-10"
-      ],
+      "appliesTo": ["canvas-1.0.3-10"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git/+/e3f919ccfe3ef542cfc983a82146070258fb57f8/LICENSE?format=TEXT",
@@ -914,9 +879,7 @@
       "path": "canvas-1.0.3/embedded/zlib-LICENSE",
       "bytes": 910,
       "sha256": "e1cfcc55c325b3f78cf55df9664abaa066e2271dffe8213347d9fccdfbac8f2c",
-      "appliesTo": [
-        "canvas-1.0.3-11"
-      ],
+      "appliesTo": ["canvas-1.0.3-11"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+/646b7f569718921d7d4b5b8e22572ff6c76f2596/LICENSE?format=TEXT",
@@ -931,9 +894,7 @@
       "path": "canvas-1.0.3/embedded/brotli-LICENSE",
       "bytes": 1084,
       "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
-      "appliesTo": [
-        "canvas-1.0.3-12"
-      ],
+      "appliesTo": ["canvas-1.0.3-12"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://skia.googlesource.com/external/github.com/google/brotli.git/+/6d03dfbedda1615c4cba1211f8d81735575209c8/LICENSE?format=TEXT",
@@ -948,9 +909,7 @@
       "path": "canvas-1.0.3/embedded/libjxl-LICENSE",
       "bytes": 1508,
       "sha256": "8405932022a556380c2d8c272eff154a923feb197233f348ce5f7334fb0a5ede",
-      "appliesTo": [
-        "canvas-1.0.3-13"
-      ],
+      "appliesTo": ["canvas-1.0.3-13"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/external/gitlab.com/wg1/jpeg-xl.git/+/a205468bc5d3a353fb15dae2398a101dff52f2d3/LICENSE?format=TEXT",
@@ -965,9 +924,7 @@
       "path": "canvas-1.0.3/embedded/libjxl-PATENTS",
       "bytes": 1333,
       "sha256": "91915f8ae056a68a3c5bdf05d9f6f78bb6903e27a8ca3a8434c9e4ac87300575",
-      "appliesTo": [
-        "canvas-1.0.3-13"
-      ],
+      "appliesTo": ["canvas-1.0.3-13"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/external/gitlab.com/wg1/jpeg-xl.git/+/a205468bc5d3a353fb15dae2398a101dff52f2d3/PATENTS?format=TEXT",
@@ -982,9 +939,7 @@
       "path": "canvas-1.0.3/embedded/highway-LICENSE",
       "bytes": 11356,
       "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
-      "appliesTo": [
-        "canvas-1.0.3-14"
-      ],
+      "appliesTo": ["canvas-1.0.3-14"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://chromium.googlesource.com/external/github.com/google/highway.git/+/424360251cdcfc314cfc528f53c872ecd63af0f0/LICENSE?format=TEXT",
@@ -999,9 +954,7 @@
       "path": "canvas-1.0.3/skia/skcms-README.chromium",
       "bytes": 88,
       "sha256": "dbbb44d5dc5ba4664fa68207c42799ef0c6652309a121e6a28921498a6fa1cd6",
-      "appliesTo": [
-        "canvas-1.0.3-15"
-      ],
+      "appliesTo": ["canvas-1.0.3-15"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/google/skia/7219df0fb0ff64f26adad448f94e8c001b964e6a/modules/skcms/README.chromium",
@@ -1016,9 +969,7 @@
       "path": "canvas-1.0.3/skia/skcms.cc",
       "bytes": 120924,
       "sha256": "3cf8f1164d727563eeb8998f978d9b7779e166314ed37989def6283bdd905ce6",
-      "appliesTo": [
-        "canvas-1.0.3-15"
-      ],
+      "appliesTo": ["canvas-1.0.3-15"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/google/skia/7219df0fb0ff64f26adad448f94e8c001b964e6a/modules/skcms/skcms.cc",
@@ -1033,9 +984,7 @@
       "path": "sharp-0.35.4/windows-package/README.md",
       "bytes": 4913,
       "sha256": "280e7d164420cfc1a1b192a582bf53e3dba97b86a5c3575f878b674ad1d41e13",
-      "appliesTo": [
-        "sharp-win32-x64-0.35.4"
-      ],
+      "appliesTo": ["sharp-win32-x64-0.35.4"],
       "source": {
         "kind": "installed-npm-original",
         "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
@@ -1053,9 +1002,7 @@
       "path": "sharp-0.35.4/windows-package/LICENSE",
       "bytes": 10464,
       "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693",
-      "appliesTo": [
-        "sharp-win32-x64-0.35.4"
-      ],
+      "appliesTo": ["sharp-win32-x64-0.35.4"],
       "source": {
         "kind": "installed-npm-original",
         "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
@@ -1073,9 +1020,7 @@
       "path": "sharp-0.35.4/windows-package/versions.json",
       "bytes": 597,
       "sha256": "d551c859958f06b8088957f679c29be1ff53760191f7401e8183460fc5f58cf4",
-      "appliesTo": [
-        "sharp-win32-x64-0.35.4"
-      ],
+      "appliesTo": ["sharp-win32-x64-0.35.4"],
       "source": {
         "kind": "installed-npm-original",
         "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
@@ -1093,9 +1038,7 @@
       "path": "sharp-0.35.4/LGPL-3.0.txt",
       "bytes": 7652,
       "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
-      "appliesTo": [
-        "libvips-8.18.6"
-      ],
+      "appliesTo": ["libvips-8.18.6"],
       "source": {
         "kind": "official-license-text",
         "officialUrl": "https://www.gnu.org/licenses/lgpl-3.0.txt",
@@ -1110,9 +1053,7 @@
       "path": "sharp-0.35.4/GPL-3.0.txt",
       "bytes": 35149,
       "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
-      "appliesTo": [
-        "libvips-8.18.6"
-      ],
+      "appliesTo": ["libvips-8.18.6"],
       "source": {
         "kind": "official-license-text",
         "officialUrl": "https://www.gnu.org/licenses/gpl-3.0.txt",
@@ -1127,9 +1068,7 @@
       "path": "sharp-0.35.4/libvips-LICENSE",
       "bytes": 26530,
       "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
-      "appliesTo": [
-        "libvips-8.18.6"
-      ],
+      "appliesTo": ["libvips-8.18.6"],
       "source": {
         "kind": "verified-source-archive-member",
         "officialUrl": "https://github.com/libvips/libvips/releases/download/v8.18.6/vips-8.18.6.tar.xz",
@@ -1146,9 +1085,7 @@
       "path": "sharp-0.35.4/libnsgif-COPYING",
       "bytes": 1133,
       "sha256": "1469b759cf18e43c6e1b4ff892307d3962cbbb337ac497620d6690a219fad10c",
-      "appliesTo": [
-        "libvips-8.18.6"
-      ],
+      "appliesTo": ["libvips-8.18.6"],
       "source": {
         "kind": "verified-source-archive-member",
         "officialUrl": "https://github.com/libvips/libvips/releases/download/v8.18.6/vips-8.18.6.tar.xz",
@@ -1165,9 +1102,7 @@
       "path": "microsoft/directml-1.15.4/LICENSE.txt",
       "bytes": 10439,
       "sha256": "a05138e3a085ff60a44881eedfa58dccb03ecc1d7b1f6ae888418e8c2fec4b8d",
-      "appliesTo": [
-        "directml-1.15.4"
-      ],
+      "appliesTo": ["directml-1.15.4"],
       "source": {
         "kind": "exact-nuget-archive-member",
         "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
@@ -1185,9 +1120,7 @@
       "path": "microsoft/directml-1.15.4/ThirdPartyNotices.txt",
       "bytes": 4577,
       "sha256": "2c95795c13ff48a58b6ed916f37901c23d964b5d9d601af422f17ad2172e7950",
-      "appliesTo": [
-        "directml-1.15.4"
-      ],
+      "appliesTo": ["directml-1.15.4"],
       "source": {
         "kind": "exact-nuget-archive-member",
         "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
@@ -1205,9 +1138,7 @@
       "path": "microsoft/directml-1.15.4/README.md",
       "bytes": 346,
       "sha256": "86e8e7c998791bc14d946044fa2feb9b5760b584cb4296fbd4fddadd35280a03",
-      "appliesTo": [
-        "directml-1.15.4"
-      ],
+      "appliesTo": ["directml-1.15.4"],
       "source": {
         "kind": "exact-nuget-archive-member",
         "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
@@ -1225,9 +1156,7 @@
       "path": "microsoft/dxc-1.8.2502.8/LICENSE-LLVM.txt",
       "bytes": 1979,
       "sha256": "729615317e28dd03907e46f0fc3b5e88f7853cee61d1a1471d2749335516b46f",
-      "appliesTo": [
-        "ort-dxc-1.8.2502.8"
-      ],
+      "appliesTo": ["ort-dxc-1.8.2502.8"],
       "source": {
         "kind": "exact-nuget-archive-member",
         "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.direct3d.dxc/1.8.2502.8/microsoft.direct3d.dxc.1.8.2502.8.nupkg",
@@ -1245,9 +1174,7 @@
       "path": "microsoft/dxc-1.8.2502.8/ReleaseNotes.md",
       "bytes": 10406,
       "sha256": "6b936ea201429298d1e7b4ffa1ab670a4c3776a34c2ab0d6e901775916b77641",
-      "appliesTo": [
-        "ort-dxc-1.8.2502.8"
-      ],
+      "appliesTo": ["ort-dxc-1.8.2502.8"],
       "source": {
         "kind": "exact-nuget-archive-member",
         "officialUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.direct3d.dxc/1.8.2502.8/microsoft.direct3d.dxc.1.8.2502.8.nupkg",
@@ -1265,9 +1192,7 @@
       "path": "microsoft/dawn-dxc-eb67a9085c/LICENSE.TXT",
       "bytes": 29241,
       "sha256": "27a49e35d1da96eba18fba54bc882667ff0ff8c0254f16f2b6e165d605ba7df8",
-      "appliesTo": [
-        "dawn-dxc-eb67a9085c"
-      ],
+      "appliesTo": ["dawn-dxc-eb67a9085c"],
       "source": {
         "kind": "fixed-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/microsoft/DirectXShaderCompiler/eb67a9085c758516d940e1ce3fed0acfb6518209/LICENSE.TXT",
@@ -1283,9 +1208,7 @@
       "path": "microsoft/windows-sdk-10.0.26100.0/sdk_license.rtf",
       "bytes": 248573,
       "sha256": "0f4a26ac9dc50066f8a1bfeaaf3f092d1b9e4791df5487b9f3c31e7c3dc4d7f5",
-      "appliesTo": [
-        "windows-sdk-10.0.26100.0"
-      ],
+      "appliesTo": ["windows-sdk-10.0.26100.0"],
       "source": {
         "kind": "installed-sdk-original-text",
         "officialUrl": "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/",
@@ -1301,9 +1224,7 @@
       "path": "microsoft/windows-sdk-10.0.26100.0/sdk_third_party_notices.rtf",
       "bytes": 22279,
       "sha256": "ebb6640a8246b39b70322c5cec9aad7a71e86ea7b86c9c604d3a7f3ff1b30e89",
-      "appliesTo": [
-        "windows-sdk-10.0.26100.0"
-      ],
+      "appliesTo": ["windows-sdk-10.0.26100.0"],
       "source": {
         "kind": "installed-sdk-original-text",
         "officialUrl": "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/",
@@ -1319,9 +1240,7 @@
       "path": "microsoft/windows-sdk-10.0.26100.0/windows-sdk-redist.html",
       "bytes": 38644,
       "sha256": "8b8edea640ef6870df733dca357ecf061ceb82692c769e467ef0312854cc8cd4",
-      "appliesTo": [
-        "windows-sdk-10.0.26100.0"
-      ],
+      "appliesTo": ["windows-sdk-10.0.26100.0"],
       "source": {
         "kind": "official-redistribution-list-snapshot",
         "officialUrl": "https://learn.microsoft.com/en-us/legal/windows-sdk/redist",
@@ -1337,9 +1256,7 @@
       "path": "canvas-1.0.3/rust/aho-corasick-1.1.4/COPYING",
       "bytes": 126,
       "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
-      "appliesTo": [
-        "canvas-rust-aho-corasick-1.1.4"
-      ],
+      "appliesTo": ["canvas-rust-aho-corasick-1.1.4"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/aho-corasick/aho-corasick-1.1.4.crate",
@@ -1356,9 +1273,7 @@
       "path": "canvas-1.0.3/rust/aho-corasick-1.1.4/LICENSE-MIT",
       "bytes": 1081,
       "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f",
-      "appliesTo": [
-        "canvas-rust-aho-corasick-1.1.4"
-      ],
+      "appliesTo": ["canvas-rust-aho-corasick-1.1.4"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/aho-corasick/aho-corasick-1.1.4.crate",
@@ -1375,9 +1290,7 @@
       "path": "canvas-1.0.3/rust/cfb-0.14.0/LICENSE",
       "bytes": 1074,
       "sha256": "ebaac853b53fec0ed475796f533ce676912a4df9ad9d8a621fa76d5060591e10",
-      "appliesTo": [
-        "canvas-rust-cfb-0.14.0"
-      ],
+      "appliesTo": ["canvas-rust-cfb-0.14.0"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/cfb/cfb-0.14.0.crate",
@@ -1394,9 +1307,7 @@
       "path": "canvas-1.0.3/rust/color_quant-1.1.0/LICENSE",
       "bytes": 1083,
       "sha256": "592dc80f1a865d20d61a2006a2d29ce34a2bc28cd7e868ab300fdeed6da154ca",
-      "appliesTo": [
-        "canvas-rust-color_quant-1.1.0"
-      ],
+      "appliesTo": ["canvas-rust-color_quant-1.1.0"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/color_quant/color_quant-1.1.0.crate",
@@ -1413,9 +1324,7 @@
       "path": "canvas-1.0.3/rust/cssparser-0.37.0/LICENSE",
       "bytes": 16726,
       "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
-      "appliesTo": [
-        "canvas-rust-cssparser-0.37.0"
-      ],
+      "appliesTo": ["canvas-rust-cssparser-0.37.0"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/cssparser/cssparser-0.37.0.crate",
@@ -1432,9 +1341,7 @@
       "path": "canvas-1.0.3/rust/gif-0.14.2/LICENSE-APACHE",
       "bytes": 10846,
       "sha256": "769f80b5bcb42ed0af4e4d2fd74e1ac9bf843cb80c5a29219d1ef3544428a6bb",
-      "appliesTo": [
-        "canvas-rust-gif-0.14.2"
-      ],
+      "appliesTo": ["canvas-rust-gif-0.14.2"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/gif/gif-0.14.2.crate",
@@ -1451,9 +1358,7 @@
       "path": "canvas-1.0.3/rust/gif-0.14.2/LICENSE-MIT",
       "bytes": 1071,
       "sha256": "77257f3d2181236b1aee78920238062ae64efe13c5d858b2db126e79c9e1b14f",
-      "appliesTo": [
-        "canvas-rust-gif-0.14.2"
-      ],
+      "appliesTo": ["canvas-rust-gif-0.14.2"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/gif/gif-0.14.2.crate",
@@ -1470,9 +1375,7 @@
       "path": "canvas-1.0.3/rust/itoa-1.0.18/LICENSE-APACHE",
       "bytes": 9723,
       "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
-      "appliesTo": [
-        "canvas-rust-itoa-1.0.18"
-      ],
+      "appliesTo": ["canvas-rust-itoa-1.0.18"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/itoa/itoa-1.0.18.crate",
@@ -1489,9 +1392,7 @@
       "path": "canvas-1.0.3/rust/itoa-1.0.18/LICENSE-MIT",
       "bytes": 1023,
       "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
-      "appliesTo": [
-        "canvas-rust-itoa-1.0.18"
-      ],
+      "appliesTo": ["canvas-rust-itoa-1.0.18"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/itoa/itoa-1.0.18.crate",
@@ -1508,9 +1409,7 @@
       "path": "canvas-1.0.3/rust/memchr-2.8.3/COPYING",
       "bytes": 126,
       "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
-      "appliesTo": [
-        "canvas-rust-memchr-2.8.3"
-      ],
+      "appliesTo": ["canvas-rust-memchr-2.8.3"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/memchr/memchr-2.8.3.crate",
@@ -1527,9 +1426,7 @@
       "path": "canvas-1.0.3/rust/memchr-2.8.3/LICENSE-MIT",
       "bytes": 1081,
       "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f",
-      "appliesTo": [
-        "canvas-rust-memchr-2.8.3"
-      ],
+      "appliesTo": ["canvas-rust-memchr-2.8.3"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/memchr/memchr-2.8.3.crate",
@@ -1546,9 +1443,7 @@
       "path": "canvas-1.0.3/rust/nom-8.0.0/LICENSE",
       "bytes": 1065,
       "sha256": "4dbda04344456f09a7a588140455413a9ac59b6b26a1ef7cdf9c800c012d87f0",
-      "appliesTo": [
-        "canvas-rust-nom-8.0.0"
-      ],
+      "appliesTo": ["canvas-rust-nom-8.0.0"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/nom/nom-8.0.0.crate",
@@ -1565,9 +1460,7 @@
       "path": "canvas-1.0.3/rust/regex-1.13.1/LICENSE-APACHE",
       "bytes": 10847,
       "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
-      "appliesTo": [
-        "canvas-rust-regex-1.13.1"
-      ],
+      "appliesTo": ["canvas-rust-regex-1.13.1"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex/regex-1.13.1.crate",
@@ -1584,9 +1477,7 @@
       "path": "canvas-1.0.3/rust/regex-1.13.1/LICENSE-MIT",
       "bytes": 1071,
       "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
-      "appliesTo": [
-        "canvas-rust-regex-1.13.1"
-      ],
+      "appliesTo": ["canvas-rust-regex-1.13.1"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex/regex-1.13.1.crate",
@@ -1603,9 +1494,7 @@
       "path": "canvas-1.0.3/rust/regex-automata-0.4.16/LICENSE-APACHE",
       "bytes": 10847,
       "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
-      "appliesTo": [
-        "canvas-rust-regex-automata-0.4.16"
-      ],
+      "appliesTo": ["canvas-rust-regex-automata-0.4.16"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex-automata/regex-automata-0.4.16.crate",
@@ -1622,9 +1511,7 @@
       "path": "canvas-1.0.3/rust/regex-automata-0.4.16/LICENSE-MIT",
       "bytes": 1071,
       "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
-      "appliesTo": [
-        "canvas-rust-regex-automata-0.4.16"
-      ],
+      "appliesTo": ["canvas-rust-regex-automata-0.4.16"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex-automata/regex-automata-0.4.16.crate",
@@ -1641,9 +1528,7 @@
       "path": "canvas-1.0.3/rust/regex-syntax-0.8.11/LICENSE-APACHE",
       "bytes": 10847,
       "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
-      "appliesTo": [
-        "canvas-rust-regex-syntax-0.8.11"
-      ],
+      "appliesTo": ["canvas-rust-regex-syntax-0.8.11"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.11.crate",
@@ -1660,9 +1545,7 @@
       "path": "canvas-1.0.3/rust/regex-syntax-0.8.11/LICENSE-MIT",
       "bytes": 1071,
       "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
-      "appliesTo": [
-        "canvas-rust-regex-syntax-0.8.11"
-      ],
+      "appliesTo": ["canvas-rust-regex-syntax-0.8.11"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.11.crate",
@@ -1679,9 +1562,7 @@
       "path": "canvas-1.0.3/rust/regex-syntax-0.8.11/src/unicode_tables/LICENSE-UNICODE",
       "bytes": 2847,
       "sha256": "74db5baf44a41b1000312c673544b3374e4198af5605c7f9080a402cec42cfa3",
-      "appliesTo": [
-        "canvas-rust-regex-syntax-0.8.11"
-      ],
+      "appliesTo": ["canvas-rust-regex-syntax-0.8.11"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.11.crate",
@@ -1698,9 +1579,7 @@
       "path": "canvas-1.0.3/rust/smallvec-1.15.2/LICENSE-APACHE",
       "bytes": 10847,
       "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
-      "appliesTo": [
-        "canvas-rust-smallvec-1.15.2"
-      ],
+      "appliesTo": ["canvas-rust-smallvec-1.15.2"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/smallvec/smallvec-1.15.2.crate",
@@ -1717,9 +1596,7 @@
       "path": "canvas-1.0.3/rust/smallvec-1.15.2/LICENSE-MIT",
       "bytes": 1072,
       "sha256": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9",
-      "appliesTo": [
-        "canvas-rust-smallvec-1.15.2"
-      ],
+      "appliesTo": ["canvas-rust-smallvec-1.15.2"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/smallvec/smallvec-1.15.2.crate",
@@ -1736,9 +1613,7 @@
       "path": "canvas-1.0.3/rust/tokio-1.53.1/LICENSE",
       "bytes": 1070,
       "sha256": "253cd04c6714889df2d32f3f64d669179a1c95c76ac43c40882c52eb06bc3552",
-      "appliesTo": [
-        "canvas-rust-tokio-1.53.1"
-      ],
+      "appliesTo": ["canvas-rust-tokio-1.53.1"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/tokio/tokio-1.53.1.crate",
@@ -1755,9 +1630,7 @@
       "path": "canvas-1.0.3/rust/weezl-0.1.12/LICENSE-APACHE",
       "bytes": 10846,
       "sha256": "769f80b5bcb42ed0af4e4d2fd74e1ac9bf843cb80c5a29219d1ef3544428a6bb",
-      "appliesTo": [
-        "canvas-rust-weezl-0.1.12"
-      ],
+      "appliesTo": ["canvas-rust-weezl-0.1.12"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/weezl/weezl-0.1.12.crate",
@@ -1774,9 +1647,7 @@
       "path": "canvas-1.0.3/rust/weezl-0.1.12/LICENSE-MIT",
       "bytes": 1080,
       "sha256": "573f5227db835cd30bbdd3aed3f82615f80119a4d5c82b4daf642dbfe2b6afde",
-      "appliesTo": [
-        "canvas-rust-weezl-0.1.12"
-      ],
+      "appliesTo": ["canvas-rust-weezl-0.1.12"],
       "source": {
         "kind": "verified-crates-archive-member",
         "officialUrl": "https://static.crates.io/crates/weezl/weezl-0.1.12.crate",
@@ -1793,9 +1664,7 @@
       "path": "canvas-1.0.3/rust/base64-simd-0.8.0/LICENSE",
       "bytes": 1062,
       "sha256": "71674605ec4c087fe9eb534e3e4f9e26eb2e4aabcd76a29fd156c6a844d44b3d",
-      "appliesTo": [
-        "canvas-rust-base64-simd-0.8.0"
-      ],
+      "appliesTo": ["canvas-rust-base64-simd-0.8.0"],
       "source": {
         "kind": "crate-vcs-pinned-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/Nugine/simd/d74c030d9dc4f3cae02146d1f497ff62726ef09a/LICENSE",
@@ -1815,9 +1684,7 @@
       "path": "canvas-1.0.3/rust/napi-3.11.0/LICENSE",
       "bytes": 2138,
       "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215",
-      "appliesTo": [
-        "canvas-rust-napi-3.11.0"
-      ],
+      "appliesTo": ["canvas-rust-napi-3.11.0"],
       "source": {
         "kind": "crate-vcs-pinned-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/napi-rs/napi-rs/679eb79f5cf3c7c6b2850f4ab46092126f23dc5c/LICENSE",
@@ -1837,9 +1704,7 @@
       "path": "canvas-1.0.3/rust/napi-sys-3.3.0/LICENSE",
       "bytes": 2138,
       "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215",
-      "appliesTo": [
-        "canvas-rust-napi-sys-3.3.0"
-      ],
+      "appliesTo": ["canvas-rust-napi-sys-3.3.0"],
       "source": {
         "kind": "crate-vcs-pinned-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/napi-rs/napi-rs/679eb79f5cf3c7c6b2850f4ab46092126f23dc5c/LICENSE",
@@ -1859,9 +1724,7 @@
       "path": "canvas-1.0.3/rust/cssparser-color-0.5.0/LICENSE",
       "bytes": 16726,
       "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
-      "appliesTo": [
-        "canvas-rust-cssparser-color-0.5.0"
-      ],
+      "appliesTo": ["canvas-rust-cssparser-color-0.5.0"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/cssparser-color/cssparser-color-0.5.0.crate",
@@ -1881,9 +1744,7 @@
       "path": "canvas-1.0.3/rust/cssparser-macros-0.7.0/LICENSE",
       "bytes": 16726,
       "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
-      "appliesTo": [
-        "canvas-rust-cssparser-macros-0.7.0"
-      ],
+      "appliesTo": ["canvas-rust-cssparser-macros-0.7.0"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/cssparser-macros/cssparser-macros-0.7.0.crate",
@@ -1903,9 +1764,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/LICENSE",
       "bytes": 1316,
       "sha256": "4764a286d8b2faeaf42f4418e7d7a28d58fc8fd4d00a3d0a7f44b0a4099de7f2",
-      "appliesTo": [
-        "canvas-aom-3.11.0-core"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-core"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -1927,9 +1786,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/PATENTS",
       "bytes": 5701,
       "sha256": "661fb8e504744e95587b556b94a58343448300606a41bea8c7a9b97125696e61",
-      "appliesTo": [
-        "canvas-aom-3.11.0-core"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-core"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -1951,9 +1808,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/AUTHORS",
       "bytes": 12121,
       "sha256": "d6e0a5250dd67ab8106d32809dd71f2629f1205b570f7807487b5ea7b7964322",
-      "appliesTo": [
-        "canvas-aom-3.11.0-core"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-core"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -1975,9 +1830,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/fastfeat/LICENSE",
       "bytes": 1506,
       "sha256": "043dcfd059386f9facd376351b2bd79325778744aa442177390cdfcca54babed",
-      "appliesTo": [
-        "canvas-aom-3.11.0-fastfeat"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-fastfeat"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -1999,9 +1852,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/vector/LICENSE",
       "bytes": 1084,
       "sha256": "ff6c857ce2708e87701323078aef115c1872a1f80a9649f86dc899b48083bc60",
-      "appliesTo": [
-        "canvas-aom-3.11.0-vector"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-vector"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2023,9 +1874,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/x86inc/LICENSE",
       "bytes": 936,
       "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
-      "appliesTo": [
-        "canvas-aom-3.11.0-x86inc"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-x86inc"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2047,9 +1896,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/libwebm/LICENSE.TXT",
       "bytes": 1496,
       "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
-      "appliesTo": [
-        "canvas-aom-3.11.0-libwebm"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-libwebm"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2071,9 +1918,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/libyuv/LICENSE",
       "bytes": 1506,
       "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
-      "appliesTo": [
-        "canvas-aom-3.11.0-libyuv"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-libyuv"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2095,9 +1940,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/LICENSE.md",
       "bytes": 1709,
       "sha256": "0acc2fcb27472bdc9aaf8b71f37055bbdac4f54671b7d922f241bd7fcd0dd3e6",
-      "appliesTo": [
-        "canvas-aom-3.11.0-SVT-AV1"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-SVT-AV1"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2119,9 +1962,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/PATENTS.md",
       "bytes": 5767,
       "sha256": "20678ab10402659106dc4c147c97b2a6e94b5c0695415e15a8f195ebc3547922",
-      "appliesTo": [
-        "canvas-aom-3.11.0-SVT-AV1"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-SVT-AV1"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2143,9 +1984,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/README.libaom",
       "bytes": 621,
       "sha256": "2ee7c4c963a0792bd9a40b7d1a2eb2446dd548191af2d399fee8e6a7538f8c35",
-      "appliesTo": [
-        "canvas-aom-3.11.0-SVT-AV1"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-SVT-AV1"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2167,9 +2006,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/libwebm/PATENTS.TXT",
       "bytes": 1436,
       "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
-      "appliesTo": [
-        "canvas-aom-3.11.0-libwebm"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-libwebm"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2191,9 +2028,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/libwebm/AUTHORS.TXT",
       "bytes": 137,
       "sha256": "3edb5f5496bfff3d6d4a62fa75fe996b814920d0d6e348c2e65c589e7ac5d177",
-      "appliesTo": [
-        "canvas-aom-3.11.0-libwebm"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-libwebm"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2215,9 +2050,7 @@
       "path": "canvas-1.0.3/aom-3.11.0/third_party/SVT-AV1/COPYRIGHT-HEADERS.txt",
       "bytes": 3152,
       "sha256": "bf1804693139d7731964c4d7fb0727694814314ac4687f5c7a8a8a0a5c45d900",
-      "appliesTo": [
-        "canvas-aom-3.11.0-SVT-AV1"
-      ],
+      "appliesTo": ["canvas-aom-3.11.0-SVT-AV1"],
       "source": {
         "kind": "labelled-verbatim-source-header-compilation",
         "officialUrl": "https://static.crates.io/crates/libaom-sys/libaom-sys-0.17.2+libaom.3.11.0.crate",
@@ -2281,9 +2114,7 @@
       "path": "canvas-1.0.3/native-supplement/libavif-0.14.0-LICENSE",
       "bytes": 1317,
       "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
-      "appliesTo": [
-        "canvas-native-libavif-0.14.0-candidate"
-      ],
+      "appliesTo": ["canvas-native-libavif-0.14.0-candidate"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libavif/libavif-0.14.0.crate",
@@ -2302,9 +2133,7 @@
       "path": "canvas-1.0.3/native-supplement/libavif-1.0.4-aggregated-LICENSE",
       "bytes": 18799,
       "sha256": "10952217a6d404de8bf8a997fbea9b88f682df1fe98cb9b9f467ade641525639",
-      "appliesTo": [
-        "canvas-native-libavif-1.0.4-candidate"
-      ],
+      "appliesTo": ["canvas-native-libavif-1.0.4-candidate"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libavif-sys/libavif-sys-0.17.0+libavif.1.0.4.crate",
@@ -2323,9 +2152,7 @@
       "path": "canvas-1.0.3/native-supplement/mimalloc-safe-0.1.64-LICENSE.txt",
       "bytes": 1055,
       "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
-      "appliesTo": [
-        "canvas-native-mimalloc-safe-0.1.64-candidate"
-      ],
+      "appliesTo": ["canvas-native-mimalloc-safe-0.1.64-candidate"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/mimalloc-safe/mimalloc-safe-0.1.64.crate",
@@ -2344,9 +2171,7 @@
       "path": "canvas-1.0.3/native-supplement/libmimalloc-sys2-0.1.60-LICENSE.txt",
       "bytes": 1055,
       "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
-      "appliesTo": [
-        "canvas-native-libmimalloc-sys2-0.1.60-candidate"
-      ],
+      "appliesTo": ["canvas-native-libmimalloc-sys2-0.1.60-candidate"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libmimalloc-sys2/libmimalloc-sys2-0.1.60.crate",
@@ -2365,9 +2190,7 @@
       "path": "canvas-1.0.3/native-supplement/mimalloc-native-LICENSE",
       "bytes": 1096,
       "sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9",
-      "appliesTo": [
-        "canvas-native-mimalloc-native-candidate"
-      ],
+      "appliesTo": ["canvas-native-mimalloc-native-candidate"],
       "source": {
         "kind": "registry-crate-original",
         "officialUrl": "https://static.crates.io/crates/libmimalloc-sys2/libmimalloc-sys2-0.1.60.crate",
@@ -2386,9 +2209,7 @@
       "path": "canvas-1.0.3/native-supplement/libavif-sys-wrapper-LICENSE",
       "bytes": 1317,
       "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
-      "appliesTo": [
-        "canvas-native-libavif-sys-0.17-candidate"
-      ],
+      "appliesTo": ["canvas-native-libavif-sys-0.17-candidate"],
       "source": {
         "kind": "crate-vcs-pinned-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/njaard/libavif-rs/c39a91dbf6c9414298d0066e5335c5312287af02/LICENSE",
@@ -2405,9 +2226,7 @@
       "path": "canvas-1.0.3/native-supplement/libaom-sys-wrapper-LICENSE",
       "bytes": 1317,
       "sha256": "fe490679de7d4c113698ef4a4f130b10c2b561f6b847db87efbaefa64b9ac057",
-      "appliesTo": [
-        "canvas-native-libaom-sys-0.17.2-candidate"
-      ],
+      "appliesTo": ["canvas-native-libaom-sys-0.17.2-candidate"],
       "source": {
         "kind": "crate-vcs-pinned-upstream-text",
         "officialUrl": "https://raw.githubusercontent.com/njaard/libavif-rs/18304417e422120835c358cdd0721ee43e4c6d7c/LICENSE",
@@ -2419,6 +2238,102 @@
         "evidencePath": "source-delivery-followup-20260925/canvas/native-notices/libaom-sys-wrapper-LICENSE"
       },
       "scopeLimitations": "Supplemental repository root wrapper notice at crate VCS commit. Not used to replace registry archive or assert dirty crate source identity. This conservative appendix preserves candidate upstream notices without asserting exact historical Cargo resolution or all optional native paths are linked."
+    },
+    {
+      "path": "sharp-0.35.5/LICENSE",
+      "bytes": 10273,
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "appliesTo": ["sharp-node-0.35.5"],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/sharp/-/sharp-0.35.5.tgz",
+        "revision": "0.35.5",
+        "retrievedAt": "2026-10-10T05:46:57.775Z",
+        "registryIntegrity": "sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==",
+        "installedMember": "LICENSE",
+        "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68"
+      },
+      "scopeLimitations": "Installed sharp package Apache-2.0 text; not a recursive native dependency inventory. Original installed bytes retained after npm ci. No new legal approval is granted."
+    },
+    {
+      "path": "sharp-0.35.5/windows-package/LICENSE",
+      "bytes": 10464,
+      "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693",
+      "appliesTo": ["sharp-win32-x64-0.35.5"],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.5.tgz",
+        "revision": "0.35.5",
+        "retrievedAt": "2026-10-10T05:46:57.778Z",
+        "registryIntegrity": "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg==",
+        "installedMember": "LICENSE",
+        "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693"
+      },
+      "scopeLimitations": "Windows package declares Apache-2.0 AND LGPL-3.0-or-later; retained notices and version metadata do not establish complete corresponding source. Original installed bytes retained after npm ci. No new legal approval is granted."
+    },
+    {
+      "path": "sharp-0.35.5/windows-package/README.md",
+      "bytes": 4913,
+      "sha256": "3d083ada5ebafe1e6c227daa7b061d4254b61df4a3901c359ffdeac817ce5866",
+      "appliesTo": ["sharp-win32-x64-0.35.5"],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.5.tgz",
+        "revision": "0.35.5",
+        "retrievedAt": "2026-10-10T05:46:57.779Z",
+        "registryIntegrity": "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg==",
+        "installedMember": "README.md",
+        "sha256": "3d083ada5ebafe1e6c227daa7b061d4254b61df4a3901c359ffdeac817ce5866"
+      },
+      "scopeLimitations": "Windows package declares Apache-2.0 AND LGPL-3.0-or-later; retained notices and version metadata do not establish complete corresponding source. Original installed bytes retained after npm ci. No new legal approval is granted."
+    },
+    {
+      "path": "sharp-0.35.5/windows-package/versions.json",
+      "bytes": 596,
+      "sha256": "e2611d5d854815a8b33c8a3d2ec649511a9596ccf16844e8eae7cf81e79881c4",
+      "appliesTo": ["sharp-win32-x64-0.35.5"],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.5.tgz",
+        "revision": "0.35.5",
+        "retrievedAt": "2026-10-10T05:46:57.780Z",
+        "registryIntegrity": "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg==",
+        "installedMember": "versions.json",
+        "sha256": "e2611d5d854815a8b33c8a3d2ec649511a9596ccf16844e8eae7cf81e79881c4"
+      },
+      "scopeLimitations": "Windows package declares Apache-2.0 AND LGPL-3.0-or-later; retained notices and version metadata do not establish complete corresponding source. Original installed bytes retained after npm ci. No new legal approval is granted."
+    },
+    {
+      "path": "electron-42.11.12/LICENSE",
+      "bytes": 1096,
+      "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d",
+      "appliesTo": ["electron-42.11.12"],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/electron/-/electron-42.11.12.tgz",
+        "revision": "42.11.12",
+        "retrievedAt": "2026-10-10T05:46:57.781Z",
+        "registryIntegrity": "sha512-fHlCHh1uqfvWykQUq8eoSoB5q1gej7z/KKd3m7rqEEhHhihm7qz/EvBIkDat7vQoIq3kGTJcrskLbJ6UFkYGyg==",
+        "installedMember": "dist/LICENSE",
+        "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d"
+      },
+      "scopeLimitations": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.12 distribution; not a complete independent binary SBOM. Original installed bytes retained after npm ci. No new legal approval is granted."
+    },
+    {
+      "path": "electron-42.11.12/LICENSES.chromium.html",
+      "bytes": 20367775,
+      "sha256": "5d545ce8065079f38a82472ab93bd62fcdf73cd319f0771ef51c45c7e243f1d4",
+      "appliesTo": ["electron-42.11.12"],
+      "source": {
+        "kind": "installed-npm-original",
+        "officialUrl": "https://registry.npmjs.org/electron/-/electron-42.11.12.tgz",
+        "revision": "42.11.12",
+        "retrievedAt": "2026-10-10T05:46:57.835Z",
+        "registryIntegrity": "sha512-fHlCHh1uqfvWykQUq8eoSoB5q1gej7z/KKd3m7rqEEhHhihm7qz/EvBIkDat7vQoIq3kGTJcrskLbJ6UFkYGyg==",
+        "installedMember": "dist/LICENSES.chromium.html",
+        "sha256": "5d545ce8065079f38a82472ab93bd62fcdf73cd319f0771ef51c45c7e243f1d4"
+      },
+      "scopeLimitations": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.12 distribution; not a complete independent binary SBOM. Original installed bytes retained after npm ci. No new legal approval is granted."
     }
   ],
   "unresolved": [
@@ -2452,7 +2367,7 @@
       "sha256": "698bd9c142d4609f9c6c281cc7194b44968f4fbe9e656969f9b6fbae354d5e81"
     }
   ],
-  "updatedOn": "2026-09-25",
+  "updatedOn": "2026-10-10",
   "resolvedForCurrentDistribution": [
     {
       "id": "guid-typescript-fixed-license",
@@ -2474,6 +2389,11 @@
     "scope": "Technical source delivery and exact Microsoft runtime distribution provenance; no acceptance or approval",
     "evidencePath": "lgpl-distribution-followup-20260925",
     "sharpSourceReview": "lgpl-distribution-followup-20260925/sharp/review.json",
-    "microsoftRuntimeReview": "lgpl-distribution-followup-20260925/microsoft-runtime/review.json"
+    "microsoftRuntimeReview": "lgpl-distribution-followup-20260925/microsoft-runtime/review.json",
+    "publicAlphaUpdate": {
+      "sharp": "0.35.5",
+      "electron": "42.11.12",
+      "basis": "Installed original license texts retained with byte hashes; historical evidence remains archived; approval flags unchanged."
+    }
   }
 }

@@ -1,6 +1,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
-const { parseArgs, runResourceFetch } = require('./fetch-runtime-resources.cjs')
+const { parseArgs, runResourceFetch, verifyFile } = require('./fetch-runtime-resources.cjs')
 
 const REQUIRED_TARGETS = ['tools/ffmpeg/bin/ffmpeg.exe', 'tools/ffmpeg/bin/ffprobe.exe']
 
@@ -46,4 +46,25 @@ async function prepareSnapshotTools(repoRoot, snapshotRoot) {
   return snapshotVerification.verified
 }
 
-module.exports = { prepareSnapshotTools }
+async function prepareSnapshotCoveredSource(repoRoot, snapshotRoot) {
+  const relative = 'legal/covered-source/canvas-rust-sources.zip'
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(snapshotRoot, 'legal/covered-source/manifest.json'), 'utf8'),
+  )
+  const declaration = manifest.files.find((entry) => entry.path === 'canvas-rust-sources.zip')
+  if (!declaration) throw new Error('Covered-source verification archive is not declared')
+  const artifact = { sizeBytes: declaration.bytes, sha256: declaration.sha256 }
+  const source = path.join(repoRoot, relative)
+  const sourceCheck = await verifyFile(source, artifact)
+  if (!sourceCheck.ok) {
+    throw new Error(
+      `Prepare the pinned local covered-source archive before pushing: ${sourceCheck.reason}`,
+    )
+  }
+  const destination = path.join(snapshotRoot, relative)
+  fs.copyFileSync(source, destination)
+  const destinationCheck = await verifyFile(destination, artifact)
+  if (!destinationCheck.ok) throw new Error('Copied covered-source archive does not match manifest')
+}
+
+module.exports = { prepareSnapshotTools, prepareSnapshotCoveredSource }

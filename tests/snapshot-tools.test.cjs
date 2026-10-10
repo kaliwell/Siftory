@@ -4,7 +4,10 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const test = require('node:test')
-const { prepareSnapshotTools } = require('../scripts/prepare-snapshot-tools.cjs')
+const {
+  prepareSnapshotTools,
+  prepareSnapshotCoveredSource,
+} = require('../scripts/prepare-snapshot-tools.cjs')
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-snapshot-tools-'))
@@ -55,4 +58,34 @@ test('manifest cannot use an extra artifact to copy arbitrary local files into a
   manifest.components[0].artifacts.push({ targetPath: '../private.txt' })
   fs.writeFileSync(manifestPath, JSON.stringify(manifest))
   await assert.rejects(prepareSnapshotTools(repo, snapshot), /exactly the two/)
+})
+
+test('covered-source archive requires matching bytes before snapshot copying', async (t) => {
+  const { repo, snapshot } = fixture(t)
+  const relative = 'legal/covered-source/canvas-rust-sources.zip'
+  const content = Buffer.from('third-party source fixture')
+  for (const root of [repo, snapshot])
+    fs.mkdirSync(path.join(root, 'legal/covered-source'), { recursive: true })
+  fs.writeFileSync(path.join(repo, relative), content)
+  fs.writeFileSync(
+    path.join(snapshot, 'legal/covered-source/manifest.json'),
+    JSON.stringify({
+      files: [
+        {
+          path: 'canvas-rust-sources.zip',
+          bytes: content.length,
+          sha256: crypto.createHash('sha256').update(content).digest('hex'),
+        },
+      ],
+    }),
+  )
+  await prepareSnapshotCoveredSource(repo, snapshot)
+  assert.deepEqual(fs.readFileSync(path.join(snapshot, relative)), content)
+  fs.unlinkSync(path.join(snapshot, relative))
+  fs.appendFileSync(path.join(repo, relative), 'tampered')
+  await assert.rejects(
+    prepareSnapshotCoveredSource(repo, snapshot),
+    /Prepare the pinned local covered-source/,
+  )
+  assert.equal(fs.existsSync(path.join(snapshot, relative)), false)
 })

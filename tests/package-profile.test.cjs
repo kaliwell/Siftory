@@ -61,7 +61,10 @@ test('online profile excludes heavyweight resources and uses a distinct installe
     false,
   )
   assert.equal(config.artifactName, '${productName} Online Setup ${version}.${ext}')
-  assert.equal(expectedInstallerName(packageJson, 'online'), 'Siftory Online Setup 1.0.0.exe')
+  assert.equal(
+    expectedInstallerName(packageJson, 'online'),
+    `Siftory Online Setup ${packageJson.version}.exe`,
+  )
 })
 
 test('offline profile bundles approved embeddings but not user-supplied model slots', () => {
@@ -86,7 +89,10 @@ test('offline profile bundles approved embeddings but not user-supplied model sl
     false,
   )
   assert.equal(config.artifactName, undefined)
-  assert.equal(expectedInstallerName(packageJson, 'offline'), 'Siftory Setup 1.0.0.exe')
+  assert.equal(
+    expectedInstallerName(packageJson, 'offline'),
+    `Siftory Setup ${packageJson.version}.exe`,
+  )
 })
 
 test('both installers preserve user data on uninstall', () => {

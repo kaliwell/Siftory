@@ -54,3 +54,6 @@ id_ed25519
 /legal/copyright-registration.local.*
 .DS_Store
 Thumbs.db
+
+# Local verification archive; delivered separately for binary distribution
+/legal/covered-source/*.zip
