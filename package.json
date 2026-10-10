@@ -219,7 +219,7 @@
     "test:architecture": "node scripts/check-layering.cjs && node scripts/check-build-graph.cjs && node --test tests/build-graph.test.cjs",
     "test:i18n-static": "node scripts/check-visible-i18n.cjs && node --test tests/i18n-visible-text-gate.test.cjs",
     "i18n:baseline-prune": "node scripts/check-visible-i18n.cjs --prune-baseline",
-    "test:git-policy": "node --test tests/git-policy.test.cjs",
+    "test:git-policy": "node --test tests/git-policy.test.cjs tests/snapshot-tools.test.cjs",
     "test:git-history-audit": "node --test tests/git-history-audit.test.cjs",
     "test:privacy": "node --test tests/tracked-privacy.test.cjs",
     "test:copyright-source": "node --test tests/copyright-source.test.cjs",
@@ -305,7 +305,8 @@
     "check:runtime-package": "node scripts/check-runtime-package.cjs",
     "test:runtime-package": "node --test tests/runtime-package-pruning.test.cjs tests/check-runtime-package.test.cjs",
     "licenses:source-check": "node scripts/check-covered-source.cjs",
-    "test:covered-source": "node --test tests/covered-source.test.cjs"
+    "test:covered-source": "node --test tests/covered-source.test.cjs",
+    "ci:verify:source": "npm run toolchain:check && npm run typecheck && npm run lint && npm run format:check && npm run docs:check && npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run build:renderer:checked && npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
@@ -320,7 +321,7 @@
   },
   "overrides": {
     "adm-zip": "0.6.1",
-    "sharp": "0.35.4"
+    "sharp": "0.35.5"
   },
   "build": {
     "appId": "com.floating-clock.electron",
@@ -466,7 +467,7 @@
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@vitejs/plugin-react": "^5.1.4",
-    "electron": "42.8.0",
+    "electron": "42.11.12",
     "electron-builder": "^26.15.3",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",

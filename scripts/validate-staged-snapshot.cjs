@@ -2,6 +2,7 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
+const { prepareSnapshotTools } = require('./prepare-snapshot-tools.cjs')
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -68,7 +69,7 @@ function validateSnapshot(snapshotRoot, full) {
   }
 }
 
-function main() {
+async function main() {
   // Hooks leak repo-scoped variables (notably GIT_INDEX_FILE) into the
   // environment; sanitize once so every spawned git/npm child sees a clean env.
   delete process.env.GIT_DIR
@@ -90,6 +91,10 @@ function main() {
     git(['worktree', 'add', '--detach', '--quiet', snapshotRoot, commit], { cwd: repoRoot })
     worktreeAdded = true
     linkDependencies(repoRoot, snapshotRoot)
+    if (full && fs.existsSync(path.join(snapshotRoot, 'electron', 'ffmpegService.ts'))) {
+      const verifiedTools = await prepareSnapshotTools(repoRoot, snapshotRoot)
+      console.log(`[staged-snapshot] prepared ${verifiedTools} hash-verified FFmpeg tools`)
+    }
     validateSnapshot(snapshotRoot, full)
     console.log(
       requestedCommit
@@ -118,9 +123,7 @@ function main() {
   }
 }
 
-try {
-  main()
-} catch (error) {
+main().catch((error) => {
   console.error(`[staged-snapshot] ${error instanceof Error ? error.message : String(error)}`)
   process.exitCode = 1
-}
+})

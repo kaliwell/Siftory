@@ -25,6 +25,8 @@ AI 模型由用户自行下载、安装或配置；源码仓库不包含模型�
 需要 Windows x64、Git、项目锁定的 Node.js **24.16.0** / npm **11.13.0**，以及原生模块编译所需的 Python 和 Visual Studio C++ 构建工具。
 
 ```powershell
+git clone https://github.com/kaliwell/Siftory.git
+cd Siftory
 npm ci
 npm run build:native
 npm run dev
@@ -40,7 +42,13 @@ npm test
 npm run build:renderer:checked
 ```
 
-这些命令针对桌面工程。GitHub 的 Windows CI 定义在 [.github/workflows/ci.yml](.github/workflows/ci.yml)；Gitee 上可以使用同样的本地验证命令。
+这些命令针对桌面工程。完整 `npm run verify` 的视频测试还需要清单指定版本的 FFmpeg / FFprobe，手动准备至 `tools/ffmpeg/bin/`，并先执行下面的哈希验证；二进制不进入源码仓库。提交快照的完整验证会复制并再次核验这两个工具。
+
+```powershell
+npm run resources:fetch -- --verify-only --component=gyan-ffmpeg-full-8-1-2
+```
+
+GitHub 的 Windows CI 定义在 [.github/workflows/ci.yml](.github/workflows/ci.yml)，运行 `ci:verify:source` 检查类型、代码、文档、基础契约、构建和依赖安全；包含视频与原生模块的完整 `ci:verify` 保留给已准备运行资源的环境，不自动下载模型或 FFmpeg。Gitee 上可以使用同样的本地验证命令。
 
 ## 使用与源码授权
 

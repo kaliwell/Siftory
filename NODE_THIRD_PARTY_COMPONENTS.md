@@ -14,32 +14,32 @@ the exact artifact. This inventory is evidence, not legal approval.
 | @huggingface/tokenizers | 0.1.3 | Apache-2.0 | no | - | - | https://github.com/huggingface/tokenizers.js |
 | @huggingface/transformers | 4.2.0 | Apache-2.0 | no | - | - | https://github.com/huggingface/transformers.js |
 | @img/colour | 1.1.0 | MIT | no | - | - | https://github.com/lovell/colour |
-| @img/sharp-darwin-arm64 | 0.35.4 | Apache-2.0 | yes | darwin | arm64 | - |
-| @img/sharp-darwin-x64 | 0.35.4 | Apache-2.0 | yes | darwin | x64 | - |
-| @img/sharp-freebsd-wasm32 | 0.35.4 | Apache-2.0 | yes | freebsd | - | - |
-| @img/sharp-libvips-darwin-arm64 | 1.3.3 | LGPL-3.0-or-later | yes | darwin | arm64 | - |
-| @img/sharp-libvips-darwin-x64 | 1.3.3 | LGPL-3.0-or-later | yes | darwin | x64 | - |
-| @img/sharp-libvips-linux-arm | 1.3.3 | LGPL-3.0-or-later | yes | linux | arm | - |
-| @img/sharp-libvips-linux-arm64 | 1.3.3 | LGPL-3.0-or-later | yes | linux | arm64 | - |
-| @img/sharp-libvips-linux-ppc64 | 1.3.3 | LGPL-3.0-or-later | yes | linux | ppc64 | - |
-| @img/sharp-libvips-linux-riscv64 | 1.3.3 | LGPL-3.0-or-later | yes | linux | riscv64 | - |
-| @img/sharp-libvips-linux-s390x | 1.3.3 | LGPL-3.0-or-later | yes | linux | s390x | - |
-| @img/sharp-libvips-linux-x64 | 1.3.3 | LGPL-3.0-or-later | yes | linux | x64 | - |
-| @img/sharp-libvips-linuxmusl-arm64 | 1.3.3 | LGPL-3.0-or-later | yes | linux | arm64 | - |
-| @img/sharp-libvips-linuxmusl-x64 | 1.3.3 | LGPL-3.0-or-later | yes | linux | x64 | - |
-| @img/sharp-linux-arm | 0.35.4 | Apache-2.0 | yes | linux | arm | - |
-| @img/sharp-linux-arm64 | 0.35.4 | Apache-2.0 | yes | linux | arm64 | - |
-| @img/sharp-linux-ppc64 | 0.35.4 | Apache-2.0 | yes | linux | ppc64 | - |
-| @img/sharp-linux-riscv64 | 0.35.4 | Apache-2.0 | yes | linux | riscv64 | - |
-| @img/sharp-linux-s390x | 0.35.4 | Apache-2.0 | yes | linux | s390x | - |
-| @img/sharp-linux-x64 | 0.35.4 | Apache-2.0 | yes | linux | x64 | - |
-| @img/sharp-linuxmusl-arm64 | 0.35.4 | Apache-2.0 | yes | linux | arm64 | - |
-| @img/sharp-linuxmusl-x64 | 0.35.4 | Apache-2.0 | yes | linux | x64 | - |
-| @img/sharp-wasm32 | 0.35.4 | Apache-2.0 AND LGPL-3.0-or-later AND MIT | yes | - | - | - |
-| @img/sharp-webcontainers-wasm32 | 0.35.4 | Apache-2.0 | yes | - | wasm32 | - |
-| @img/sharp-win32-arm64 | 0.35.4 | Apache-2.0 AND LGPL-3.0-or-later | yes | win32 | arm64 | - |
-| @img/sharp-win32-ia32 | 0.35.4 | Apache-2.0 AND LGPL-3.0-or-later | yes | win32 | ia32 | - |
-| @img/sharp-win32-x64 | 0.35.4 | Apache-2.0 AND LGPL-3.0-or-later | yes | win32 | x64 | https://github.com/lovell/sharp |
+| @img/sharp-darwin-arm64 | 0.35.5 | Apache-2.0 | yes | darwin | arm64 | - |
+| @img/sharp-darwin-x64 | 0.35.5 | Apache-2.0 | yes | darwin | x64 | - |
+| @img/sharp-freebsd-wasm32 | 0.35.5 | Apache-2.0 | yes | freebsd | - | - |
+| @img/sharp-libvips-darwin-arm64 | 1.3.4 | LGPL-3.0-or-later | yes | darwin | arm64 | - |
+| @img/sharp-libvips-darwin-x64 | 1.3.4 | LGPL-3.0-or-later | yes | darwin | x64 | - |
+| @img/sharp-libvips-linux-arm | 1.3.4 | LGPL-3.0-or-later | yes | linux | arm | - |
+| @img/sharp-libvips-linux-arm64 | 1.3.4 | LGPL-3.0-or-later | yes | linux | arm64 | - |
+| @img/sharp-libvips-linux-ppc64 | 1.3.4 | LGPL-3.0-or-later | yes | linux | ppc64 | - |
+| @img/sharp-libvips-linux-riscv64 | 1.3.4 | LGPL-3.0-or-later | yes | linux | riscv64 | - |
+| @img/sharp-libvips-linux-s390x | 1.3.4 | LGPL-3.0-or-later | yes | linux | s390x | - |
+| @img/sharp-libvips-linux-x64 | 1.3.4 | LGPL-3.0-or-later | yes | linux | x64 | - |
+| @img/sharp-libvips-linuxmusl-arm64 | 1.3.4 | LGPL-3.0-or-later | yes | linux | arm64 | - |
+| @img/sharp-libvips-linuxmusl-x64 | 1.3.4 | LGPL-3.0-or-later | yes | linux | x64 | - |
+| @img/sharp-linux-arm | 0.35.5 | Apache-2.0 | yes | linux | arm | - |
+| @img/sharp-linux-arm64 | 0.35.5 | Apache-2.0 | yes | linux | arm64 | - |
+| @img/sharp-linux-ppc64 | 0.35.5 | Apache-2.0 | yes | linux | ppc64 | - |
+| @img/sharp-linux-riscv64 | 0.35.5 | Apache-2.0 | yes | linux | riscv64 | - |
+| @img/sharp-linux-s390x | 0.35.5 | Apache-2.0 | yes | linux | s390x | - |
+| @img/sharp-linux-x64 | 0.35.5 | Apache-2.0 | yes | linux | x64 | - |
+| @img/sharp-linuxmusl-arm64 | 0.35.5 | Apache-2.0 | yes | linux | arm64 | - |
+| @img/sharp-linuxmusl-x64 | 0.35.5 | Apache-2.0 | yes | linux | x64 | - |
+| @img/sharp-wasm32 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later AND MIT | yes | - | - | - |
+| @img/sharp-webcontainers-wasm32 | 0.35.5 | Apache-2.0 | yes | - | wasm32 | - |
+| @img/sharp-win32-arm64 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later | yes | win32 | arm64 | - |
+| @img/sharp-win32-ia32 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later | yes | win32 | ia32 | - |
+| @img/sharp-win32-x64 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later | yes | win32 | x64 | https://github.com/lovell/sharp |
 | @napi-rs/canvas-android-arm64 | 1.0.3 | MIT | yes | android | arm64 | - |
 | @napi-rs/canvas-darwin-arm64 | 1.0.3 | MIT | yes | darwin | arm64 | - |
 | @napi-rs/canvas-darwin-x64 | 1.0.3 | MIT | yes | darwin | x64 | - |
@@ -107,7 +107,7 @@ the exact artifact. This inventory is evidence, not legal approval.
 | semver | 7.8.4 | ISC | no | - | - | https://github.com/npm/node-semver |
 | semver | 7.8.5 | ISC | no | - | - | https://github.com/npm/node-semver |
 | serialize-error | 7.0.1 | MIT | no | - | - | sindresorhus/serialize-error |
-| sharp | 0.35.4 | Apache-2.0 | no | - | - | https://github.com/lovell/sharp |
+| sharp | 0.35.5 | Apache-2.0 | no | - | - | https://github.com/lovell/sharp |
 | sprintf-js | 1.1.3 | BSD-3-Clause | no | - | - | https://github.com/alexei/sprintf.js |
 | ssh2 | 1.17.0 | MIT | no | - | - | http://github.com/mscdex/ssh2 |
 | tslib | 2.8.1 | 0BSD | no | - | - | https://github.com/Microsoft/tslib |

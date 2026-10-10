@@ -44,3 +44,4 @@ legal/third-party/** whitespace=-blank-at-eol,-blank-at-eof
 native/stb*.h whitespace=-blank-at-eol,-blank-at-eof
 scripts/generate-node-third-party-components.cjs whitespace=-blank-at-eol
 scripts/run-video-profile-final-audit.cjs whitespace=-blank-at-eol
+legal/third-party/electron-42.11.12/LICENSES.chromium.html binary
