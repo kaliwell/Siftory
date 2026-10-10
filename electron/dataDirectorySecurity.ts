@@ -26,6 +26,20 @@ const WINDOWS_USER_SID = /^S-1-5-21-(?:\d+-){3}\d+$/
 const WINDOWS_SYSTEM_SID = 'S-1-5-18'
 const WINDOWS_ADMINISTRATORS_SID = 'S-1-5-32-544'
 
+function windowsSystemExecutable(
+  executable: string,
+  windowsRoot: string | undefined = process.env.SystemRoot || process.env.WINDIR,
+): string {
+  if (!windowsRoot || !path.win32.isAbsolute(windowsRoot)) {
+    throw new Error('Windows system directory is unavailable')
+  }
+  if (executable === 'whoami.exe') return path.win32.join(windowsRoot, 'System32', executable)
+  if (executable === 'powershell.exe') {
+    return path.win32.join(windowsRoot, 'System32', 'WindowsPowerShell', 'v1.0', executable)
+  }
+  throw new Error('Unsupported Windows security executable')
+}
+
 // powershell.exe -Command appends trailing argv tokens as extra command text
 // instead of filling $args, so paths/SIDs are inlined as single-quoted literals.
 function powerShellLiteral(value: string): string {
@@ -84,7 +98,7 @@ function defaultCommandRunner(
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     nodeExecFile(
-      executable,
+      windowsSystemExecutable(executable),
       args,
       { encoding: 'utf8', windowsHide: true, timeout: 15_000, maxBuffer: 256 * 1024 },
       (error, stdout, stderr) => {
@@ -272,6 +286,7 @@ export async function probeDataDirectorySecurity(
 }
 
 export const dataDirectorySecurityInternals = {
+  windowsSystemExecutable,
   extractWindowsUserSid,
   validateUserDataDirectory,
   buildWindowsAclScript,

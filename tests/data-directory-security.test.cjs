@@ -15,6 +15,17 @@ function temporaryDirectory(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `siftory-data-security-${label}-`))
 }
 
+test('Windows security tools resolve to System32 rather than a PATH shadow', () => {
+  const resolve = dataDirectorySecurityInternals.windowsSystemExecutable
+  assert.equal(resolve('whoami.exe', 'C:\\Windows'), 'C:\\Windows\\System32\\whoami.exe')
+  assert.equal(
+    resolve('powershell.exe', 'C:\\Windows'),
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+  )
+  assert.throws(() => resolve('whoami.exe', 'relative'), /system directory/)
+  assert.throws(() => resolve('untrusted.exe', 'C:\\Windows'), /Unsupported/)
+})
+
 test('data directory hardening is opt-in for packaged startup', async () => {
   let calls = 0
   const result = await hardenDataDirectoryPermissions(path.join(os.tmpdir(), 'not-created'), {

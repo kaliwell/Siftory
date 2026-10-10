@@ -20,7 +20,10 @@ function versionAtLeast(actual, minimum) {
 
 test('production and build dependency remediations stay locked above advisory floors', () => {
   const expectedFloors = {
-    sharp: '0.35.4',
+    sharp: '0.35.5',
+    electron: '42.11.12',
+    'http-cache-semantics': '4.3.0',
+    'source-map-js': '1.2.2',
     'adm-zip': '0.6.1',
     protobufjs: '7.6.5',
     tar: '7.5.21',
@@ -31,7 +34,7 @@ test('production and build dependency remediations stay locked above advisory fl
     undici: '7.29.1',
   }
 
-  assert.equal(packageJson.overrides.sharp, '0.35.4')
+  assert.equal(packageJson.overrides.sharp, '0.35.5')
   assert.equal(packageJson.overrides['adm-zip'], '0.6.1')
   assert.deepEqual(nodeTsconfig.compilerOptions.paths.sharp, ['node_modules/sharp/lib/index.d.ts'])
   for (const [name, minimum] of Object.entries(expectedFloors)) {

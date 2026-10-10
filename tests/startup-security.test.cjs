@@ -95,9 +95,11 @@ test('smoke startup rejects missing, mismatched, and non-temp session proofs', (
     )
   })
 
-  const outsideTemp = path.join(repo, '.startup-security-test-user-data')
-  fs.mkdirSync(outsideTemp, { recursive: true })
-  try {
+  withTemporaryDirectory('floating-clock-startup-boundary-', (root) => {
+    const trustedTemp = path.join(root, 'trusted-temp')
+    const outsideTemp = path.join(root, 'outside-temp')
+    fs.mkdirSync(trustedTemp)
+    fs.mkdirSync(outsideTemp)
     const markerPath = path.join(outsideTemp, '.floating-clock-smoke-session.json')
     fs.writeFileSync(
       markerPath,
@@ -108,13 +110,12 @@ test('smoke startup rejects missing, mismatched, and non-temp session proofs', (
       () =>
         validateStartupSecurity({
           argv: ['.'],
+          tempDirectory: trustedTemp,
           env: smokeEnvironment(outsideTemp, 'ui', 'b'.repeat(64)),
         }),
       /system temporary directory/,
     )
-  } finally {
-    fs.rmSync(outsideTemp, { recursive: true, force: true })
-  }
+  })
 })
 
 test('real semantic snapshot has no production aliases and hits its independent fresh cache', () => {

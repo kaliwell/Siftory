@@ -29,6 +29,7 @@ git clone https://github.com/kaliwell/Siftory.git
 cd Siftory
 npm ci
 npm run build:native
+npm run build:native:electron
 npm run dev
 ```
 
