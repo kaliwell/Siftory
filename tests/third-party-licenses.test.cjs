@@ -35,7 +35,8 @@ function fixture(t) {
     const directory = path.join(appRoot, 'legal')
     fs.mkdirSync(directory, { recursive: true })
     fs.writeFileSync(path.join(directory, 'LICENSE.txt'), 'Fixture license notice')
-    return fs.realpathSync(directory)
+    // Match fs.promises.realpath in production when Windows TEMP uses an 8.3 alias.
+    return fs.realpathSync.native(directory)
   }
   return { root, options, opened, shell, addLicenses }
 }
