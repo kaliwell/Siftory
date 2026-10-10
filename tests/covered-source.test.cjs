@@ -26,14 +26,19 @@ function fixture(t) {
   return { root, copy }
 }
 
-test('identified sources and notice are present without a full native-source approval claim', () => {
+test('identified sources and notice are present without a full native-source approval claim', (t) => {
   const result = inspectCoveredSourcePayload()
   assert.equal(result.ok, true, result.errors.join('\n'))
   assert.ok(result.verifiedFiles.includes('canvas-rust-sources.zip'))
   assert.ok(result.verifiedFiles.includes('README.md'))
   assert.equal(result.approvalGranted, false)
   assert.equal(result.completeNativeInventory, false)
-  const binary = inspectCoveredSourceDistribution()
+  const { root } = fixture(t)
+  const binding = readManifest().bindings[0]
+  const target = path.join(root, 'app.asar.unpacked', binding.binaryPath)
+  fs.mkdirSync(path.dirname(target), { recursive: true })
+  fs.copyFileSync(path.join(projectRoot, binding.binaryPath), target)
+  const binary = inspectCoveredSourceDistribution(root)
   assert.equal(binary.ok, true, binary.errors.join('\n'))
   assert.equal(binary.binaryBindings.length, 1)
 })
