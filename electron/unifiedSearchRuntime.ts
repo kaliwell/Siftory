@@ -246,7 +246,8 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
         run: () =>
           searchImagesAsync({
             imagePath: request.referenceImagePath,
-            threshold: 0.85,
+            // Native expects a 64-bit Hamming distance, not a similarity ratio.
+            threshold: Math.floor(64 * (1 - 0.85)),
             topK,
             searchMode: 'balanced',
           }),

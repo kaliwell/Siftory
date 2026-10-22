@@ -23,6 +23,8 @@ async function run() {
     : path.join(root, 'materials')
   fs.mkdirSync(profile)
   if (!publicParent) fs.mkdirSync(materials)
+  const library = path.join(materials, 'library')
+  fs.mkdirSync(library)
   fs.writeFileSync(
     path.join(profile, 'floating_clock_settings.json'),
     JSON.stringify({
@@ -38,11 +40,21 @@ async function run() {
   )
   const before = []
   for (let index = 0; index < 3; index++) {
-    const file = path.join(materials, `sample-${index}.jpg`)
+    const file = path.join(library, `sample-${index}.jpg`)
     const svg = `<svg width="160" height="120"><rect width="160" height="120" fill="${['#abcdee', '#faf0ca', '#c9edda'][index]}"/><circle cx="${45 + 30 * index}" cy="60" r="30" fill="#284c80"/></svg>`
     await sharp(Buffer.from(svg)).jpeg().toFile(file)
     before.push({ file, hash: hash(file) })
   }
+  // Slightly shifted reference is outside the indexed source; it must still find sample-0.
+  const reference = path.join(materials, 'reference.jpg')
+  await sharp(
+    Buffer.from(
+      '<svg width="160" height="120"><rect width="160" height="120" fill="#abcdee"/><circle cx="53" cy="60" r="30" fill="#284c80"/></svg>',
+    ),
+  )
+    .jpeg()
+    .toFile(reference)
+  const referenceHash = hash(reference)
   const bootstrap = path.join(root, 'bootstrap.cjs')
   fs.writeFileSync(
     bootstrap,
@@ -107,7 +119,7 @@ async function run() {
           displayName: 'Demo materials',
           rootLocator,
         }),
-      materials,
+      library,
     )
     assert.equal(added.ok, true, added.error)
     const discovery = await page.evaluate(
@@ -130,7 +142,7 @@ async function run() {
     await page.evaluate(
       (paths) =>
         window.electronAPI.imageSearch.startScan({ paths, mode: 'fast', scanMode: 'full' }),
-      [materials],
+      [library],
     )
     await page.waitForFunction(
       async () => {
@@ -141,6 +153,19 @@ async function run() {
       },
       null,
       { timeout: 45000 },
+    )
+    const fingerprints = await page.evaluate(
+      async (files) =>
+        Promise.all(files.map((file) => window.electronAPI.imageSearch.hashImage(file))),
+      [before[0].file, reference],
+    )
+    assert.ok(fingerprints.every((item) => item.ok && item.diffHash64))
+    const hashDifference =
+      BigInt('0x' + fingerprints[0].diffHash64) ^ BigInt('0x' + fingerprints[1].diffHash64)
+    const referenceHammingDistance = hashDifference.toString(2).replaceAll('0', '').length
+    assert.ok(
+      referenceHammingDistance > 0 && referenceHammingDistance <= 9,
+      `Reference distance: ${referenceHammingDistance}`,
     )
     const result = await page.evaluate(
       (imagePath) =>
@@ -161,10 +186,14 @@ async function run() {
       // Only the file-picker result is supplied by the fixture; search and rendering use real IPC.
       await application.evaluate(({ dialog }, file) => {
         dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [file] })
-      }, before[0].file)
+      }, reference)
       await page.getByTestId('unified-search-reference').click()
       try {
         await page.getByTestId('unified-search-result').first().waitFor({ timeout: 15000 })
+        await page
+          .getByTestId('unified-search-result')
+          .filter({ hasText: 'sample-0.jpg' })
+          .waitFor({ timeout: 15000 })
       } catch (error) {
         fs.writeFileSync(
           path.join(evidence, 'ui-debug.txt'),
@@ -192,6 +221,7 @@ async function run() {
     )
     assert.deepEqual(errors, [])
     for (const item of before) assert.equal(hash(item.file), item.hash)
+    assert.equal(hash(reference), referenceHash)
     const report = {
       passed: true,
       realElectron: true,
@@ -202,6 +232,8 @@ async function run() {
       nativeConnected: initial.nativeConnected,
       nativeVersion: initial.nativeVersion,
       matchingResults: result.results.length,
+      shiftedReferenceFoundOriginal: true,
+      referenceHammingDistance,
       pageErrors: errors,
     }
     fs.writeFileSync(path.join(evidence, 'report.json'), JSON.stringify(report, null, 2))
