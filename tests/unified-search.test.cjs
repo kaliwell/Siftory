@@ -32,6 +32,39 @@ function makeService(overrides = {}) {
   })
 }
 
+test('reference images retain fingerprint hits without models and do not claim AI indexing', async () => {
+  const item = lexicalItem('reference.jpg')
+  const service = new UnifiedSearchService({
+    lexicalRecall: () => ({ items: [], total: 0 }),
+    vectorHealth: () => ({ status: 'missing', detail: 'No vector generation' }),
+    imageFingerprintRecall: async () => [{ displayPath: item.displayPath, score: 1 }],
+    hydrateRecallItems: () => [item],
+  })
+  const response = await service.search({ referenceImagePath: 'D:\\reference.jpg' })
+  assert.equal(response.items.length, 1)
+  assert.equal(response.items[0].displayPath, item.displayPath)
+  assert.equal(response.items[0].indexState[0], 'metadata-only')
+  assert.equal(response.items[0].evidence[0].hitType, 'image-fingerprint')
+  assert.equal(response.items[0].evidence[0].modelSources, undefined)
+  assert.notEqual(response.aiEnhancement, 'ready')
+})
+
+test('fingerprint recall does not replace subject crop intent or run for text-only queries', async () => {
+  let calls = 0
+  const service = makeService({
+    imageFingerprintRecall: async () => {
+      calls++
+      return []
+    },
+  })
+  await service.search({ query: 'cat' })
+  await service.search({
+    referenceImagePath: 'D:\\reference.jpg',
+    subject: { x: 0, y: 0, width: 0.5, height: 0.5 },
+  })
+  assert.equal(calls, 0)
+})
+
 test('model missing: metadata results still return, marked metadata-only with actionable hint', async () => {
   const service = makeService()
   const response = await service.search({ query: 'cat' })

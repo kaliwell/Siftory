@@ -10,8 +10,6 @@ const EXPECTED_LAZY_PANEL_IDS = [
   'assetLibrary',
   'appStorage',
   'duplicateFinder',
-  'remoteTerminal',
-  'batchRename',
 ]
 const LAZY_PANEL_SOURCES = Object.freeze({
   unifiedSearch: 'src/components/UnifiedSearchPanel.tsx',
@@ -20,8 +18,6 @@ const LAZY_PANEL_SOURCES = Object.freeze({
   assetLibrary: 'src/components/AssetLibraryPanel.tsx',
   appStorage: 'src/components/AppStoragePanel.tsx',
   duplicateFinder: 'src/components/DuplicateFinderPanel.tsx',
-  remoteTerminal: 'src/components/RemoteTerminalPanel.tsx',
-  batchRename: 'src/components/BatchRenamePanel.tsx',
 })
 const BUDGETS = Object.freeze({
   rendererMainBytes: 384 * 1024,
@@ -97,13 +93,10 @@ function analyzeLazyPanelPolicy(
 
 function analyzeLazyXtermCssPolicy() {
   const entrySource = fs.readFileSync(path.join(REPO_ROOT, 'src', 'main.tsx'), 'utf8')
-  const remoteSource = fs.readFileSync(
-    path.join(REPO_ROOT, 'src', 'components', 'RemoteTerminalPanel.tsx'),
-    'utf8',
-  )
+  const packageJson = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'))
   return {
     eagerImport: entrySource.includes('@xterm/xterm/css/xterm.css'),
-    remotePanelImport: remoteSource.includes('@xterm/xterm/css/xterm.css'),
+    terminalDependencyRemoved: !packageJson.dependencies?.['@xterm/xterm'],
   }
 }
 
@@ -242,14 +235,6 @@ function analyzeRendererBuild(distRoot = path.join(REPO_ROOT, 'dist')) {
   const mediaReferencesVendor = [...mediaKeys].some((key) =>
     /^react-vendor-.*\.js$/.test(path.basename(manifest[key].file)),
   )
-  const [remoteKey] = findManifestSource(manifest, LAZY_PANEL_SOURCES.remoteTerminal)
-  const remoteClosure = new Set(
-    [...collectManifestStaticClosure(manifest, [remoteKey])].filter((key) => !eagerKeys.has(key)),
-  )
-  const remoteTerminalCssFiles = manifestFiles(distRoot, manifest, remoteClosure, 'css').map(
-    measureFile,
-  )
-  const eagerCssNames = new Set(eagerCssFiles.map((item) => item.file))
   return {
     main,
     reactVendor,
@@ -259,10 +244,6 @@ function analyzeRendererBuild(distRoot = path.join(REPO_ROOT, 'dist')) {
     eagerCssFiles,
     lazyPanelChunks,
     mediaReferencesVendor,
-    remoteTerminalCssFiles,
-    remoteTerminalCssIsLazy:
-      remoteTerminalCssFiles.length > 0 &&
-      remoteTerminalCssFiles.every((item) => !eagerCssNames.has(item.file)),
     manifest: {
       file: path.relative(REPO_ROOT, manifestPath).replaceAll('\\', '/'),
       eagerKeys: [...eagerKeys].sort(),
@@ -313,8 +294,8 @@ function buildReport({ includeBuild = true } = {}) {
     errors.push('Frame Index dynamic boundary no longer covers all seven owning modules')
   }
   if (lazyPanels.missing.length > 0) errors.push(`Lazy panels became eager: ${lazyPanels.missing}`)
-  if (xtermCss.eagerImport || !xtermCss.remotePanelImport) {
-    errors.push('xterm CSS is not scoped to the lazy Remote Terminal panel')
+  if (xtermCss.eagerImport || !xtermCss.terminalDependencyRemoved) {
+    errors.push('Removed terminal assets or dependencies are still eager')
   }
   if (renderer) {
     if (!renderer.main) errors.push('Renderer main entry chunk is missing')
@@ -348,9 +329,6 @@ function buildReport({ includeBuild = true } = {}) {
     if (missingChunks.length > 0) errors.push(`Lazy panel chunks are missing: ${missingChunks}`)
     if (renderer.mediaReferencesVendor)
       errors.push('Media Player unexpectedly depends on React vendor')
-    if (!renderer.remoteTerminalCssIsLazy) {
-      errors.push('Remote Terminal CSS is missing from its dynamic manifest closure')
-    }
   }
   if (
     electron &&

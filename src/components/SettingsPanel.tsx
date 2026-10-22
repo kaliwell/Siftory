@@ -699,34 +699,20 @@ const SettingsPanel: React.FC = () => {
       setAiControlBusy(false)
     }
   }
-  const showClock = useStore((s) => s.showClock)
-  const showFolders = useStore((s) => s.showFolders)
-  const showPrompts = useStore((s) => s.showPrompts)
   const showSettings = useStore((s) => s.showSettings)
-  const showCalc = useStore((s) => s.showCalc)
-  const showFM = useStore((s) => s.showFM)
   const showImageSearch = useStore((s) => s.showImageSearch)
   const showUnifiedSearch = useStore((s) => s.showUnifiedSearch)
   const showAppStorage = useStore((s) => s.showAppStorage)
-  const showRemoteTerminal = useStore((s) => s.showRemoteTerminal)
   const showDuplicateFinder = useStore((s) => s.showDuplicateFinder)
   const showMediaSearch = useStore((s) => s.showMediaSearch)
   const showAssetLibrary = useStore((s) => s.showAssetLibrary)
-  const showBatchRename = useStore((s) => s.showBatchRename)
-  const toggleShowClock = useStore((s) => s.toggleShowClock)
-  const toggleShowFolders = useStore((s) => s.toggleShowFolders)
-  const toggleShowPrompts = useStore((s) => s.toggleShowPrompts)
   const toggleShowSettings = useStore((s) => s.toggleShowSettings)
-  const toggleShowCalc = useStore((s) => s.toggleShowCalc)
-  const toggleShowFM = useStore((s) => s.toggleShowFM)
   const toggleShowImageSearch = useStore((s) => s.toggleShowImageSearch)
   const toggleShowUnifiedSearch = useStore((s) => s.toggleShowUnifiedSearch)
   const toggleShowAppStorage = useStore((s) => s.toggleShowAppStorage)
-  const toggleShowRemoteTerminal = useStore((s) => s.toggleShowRemoteTerminal)
   const toggleShowDuplicateFinder = useStore((s) => s.toggleShowDuplicateFinder)
   const toggleShowMediaSearch = useStore((s) => s.toggleShowMediaSearch)
   const toggleShowAssetLibrary = useStore((s) => s.toggleShowAssetLibrary)
-  const toggleShowBatchRename = useStore((s) => s.toggleShowBatchRename)
   const handleMove = useLinkedMove('settings', settingsPos, setSettingsPos, linkedMove)
 
   const handlePanelVisibilityToggle = async (
@@ -766,7 +752,8 @@ const SettingsPanel: React.FC = () => {
       showBatchRename: next.showBatchRename,
       savedVisibility,
     })
-    await flushSettingsWrites()
+    // The workspace banner exposes failure and retry without an unhandled rejection.
+    await flushSettingsWrites().catch(() => {})
   }
 
   const [hotkeyStatus, setHotkeyStatus] = useState<GlobalHotkeyStatus>({
@@ -958,47 +945,12 @@ const SettingsPanel: React.FC = () => {
 
   const otherPanelVisibilityItems: PanelVisibilityItem[] = [
     {
-      key: 'clock',
-      label: 'Clock',
-      show: showClock,
-      toggle: toggleShowClock,
-      read: () => useStore.getState().showClock,
-    },
-    {
-      key: 'folders',
-      label: 'Folders',
-      show: showFolders,
-      toggle: toggleShowFolders,
-      read: () => useStore.getState().showFolders,
-    },
-    {
-      key: 'prompts',
-      label: 'Prompts',
-      show: showPrompts,
-      toggle: toggleShowPrompts,
-      read: () => useStore.getState().showPrompts,
-    },
-    {
       key: 'settings',
       label: 'Settings',
       show: showSettings,
       toggle: toggleShowSettings,
       read: () => useStore.getState().showSettings,
       disabled: true,
-    },
-    {
-      key: 'calc',
-      label: 'Calculator',
-      show: showCalc,
-      toggle: toggleShowCalc,
-      read: () => useStore.getState().showCalc,
-    },
-    {
-      key: 'fm',
-      label: 'File Manager',
-      show: showFM,
-      toggle: toggleShowFM,
-      read: () => useStore.getState().showFM,
     },
     {
       key: 'appStorage',
@@ -1013,23 +965,6 @@ const SettingsPanel: React.FC = () => {
       show: showDuplicateFinder,
       toggle: toggleShowDuplicateFinder,
       read: () => useStore.getState().showDuplicateFinder,
-    },
-    {
-      key: 'batchRename',
-      label: 'Batch Rename',
-      show: showBatchRename,
-      toggle: toggleShowBatchRename,
-      read: () => useStore.getState().showBatchRename,
-    },
-  ]
-
-  const sourceAdvancedToolItems: PanelVisibilityItem[] = [
-    {
-      key: 'remoteTerminal',
-      label: 'Remote source advanced tools',
-      show: showRemoteTerminal,
-      toggle: toggleShowRemoteTerminal,
-      read: () => useStore.getState().showRemoteTerminal,
     },
   ]
 
@@ -1295,7 +1230,6 @@ const SettingsPanel: React.FC = () => {
           <div style={{ display: 'grid', gap: 5 }}>
             {renderPanelVisibilityGroup('Search panels', searchPanelVisibilityItems)}
             {renderPanelVisibilityGroup('Other panels', otherPanelVisibilityItems)}
-            {renderPanelVisibilityGroup('Source advanced tools', sourceAdvancedToolItems)}
           </div>
         </CollapsibleSettingsSection>
 

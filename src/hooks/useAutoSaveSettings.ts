@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useStore } from '../stores/useStore'
 import { scheduleSettingsWrite } from './settingsWriter'
 
@@ -10,14 +10,15 @@ import { scheduleSettingsWrite } from './settingsWriter'
  * The hook itself renders nothing — it only schedules disk writes.
  */
 export function useAutoSaveSettings(ready: boolean): void {
-  const prevSnapshot = useRef('')
-
   useEffect(() => {
     if (!ready) return
+    let previous: Record<string, unknown> | undefined
 
     // The writer already debounces disk I/O. Capture every update here so the final
     // checkbox or position change cannot be discarded by a leading-edge throttle.
-    const unsub = useStore.subscribe((state) => {
+    const save = () => {
+      // Earlier subscribers may reconcile a legacy visibility change synchronously.
+      const state = useStore.getState()
       const settings = {
         panelSizeDefaultsVersion: state.panelSizeDefaultsVersion,
         panelVisibilityDefaultsVersion: state.panelVisibilityDefaultsVersion,
@@ -81,12 +82,18 @@ export function useAutoSaveSettings(ready: boolean): void {
         globalVisible: state.globalVisible,
         savedVisibility: state.savedVisibility,
       }
-      const snapshot = JSON.stringify(settings)
-      if (snapshot === prevSnapshot.current) return
-      prevSnapshot.current = snapshot
+      if (
+        previous &&
+        Object.entries(settings).every(([key, value]) => Object.is(value, previous![key]))
+      )
+        return
+      previous = settings
 
       scheduleSettingsWrite(settings)
-    })
+    }
+    // Persist the canonical startup view even when the user makes no further edits.
+    save()
+    const unsub = useStore.subscribe(save)
 
     return unsub
   }, [ready])

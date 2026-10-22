@@ -48,6 +48,7 @@ export const PRODUCT_PRIMARY_WORKSPACE_VISIBILITY: ProductWorkspaceVisibility = 
   ...PRODUCT_LEGACY_DEFAULT_WORKSPACE_VISIBILITY,
   showImageSearch: false,
   showUnifiedSearch: true,
+  showSettings: false,
 }
 
 export const PRODUCT_PRIMARY_WORKSPACE_SAVED_VISIBILITY = {

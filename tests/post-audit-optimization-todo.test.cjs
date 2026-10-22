@@ -122,13 +122,13 @@ test('Frame Index import classifier ignores type queries but rejects runtime sta
   )
 })
 
-test('all eight heavy panels and xterm styles retain their lazy ownership', () => {
+test('remaining heavy panels are lazy and terminal dependencies stay removed', () => {
   const panels = analyzeLazyPanelPolicy()
   assert.equal(panels.expected, EXPECTED_LAZY_PANEL_IDS.length)
   assert.deepEqual(panels.missing, [])
   assert.deepEqual(analyzeLazyXtermCssPolicy(), {
     eagerImport: false,
-    remotePanelImport: true,
+    terminalDependencyRemoved: true,
   })
 })
 
@@ -243,7 +243,6 @@ test('artifact analysis follows the Vite manifest graph and the current Electron
   assert.equal(renderer.main.file, 'main-fixture.js')
   assert.equal(renderer.reactVendor.file, 'react-vendor-fixture.js')
   assert.equal(renderer.mediaReferencesVendor, false)
-  assert.equal(renderer.remoteTerminalCssIsLazy, true)
   assert.ok(renderer.lazyPanelChunks.every((item) => item.present && item.dynamic && !item.eager))
 
   fs.writeFileSync(path.join(electronRoot, 'main.js'), 'require("./main-fixture.js")')

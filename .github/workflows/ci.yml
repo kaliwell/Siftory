@@ -23,5 +23,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - run: npm install --global npm@11.19.1
       - run: npm ci
       - run: npm run ci:verify:source
+      - run: npx playwright install chromium
+      - run: npm run test:focused-workspace:browser

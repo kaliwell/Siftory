@@ -232,7 +232,7 @@ export function assessLargeFileCleanup(
   olderThanDays = DEFAULT_OLDER_THAN_DAYS,
   now = Date.now(),
 ): LargeFileCleanupDecision {
-  const name = path.basename(filePath)
+  const name = path.posix.basename(filePath.replace(/\\/g, '/'))
   const extension = path.extname(name).toLowerCase()
   const ageDays = Math.max(0, Math.floor((now - modifiedAt) / DAY_MS))
 

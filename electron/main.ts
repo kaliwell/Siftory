@@ -6,13 +6,12 @@ import path from 'path'
 import { initImageSearchService, shutdownImageSearchForQuit } from './imageSearchService'
 import { shutdownImageSearchDataCatalogForQuit } from './imageSearchDataCatalogService'
 import { initAppStorageService } from './appStorageService'
-import { loadProfiles, disconnectAll } from './remoteTerminalService'
+import { loadProfiles } from './remoteTerminalService'
 import { registerBatchRenameIpc } from './batchRenameIpc'
 import { registerSubjectSearchIpc } from './subjectSearchIpc'
 import { registerSamSegmentIpc } from './samSegmentIpc'
 import { disposeFileManagerWatchers, registerFileManagerIpc } from './fileManagerIpc'
 import { registerImageSearchIpc } from './imageSearchIpc'
-import { registerAppStorageIpc } from './appStorageIpc'
 import { registerDuplicateFinderIpc } from './duplicateFinderIpc'
 import { registerMediaSearchCoreIpc } from './mediaSearchIpc'
 import { registerDiscoveryCatalogIpc } from './discoveryCatalogIpc'
@@ -33,7 +32,6 @@ import { registerRemoteTerminalProfileIpc } from './remoteTerminalProfileIpc'
 import { registerRemoteTerminalSftpIpc } from './remoteTerminalSftpIpc'
 import { registerRemoteTerminalTransferIpc } from './remoteTerminalTransferIpc'
 import { disposeRemoteTransfers } from './remoteTransferService'
-import { registerRemoteTerminalConnectionIpc } from './remoteTerminalConnectionIpc'
 import {
   registerAppCoreIpc,
   registerGlobalHotkeys,
@@ -820,7 +818,6 @@ if (!hasSingleInstanceLock) {
     }
     registerAiControlIpc()
     registerImageSearchIpc(() => mainWindow, getUnifiedTaskScheduler())
-    registerAppStorageIpc(() => mainWindow)
     registerDuplicateFinderIpc(() => mainWindow)
     registerMediaSearchCoreIpc(() => mainWindow, getUnifiedTaskScheduler())
     registerMediaPlayerExportIpc()
@@ -891,7 +888,6 @@ if (!hasSingleInstanceLock) {
     registerRemoteTerminalProfileIpc(app.getPath('userData'), profilesReady)
     registerRemoteTerminalSftpIpc(app.getPath('userData'), profilesReady)
     registerRemoteTerminalTransferIpc(() => mainWindow, app.getPath('userData'), profilesReady)
-    registerRemoteTerminalConnectionIpc(() => mainWindow, app.getPath('userData'), profilesReady)
     registerFileManagerIpc(() => mainWindow)
     registerBatchRenameIpc(() => mainWindow)
     registerSubjectSearchIpc(() => mainWindow)
@@ -965,6 +961,5 @@ app.on('will-quit', (event) => {
   shutdownUnifiedResourceGovernor()
   disposeFileManagerWatchers()
   disposeRemoteTransfers()
-  disconnectAll()
   globalShortcut.unregisterAll()
 })

@@ -8,6 +8,7 @@ import type {
 const HIT_LABEL_KEYS: Record<UnifiedSearchHitType, string> = {
   filename: 'Filename match',
   'image-semantic': 'Image semantic match',
+  'image-fingerprint': 'Image fingerprint match',
   subject: 'Subject match',
   duplicate: 'Duplicate match',
   'video-visual': 'Video visual match',

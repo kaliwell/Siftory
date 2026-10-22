@@ -63,8 +63,6 @@ the exact artifact. This inventory is evidence, not legal approval.
 | @protobufjs/utf8 | 1.1.1 | BSD-3-Clause | no | - | - | https://github.com/dcodeIO/protobuf.js |
 | @types/node | 24.13.2 | MIT | no | - | - | https://github.com/DefinitelyTyped/DefinitelyTyped |
 | @types/react | 19.2.18 | MIT | no | - | - | https://github.com/DefinitelyTyped/DefinitelyTyped |
-| @xterm/addon-fit | 0.11.0 | MIT | no | - | - | https://github.com/xtermjs/xterm.js/tree/master/addons/addon-fit |
-| @xterm/xterm | 5.5.0 | MIT | no | - | - | https://github.com/xtermjs/xterm.js |
 | adm-zip | 0.6.1 | MIT | no | - | - | https://github.com/cthackers/adm-zip |
 | asn1 | 0.2.6 | MIT | no | - | - | https://github.com/joyent/node-asn1 |
 | bcrypt-pbkdf | 1.0.2 | BSD-3-Clause | no | - | - | git://github.com/joyent/node-bcrypt-pbkdf |
@@ -116,5 +114,5 @@ the exact artifact. This inventory is evidence, not legal approval.
 | undici-types | 7.18.2 | MIT | no | - | - | https://github.com/nodejs/undici |
 | zustand | 5.0.14 | MIT | no | - | - | https://github.com/pmndrs/zustand |
 
-Packages: 106  
+Packages: 104  
 Unresolved license declarations: 0

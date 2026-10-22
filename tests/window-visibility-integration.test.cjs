@@ -104,8 +104,8 @@ test('mouse transparency commits after IPC success and all drags have cancellati
   assert.match(hook, /window-visibility-state/)
   assert.match(panel, /window-visibility-cancel-interactions/)
   assert.match(panel, /window\.addEventListener\('blur'/)
-  assert.match(navigator, /window-visibility-cancel-interactions/)
-  assert.match(navigator, /window\.addEventListener\('blur'/)
+  assert.doesNotMatch(navigator, /onMouseDown=\{startMove\}/)
+  assert.match(navigator, /workspace-window-hide/)
 })
 
 test('real Electron UI smoke executes repeated native hide and renderer-ready show cycles', () => {

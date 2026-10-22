@@ -28,11 +28,15 @@ import {
   videoHitLabelKey,
   videoHitModelLabel,
 } from '../utils/unifiedVideoEvidence'
+import ThumbnailImage from './filemanager/ThumbnailImage'
 import DraggablePanel from './DraggablePanel'
 import SearchEmptyState from './SearchEmptyState'
 import SubjectPickerModal, { type SubjectPickerData } from './SubjectPickerModal'
 
 type DurationFilter = '' | 'under-minute' | 'one-five' | 'five-thirty' | 'over-thirty'
+const PAGE_SIZE = 100
+// The main process bounds fused recall to 500 candidates.
+const MAX_CANDIDATES = 500
 
 function durationFilterBounds(
   value: DurationFilter,
@@ -112,6 +116,7 @@ function mediaPlayerHitContext(
 
 const UnifiedSearchPanel: React.FC = () => {
   const { t } = useTranslation()
+  const isVisible = useStore((state) => state.showUnifiedSearch)
   const position = useStore((state) => state.unifiedSearchPos)
   const size = useStore((state) => state.unifiedSearchSize)
   const setPosition = useStore((state) => state.setUnifiedSearchPos)
@@ -123,6 +128,7 @@ const UnifiedSearchPanel: React.FC = () => {
   const toggleVisibilityLock = useStore((state) => state.toggleVisibilityLock)
   const handleMove = useLinkedMove('unifiedSearch', position, setPosition, linkedMove)
   const { collectionId, collections, setCollectionId } = useAssetCollections()
+  const [activeResultId, setActiveResultId] = useState('')
   const [query, setQuery] = useState('')
   const [referenceImagePath, setReferenceImagePath] = useState('')
   const [subject, setSubject] = useState<SubjectBBox | undefined>()
@@ -136,7 +142,10 @@ const UnifiedSearchPanel: React.FC = () => {
   const [modifiedAfter, setModifiedAfter] = useState('')
   const [modifiedBefore, setModifiedBefore] = useState('')
   const [sources, setSources] = useState<Array<{ id: string; displayName: string }>>([])
-  const [response, setResponse] = useState<UnifiedSearchResponse | null>(null)
+  const [resultSnapshot, setResponse] = useState<{
+    request: UnifiedSearchRequest
+    result: UnifiedSearchResponse
+  } | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pending, setPending] = useState(false)
   const [actionPending, setActionPending] = useState('')
@@ -144,7 +153,9 @@ const UnifiedSearchPanel: React.FC = () => {
   const [lastFeedback, setLastFeedback] = useState<{ id: string; label: string } | null>(null)
   const [exportStatus, setExportStatus] = useState('')
   const [timelineFrameRate, setTimelineFrameRate] = useState<UnifiedTimelineFrameRate>(25)
+  const detailRef = useRef<HTMLElement | null>(null)
   const queryInputRef = useRef<HTMLInputElement | null>(null)
+  const resultsPaneRef = useRef<HTMLElement | null>(null)
   const hasActiveFilters = Boolean(
     sourceId ||
     mediaType ||
@@ -180,7 +191,7 @@ const UnifiedSearchPanel: React.FC = () => {
       ...(referenceImagePath && subject && segmentationSessionId ? { segmentationSessionId } : {}),
       ...(sourceId ? { sourceId } : {}),
       ...(Object.keys(filters).length ? { filters } : {}),
-      limit: 100,
+      limit: MAX_CANDIDATES,
     }
   }, [
     durationFilter,
@@ -195,13 +206,34 @@ const UnifiedSearchPanel: React.FC = () => {
     sourceId,
     subject,
   ])
+  const [page, setPage] = useState<{ criteria: UnifiedSearchRequest | null; offset: number }>({
+    criteria: null,
+    offset: 0,
+  })
+  const response = resultSnapshot?.request === searchRequest ? resultSnapshot.result : null
+  const requestedOffset = page.criteria === searchRequest ? page.offset : 0
+  const offset = response?.items.length
+    ? Math.min(requestedOffset, Math.floor((response.items.length - 1) / PAGE_SIZE) * PAGE_SIZE)
+    : 0
+
+  const latestSearch = useRef(searchRequest)
+  latestSearch.current = searchRequest
 
   useEffect(() => {
+    if (!isVisible) return
+    let cancelled = false
     void window.electronAPI.discoveryCatalog
       .listSources()
-      .then((items) => setSources(items.map(({ id, displayName }) => ({ id, displayName }))))
-      .catch(() => setSources([]))
-  }, [])
+      .then((items) => {
+        if (!cancelled) setSources(items.map(({ id, displayName }) => ({ id, displayName })))
+      })
+      .catch(() => {
+        if (!cancelled) setSources([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isVisible])
 
   useEffect(() => {
     const focusFirstSearch = () => {
@@ -214,6 +246,10 @@ const UnifiedSearchPanel: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false
+    if (!isVisible) {
+      setPending(false)
+      return
+    }
     if (!hasQuery) {
       setResponse(null)
       setPending(false)
@@ -226,7 +262,7 @@ const UnifiedSearchPanel: React.FC = () => {
         .query(searchRequest)
         .then((result) => {
           if (!cancelled) {
-            setResponse(result)
+            setResponse({ request: searchRequest, result })
             announceFirstSearchCompleted('unified')
           }
         })
@@ -244,7 +280,7 @@ const UnifiedSearchPanel: React.FC = () => {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [hasQuery, searchRequest, t])
+  }, [hasQuery, isVisible, searchRequest, t])
 
   const refineSubject = async () => {
     if (!referenceImagePath) return
@@ -266,13 +302,29 @@ const UnifiedSearchPanel: React.FC = () => {
     }
   }
 
-  const results = useMemo(() => response?.items ?? [], [response])
+  // Keep one ranked snapshot; page changes never rerun model inference or reshuffle earlier pages.
+  const results = useMemo(
+    () => response?.items.slice(offset, offset + PAGE_SIZE) ?? [],
+    [response, offset],
+  )
+  const changePage = (nextOffset: number) => {
+    setPage({ criteria: searchRequest, offset: nextOffset })
+    setActiveResultId('')
+    setSelectedIds(new Set())
+    resultsPaneRef.current?.scrollTo({ top: 0 })
+  }
 
   useEffect(() => {
     const visible = new Set(results.map((item) => item.fileEntryId))
     setSelectedIds((current) => new Set([...current].filter((id) => visible.has(id))))
-    void window.electronAPI.unifiedSearch.setVisiblePaths(results.map((item) => item.displayPath))
-  }, [results])
+    void window.electronAPI.unifiedSearch
+      .setVisiblePaths(
+        isVisible
+          ? results.filter((item) => item.source.type !== 'sftp').map((item) => item.displayPath)
+          : [],
+      )
+      .catch(() => {})
+  }, [isVisible, results])
 
   const runAction = async (key: string, action: () => Promise<void>) => {
     setActionPending(key)
@@ -288,7 +340,7 @@ const UnifiedSearchPanel: React.FC = () => {
 
   const refreshSearch = async () => {
     const result = await window.electronAPI.unifiedSearch.query(searchRequest)
-    setResponse(result)
+    if (latestSearch.current === searchRequest) setResponse({ request: searchRequest, result })
   }
 
   const saveSearchFeedback = (item: UnifiedSearchResultItem, kind: UnifiedSearchFeedbackKind) =>
@@ -419,6 +471,192 @@ const UnifiedSearchPanel: React.FC = () => {
     if (!queued.ok) throw new Error(queued.error)
   }
 
+  useEffect(() => {
+    if (activeResultId && isVisible) detailRef.current?.focus({ preventScroll: true })
+  }, [activeResultId, isVisible])
+
+  const activeResult = results.find((item) => item.fileEntryId === activeResultId)
+  const renderDetails = (item: UnifiedSearchResultItem) => (
+    <div className="unified-search-detail-content">
+      <div className="unified-search-result-heading">
+        <strong className="unified-search-result-name">{item.displayName}</strong>
+        <span className="unified-search-result-meta">
+          {formatBytes(item.sizeBytes)} · {item.source.name} · {item.mediaType}
+        </span>
+        <span className="unified-search-result-actions">
+          <button
+            data-testid="unified-result-open"
+            disabled={Boolean(actionPending)}
+            onClick={() => void open(item)}
+          >
+            {t('Open')}
+          </button>
+          {item.source.type !== 'sftp' ? (
+            <button
+              data-testid="unified-result-reveal"
+              disabled={Boolean(actionPending)}
+              onClick={() => void reveal(item)}
+            >
+              {t('Folder')}
+            </button>
+          ) : null}
+          {item.source.type === 'sftp' ? (
+            <button
+              data-testid="unified-result-download"
+              disabled={Boolean(actionPending)}
+              onClick={() => void runAction(`download:${item.fileEntryId}`, () => download(item))}
+            >
+              {t('Download')}
+            </button>
+          ) : null}
+          <button
+            data-testid="unified-result-collect"
+            disabled={!collectionId || Boolean(actionPending)}
+            onClick={() => void collect([item])}
+          >
+            {t('Collect')}
+          </button>
+        </span>
+      </div>
+      <div
+        title={item.displayPath}
+        className="unified-search-result-path"
+        style={{
+          opacity: 0.55,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {item.displayPath}
+      </div>
+      <div className="unified-search-feedback-row">
+        <button
+          data-testid="unified-search-feedback-relevant"
+          disabled={Boolean(actionPending)}
+          onClick={() => void saveSearchFeedback(item, 'relevant')}
+        >
+          {t('Relevant')}
+        </button>
+        <button
+          data-testid="unified-search-feedback-irrelevant"
+          disabled={Boolean(actionPending)}
+          onClick={() => void saveSearchFeedback(item, 'irrelevant')}
+        >
+          {t('Not relevant')}
+        </button>
+        {item.videoHitMs !== undefined ? (
+          <button
+            data-testid="unified-search-feedback-timestamp"
+            disabled={Boolean(actionPending)}
+            onClick={() => void saveSearchFeedback(item, 'timestamp-wrong')}
+          >
+            {t('Wrong hit time')}
+          </button>
+        ) : null}
+        {item.rankingFeedback ? (
+          <span data-testid="unified-search-feedback-explanation">
+            {t(unifiedFeedbackReasonLabelKey(item.rankingFeedback))} ·{' '}
+            {item.rankingFeedback.adjustment >= 0 ? '+' : ''}
+            {item.rankingFeedback.adjustment.toFixed(2)}
+          </span>
+        ) : null}
+      </div>
+      {item.evidence?.length ? (
+        <div className="unified-search-evidence-list">
+          {item.evidence.map((evidence, index) => {
+            const model = unifiedEvidenceModelLabel(evidence)
+            const sources = videoEvidenceSourceLabelKeys(evidence.evidenceSources ?? []).map(
+              (key) => t(key),
+            )
+            const timeRange =
+              evidence.startMs === undefined
+                ? ''
+                : evidence.endMs !== undefined && evidence.endMs > evidence.startMs
+                  ? `${formatDuration(evidence.startMs)}–${formatDuration(evidence.endMs)}`
+                  : formatDuration(evidence.startMs)
+            return (
+              <div
+                key={`${evidence.lane}:${evidence.hitType}:${evidence.startMs ?? index}:${index}`}
+                data-testid="unified-search-evidence-card"
+                className="unified-search-evidence-card"
+              >
+                <div className="unified-search-evidence-heading">
+                  <strong>{t(unifiedEvidenceHitLabelKey(evidence))}</strong>
+                  {timeRange ? (
+                    <span>
+                      {t('Time range')}: {timeRange}
+                    </span>
+                  ) : null}
+                  {evidence.confidence !== undefined ? (
+                    <span>
+                      {t('Confidence')}:{' '}
+                      {Math.round(Math.max(0, Math.min(1, evidence.confidence)) * 100)}%
+                    </span>
+                  ) : null}
+                </div>
+                <div className="unified-search-evidence-summary" title={evidence.summary}>
+                  {evidence.summary}
+                </div>
+                <div className="unified-search-evidence-meta">
+                  <span>
+                    {t('Model source')}: {model ?? t('Metadata or rules')}
+                  </span>
+                  {sources.length ? (
+                    <span>
+                      {t('Evidence')}: {sources.join(' + ')}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
+          {item.degradedReason ? (
+            <div className="unified-search-evidence-degraded">
+              {t('Degraded')}: {t(unifiedDegradedLabelKey(item.degradedReason))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {item.videoId && item.videoHits?.length ? (
+        <div
+          data-testid="unified-video-evidence"
+          style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}
+        >
+          {item.videoHits.map((hit, index) => {
+            const evidence = videoHitEvidenceLabelKeys(hit).map((key) => t(key))
+            const model = videoHitModelLabel(hit)
+            return (
+              <button
+                key={`${hit.kind}:${hit.timestampMs}:${hit.frameId ?? index}`}
+                data-testid="unified-video-hit"
+                disabled={Boolean(actionPending)}
+                title={[hit.text, `${t('Evidence')}: ${evidence.join(' + ')}`, model]
+                  .filter(Boolean)
+                  .join('\n')}
+                onClick={() =>
+                  void runAction(`seek:${item.fileEntryId}:${hit.timestampMs}`, async () => {
+                    const result = await window.electronAPI.mediaSearch.openMediaAtTime({
+                      videoId: item.videoId!,
+                      timestampMs: hit.timestampMs,
+                      hitContext: mediaPlayerHitContext(item, query, hit.timestampMs)!,
+                    })
+                    if (!result.ok) throw new Error(result.error)
+                  })
+                }
+                style={{ fontSize: 10, padding: '1px 5px' }}
+              >
+                {t(videoHitLabelKey(hit))} · {formatDuration(hit.timestampMs)} · {t('Evidence')}:{' '}
+                {evidence.join(' + ')}
+                {model ? ` · ${t('AI generated')}: ${model}` : ''}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
+  )
+
   return (
     <DraggablePanel
       panelId="unifiedSearch"
@@ -443,6 +681,24 @@ const UnifiedSearchPanel: React.FC = () => {
       <div
         className="split-tool-shell unified-search-shell"
         data-testid="unified-search-page"
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes('Files')) event.preventDefault()
+        }}
+        onDrop={(event) => {
+          event.preventDefault()
+          const file = event.dataTransfer.files[0]
+          if (!file || !file.type.startsWith('image/')) return
+          try {
+            const path = window.electronAPI.getPathForFile(file)
+            if (path) {
+              setReferenceImagePath(path)
+              setSubject(undefined)
+              setSegmentationSessionId('')
+            }
+          } catch {
+            setError(t('The operation failed.'))
+          }
+        }}
         style={{
           padding: 6,
         }}
@@ -458,7 +714,7 @@ const UnifiedSearchPanel: React.FC = () => {
                 data-testid="unified-search-query"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={t('Search file names')}
+                placeholder={t('Search by name or describe an image')}
                 autoFocus
                 style={{ flex: '1 1 260px' }}
               />
@@ -488,6 +744,20 @@ const UnifiedSearchPanel: React.FC = () => {
               >
                 {t('Reference image')}
               </button>
+              <button
+                data-testid="unified-search-paste-image"
+                onClick={() =>
+                  void runAction('paste', async () => {
+                    const result = await window.electronAPI.imageSearch.pasteClipboardImage()
+                    if (!result.ok || !result.path) throw new Error(result.error)
+                    setReferenceImagePath(result.path)
+                    setSubject(undefined)
+                    setSegmentationSessionId('')
+                  })
+                }
+              >
+                {t('Paste image')}
+              </button>
               {referenceImagePath ? (
                 <button
                   data-testid="unified-search-refine-subject"
@@ -508,73 +778,78 @@ const UnifiedSearchPanel: React.FC = () => {
                   {t('Remove')}
                 </button>
               ) : null}
-              <select
-                data-testid="unified-search-collection-select"
-                value={collectionId}
-                onChange={(event) => setCollectionId(Number(event.target.value))}
-              >
-                <option value={0}>{t('Select collection')}</option>
-                {collections.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                data-testid="unified-search-collect-selected"
-                disabled={!collectionId || selectedIds.size === 0 || Boolean(actionPending)}
-                onClick={() =>
-                  void collect(results.filter((item) => selectedIds.has(item.fileEntryId)))
-                }
-              >
-                {t('Collect selected')} ({selectedIds.size})
-              </button>
-              <button
-                data-testid="unified-search-export-json"
-                disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                onClick={() => void exportSelected('json')}
-              >
-                {t('Export JSON')}
-              </button>
-              <button
-                data-testid="unified-search-export-csv"
-                disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                onClick={() => void exportSelected('csv')}
-              >
-                {t('Export CSV')}
-              </button>
-              <select
-                data-testid="unified-search-timeline-frame-rate"
-                value={timelineFrameRate}
-                onChange={(event) =>
-                  setTimelineFrameRate(Number(event.target.value) as UnifiedTimelineFrameRate)
-                }
-                aria-label={t('Timeline frame rate')}
-              >
-                {[23.976, 24, 25, 29.97, 30, 50, 59.94, 60].map((frameRate) => (
-                  <option key={frameRate} value={frameRate}>
-                    {t('{rate} fps', { rate: frameRate })}
-                  </option>
-                ))}
-              </select>
-              <button
-                data-testid="unified-search-export-edl"
-                disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                onClick={() => void exportSelected('edl')}
-              >
-                {t('Export EDL')}
-              </button>
-              <button
-                data-testid="unified-search-export-fcpxml"
-                disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                onClick={() => void exportSelected('fcpxml')}
-              >
-                {t('Export FCPXML')}
-              </button>
-              {exportStatus ? (
-                <span data-testid="unified-search-export-status">{exportStatus}</span>
-              ) : null}
             </div>
+            <details className="unified-search-more">
+              <summary>{t('Collections and export')}</summary>
+              <div className="unified-search-more__content">
+                <select
+                  data-testid="unified-search-collection-select"
+                  value={collectionId}
+                  onChange={(event) => setCollectionId(Number(event.target.value))}
+                >
+                  <option value={0}>{t('Select collection')}</option>
+                  {collections.map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  data-testid="unified-search-collect-selected"
+                  disabled={!collectionId || selectedIds.size === 0 || Boolean(actionPending)}
+                  onClick={() =>
+                    void collect(results.filter((item) => selectedIds.has(item.fileEntryId)))
+                  }
+                >
+                  {t('Collect selected')} ({selectedIds.size})
+                </button>
+                <button
+                  data-testid="unified-search-export-json"
+                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                  onClick={() => void exportSelected('json')}
+                >
+                  {t('Export JSON')}
+                </button>
+                <button
+                  data-testid="unified-search-export-csv"
+                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                  onClick={() => void exportSelected('csv')}
+                >
+                  {t('Export CSV')}
+                </button>
+                <select
+                  data-testid="unified-search-timeline-frame-rate"
+                  value={timelineFrameRate}
+                  onChange={(event) =>
+                    setTimelineFrameRate(Number(event.target.value) as UnifiedTimelineFrameRate)
+                  }
+                  aria-label={t('Timeline frame rate')}
+                >
+                  {[23.976, 24, 25, 29.97, 30, 50, 59.94, 60].map((frameRate) => (
+                    <option key={frameRate} value={frameRate}>
+                      {t('{rate} fps', { rate: frameRate })}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  data-testid="unified-search-export-edl"
+                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                  onClick={() => void exportSelected('edl')}
+                >
+                  {t('Export EDL')}
+                </button>
+                <button
+                  data-testid="unified-search-export-fcpxml"
+                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                  onClick={() => void exportSelected('fcpxml')}
+                >
+                  {t('Export FCPXML')}
+                </button>
+                {exportStatus ? (
+                  <span data-testid="unified-search-export-status">{exportStatus}</span>
+                ) : null}
+              </div>
+            </details>
             <div
               className="unified-search-filters"
               data-testid="unified-search-filters"
@@ -688,260 +963,163 @@ const UnifiedSearchPanel: React.FC = () => {
                 {error}
               </div>
             ) : null}
-            <div style={{ opacity: 0.65 }}>
+            <div style={{ opacity: 0.65 }} role="status">
               {pending
                 ? t('Searching...')
                 : hasQuery
                   ? t('{count} results total', { count: response?.total ?? 0 })
                   : t('Search all indexed sources from one place.')}
             </div>
+            {hasQuery && (
+              <div className="unified-search-pagination" aria-label={t('Search pages')}>
+                <button
+                  data-testid="unified-search-previous-page"
+                  disabled={pending || offset === 0}
+                  onClick={() => changePage(Math.max(0, offset - PAGE_SIZE))}
+                >
+                  {t('Previous')}
+                </button>
+                <span data-testid="unified-search-page-range">
+                  {t('Showing {start}–{end} of {total}', {
+                    start: results.length ? offset + 1 : 0,
+                    end: results.length ? offset + results.length : 0,
+                    total: response?.total ?? 0,
+                  })}
+                </span>
+                <button
+                  data-testid="unified-search-next-page"
+                  disabled={
+                    pending ||
+                    results.length < PAGE_SIZE ||
+                    offset + PAGE_SIZE >= (response?.items.length ?? 0)
+                  }
+                  onClick={() => changePage(offset + PAGE_SIZE)}
+                >
+                  {t('Next')}
+                </button>
+                {(response?.total ?? 0) > MAX_CANDIDATES && (
+                  <small>
+                    {t('Showing up to 500 candidates. Refine your search to see more.')}
+                  </small>
+                )}
+              </div>
+            )}
           </aside>
-          <main className="split-tool-results-pane unified-search-results-pane">
-            <div className="unified-search-results">
-              {lastFeedback ? (
-                <div
-                  data-testid="unified-search-feedback-undo"
-                  className="unified-search-feedback-undo"
-                >
-                  <span>
-                    {t('Feedback saved locally')}: {lastFeedback.label}
-                  </span>
-                  <button
-                    disabled={Boolean(actionPending)}
-                    onClick={() => void undoSearchFeedback()}
-                  >
-                    {t('Undo')}
-                  </button>
-                </div>
-              ) : null}
-              {results.map((item) => (
-                <div
-                  key={item.fileEntryId}
-                  data-testid="unified-search-result"
-                  className="unified-search-result-card"
-                  style={{ border: '1px solid rgba(var(--date), 0.16)', padding: 5 }}
-                >
-                  <div className="unified-search-result-heading">
-                    <input
-                      type="checkbox"
-                      aria-label={t('Select result')}
-                      checked={selectedIds.has(item.fileEntryId)}
-                      onChange={(event) =>
-                        setSelectedIds((current) => {
-                          const next = new Set(current)
-                          if (event.target.checked) next.add(item.fileEntryId)
-                          else next.delete(item.fileEntryId)
-                          return next
-                        })
-                      }
-                    />
-                    <strong className="unified-search-result-name">{item.displayName}</strong>
-                    <span className="unified-search-result-meta">
-                      {formatBytes(item.sizeBytes)} · {item.source.name} · {item.mediaType}
-                    </span>
-                    <span className="unified-search-result-actions">
-                      <button
-                        data-testid="unified-result-open"
-                        disabled={Boolean(actionPending)}
-                        onClick={() => void open(item)}
-                      >
-                        {t('Open')}
-                      </button>
-                      {item.source.type !== 'sftp' ? (
-                        <button
-                          data-testid="unified-result-reveal"
-                          disabled={Boolean(actionPending)}
-                          onClick={() => void reveal(item)}
-                        >
-                          {t('Folder')}
-                        </button>
-                      ) : null}
-                      {item.source.type === 'sftp' ? (
-                        <button
-                          data-testid="unified-result-download"
-                          disabled={Boolean(actionPending)}
-                          onClick={() =>
-                            void runAction(`download:${item.fileEntryId}`, () => download(item))
-                          }
-                        >
-                          {t('Download')}
-                        </button>
-                      ) : null}
-                      <button
-                        data-testid="unified-result-collect"
-                        disabled={!collectionId || Boolean(actionPending)}
-                        onClick={() => void collect([item])}
-                      >
-                        {t('Collect')}
-                      </button>
-                    </span>
-                  </div>
+          <div className="unified-search-content">
+            <main
+              ref={resultsPaneRef}
+              className="split-tool-results-pane unified-search-results-pane"
+            >
+              <div className="unified-search-results">
+                {lastFeedback ? (
                   <div
-                    title={item.displayPath}
-                    className="unified-search-result-path"
-                    style={{
-                      opacity: 0.55,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
+                    data-testid="unified-search-feedback-undo"
+                    className="unified-search-feedback-undo"
                   >
-                    {item.displayPath}
+                    <span>
+                      {t('Feedback saved locally')}: {lastFeedback.label}
+                    </span>
+                    <button
+                      disabled={Boolean(actionPending)}
+                      onClick={() => void undoSearchFeedback()}
+                    >
+                      {t('Undo')}
+                    </button>
                   </div>
-                  <div className="unified-search-feedback-row">
-                    <button
-                      data-testid="unified-search-feedback-relevant"
-                      disabled={Boolean(actionPending)}
-                      onClick={() => void saveSearchFeedback(item, 'relevant')}
+                ) : null}
+                <div className="unified-search-grid">
+                  {results.map((item) => (
+                    <article
+                      key={item.fileEntryId}
+                      data-testid="unified-search-result"
+                      className="unified-search-tile"
+                      data-active={activeResultId === item.fileEntryId}
                     >
-                      {t('Relevant')}
-                    </button>
-                    <button
-                      data-testid="unified-search-feedback-irrelevant"
-                      disabled={Boolean(actionPending)}
-                      onClick={() => void saveSearchFeedback(item, 'irrelevant')}
-                    >
-                      {t('Not relevant')}
-                    </button>
-                    {item.videoHitMs !== undefined ? (
+                      <input
+                        type="checkbox"
+                        aria-label={t('Select result')}
+                        checked={selectedIds.has(item.fileEntryId)}
+                        onChange={(event) => {
+                          const checked = event.target.checked
+                          setSelectedIds((current) => {
+                            const next = new Set(current)
+                            if (checked) next.add(item.fileEntryId)
+                            else next.delete(item.fileEntryId)
+                            return next
+                          })
+                        }}
+                      />
                       <button
-                        data-testid="unified-search-feedback-timestamp"
-                        disabled={Boolean(actionPending)}
-                        onClick={() => void saveSearchFeedback(item, 'timestamp-wrong')}
+                        className="unified-search-tile__preview"
+                        aria-pressed={activeResultId === item.fileEntryId}
+                        onClick={() => setActiveResultId(item.fileEntryId)}
+                        onDoubleClick={() => {
+                          if (!actionPending) void open(item)
+                        }}
                       >
-                        {t('Wrong hit time')}
+                        {item.source.type !== 'sftp' ? (
+                          <ThumbnailImage
+                            filePath={item.displayPath}
+                            ext={'.' + (item.displayName.split('.').pop() ?? '')}
+                            isDirectory={false}
+                            viewMode="thumbnail-grid"
+                            style={{ height: 150, width: '100%' }}
+                          />
+                        ) : (
+                          <span className="unified-search-tile__remote">{t('Remote file')}</span>
+                        )}
+                        <strong title={item.displayName}>{item.displayName}</strong>
+                        <span>
+                          {item.mediaType} · {formatBytes(item.sizeBytes)}
+                        </span>
                       </button>
-                    ) : null}
-                    {item.rankingFeedback ? (
-                      <span data-testid="unified-search-feedback-explanation">
-                        {t(unifiedFeedbackReasonLabelKey(item.rankingFeedback))} ·{' '}
-                        {item.rankingFeedback.adjustment >= 0 ? '+' : ''}
-                        {item.rankingFeedback.adjustment.toFixed(2)}
-                      </span>
-                    ) : null}
-                  </div>
-                  {item.evidence?.length ? (
-                    <div className="unified-search-evidence-list">
-                      {item.evidence.map((evidence, index) => {
-                        const model = unifiedEvidenceModelLabel(evidence)
-                        const sources = videoEvidenceSourceLabelKeys(
-                          evidence.evidenceSources ?? [],
-                        ).map((key) => t(key))
-                        const timeRange =
-                          evidence.startMs === undefined
-                            ? ''
-                            : evidence.endMs !== undefined && evidence.endMs > evidence.startMs
-                              ? `${formatDuration(evidence.startMs)}–${formatDuration(evidence.endMs)}`
-                              : formatDuration(evidence.startMs)
-                        return (
-                          <div
-                            key={`${evidence.lane}:${evidence.hitType}:${evidence.startMs ?? index}:${index}`}
-                            data-testid="unified-search-evidence-card"
-                            className="unified-search-evidence-card"
-                          >
-                            <div className="unified-search-evidence-heading">
-                              <strong>{t(unifiedEvidenceHitLabelKey(evidence))}</strong>
-                              {timeRange ? (
-                                <span>
-                                  {t('Time range')}: {timeRange}
-                                </span>
-                              ) : null}
-                              {evidence.confidence !== undefined ? (
-                                <span>
-                                  {t('Confidence')}:{' '}
-                                  {Math.round(Math.max(0, Math.min(1, evidence.confidence)) * 100)}%
-                                </span>
-                              ) : null}
-                            </div>
-                            <div
-                              className="unified-search-evidence-summary"
-                              title={evidence.summary}
-                            >
-                              {evidence.summary}
-                            </div>
-                            <div className="unified-search-evidence-meta">
-                              <span>
-                                {t('Model source')}: {model ?? t('Metadata or rules')}
-                              </span>
-                              {sources.length ? (
-                                <span>
-                                  {t('Evidence')}: {sources.join(' + ')}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-                        )
-                      })}
-                      {item.degradedReason ? (
-                        <div className="unified-search-evidence-degraded">
-                          {t('Degraded')}: {t(unifiedDegradedLabelKey(item.degradedReason))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  {item.videoId && item.videoHits?.length ? (
-                    <div
-                      data-testid="unified-video-evidence"
-                      style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}
-                    >
-                      {item.videoHits.map((hit, index) => {
-                        const evidence = videoHitEvidenceLabelKeys(hit).map((key) => t(key))
-                        const model = videoHitModelLabel(hit)
-                        return (
-                          <button
-                            key={`${hit.kind}:${hit.timestampMs}:${hit.frameId ?? index}`}
-                            data-testid="unified-video-hit"
-                            disabled={Boolean(actionPending)}
-                            title={[hit.text, `${t('Evidence')}: ${evidence.join(' + ')}`, model]
-                              .filter(Boolean)
-                              .join('\n')}
-                            onClick={() =>
-                              void runAction(
-                                `seek:${item.fileEntryId}:${hit.timestampMs}`,
-                                async () => {
-                                  const result =
-                                    await window.electronAPI.mediaSearch.openMediaAtTime({
-                                      videoId: item.videoId!,
-                                      timestampMs: hit.timestampMs,
-                                      hitContext: mediaPlayerHitContext(
-                                        item,
-                                        query,
-                                        hit.timestampMs,
-                                      )!,
-                                    })
-                                  if (!result.ok) throw new Error(result.error)
-                                },
-                              )
-                            }
-                            style={{ fontSize: 10, padding: '1px 5px' }}
-                          >
-                            {t(videoHitLabelKey(hit))} · {formatDuration(hit.timestampMs)} ·{' '}
-                            {t('Evidence')}: {evidence.join(' + ')}
-                            {model ? ` · ${t('AI generated')}: ${model}` : ''}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  ) : null}
+                    </article>
+                  ))}
                 </div>
-              ))}
-              {!hasQuery && !pending ? (
-                <SearchEmptyState
-                  testId="unified-search-empty-state"
-                  title={t('Search all indexed sources')}
-                  description={t(
-                    'Enter natural language, a file name, or choose a reference image to begin.',
-                  )}
-                />
-              ) : hasQuery && !pending && results.length === 0 ? (
-                <SearchEmptyState
-                  testId="unified-search-empty-state"
-                  title={t('No results')}
-                  description={t('Try clearing filters or use a broader query.')}
-                />
-              ) : null}
-            </div>
-          </main>
+                {!hasQuery && !pending ? (
+                  <SearchEmptyState
+                    testId="unified-search-empty-state"
+                    title={t('Search all indexed sources')}
+                    description={t(
+                      'Enter natural language, a file name, or choose a reference image to begin.',
+                    )}
+                  />
+                ) : hasQuery && !pending && results.length === 0 ? (
+                  <SearchEmptyState
+                    testId="unified-search-empty-state"
+                    title={t('No results')}
+                    description={t('Try clearing filters or use a broader query.')}
+                  />
+                ) : null}
+              </div>
+            </main>
+            {activeResult && (
+              <aside
+                ref={detailRef}
+                tabIndex={-1}
+                className="unified-search-detail"
+                aria-label={t('Details')}
+              >
+                <button
+                  className="unified-search-detail__close"
+                  onClick={() => setActiveResultId('')}
+                >
+                  {t('Close')}
+                </button>
+                {activeResult.source.type !== 'sftp' && (
+                  <ThumbnailImage
+                    filePath={activeResult.displayPath}
+                    ext={'.' + (activeResult.displayName.split('.').pop() ?? '')}
+                    isDirectory={false}
+                    viewMode="xlarge-icon"
+                    targetSize={512}
+                    style={{ height: 240, width: '100%' }}
+                  />
+                )}
+                {renderDetails(activeResult)}
+              </aside>
+            )}
+          </div>
         </div>
       </div>
       {subjectPicker ? (

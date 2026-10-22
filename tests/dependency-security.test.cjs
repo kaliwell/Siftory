@@ -82,11 +82,11 @@ test('project preview PDF renderer stays on the reviewed runtime pair', () => {
   )
 })
 
-test('remote terminal uses the scoped xterm package and keeps SSH types development-only', () => {
+test('removed terminal has no xterm dependency; SFTP keeps SSH types development-only', () => {
   assert.equal(packageJson.dependencies.xterm, undefined)
-  assert.equal(packageJson.dependencies['@xterm/xterm'], '^5.5.0')
+  assert.equal(packageJson.dependencies['@xterm/xterm'], undefined)
   assert.equal(packageLock.packages['node_modules/xterm'], undefined)
-  assert.equal(packageLock.packages['node_modules/@xterm/xterm']?.version, '5.5.0')
+  assert.equal(packageLock.packages['node_modules/@xterm/xterm'], undefined)
   assert.equal(packageJson.dependencies['@types/ssh2'], undefined)
   assert.equal(packageJson.devDependencies['@types/ssh2'], '^1.15.5')
   assert.equal(packageLock.packages['node_modules/@types/ssh2']?.dev, true)
@@ -104,11 +104,11 @@ test('lint toolchain stays on the reviewed ESLint 10 flat-config stack', () => {
 })
 
 test('Vite 7 build plugins stay on the warning-free reviewed combination', () => {
-  assert.equal(packageJson.devDependencies.vite, '^7.3.1')
+  assert.equal(packageJson.devDependencies.vite, '7.3.7')
   assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], '^5.1.4')
   assert.equal(packageJson.devDependencies['vite-plugin-electron'], '^0.29.1')
   assert.equal(packageJson.devDependencies['vite-plugin-electron-renderer'], '^1.0.0')
-  assert.equal(packageLock.packages['node_modules/vite']?.version, '7.3.6')
+  assert.equal(packageLock.packages['node_modules/vite']?.version, '7.3.7')
   assert.equal(packageLock.packages['node_modules/@vitejs/plugin-react']?.version, '5.2.0')
   assert.equal(packageLock.packages['node_modules/vite-plugin-electron']?.version, '0.29.1')
   assert.equal(packageLock.packages['node_modules/vite-plugin-electron-renderer']?.version, '1.0.0')

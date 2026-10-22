@@ -1,584 +1,269 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { UnifiedResourceProfile, UnifiedSchedulerStats } from '../../shared/ipc-contract'
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import type {
+  ProductFirstRunGuideStepId,
+  UnifiedResourceProfile,
+  UnifiedSchedulerStats,
+} from '../../shared/ipc-contract'
+import { PANEL_IDENTITIES } from '../../shared/ipc/app-core'
 import { useTranslation } from '../i18n/useTranslation'
 import { useStore } from '../stores/useStore'
-import { clampPanelToWorkspace } from '../services/workspaceGeometry'
 import { nextRovingIndex } from '../services/productInformationArchitecture'
-import type { ProductFirstRunGuideStepId } from '../../shared/ipc-contract'
-import type { ProductReadinessAction } from '../services/productReadiness'
-import FirstRunGuide from './FirstRunGuide'
-import GlobalModelReadinessPanel from './GlobalModelReadinessPanel'
-import ProductReadinessCenter from './ProductReadinessCenter'
-import { useGlobalModelReadiness } from '../hooks/useGlobalModelReadiness'
 import {
-  PANEL_IDENTITIES,
-  PANEL_ID_BY_VISIBILITY,
-  type PanelVisibilityKey,
-} from '../../shared/ipc/app-core'
-import '../styles/workspace-navigator.css'
+  focusedWorkspaceVisibility,
+  WORKSPACE_PANELS,
+  type WorkspacePanel,
+} from '../services/focusedWorkspace'
+import { requestWorkspaceNavigation } from '../services/workspaceNavigation'
+import { useWindowAlwaysOnTop } from '../hooks/useWindowAlwaysOnTop'
+import FirstRunGuide from './FirstRunGuide'
+import '../styles/workspace-status.css'
+import ProductReadinessCenter from './ProductReadinessCenter'
+import type { ProductReadinessAction } from '../services/productReadiness'
 import { version as appVersion } from '../../package.json'
+import {
+  flushSettingsWrites,
+  getSettingsWriteStatus,
+  subscribeSettingsWriteStatus,
+} from '../hooks/settingsWriter'
 
-export const WORKSPACE_DOMAINS = [
-  'Search',
-  'Sources',
-  'Library',
-  'Organize',
-  'Tasks',
-  'Settings',
-] as const
+export const WORKSPACE_DOMAINS = ['Search', 'Library', 'Sources', 'Tasks', 'Settings'] as const
 
-type WorkspaceDomain = (typeof WORKSPACE_DOMAINS)[number]
-type VisibilityKey = Extract<
-  PanelVisibilityKey,
-  | 'showImageSearch'
-  | 'showUnifiedSearch'
-  | 'showMediaSearch'
-  | 'showAssetLibrary'
-  | 'showBatchRename'
-  | 'showDuplicateFinder'
-  | 'showFM'
-  | 'showRemoteTerminal'
-  | 'showSettings'
->
-
-function focusPanel(visibilityKey: VisibilityKey, afterFocus?: () => void): void {
-  useStore.setState({ [visibilityKey]: true })
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      window.dispatchEvent(
-        new CustomEvent('panel-focus-request', {
-          detail: {
-            panel: PANEL_IDENTITIES[PANEL_ID_BY_VISIBILITY[visibilityKey]].domId,
-          },
-        }),
-      )
-      afterFocus?.()
-    })
-  })
+export function openWorkspacePanel(panel: WorkspacePanel, eventName?: string): void {
+  const current = useStore.getState()
+  const visibility = focusedWorkspaceVisibility(
+    { ...current, [PANEL_IDENTITIES[panel].visibilityKey]: true },
+    {
+      ...current,
+      [PANEL_IDENTITIES[panel].visibilityKey]: false,
+    },
+  )
+  useStore.setState(visibility)
+  requestWorkspaceNavigation(
+    panel,
+    eventName,
+    () => useStore.getState()[PANEL_IDENTITIES[panel].visibilityKey],
+  )
 }
 
 const WorkspaceNavigator: React.FC = () => {
   const { t } = useTranslation()
-  const navigatorRef = useRef<HTMLElement | null>(null)
-  const domainButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
-  const dragCleanupRef = useRef<(() => void) | null>(null)
-  const navigatorPos = useStore((state) => state.workspaceNavigatorPos)
-  const setNavigatorPos = useStore((state) => state.setWorkspaceNavigatorPos)
-  const workArea = useStore((state) => state.workArea)
-  const linkedMove = useStore((state) => state.linkedMove)
-  const setLinkedMove = useStore((state) => state.setLinkedMove)
-  const snapToGrid = useStore((state) => state.snapToGrid)
-  const setSnapToGrid = useStore((state) => state.setSnapToGrid)
-  const [activeDomain, setActiveDomain] = useState<WorkspaceDomain | null>(null)
-  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false)
-  const [layoutOpen, setLayoutOpen] = useState(false)
-  const [modelsOpen, setModelsOpen] = useState(false)
-  const [schedulerStats, setSchedulerStats] = useState<UnifiedSchedulerStats | null>(null)
-  const globalModels = useGlobalModelReadiness()
-
-  const refreshSchedulerStats = useCallback(async () => {
-    try {
-      setSchedulerStats(await window.electronAPI.unifiedSearch.getSchedulerStats())
-    } catch {
-      setSchedulerStats(null)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (activeDomain !== 'Tasks') return
-    void refreshSchedulerStats()
-    const timer = window.setInterval(() => void refreshSchedulerStats(), 1500)
-    return () => window.clearInterval(timer)
-  }, [activeDomain, refreshSchedulerStats])
-
-  useEffect(
-    () => () => {
-      dragCleanupRef.current?.()
-    },
-    [],
+  const activePanel = useStore((state) =>
+    WORKSPACE_PANELS.find((panel) => state[PANEL_IDENTITIES[panel].visibilityKey]),
   )
-
+  const globalVisible = useStore((state) => state.globalVisible)
+  const saveStatus = useSyncExternalStore(subscribeSettingsWriteStatus, getSettingsWriteStatus)
+  const refs = useRef<Array<HTMLButtonElement | null>>([])
+  const [tasksOpen, setTasksOpen] = useState(false)
+  const [guideMounted, setGuideMounted] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
+  const { alwaysOnTop, toggleAlwaysOnTop } = useWindowAlwaysOnTop()
+  const [stats, setStats] = useState<UnifiedSchedulerStats | null>(null)
+  const [taskError, setTaskError] = useState('')
+  const [resourceBusy, setResourceBusy] = useState(false)
+  const resourceBusyRef = useRef(false)
+  const statsVersion = useRef(0)
   useEffect(() => {
-    if (!navigatorPos) return
-    const navigator = navigatorRef.current
-    if (!navigator) return
-    const rect = navigator.getBoundingClientRect()
-    const next = clampPanelToWorkspace(
-      workArea,
-      navigatorPos.x,
-      navigatorPos.y,
-      rect.width,
-      rect.height,
-    )
-    if (next.x !== navigatorPos.x || next.y !== navigatorPos.y) setNavigatorPos(next)
-  }, [navigatorPos, setNavigatorPos, workArea])
-
-  const startMove = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (event.button !== 0) return
-      event.preventDefault()
-      event.stopPropagation()
-      const navigator = navigatorRef.current
-      if (!navigator) return
-
-      const originX = Number(document.documentElement.dataset.overlayOriginX) || 0
-      const originY = Number(document.documentElement.dataset.overlayOriginY) || 0
-      const rect = navigator.getBoundingClientRect()
-      const offsetX = event.clientX - rect.left
-      const offsetY = event.clientY - rect.top
-      const dragOrigin = { x: rect.left + originX, y: rect.top + originY }
-      let frame = 0
-      let pending: { x: number; y: number } | null = null
-      let visualPosition: { x: number; y: number } | null = null
-
-      // Keep the complete navigator subtree out of React's render loop while it
-      // moves. The Tasks menu can contain live readiness data, so committing its
-      // position on every mousemove used to repaint the whole transparent window.
-      navigator.dataset.moving = 'true'
-      navigator.style.left = `${dragOrigin.x}px`
-      navigator.style.right = 'auto'
-      navigator.style.top = `${dragOrigin.y}px`
-      navigator.style.transform = 'translate3d(0, 0, 0)'
-      navigator.style.willChange = 'transform'
-
-      const flush = () => {
-        frame = 0
-        if (!pending) return
-        const next = pending
-        pending = null
-        visualPosition = next
-        navigator.style.transform = `translate3d(${next.x - dragOrigin.x}px, ${
-          next.y - dragOrigin.y
-        }px, 0)`
+    if (!globalVisible) return
+    let alive = true
+    let timer: ReturnType<typeof setTimeout>
+    const refresh = async () => {
+      const version = ++statsVersion.current
+      try {
+        if (resourceBusyRef.current) return
+        const value = await window.electronAPI.unifiedSearch.getSchedulerStats()
+        if (alive && version === statsVersion.current) setStats(value)
+      } catch {
+        if (alive && version === statsVersion.current) setStats(null)
+      } finally {
+        if (alive) timer = setTimeout(() => void refresh(), 5000)
       }
-      const onMove = (moveEvent: MouseEvent) => {
-        const pointerX = moveEvent.clientX + originX
-        const pointerY = moveEvent.clientY + originY
-        pending = clampPanelToWorkspace(
-          useStore.getState().workArea,
-          pointerX - offsetX,
-          pointerY - offsetY,
-          rect.width,
-          rect.height,
-          { x: pointerX, y: pointerY },
-        )
-        if (!frame) frame = requestAnimationFrame(flush)
-      }
-      const finish = () => {
-        if (frame) cancelAnimationFrame(frame)
-        flush()
-        window.removeEventListener('mousemove', onMove)
-        window.removeEventListener('mouseup', finish)
-        window.removeEventListener('blur', finish)
-        window.removeEventListener('window-visibility-cancel-interactions', finish)
-        dragCleanupRef.current = null
-        delete navigator.dataset.moving
-        navigator.style.willChange = ''
-        if (visualPosition) {
-          navigator.style.left = `${visualPosition.x}px`
-          navigator.style.right = 'auto'
-          navigator.style.top = `${visualPosition.y}px`
-          navigator.style.transform = 'none'
-          setNavigatorPos(visualPosition)
-        } else if (navigatorPos) {
-          navigator.style.left = `${navigatorPos.x}px`
-          navigator.style.right = 'auto'
-          navigator.style.top = `${navigatorPos.y}px`
-          navigator.style.transform = 'none'
-        } else {
-          navigator.style.left = ''
-          navigator.style.right = ''
-          navigator.style.top = ''
-          navigator.style.transform = ''
-        }
-        window.dispatchEvent(new CustomEvent('panel-interaction', { detail: { active: false } }))
-      }
-      dragCleanupRef.current?.()
-      dragCleanupRef.current = finish
-      window.dispatchEvent(new CustomEvent('panel-interaction', { detail: { active: true } }))
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', finish)
-      window.addEventListener('blur', finish)
-      window.addEventListener('window-visibility-cancel-interactions', finish)
-    },
-    [navigatorPos, setNavigatorPos],
-  )
-
-  const openDomain = (domain: WorkspaceDomain) => {
-    setAdvancedSearchOpen(false)
-    setLayoutOpen(false)
-    setModelsOpen(false)
-    setActiveDomain(domain)
-    switch (domain) {
-      case 'Search':
-        focusPanel('showUnifiedSearch')
-        break
-      case 'Sources':
-        focusPanel('showImageSearch', () =>
-          window.dispatchEvent(new Event('workspace-sources-focus')),
-        )
-        break
-      case 'Library':
-        focusPanel('showAssetLibrary')
-        break
-      case 'Settings':
-        focusPanel('showSettings')
-        break
     }
+    void refresh()
+    return () => {
+      alive = false
+      clearTimeout(timer)
+    }
+  }, [globalVisible])
+
+  const navigate = (panel: WorkspacePanel, eventName?: string) => {
+    setTasksOpen(false)
+    setGuideOpen(false)
+    openWorkspacePanel(panel, eventName)
   }
-
-  const moveDomainFocus = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    const nextIndex = nextRovingIndex(index, WORKSPACE_DOMAINS.length, event.key)
-    if (nextIndex === null) return
-    event.preventDefault()
-    domainButtonRefs.current[nextIndex]?.focus()
+  const onReadinessAction = (action: ProductReadinessAction) => {
+    if (action === 'review-derived-reset') navigate('settings', 'workspace-review-derived-reset')
+    else if (['add-source', 'scan-sources', 'reconnect-source'].includes(action))
+      navigate('imageSearch', 'workspace-sources-focus')
+    else if (['prepare-image-search', 'retry-image-index'].includes(action)) navigate('imageSearch')
+    else navigate('mediaSearch')
   }
-
-  const moveNavigatorWithKeyboard = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Home') {
-      event.preventDefault()
-      setNavigatorPos(null)
-      return
-    }
-    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
-    event.preventDefault()
-    const navigator = navigatorRef.current
-    if (!navigator) return
-    const originX = Number(document.documentElement.dataset.overlayOriginX) || 0
-    const originY = Number(document.documentElement.dataset.overlayOriginY) || 0
-    const rect = navigator.getBoundingClientRect()
-    const current = navigatorPos ?? { x: rect.left + originX, y: rect.top + originY }
-    const step = event.shiftKey ? 24 : 8
-    const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0
-    const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0
-    setNavigatorPos(
-      clampPanelToWorkspace(workArea, current.x + dx, current.y + dy, rect.width, rect.height),
-    )
-  }
-
-  const openReadinessAction = (action: ProductReadinessAction) => {
-    if (action === 'review-derived-reset') {
-      focusPanel('showSettings', () =>
-        window.dispatchEvent(new Event('workspace-review-derived-reset')),
-      )
-      return
-    }
-    if (['add-source', 'scan-sources', 'reconnect-source'].includes(action)) {
-      focusPanel('showImageSearch', () =>
-        window.dispatchEvent(new Event('workspace-sources-focus')),
-      )
-      return
-    }
-    if (['prepare-image-search', 'retry-image-index'].includes(action)) {
-      focusPanel('showImageSearch')
-      return
-    }
-    focusPanel('showMediaSearch')
-  }
-
   const openFirstRunStep = (step: ProductFirstRunGuideStepId) => {
-    setAdvancedSearchOpen(false)
-    setLayoutOpen(false)
-    setModelsOpen(false)
-    if (step === 'source') {
-      focusPanel('showImageSearch', () =>
-        window.dispatchEvent(new Event('workspace-sources-focus')),
-      )
-      return
-    }
-    if (step === 'models') {
-      setActiveDomain('Tasks')
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => window.dispatchEvent(new Event('workspace-open-model-manager')))
-      })
-      return
-    }
-    if (step === 'catalog') {
-      focusPanel('showImageSearch', () =>
-        window.dispatchEvent(new Event('workspace-prepare-library-focus')),
-      )
-      return
-    }
-    focusPanel('showUnifiedSearch', () =>
-      window.dispatchEvent(new Event('workspace-first-search-focus')),
-    )
+    if (step === 'source') navigate('imageSearch', 'workspace-sources-focus')
+    else if (step === 'models') navigate('settings', 'workspace-open-model-settings')
+    else if (step === 'catalog') navigate('imageSearch', 'workspace-prepare-library-focus')
+    else navigate('unifiedSearch', 'workspace-first-search-focus')
   }
-
-  const taskCount = schedulerStats
-    ? schedulerStats.lanes.local.running +
-      schedulerStats.lanes.local.queued +
-      schedulerStats.lanes.gpu.running +
-      schedulerStats.lanes.gpu.queued
+  const count = stats
+    ? stats.lanes.local.running +
+      stats.lanes.local.queued +
+      stats.lanes.gpu.running +
+      stats.lanes.gpu.queued
     : 0
+  const entries = [
+    { label: 'Search', panel: 'unifiedSearch', icon: '⌕' },
+    { label: 'Library', panel: 'assetLibrary', icon: '▦' },
+    { label: 'Sources', panel: 'imageSearch', icon: '+' },
+    { label: 'Video indexing', panel: 'mediaSearch', icon: '▷' },
+    { label: 'Duplicate Finder', panel: 'duplicateFinder', icon: '▤' },
+  ] as const
 
   return (
     <nav
-      ref={navigatorRef}
-      className="workspace-navigator"
+      className="workspace-sidebar"
       data-portal=""
       aria-label={t('Workspace')}
-      data-active-domain={activeDomain?.toLowerCase() ?? 'none'}
       onKeyDown={(event) => {
-        if (event.key !== 'Escape') return
-        setActiveDomain(null)
-        setAdvancedSearchOpen(false)
-        setLayoutOpen(false)
-        setModelsOpen(false)
+        if (event.key === 'Escape') {
+          setTasksOpen(false)
+          setGuideOpen(false)
+        }
       }}
-      style={
-        navigatorPos
-          ? { left: navigatorPos.x, right: 'auto', top: navigatorPos.y, transform: 'none' }
-          : undefined
-      }
     >
-      {appVersion.includes('-alpha.') && (
-        <div className="workspace-navigator__release" data-testid="workspace-alpha-version">
-          <strong>{t('Siftory · 寻藏')}</strong>
-          <span>{t('Alpha test · v{version}', { version: appVersion })}</span>
-        </div>
-      )}
-      <div className="workspace-navigator__domains">
-        {WORKSPACE_DOMAINS.map((domain, index) => (
+      <div className="workspace-sidebar__brand">
+        <strong>{t('Siftory · 寻藏')}</strong>
+        <span>v{appVersion}</span>
+      </div>
+      <div className="workspace-sidebar__links" role="group" aria-label={t('Workspace')}>
+        {entries.map((entry, index) => (
           <button
-            key={domain}
+            key={entry.panel}
             ref={(element) => {
-              domainButtonRefs.current[index] = element
+              refs.current[index] = element
             }}
-            data-testid={`workspace-domain-${domain.toLowerCase()}`}
-            aria-pressed={activeDomain === domain}
-            aria-expanded={
-              ['Search', 'Sources', 'Organize', 'Tasks'].includes(domain)
-                ? activeDomain === domain
-                : undefined
+            data-testid={`workspace-domain-${entry.label.toLowerCase().replaceAll(' ', '-')}`}
+            aria-current={activePanel === entry.panel ? 'page' : undefined}
+            onKeyDown={(event) => {
+              const next = nextRovingIndex(index, entries.length, event.key)
+              if (next !== null) {
+                event.preventDefault()
+                refs.current[next]?.focus()
+              }
+            }}
+            onClick={() =>
+              navigate(
+                entry.panel,
+                entry.panel === 'imageSearch' ? 'workspace-sources-focus' : undefined,
+              )
             }
-            aria-controls={
-              ['Search', 'Sources', 'Organize', 'Tasks'].includes(domain)
-                ? `workspace-menu-${domain.toLowerCase()}`
-                : undefined
-            }
-            onKeyDown={(event) => moveDomainFocus(event, index)}
-            onClick={() => openDomain(domain)}
           >
-            {t(domain)}
-            {domain === 'Tasks' && taskCount > 0 ? ` · ${taskCount}` : ''}
+            <span aria-hidden="true">{entry.icon}</span>
+            {t(entry.label)}
           </button>
         ))}
+      </div>
+      <div className="workspace-sidebar__maintenance">
         <button
-          className={`workspace-navigator__models-toggle is-${globalModels.snapshot.state}`}
-          data-testid="workspace-model-readiness-toggle"
-          data-model-state={globalModels.snapshot.state}
-          aria-pressed={modelsOpen}
-          aria-expanded={modelsOpen}
-          aria-controls="workspace-model-readiness-menu"
-          onClick={() => {
-            const nextOpen = !modelsOpen
-            setActiveDomain(null)
-            setAdvancedSearchOpen(false)
-            setLayoutOpen(false)
-            setModelsOpen(nextOpen)
-            if (nextOpen) void globalModels.refresh({ deep: true })
-          }}
+          aria-current={activePanel === 'appStorage' ? 'page' : undefined}
+          onClick={() => navigate('appStorage')}
         >
-          {t('Models')} · {globalModels.snapshot.readyCount}/{globalModels.snapshot.totalCount}
+          {t('Index and maintenance')}
         </button>
         <button
-          data-testid="workspace-layout-toggle"
-          aria-pressed={layoutOpen}
-          aria-expanded={layoutOpen}
-          aria-controls="workspace-layout-menu"
-          onClick={() => {
-            setActiveDomain(null)
-            setAdvancedSearchOpen(false)
-            setModelsOpen(false)
-            setLayoutOpen((open) => !open)
-          }}
+          data-testid="workspace-domain-settings"
+          aria-current={activePanel === 'settings' ? 'page' : undefined}
+          onClick={() => navigate('settings')}
         >
-          {t('Layout')}
-        </button>
-        <button
-          className="workspace-navigator__move"
-          data-testid="workspace-navigator-move"
-          onMouseDown={startMove}
-          onDoubleClick={() => setNavigatorPos(null)}
-          onKeyDown={moveNavigatorWithKeyboard}
-          title={t('Drag to move navigation; double-click to reset')}
-          aria-label={t('Drag to move navigation; double-click to reset')}
-        >
-          <svg viewBox="0 0 14 14" aria-hidden="true">
-            <path d="M7 1v12M1 7h12M7 1 5 3M7 1l2 2M7 13l-2-2M7 13l2-2M1 7l2-2M1 7l2 2M13 7l-2-2M13 7l-2 2" />
-          </svg>
+          {t('Settings')}
         </button>
       </div>
-
-      {modelsOpen && (
-        <div
-          className="workspace-navigator__menu workspace-navigator__models"
-          id="workspace-model-readiness-menu"
+      {saveStatus === 'error' && (
+        <div className="workspace-save-error" data-testid="workspace-save-error" role="alert">
+          <span>{t('Settings could not be saved. Retry before closing the app.')}</span>
+          <button onClick={() => void flushSettingsWrites().catch(() => {})}>{t('Retry')}</button>
+        </div>
+      )}
+      <div className="workspace-sidebar__window-controls">
+        <button
+          data-testid="workspace-window-pin"
+          aria-pressed={alwaysOnTop}
+          onClick={toggleAlwaysOnTop}
         >
-          <GlobalModelReadinessPanel
-            snapshot={globalModels.snapshot}
-            checking={globalModels.checking}
-            deepChecking={globalModels.deepChecking}
-            onRefresh={() => void globalModels.refresh({ deep: true })}
-            onManage={() => {
-              setModelsOpen(false)
-              focusPanel('showSettings', () =>
-                window.dispatchEvent(new Event('workspace-open-model-settings')),
-              )
-            }}
-          />
-        </div>
-      )}
-
-      {layoutOpen && (
-        <div
-          className="workspace-navigator__menu workspace-navigator__layout"
-          data-testid="workspace-layout-menu"
-          id="workspace-layout-menu"
-          role="group"
-          aria-label={t('Layout')}
+          {t(alwaysOnTop ? 'Stop keeping window on top' : 'Keep window on top')}
+        </button>
+        <button
+          data-testid="workspace-window-hide"
+          onClick={() =>
+            void window.electronAPI
+              .hideWindow()
+              .catch(() => setTaskError(t('The operation failed.')))
+          }
         >
-          <button
-            data-testid="workspace-layout-row"
-            onClick={() => useStore.getState().arrangeHorizontal()}
-          >
-            ─ {t('Row')}
-          </button>
-          <button
-            data-testid="workspace-layout-grid"
-            onClick={() => useStore.getState().autoArrange()}
-          >
-            ⊞ {t('Grid')}
-          </button>
-          <button
-            data-testid="workspace-layout-column"
-            onClick={() => useStore.getState().arrangeVertical()}
-          >
-            ║ {t('Column')}
-          </button>
-          <button
-            className={linkedMove ? 'is-enabled' : undefined}
-            data-testid="workspace-layout-linked-move"
-            aria-pressed={linkedMove}
-            onClick={() => setLinkedMove(!linkedMove)}
-          >
-            {linkedMove ? `✓ ${t('Linked Move')}` : t('Linked Move')}
-          </button>
-          <button
-            className={snapToGrid ? 'is-enabled' : undefined}
-            data-testid="workspace-layout-snap-grid"
-            aria-pressed={snapToGrid}
-            onClick={() => setSnapToGrid(!snapToGrid)}
-          >
-            {snapToGrid ? `✓ ${t('Snap to Grid')}` : t('Snap to Grid')}
-          </button>
-        </div>
-      )}
-
-      {activeDomain !== 'Tasks' && !modelsOpen && <FirstRunGuide onNavigate={openFirstRunStep} />}
-
-      {activeDomain === 'Search' && (
-        <div className="workspace-navigator__menu" id="workspace-menu-search">
-          <button
-            className="workspace-navigator__primary-entry"
-            data-testid="workspace-search-unified"
-            onClick={() => focusPanel('showUnifiedSearch')}
-          >
-            {t('Unified search')}
-          </button>
-          <button
-            className="workspace-navigator__advanced-toggle"
-            data-testid="workspace-search-advanced-toggle"
-            aria-expanded={advancedSearchOpen}
-            aria-controls="workspace-search-advanced-tools"
-            onClick={() => setAdvancedSearchOpen((open) => !open)}
-          >
-            {t('Advanced search tools')}
-          </button>
-          {advancedSearchOpen && (
-            <div
-              id="workspace-search-advanced-tools"
-              className="workspace-navigator__advanced-tools"
-            >
-              <button
-                data-testid="workspace-search-images"
-                onClick={() => focusPanel('showImageSearch')}
-              >
-                {t('Photos and files')}
-              </button>
-              <button
-                data-testid="workspace-search-videos"
-                onClick={() => focusPanel('showMediaSearch')}
-              >
-                {t('Video search')}
-              </button>
-              <button
-                data-testid="workspace-search-library"
-                onClick={() => focusPanel('showAssetLibrary')}
-              >
-                {t('Asset Library')}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-      {activeDomain === 'Sources' && (
-        <div className="workspace-navigator__menu" id="workspace-menu-sources">
-          <button
-            className="workspace-navigator__primary-entry"
-            data-testid="workspace-manage-sources"
-            onClick={() =>
-              focusPanel('showImageSearch', () =>
-                window.dispatchEvent(new Event('workspace-sources-focus')),
-              )
-            }
-          >
-            {t('Manage sources')}
-          </button>
-          <button
-            data-testid="workspace-remote-advanced"
-            onClick={() => focusPanel('showRemoteTerminal')}
-          >
-            {t('Remote source advanced tools')}
-          </button>
-        </div>
-      )}
-      {activeDomain === 'Organize' && (
-        <div className="workspace-navigator__menu" id="workspace-menu-organize">
-          <button onClick={() => focusPanel('showBatchRename')}>{t('Batch Rename')}</button>
-          <button onClick={() => focusPanel('showDuplicateFinder')}>{t('Duplicate Finder')}</button>
-          <button onClick={() => focusPanel('showFM')}>{t('File Manager')}</button>
-        </div>
-      )}
-      {activeDomain === 'Tasks' && (
-        <div
-          className="workspace-navigator__menu workspace-navigator__tasks"
+          {t('Hide')}
+        </button>
+      </div>
+      <button
+        className="workspace-sidebar__tasks"
+        data-testid="workspace-domain-tasks"
+        aria-expanded={tasksOpen}
+        aria-controls="workspace-task-summary"
+        onClick={() => {
+          setGuideOpen(false)
+          setTasksOpen(!tasksOpen)
+        }}
+      >
+        {t('Tasks')} · {count}
+      </button>
+      {tasksOpen && (
+        <section
+          data-portal=""
+          id="workspace-task-summary"
           data-testid="workspace-task-summary"
-          id="workspace-menu-tasks"
+          className="workspace-task-drawer"
+          aria-label={t('Tasks')}
         >
+          <header>
+            <strong>{t('Tasks')}</strong>
+            <button onClick={() => setTasksOpen(false)}>{t('Close')}</button>
+          </header>
           <button
-            className="workspace-navigator__getting-started"
             data-testid="workspace-first-run-guide"
             onClick={() => {
-              setActiveDomain(null)
-              requestAnimationFrame(() =>
-                window.dispatchEvent(new Event('workspace-open-first-run-guide')),
-              )
+              setTasksOpen(false)
+              setGuideMounted(true)
+              setGuideOpen(true)
+              if (guideMounted)
+                requestAnimationFrame(() =>
+                  window.dispatchEvent(new Event('workspace-open-first-run-guide')),
+                )
             }}
           >
             {t('Getting started')}
           </button>
-          <div className="workspace-navigator__resource-policy" data-testid="resource-governor">
+          <div data-testid="resource-governor" className="workspace-resource-policy">
             <label>
-              <span>{t('Resource mode')}</span>
+              {t('Resource mode')}
               <select
                 data-testid="resource-governor-profile"
-                value={schedulerStats?.resource.profile ?? 'balanced'}
+                value={stats?.resource.profile ?? 'balanced'}
+                disabled={resourceBusy}
                 onChange={(event) => {
+                  if (resourceBusyRef.current) return
                   const profile = event.target.value as UnifiedResourceProfile
+                  resourceBusyRef.current = true
+                  setResourceBusy(true)
+                  ++statsVersion.current
                   void window.electronAPI.unifiedSearch
                     .setResourceProfile(profile)
-                    .then(() => refreshSchedulerStats())
+                    .then((result) => {
+                      if (!result.ok || !result.stats) throw new Error('resource-profile-failed')
+                      setStats(result.stats)
+                      setTaskError('')
+                    })
+                    .catch(() => setTaskError(t('The operation failed.')))
+                    .finally(() => {
+                      resourceBusyRef.current = false
+                      setResourceBusy(false)
+                    })
                 }}
               >
                 <option value="power-saver">{t('Power saver')}</option>
@@ -586,40 +271,54 @@ const WorkspaceNavigator: React.FC = () => {
                 <option value="quality">{t('High quality')}</option>
               </select>
             </label>
-            <span data-testid="resource-governor-limits">
-              {t('Local concurrency')}: {schedulerStats?.resource.effectiveLocalConcurrency ?? 0} ·{' '}
-              {t('GPU concurrency')}: {schedulerStats?.resource.effectiveGpuConcurrency ?? 0}
-            </span>
-            {schedulerStats?.resource.backgroundPaused ? (
-              <span data-testid="resource-governor-pressure">
-                {t('Background work paused')}: {schedulerStats.resource.pressureReasons.join(', ')}
-              </span>
-            ) : null}
-            <button
-              data-testid="resource-governor-cancel-background"
-              onClick={() => {
-                void window.electronAPI.unifiedSearch
-                  .cancelBackgroundTasks()
-                  .then(() => refreshSchedulerStats())
-              }}
-            >
-              {t('Cancel queued background tasks')}
-            </button>
+            <p data-testid="resource-governor-limits">
+              {t('Local concurrency')}: {stats?.resource.effectiveLocalConcurrency ?? 0} ·{' '}
+              {t('GPU concurrency')}: {stats?.resource.effectiveGpuConcurrency ?? 0}
+            </p>
+            {stats?.resource.backgroundPaused && (
+              <p data-testid="resource-governor-pressure">
+                {t('Background work paused')}: {stats.resource.pressureReasons.join(', ')}
+              </p>
+            )}
           </div>
-          <div className="workspace-navigator__task-counts">
-            <span>
-              {t('Local tasks')}: {schedulerStats?.lanes.local.running ?? 0} /{' '}
-              {schedulerStats?.lanes.local.queued ?? 0}
-            </span>
-            <span>
-              {t('AI tasks')}: {schedulerStats?.lanes.gpu.running ?? 0} /{' '}
-              {schedulerStats?.lanes.gpu.queued ?? 0}
-            </span>
-            <button onClick={() => focusPanel('showImageSearch')}>{t('Image indexing')}</button>
-            <button onClick={() => focusPanel('showMediaSearch')}>{t('Video indexing')}</button>
-          </div>
-          <ProductReadinessCenter onAction={openReadinessAction} />
-        </div>
+          <p>
+            {t('Local tasks')}: {stats?.lanes.local.running ?? 0} / {stats?.lanes.local.queued ?? 0}
+          </p>
+          <p>
+            {t('AI tasks')}: {stats?.lanes.gpu.running ?? 0} / {stats?.lanes.gpu.queued ?? 0}
+          </p>
+          <button
+            data-testid="resource-governor-cancel-background"
+            onClick={() =>
+              void window.electronAPI.unifiedSearch
+                .cancelBackgroundTasks()
+                .then(() => setTaskError(''))
+                .catch(() => setTaskError(t('The operation failed.')))
+            }
+          >
+            {t('Cancel queued background tasks')}
+          </button>
+          {taskError && <p role="alert">{taskError}</p>}
+          <ProductReadinessCenter onAction={onReadinessAction} />
+        </section>
+      )}
+      {guideMounted && (
+        <section
+          className="workspace-task-drawer workspace-guide-drawer"
+          data-portal=""
+          hidden={!guideOpen}
+          aria-label={t('Getting started')}
+        >
+          <header>
+            <strong>{t('Getting started')}</strong>
+            <button onClick={() => setGuideOpen(false)}>{t('Close')}</button>
+          </header>
+          <FirstRunGuide
+            onNavigate={openFirstRunStep}
+            reopenOnMount
+            active={guideOpen && globalVisible}
+          />
+        </section>
       )}
     </nav>
   )

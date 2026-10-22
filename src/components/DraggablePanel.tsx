@@ -1,3 +1,5 @@
+import { WORKSPACE_PANELS } from '../services/focusedWorkspace'
+import { registerWorkspacePanel } from '../services/workspaceNavigation'
 import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react'
 import { useStore } from '../stores/useStore'
 import { PANEL_IDENTITIES, type PanelId } from '../../shared/ipc/app-core'
@@ -131,6 +133,10 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
   const layerId = useRef(Symbol(title))
   const [zIndex, setZIndex] = useState(10)
   const domId = dataPanel ?? (panelId ? PANEL_IDENTITIES[panelId].domId : panelDomKey(title))
+
+  useEffect(() => {
+    if (panelId) return registerWorkspacePanel(panelId)
+  }, [panelId])
 
   useEffect(() => {
     const entry = { id: layerId.current, setZ: setZIndex, pinned: false }
@@ -390,6 +396,23 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
     }
     if (panelId) closePanel(panelId)
   }, [closePanel, onClose, panelId])
+
+  const docked = panelId !== undefined && (WORKSPACE_PANELS as readonly string[]).includes(panelId)
+  if (docked)
+    return (
+      <section
+        ref={panelRef}
+        className="panel"
+        data-panel={domId}
+        data-docked="true"
+        aria-label={displayTitle ?? t(title)}
+      >
+        <header className="panel-header">
+          <span className="panel-title">{displayTitle ?? t(title)}</span>
+        </header>
+        <div className="panel-body">{children}</div>
+      </section>
+    )
 
   return (
     <div

@@ -2,22 +2,18 @@ export type LazyPanelVisibilityKey =
   | 'showImageSearch'
   | 'showUnifiedSearch'
   | 'showAppStorage'
-  | 'showRemoteTerminal'
   | 'showDuplicateFinder'
   | 'showMediaSearch'
   | 'showAssetLibrary'
-  | 'showBatchRename'
 
 export interface LazyPanelDefinition {
   id:
     | 'imageSearch'
     | 'unifiedSearch'
     | 'appStorage'
-    | 'remoteTerminal'
     | 'duplicateFinder'
     | 'mediaSearch'
     | 'assetLibrary'
-    | 'batchRename'
   boundaryName: string
   visibilityKey: LazyPanelVisibilityKey
   load: () => Promise<{ default: ComponentType }>
@@ -33,6 +29,7 @@ export const lazyPanelRegistry = [
     visibilityKey: 'showUnifiedSearch',
     load: () => import('../components/UnifiedSearchPanel'),
     preloadOrder: 5,
+    preserveWhenHidden: true,
   },
   {
     id: 'mediaSearch',
@@ -56,6 +53,7 @@ export const lazyPanelRegistry = [
     visibilityKey: 'showAssetLibrary',
     load: () => import('../components/AssetLibraryPanel'),
     preloadOrder: 25,
+    preserveWhenHidden: true,
   },
   {
     id: 'appStorage',
@@ -63,6 +61,7 @@ export const lazyPanelRegistry = [
     visibilityKey: 'showAppStorage',
     load: () => import('../components/AppStoragePanel'),
     preloadOrder: 30,
+    preserveWhenHidden: true,
   },
   {
     id: 'duplicateFinder',
@@ -71,21 +70,6 @@ export const lazyPanelRegistry = [
     load: () => import('../components/DuplicateFinderPanel'),
     preloadOrder: 40,
     preserveWhenHidden: true,
-  },
-  {
-    id: 'remoteTerminal',
-    boundaryName: 'RemoteTerminal',
-    visibilityKey: 'showRemoteTerminal',
-    load: () => import('../components/RemoteTerminalPanel'),
-    preloadOrder: 50,
-    preserveWhenHidden: true,
-  },
-  {
-    id: 'batchRename',
-    boundaryName: 'BatchRename',
-    visibilityKey: 'showBatchRename',
-    load: () => import('../components/BatchRenamePanel'),
-    preloadOrder: 35,
   },
 ] as const satisfies readonly LazyPanelDefinition[]
 import type { ComponentType } from 'react'

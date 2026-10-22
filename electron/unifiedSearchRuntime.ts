@@ -23,6 +23,7 @@ import { authoritativeVectorStoreRootFromCacheDir } from './authoritativeVectorS
 import { isClipTextModelAvailable, searchSemanticImages } from './semanticSearchService'
 import { getSourceCatalogService } from './sourceCatalogService'
 import { searchBySubject } from './subjectSearchService'
+import { searchImagesAsync } from './imageSearchService'
 import {
   UnifiedRecallError,
   UnifiedSearchService,
@@ -235,6 +236,30 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
     path.join(userDataPath, 'vector-db', 'embedding-cache'),
   )
   configureUnifiedSearchDeps({
+    imageFingerprintRecall: async (request) => {
+      if (!request.referenceImagePath || request.subject) return []
+      const topK = Math.min(500, Math.max((request.offset ?? 0) + (request.limit ?? 100), 100))
+      const task = taskScheduler.enqueue({
+        stage: 'metadata',
+        priority: 0,
+        label: 'unified image fingerprint query',
+        run: () =>
+          searchImagesAsync({
+            imagePath: request.referenceImagePath,
+            threshold: 0.85,
+            topK,
+            searchMode: 'balanced',
+          }),
+      })
+      const response = await task.promise
+      return response.results.map((result) => ({
+        displayPath: result.path,
+        score: result.score,
+        width: result.width,
+        height: result.height,
+        evidenceSummary: 'Image fingerprint match',
+      }))
+    },
     lexicalRecall: (request) => {
       const service = getSourceCatalogService()
       if (!service) return { items: [], total: 0 }

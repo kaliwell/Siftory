@@ -139,5 +139,5 @@ test('simple unified search UI keeps every core filter directly reachable', () =
   }
   assert.match(ui, /type="date"/)
   assert.match(ui, /Object\.keys\(filters\)\.length \? \{ filters \} : \{\}/)
-  assert.doesNotMatch(ui, /<details[^>]*>[\s\S]*unified-search-filters/)
+  assert.doesNotMatch(ui, /<details[^>]*>(?:(?!<\/details>)[\s\S])*unified-search-filters/)
 })

@@ -1,6 +1,8 @@
+> 本地修改版：已开始精简桌面工具并整合素材检索工作台，当前范围见 [REFACTOR_NOTES.md](./REFACTOR_NOTES.md)，两轮审计与验证见 [UI_AUDIT.md](./UI_AUDIT.md)。尚未完成全部功能裁剪与 Windows 发行验收。
+
 # Siftory · 寻藏
 
-**Alpha 测试版 · v1.0.1-alpha.1 · Windows x64**
+**Alpha 测试版 · v1.0.1-alpha.2 · Windows x64**
 
 本地优先的图片、视频检索与素材管理桌面软件。收到同事或客户发来的参考图片后，把图片拖入寻藏，在自己已经建立索引的素材库中查找相似候选，再打开原文件或所在文件夹。
 
@@ -10,7 +12,7 @@
 
 首次运行或升级前，请阅读 [Alpha 数据备份与恢复规则](BACKUP_SAFETY.md)：退出应用后备份整个实际数据目录，原图片、视频及工程文件另行备份；Alpha 与旧版默认共享用户数据目录。
 
-`1.0.1-alpha.1` 是当前维护版本；软件著作权登记提交的 V1.0.0 材料是历史记录，不随维护版本改写。当前版本号高于已有的 1.0.0，后续 Alpha 版本依次使用 `1.0.1-alpha.2`、`1.0.1-alpha.3`。
+`1.0.1-alpha.2` 是当前维护版本；软件著作权登记提交的 V1.0.0 材料是历史记录，不随维护版本改写。当前版本号高于已有的 1.0.0，后续 Alpha 版本从 `1.0.1-alpha.3` 继续。
 
 ## 主要功能
 
@@ -24,7 +26,7 @@ AI 模型由用户自行下载、安装或配置；源码仓库不包含模型�
 
 ## 开发运行
 
-需要 Windows x64、Git、项目锁定的 Node.js **24.16.0** / npm **11.13.0**，以及原生模块编译所需的 Python 和 Visual Studio C++ 构建工具。
+需要 Windows x64、Git、项目锁定的 Node.js **24.22.1** / npm **11.19.1**，以及原生模块编译所需的 Python 和 Visual Studio C++ 构建工具。
 
 ```powershell
 git clone https://github.com/kaliwell/Siftory.git

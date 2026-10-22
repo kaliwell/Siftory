@@ -66,7 +66,7 @@ test('one canonical manifest owns every stable panel identity', () => {
   const linkedMove = source('src/hooks/useLinkedMove.ts')
   assert.match(settings, /PANEL_IDENTITIES\[key\]\.domId/)
   assert.doesNotMatch(settings, /const panelKeys:/)
-  assert.match(navigator, /PANEL_ID_BY_VISIBILITY\[visibilityKey\]/)
+  assert.match(navigator, /PANEL_IDENTITIES\[panel\]\.visibilityKey/)
   assert.doesNotMatch(navigator, /const PANEL_IDS: Record/)
   assert.match(linkedMove, /for \(const pn of PANEL_IDS\)/)
   assert.match(linkedMove, /PANEL_IDENTITIES\[panel\]\.positionKey/)
@@ -75,7 +75,9 @@ test('one canonical manifest owns every stable panel identity', () => {
 test('live session and scan panels remain mounted after their first display', () => {
   const registry = source('src/config/panelRegistry.ts')
   assert.match(registry, /id: 'duplicateFinder'[\s\S]*?preserveWhenHidden: true/)
-  assert.match(registry, /id: 'remoteTerminal'[\s\S]*?preserveWhenHidden: true/)
+  assert.doesNotMatch(registry, /id: 'remoteTerminal'/)
+  for (const panel of ['unifiedSearch', 'assetLibrary', 'appStorage'])
+    assert.match(registry, new RegExp(`id: '${panel}'[\\s\\S]*?preserveWhenHidden: true`))
 
   const duplicateFinder = source('src/components/DuplicateFinderPanel.tsx')
   assert.match(duplicateFinder, /getProgress\(\)[\s\S]*current\.state === 'done'/)
@@ -103,51 +105,18 @@ test('shared panel header exposes move, maximize, restore, and close controls', 
   assert.match(panel, /!maximized &&/)
 })
 
-test('workspace navigator has its own persistent drag handle', () => {
+test('focused workspace uses fixed navigation and retains generation-safe native shape updates', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
-  assert.match(navigator, /data-testid="workspace-navigator-move"/)
-  assert.match(navigator, /onMouseDown=\{startMove\}/)
-  assert.match(navigator, /onDoubleClick=\{\(\) => setNavigatorPos\(null\)\}/)
-  assert.match(navigator, /clampPanelToWorkspace/)
-  assert.match(navigator, /const workArea = useStore\(\(state\) => state\.workArea\)/)
-  assert.match(navigator, /getBoundingClientRect\(\)[\s\S]*setNavigatorPos\(next\)/)
-  assert.match(navigator, /navigator\.dataset\.moving = 'true'/)
-  assert.match(navigator, /navigator\.style\.willChange = 'transform'/)
-  assert.match(navigator, /navigator\.style\.transform = `translate3d\(/)
-  assert.match(navigator, /visualPosition = next[\s\S]*setNavigatorPos\(visualPosition\)/)
-
-  const flushBlock = navigator.slice(
-    navigator.indexOf('const flush = () =>'),
-    navigator.indexOf('const onMove ='),
-  )
-  assert.doesNotMatch(flushBlock, /setNavigatorPos/)
-
-  const navigatorStyles = source('src/styles/workspace-navigator.css')
-  assert.match(navigatorStyles, /html\[data-panel-interaction='active'\] \.workspace-navigator/)
-  assert.match(navigatorStyles, /\.workspace-navigator\[data-moving='true'\]/)
-  assert.match(navigatorStyles, /contain: paint style/)
-  assert.match(navigatorStyles, /backdrop-filter: none/)
-  assert.match(navigator, /activeDomain !== 'Tasks' && !modelsOpen && <FirstRunGuide/)
-  assert.match(
-    navigator,
-    /workspace-navigator__getting-started[\s\S]*setActiveDomain\(null\)[\s\S]*workspace-open-first-run-guide/,
-  )
-
-  const autoSave = source('src/hooks/useAutoSaveSettings.ts')
+  const styles = source('src/styles/focused-workspace.css')
   const app = source('src/App.tsx')
-  const contract = source('shared/ipc/app-core.ts')
-  assert.match(autoSave, /workspaceNavigatorPos: state\.workspaceNavigatorPos/)
-  assert.match(app, /safePoint\(settings\.workspaceNavigatorPos\)/)
-  assert.match(app, /new MutationObserver\(\(mutations\) => \{[\s\S]*interactionActive/)
-  assert.match(app, /mutations\.some\(mutationContainsShapeElement\)/)
+  assert.doesNotMatch(navigator, /onMouseDown=\{startMove\}|workspace-navigator-move/)
+  assert.match(styles, /\.workspace-sidebar\s*\{[\s\S]*?position: absolute/)
+  assert.match(styles, /data-docked='true'/)
   assert.match(app, /scheduleSettledShapeSync/)
-  assert.match(app, /lastShape \? 80 : 300/)
-  assert.doesNotMatch(app, /element\.offsetParent/)
-  const windowStyles = source('src/styles/window-system.css')
-  assert.match(windowStyles, /\.panel\s*\{[\s\S]*contain: layout style/)
   assert.match(app, /overflow: 'clip'/)
-  assert.doesNotMatch(app, /data-testid="app-root"[\s\S]{0,500}overflow: 'hidden'/)
-  assert.match(contract, /workspaceNavigatorPos\?: \{ x: number; y: number \} \| null/)
+  assert.match(app, /window-visibility-state/)
+  assert.match(navigator, /<FirstRunGuide/)
+  assert.match(navigator, /workspace-first-run-guide/)
 })
 
 test('startup restores the workspace navigator with the saved panel snapshot', () => {
@@ -166,25 +135,17 @@ test('startup restores the workspace navigator with the saved panel snapshot', (
   assert.doesNotMatch(restoreBlock, /globalVisible: settings\.globalVisible/)
 })
 
-test('layout controls live in the workspace navigator instead of settings', () => {
+test('fixed workspace replaces per-panel layout controls with application window controls', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
-  for (const testId of [
-    'workspace-layout-toggle',
-    'workspace-layout-row',
-    'workspace-layout-grid',
-    'workspace-layout-column',
-    'workspace-layout-linked-move',
-    'workspace-layout-snap-grid',
-  ]) {
-    assert.match(navigator, new RegExp(`data-testid="${testId}"`))
-  }
-  assert.match(navigator, /arrangeHorizontal\(\)/)
-  assert.match(navigator, /autoArrange\(\)/)
-  assert.match(navigator, /arrangeVertical\(\)/)
-
-  const settings = source('src/components/SettingsPanel.tsx')
-  assert.doesNotMatch(settings, /<Section label=\{t\('Layout'\)\}/)
-  assert.doesNotMatch(settings, /setSnapToGrid/)
+  const panel = source('src/components/DraggablePanel.tsx')
+  assert.doesNotMatch(
+    navigator,
+    /workspace-layout-toggle|arrangeHorizontal\(\)|arrangeVertical\(\)/,
+  )
+  assert.match(navigator, /workspace-window-pin/)
+  assert.match(navigator, /workspace-window-hide/)
+  assert.match(panel, /if \(docked\)/)
+  assert.match(panel, /data-docked="true"/)
 })
 
 test('settings are grouped into accessible collapsible categories', () => {
@@ -232,7 +193,8 @@ test('every draggable panel declares how its close button hides that panel', () 
   }
   // One declaration per real panel. Loading placeholders must not inflate this
   // count because they make startup tests pass while delaying the actual UI.
-  assert.ok(declarations >= 15)
+  const { WORKSPACE_PANELS } = loadTsModule('src/services/focusedWorkspace.ts')
+  assert.ok(declarations >= WORKSPACE_PANELS.length)
 })
 
 test('panel controls have localized labels and close all registered workspace panels', () => {

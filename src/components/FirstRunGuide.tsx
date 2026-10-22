@@ -17,6 +17,8 @@ import { loadProductReadiness, type ProductReadinessSnapshot } from '../services
 
 interface FirstRunGuideProps {
   onNavigate: (step: ProductFirstRunGuideStepId) => void
+  reopenOnMount?: boolean
+  active?: boolean
 }
 
 const STEP_LABELS: Record<ProductFirstRunGuideStepId, string> = {
@@ -55,33 +57,58 @@ function samePersistedState(left: unknown, right: ProductFirstRunGuideSettings):
   )
 }
 
-const FirstRunGuide: React.FC<FirstRunGuideProps> = ({ onNavigate }) => {
+const FirstRunGuide: React.FC<FirstRunGuideProps> = ({
+  onNavigate,
+  reopenOnMount = false,
+  active = true,
+}) => {
   const { t } = useTranslation()
   const [guideState, setGuideState] = useState<ProductFirstRunGuideSettings | null>(null)
   const [snapshot, setSnapshot] = useState<ProductReadinessSnapshot | null>(null)
   const [loadError, setLoadError] = useState(false)
+  const [reloadVersion, setReloadVersion] = useState(0)
   const stateRef = useRef<ProductFirstRunGuideSettings | null>(null)
+  const activeRef = useRef(active)
+  activeRef.current = active
+  const mountedRef = useRef(true)
+  const refreshInFlightRef = useRef<Promise<void> | null>(null)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   const commit = useCallback((next: ProductFirstRunGuideSettings) => {
     stateRef.current = next
     setGuideState(next)
     scheduleSettingsWrite({ firstRunGuide: next })
-    return flushSettingsWrites()
+    return flushSettingsWrites().catch(() => {})
   }, [])
 
-  const refresh = useCallback(async () => {
-    const nextSnapshot = await loadProductReadiness(window.electronAPI)
-    setSnapshot(nextSnapshot)
-    const current = stateRef.current
-    if (current) {
-      const reconciled = reconcileFirstRunGuide(current, nextSnapshot)
-      if (reconciled !== current) void commit(reconciled)
-    }
-    return nextSnapshot
+  const refresh = useCallback(() => {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current
+    const request = loadProductReadiness(window.electronAPI)
+      .then((nextSnapshot) => {
+        if (!mountedRef.current || !activeRef.current) return
+        setSnapshot(nextSnapshot)
+        setLoadError(false)
+        const current = stateRef.current
+        if (current) {
+          const reconciled = reconcileFirstRunGuide(current, nextSnapshot)
+          if (reconciled !== current) void commit(reconciled)
+        }
+      })
+      .finally(() => {
+        refreshInFlightRef.current = null
+      })
+    refreshInFlightRef.current = request
+    return request
   }, [commit])
 
   useEffect(() => {
     let cancelled = false
+    setLoadError(false)
     void window.electronAPI
       .loadSettings()
       .then(async (settings) => {
@@ -92,7 +119,7 @@ const FirstRunGuide: React.FC<FirstRunGuideProps> = ({ onNavigate }) => {
         // A dismissed/completed guide is invisible. Do not make it perform the
         // complete readiness probe (including large library inventories) merely
         // to decide that it should render nothing.
-        if (persisted && persisted.status !== 'active') {
+        if (persisted && persisted.status !== 'active' && !reopenOnMount) {
           stateRef.current = persisted
           setGuideState(persisted)
           setSnapshot(null)
@@ -101,7 +128,8 @@ const FirstRunGuide: React.FC<FirstRunGuideProps> = ({ onNavigate }) => {
         }
         const initialSnapshot = await loadProductReadiness(window.electronAPI)
         if (cancelled) return
-        const initial = initializeFirstRunGuide(initialSnapshot, persisted)
+        const loaded = initializeFirstRunGuide(initialSnapshot, persisted)
+        const initial = reopenOnMount ? updateFirstRunGuide(loaded, 'reopen') : loaded
         stateRef.current = initial
         setGuideState(initial)
         setSnapshot(initialSnapshot)
@@ -114,13 +142,13 @@ const FirstRunGuide: React.FC<FirstRunGuideProps> = ({ onNavigate }) => {
     return () => {
       cancelled = true
     }
-  }, [commit])
+  }, [commit, reloadVersion, reopenOnMount])
 
   useEffect(() => {
-    if (guideState?.status !== 'active') return
+    if (!active || guideState?.status !== 'active') return
     const timer = window.setInterval(() => void refresh().catch(() => setLoadError(true)), 2500)
     return () => window.clearInterval(timer)
-  }, [guideState?.status, refresh])
+  }, [active, guideState?.status, refresh])
 
   useEffect(() => {
     const reopen = () => {
@@ -147,7 +175,17 @@ const FirstRunGuide: React.FC<FirstRunGuideProps> = ({ onNavigate }) => {
     [guideState, snapshot],
   )
 
-  if (!view?.visible) return null
+  if (guideState && guideState.status !== 'active') return null
+  if (!view)
+    return (
+      <section className="first-run-guide" data-testid="product-first-run-guide" role="status">
+        <span>{t(loadError ? 'The operation failed.' : 'Loading preparation status')}</span>
+        {loadError && (
+          <button onClick={() => setReloadVersion((version) => version + 1)}>{t('Retry')}</button>
+        )}
+      </section>
+    )
+  if (!view.visible) return null
 
   const currentStep = view.currentStep === 'complete' ? null : view.currentStep
   return (

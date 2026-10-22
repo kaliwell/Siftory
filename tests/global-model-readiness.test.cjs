@@ -139,7 +139,7 @@ test('deep runtime failures override import-time graph inspection and gate depen
   assert.equal(canExecuteGlobalModelTask(snapshot, ['dinov2_vitb14']), true)
 })
 
-test('navigation owns model detection and explicit deep checks use the isolated runtime', () => {
+test('model management stays reachable from tasks/settings and explicit deep checks use the isolated runtime', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const panel = source('src/components/GlobalModelReadinessPanel.tsx')
   const hook = source('src/hooks/useGlobalModelReadiness.ts')
@@ -150,9 +150,11 @@ test('navigation owns model detection and explicit deep checks use the isolated 
   const mediaPanel = source('src/components/MediaSearchPanel.tsx')
   const subjectPicker = source('src/components/SubjectPickerModal.tsx')
 
-  assert.match(navigator, /data-testid="workspace-model-readiness-toggle"/)
-  assert.match(navigator, /<GlobalModelReadinessPanel/)
-  assert.match(navigator, /globalModels\.refresh\(\{ deep: true \}\)/)
+  assert.match(navigator, /<ProductReadinessCenter/)
+  assert.match(navigator, /workspace-open-model-settings/)
+  assert.match(source('src/components/ProductReadinessCenter.tsx'), /modelManagerRef/)
+  assert.match(source('src/components/SettingsPanel.tsx'), /<VectorSettings/)
+  assert.doesNotMatch(navigator, /useGlobalModelReadiness/)
   assert.match(panel, /data-testid="global-model-readiness"/)
   for (const id of [
     ...GLOBAL_MANAGED_MODEL_NAMES,

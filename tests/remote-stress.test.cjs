@@ -114,38 +114,10 @@ test('stress: 200 concurrent local atomic replacements preserve contents', async
   }
 })
 
-test('stress: 50 refused SSH connections settle and release sessions', async () => {
-  const profile = {
-    id: 'refused-stress',
-    name: 'Refused Stress',
-    host: '127.0.0.1',
-    port: 1,
-    username: 'stress',
-    authType: 'password',
-    tags: ['stress'],
-    createdAt: 1,
-    updatedAt: 1,
+test('retired interactive SSH sessions expose no connection or session lifecycle API', () => {
+  for (const key of ['connect', 'disconnect', 'disconnectAll', 'getSessionStatus', 'write', 'resize']) {
+    assert.equal(terminal[key], undefined, `${key} must stay unavailable after terminal retirement`)
   }
-  const startedAt = performance.now()
-  const statuses = await Promise.all(
-    Array.from({ length: 50 }, () =>
-      terminal.connect(profile, {
-        profileId: profile.id,
-        password: 'not-used',
-        cols: 80,
-        rows: 24,
-      }),
-    ),
-  )
-  const durationMs = performance.now() - startedAt
-  process.stdout.write(`[stress] 50 refused SSH connections: ${durationMs.toFixed(1)} ms\n`)
-  assert.equal(
-    statuses.every((status) => status.state === 'error'),
-    true,
-  )
-  assert.equal(
-    statuses.every((status) => terminal.getSessionStatus(status.sessionId) === null),
-    true,
-  )
-  assert.ok(durationMs < 10_000, `refused connections took ${durationMs} ms`)
+  assert.equal(typeof terminal.buildSshConfig, 'function')
+  assert.equal(typeof terminal.verifyHostFingerprint, 'function')
 })

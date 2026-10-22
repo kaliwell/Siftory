@@ -138,7 +138,7 @@ test('mode switcher and quick navigation are keyboard reachable with visible foc
   const modeBar = source('src/components/SearchExperienceModeBar.tsx')
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const windowStyles = source('src/styles/window-system.css')
-  const navigatorStyles = source('src/styles/workspace-navigator.css')
+  const navigatorStyles = source('src/styles/focused-workspace.css')
   const smoke = source('electron/uiSmokeService.ts')
 
   assert.match(modeBar, /role="radiogroup"/)
@@ -151,21 +151,16 @@ test('mode switcher and quick navigation are keyboard reachable with visible foc
     /requestAnimationFrame\(\(\) => buttonRefs\.current\[nextIndex\]\?\.focus\(\)\)/,
   )
 
-  assert.match(navigator, /moveDomainFocus/)
-  assert.match(navigator, /moveNavigatorWithKeyboard/)
-  assert.match(navigator, /event\.key !== 'Escape'/)
+  assert.match(navigator, /nextRovingIndex/)
+  assert.match(navigator, /refs.current\[next\]\?\.focus/)
+  assert.match(navigator, /event.key === 'Escape'/)
+  assert.match(navigator, /aria-current=/)
   assert.match(navigator, /aria-controls=/)
   assert.match(navigator, /aria-expanded=/)
-  assert.match(navigator, /data-testid="workspace-search-advanced-toggle"/)
-  assert.match(navigator, /advancedSearchOpen &&/)
-  assert.match(navigator, /data-testid="workspace-search-library"/)
-  assert.match(navigator, /className="workspace-navigator__primary-entry"/)
+  assert.doesNotMatch(navigator, /moveNavigatorWithKeyboard|advancedSearchOpen/)
   assert.match(windowStyles, /button:focus-visible/)
-  assert.match(navigatorStyles, /overflow-x: auto/)
-  assert.match(navigatorStyles, /max-width: calc\(100vw - 16px\)/)
-  assert.match(navigatorStyles, /width: min\(732px, calc\(100vw - 16px\)\)/)
-  assert.match(navigatorStyles, /\.workspace-navigator__tasks\s*\{[\s\S]*?width: 100%/)
-  assert.doesNotMatch(navigatorStyles, /width: max-content/)
+  assert.match(navigatorStyles, /button:focus-visible/)
+  assert.match(navigatorStyles, /@media \(max-width: 760px\)/)
   for (const evidence of [
     'coreActionParity',
     'keyboardReachable',

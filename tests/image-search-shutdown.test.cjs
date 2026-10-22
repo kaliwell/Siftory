@@ -62,7 +62,8 @@ test('main.ts will-quit prevents default, awaits shutdown, and guards re-entry',
   assert.match(main, /\.finally\(\(\) => app\.quit\(\)\)/)
   // Existing cleanup lines remain after the shutdown handshake.
   assert.match(main, /disposeVectorAnnWorker\(\)/)
-  assert.match(main, /disconnectAll\(\)/)
+  // Interactive terminal sessions have been retired; no dangling shutdown call remains.
+  assert.doesNotMatch(main, /disconnectAll\(\)/)
   assert.match(main, /globalShortcut\.unregisterAll\(\)/)
   // Shutdown handshake must run before the vector worker disposal.
   const shutdownIndex = main.indexOf('shutdownImageSearchForQuit()')

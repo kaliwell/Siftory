@@ -212,7 +212,6 @@ test('renderer loads only after IPC registration and remote profile handlers sha
     'registerRemoteTerminalProfileIpc(',
     'registerRemoteTerminalSftpIpc(',
     'registerRemoteTerminalTransferIpc(',
-    'registerRemoteTerminalConnectionIpc(',
     'registerFileManagerIpc(',
     'registerFileDragIpc(',
     'registerVectorIpc(',
@@ -222,12 +221,12 @@ test('renderer loads only after IPC registration and remote profile handlers sha
     assert.ok(registrationAt < createWindowAt, `${registration} must precede createWindow()`)
   }
 
+  assert.doesNotMatch(readyBlock, /registerRemoteTerminalConnectionIpc/)
   assert.match(readyBlock, /const profilesReady = loadProfiles\(/)
   for (const file of [
     'electron/remoteTerminalProfileIpc.ts',
     'electron/remoteTerminalSftpIpc.ts',
     'electron/remoteTerminalTransferIpc.ts',
-    'electron/remoteTerminalConnectionIpc.ts',
   ]) {
     assert.match(readText(file), /await profilesReady/, `${file} must await profile initialization`)
   }

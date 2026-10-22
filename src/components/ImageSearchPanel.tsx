@@ -781,6 +781,7 @@ const ImageSearchPanel: React.FC = () => {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (!useStore.getState().showImageSearch) return
       if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'v') return
       const target = event.target as HTMLElement | null
       const tag = target?.tagName?.toLowerCase()

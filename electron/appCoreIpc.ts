@@ -630,13 +630,15 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
   })
 
   secureIpcMain.handle('load-settings', () => {
-    return readJSON(getSettingsPath(options.userDataPath))
+    return readJSON(getSettingsPath(options.userDataPath), true)
   })
 
   secureIpcMain.handle('save-settings', (_event, rawSettings: unknown) => {
     const settings = normalizePersistedObject(rawSettings, 'settings')
     if (!settings) throw new TypeError('Invalid settings payload')
-    writeJSON(getSettingsPath(options.userDataPath), settings)
+    if (!writeJSON(getSettingsPath(options.userDataPath), settings)) {
+      throw new Error('Could not save local settings')
+    }
   })
 
   secureIpcMain.handle('load-config', () => {

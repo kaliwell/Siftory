@@ -77,6 +77,7 @@ export type UnifiedDegradedReason =
 
 export type UnifiedSearchLane =
   | 'lexical'
+  | 'image-fingerprint'
   | 'semantic'
   | 'subject'
   | 'duplicate'
@@ -155,6 +156,7 @@ export type UnifiedVideoEvidenceSource =
 
 export type UnifiedSearchHitType =
   | 'filename'
+  | 'image-fingerprint'
   | 'image-semantic'
   | 'subject'
   | 'duplicate'

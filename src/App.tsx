@@ -1,19 +1,15 @@
+import './styles/focused-workspace.css'
+import { focusedWorkspaceVisibility } from './services/focusedWorkspace'
 import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { normalizeImageSearchScanPaths, useStore } from './stores/useStore'
 import { useFMStore } from './stores/useFMStore'
-import ClockPanel from './components/ClockPanel'
-import FoldersPanel from './components/FoldersPanel'
-import PromptsPanel from './components/PromptsPanel'
 import SettingsPanel from './components/SettingsPanel'
-import EditPanel from './components/EditPanel'
-import CalculatorPanel from './components/CalculatorPanel'
 import WorkspaceNavigator from './components/WorkspaceNavigator'
-import FileManagerPanel from './components/filemanager/FileManagerPanel'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { createDefaultTabs, createDefaultPromptTabs } from './config/default'
 import { lazyPanelRegistry } from './config/panelRegistry'
 import { useAutoSaveSettings } from './hooks/useAutoSaveSettings'
-import { useAutoSaveFMSettings } from './hooks/useAutoSaveFMSettings'
+import { scheduleSettingsWrite } from './hooks/settingsWriter'
 import { useMouseTransparency } from './hooks/useMouseTransparency'
 import { resolvePanelVisibility } from './services/settingsVisibility'
 import {
@@ -96,20 +92,13 @@ const App: React.FC = () => {
   const themeMode = useStore((s) => s.themeMode)
   const transparency = useStore((s) => s.transparency)
   const configDirty = useStore((s) => s.configDirty)
-  const showClock = useStore((s) => s.showClock)
-  const showFolders = useStore((s) => s.showFolders)
-  const showPrompts = useStore((s) => s.showPrompts)
   const showSettings = useStore((s) => s.showSettings)
-  const showCalc = useStore((s) => s.showCalc)
-  const showFM = useStore((s) => s.showFM)
   const showImageSearch = useStore((s) => s.showImageSearch)
   const showUnifiedSearch = useStore((s) => s.showUnifiedSearch)
   const showAppStorage = useStore((s) => s.showAppStorage)
-  const showRemoteTerminal = useStore((s) => s.showRemoteTerminal)
   const showDuplicateFinder = useStore((s) => s.showDuplicateFinder)
   const showMediaSearch = useStore((s) => s.showMediaSearch)
   const showAssetLibrary = useStore((s) => s.showAssetLibrary)
-  const showBatchRename = useStore((s) => s.showBatchRename)
   const globalVisible = useStore((s) => s.globalVisible)
   const savedVisibility = useStore((s) => s.savedVisibility)
   const workArea = useStore((s) => s.workArea)
@@ -121,6 +110,25 @@ const App: React.FC = () => {
   const loaded = useRef(false)
   const mountedLazyPanelIds = useRef(new Set<(typeof lazyPanels)[number]['id']>())
   const visibilityGenerationRef = useRef(0)
+
+  useEffect(() => {
+    if (!ready) return
+    const reconcile = (
+      state: ReturnType<typeof useStore.getState>,
+      previous?: ReturnType<typeof useStore.getState>,
+    ) => {
+      const visibility = focusedWorkspaceVisibility(state, previous)
+      if (
+        Object.entries(visibility).some(
+          ([key, value]) => state[key as keyof typeof visibility] !== value,
+        )
+      ) {
+        useStore.setState(visibility)
+      }
+    }
+    reconcile(useStore.getState())
+    return useStore.subscribe(reconcile)
+  }, [ready])
 
   // ── Snap helper (shared) ─────────────────────────────────
   const snapAllToScreen = (wa: WorkArea, previous?: WorkArea) => {
@@ -712,7 +720,6 @@ const App: React.FC = () => {
   }, [])
 
   useAutoSaveSettings(ready)
-  useAutoSaveFMSettings()
 
   // ── Load on startup ─────────────────────────────────────
   useEffect(() => {
@@ -722,7 +729,10 @@ const App: React.FC = () => {
     // Load settings & config in parallel, then enable auto-save
     let pending = 2
     const done = () => {
-      if (--pending === 0) setReady(true)
+      if (--pending === 0) {
+        useStore.setState(focusedWorkspaceVisibility(useStore.getState()))
+        setReady(true)
+      }
     }
 
     window.electronAPI
@@ -965,8 +975,7 @@ const App: React.FC = () => {
             migrateTheme ||
             migrateSearchUiPreferences
           ) {
-            void window.electronAPI.saveSettings({
-              ...settings,
+            scheduleSettingsWrite({
               theme: legacyThemeIndex(migratedThemeId),
               themeId: migratedThemeId,
               themeMode: migratedThemeMode,
@@ -1089,6 +1098,7 @@ const App: React.FC = () => {
 
   return (
     <div
+      className="focused-workspace"
       data-testid="app-root"
       data-ready={ready ? 'true' : 'false'}
       style={{
@@ -1104,74 +1114,43 @@ const App: React.FC = () => {
         overflow: 'clip',
       }}
     >
-      {globalVisible && (
+      {ready && globalVisible && (
         <ErrorBoundary name="Workspace">
           <WorkspaceNavigator />
         </ErrorBoundary>
       )}
-      {showClock && (
-        <ErrorBoundary name="Clock">
-          <ClockPanel />
-        </ErrorBoundary>
-      )}
-      {showFolders && (
-        <ErrorBoundary name="Folders">
-          <FoldersPanel />
-        </ErrorBoundary>
-      )}
-      {showPrompts && (
-        <ErrorBoundary name="Prompts">
-          <PromptsPanel />
-        </ErrorBoundary>
-      )}
-      {showSettings && (
+      {ready && showSettings && (
         <ErrorBoundary name="Settings">
           <SettingsPanel />
         </ErrorBoundary>
       )}
-      {showCalc && (
-        <ErrorBoundary name="Calculator">
-          <CalculatorPanel />
-        </ErrorBoundary>
-      )}
-      {(showFM || (!globalVisible && savedVisibility.fm)) && (
-        <div style={{ display: showFM ? 'contents' : 'none' }}>
-          <ErrorBoundary name="File Manager">
-            <FileManagerPanel />
-          </ErrorBoundary>
-        </div>
-      )}
-      {lazyPanels.map(
-        ({ id, boundaryName, visibilityKey, Component, preserveWhenHidden = false }) => {
-          const panelVisible = {
-            showImageSearch,
-            showUnifiedSearch,
-            showAppStorage,
-            showRemoteTerminal,
-            showDuplicateFinder,
-            showMediaSearch,
-            showAssetLibrary,
-            showBatchRename,
-          }[visibilityKey]
-          const requestedMount = panelVisible || (!globalVisible && savedVisibility[id])
-          if (requestedMount && preserveWhenHidden) mountedLazyPanelIds.current.add(id)
-          if (!requestedMount && !(preserveWhenHidden && mountedLazyPanelIds.current.has(id))) {
-            return null
-          }
-          return (
-            <div key={id} style={{ display: panelVisible ? 'contents' : 'none' }}>
-              <ErrorBoundary name={boundaryName}>
-                <Suspense fallback={null}>
-                  <Component />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )
-        },
-      )}
-      <ErrorBoundary name="Edit">
-        <EditPanel />
-      </ErrorBoundary>
+      {ready &&
+        lazyPanels.map(
+          ({ id, boundaryName, visibilityKey, Component, preserveWhenHidden = false }) => {
+            const panelVisible = {
+              showImageSearch,
+              showUnifiedSearch,
+              showAppStorage,
+              showDuplicateFinder,
+              showMediaSearch,
+              showAssetLibrary,
+            }[visibilityKey]
+            const requestedMount = panelVisible || (!globalVisible && savedVisibility[id])
+            if (requestedMount && preserveWhenHidden) mountedLazyPanelIds.current.add(id)
+            if (!requestedMount && !(preserveWhenHidden && mountedLazyPanelIds.current.has(id))) {
+              return null
+            }
+            return (
+              <div key={id} style={{ display: panelVisible ? 'contents' : 'none' }}>
+                <ErrorBoundary name={boundaryName}>
+                  <Suspense fallback={null}>
+                    <Component />
+                  </Suspense>
+                </ErrorBoundary>
+              </div>
+            )
+          },
+        )}
     </div>
   )
 }

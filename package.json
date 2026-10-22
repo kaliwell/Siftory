@@ -1,18 +1,18 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.1",
+  "version": "1.0.1-alpha.2",
   "private": true,
   "license": "UNLICENSED",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",
   "engines": {
-    "node": "24.16.0",
-    "npm": "11.13.0"
+    "node": "24.22.1",
+    "npm": "11.19.1"
   },
-  "packageManager": "npm@11.13.0",
+  "packageManager": "npm@11.19.1",
   "main": "dist-electron/main.js",
   "scripts": {
     "postinstall": "node scripts/install-electron.cjs",
-    "test": "npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:copyright-source && npm run test:optimization-todo && npm run test:operations-automation && npm run test:foundation-automation && npm run test:productization && npm run test:qa-toolchain && npm run test:audit-regressions && npm run test:guards && npm run test:architecture && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run test:safe-eval && npm run test:settings && npm run test:window-visibility && npm run test:ui-smoke-contract && npm run test:file-drag && npm run test:fm-security && npm run test:fm-watcher && npm run test:app-storage && npm run test:duplicate-finder && npm run test:media-search && npm run test:image-search-sort && npm run test:image-search-shutdown && npm run test:image-search-data-folders && npm run test:asset-library && npm run test:asset-library-sqlite && npm run test:neko-search-cluster && npm run test:transaction-faults && npm run test:remote-terminal && npm run test:remote-sftp && npm run test:remote-transfer && npm run test:remote-stress && npm run test:vector-pipeline && npm run test:vector-ann && npm run test:text-encoder && npm run test:model-download && npm run test:runtime-package && npm run test:covered-source && npm run test:reproducible-build && npm run test:batch-rename && npm run test:face-match && npm run test:person-reid && npm run test:subject-crop && npm run test:project-preview && npm run test:discovery-catalog && npm run test:asset-identity && npm run test:unified-search && npm run build:native && npm run test:native",
+    "test": "npm run test:focused-workspace && npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:copyright-source && npm run test:optimization-todo && npm run test:operations-automation && npm run test:foundation-automation && npm run test:productization && npm run test:qa-toolchain && npm run test:audit-regressions && npm run test:guards && npm run test:architecture && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run test:safe-eval && npm run test:settings && npm run test:window-visibility && npm run test:ui-smoke-contract && npm run test:file-drag && npm run test:fm-security && npm run test:fm-watcher && npm run test:app-storage && npm run test:duplicate-finder && npm run test:media-search && npm run test:image-search-sort && npm run test:image-search-shutdown && npm run test:image-search-data-folders && npm run test:asset-library && npm run test:asset-library-sqlite && npm run test:neko-search-cluster && npm run test:transaction-faults && npm run test:remote-terminal && npm run test:remote-sftp && npm run test:remote-transfer && npm run test:remote-stress && npm run test:vector-pipeline && npm run test:vector-ann && npm run test:text-encoder && npm run test:model-download && npm run test:runtime-package && npm run test:covered-source && npm run test:reproducible-build && npm run test:batch-rename && npm run test:face-match && npm run test:person-reid && npm run test:subject-crop && npm run test:project-preview && npm run test:discovery-catalog && npm run test:asset-identity && npm run test:unified-search && npm run build:native && npm run test:native",
     "dev": "set SIFTORY_MEDIA_SEARCH_DIR=%APPDATA%\\floating-clock-electron\\media-search&& vite --config vite.config.mjs --configLoader runner",
     "build": "node scripts/build.cjs --profile=online",
     "build:offline": "node scripts/build.cjs --profile=offline",
@@ -233,7 +233,7 @@
     "test:ipc-registration": "node --test tests/ipc-registration.test.cjs tests/third-party-licenses.test.cjs",
     "test:preload-contract": "node --test tests/preload-contract.test.cjs",
     "test:safe-eval": "node --test tests/safe-eval.test.cjs",
-    "test:settings": "node --test tests/settings-store.test.cjs tests/i18n.test.cjs tests/window-material.test.cjs tests/workspace-display.test.cjs tests/ai-control-policy.test.cjs tests/ai-control-concurrency.test.cjs tests/folder-stats.test.cjs tests/large-file-inventory.test.cjs tests/theme-system.test.cjs tests/ui-font-license.test.cjs tests/product-identity.test.cjs && npm run test:end-user-terms",
+    "test:settings": "node --test tests/settings-store.test.cjs tests/settings-writer.test.cjs tests/i18n.test.cjs tests/window-material.test.cjs tests/workspace-display.test.cjs tests/ai-control-policy.test.cjs tests/ai-control-concurrency.test.cjs tests/folder-stats.test.cjs tests/large-file-inventory.test.cjs tests/theme-system.test.cjs tests/ui-font-license.test.cjs tests/product-identity.test.cjs && npm run test:end-user-terms",
     "test:end-user-terms": "node --test tests/end-user-terms.test.cjs tests/end-user-terms-dialog.test.cjs tests/end-user-terms-ipc.test.cjs",
     "smoke:end-user-terms": "npm run build:renderer:checked && node tests/end-user-terms-electron-smoke.cjs",
     "test:ui-smoke-contract": "node --test tests/ui-smoke-contract.test.cjs tests/panel-window-controls.test.cjs tests/image-search-wide-layout.test.cjs tests/split-tool-panel-layout.test.cjs tests/ui-smoke-drag-geometry.test.cjs tests/electron-media-probe.test.cjs",
@@ -306,13 +306,14 @@
     "test:runtime-package": "node --test tests/runtime-package-pruning.test.cjs tests/check-runtime-package.test.cjs",
     "licenses:source-check": "node scripts/check-covered-source.cjs",
     "test:covered-source": "node --test tests/covered-source.test.cjs",
-    "ci:verify:source": "npm run toolchain:check && npm run typecheck && npm run lint && npm run format:check && npm run docs:check && npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run build:renderer:checked && npm audit --omit=dev --audit-level=high"
+    "ci:verify:source": "npm run toolchain:check && npm run test:focused-workspace && npm run typecheck && npm run lint && npm run format:check && npm run docs:check && npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run build:renderer:checked && npm audit --omit=dev --audit-level=high",
+    "test:focused-workspace": "node --test tests/focused-workspace.test.cjs tests/workspace-navigation.test.cjs tests/ipc-registration.test.cjs tests/preload-contract.test.cjs tests/product-information-architecture.test.cjs tests/product-unified-search-filters.test.cjs tests/product-search-evidence.test.cjs tests/product-search-feedback.test.cjs tests/unified-search.test.cjs tests/panel-window-controls.test.cjs tests/ui-smoke-contract.test.cjs tests/product-first-run-guide.test.cjs tests/global-model-readiness.test.cjs tests/product-resource-governor.test.cjs tests/settings-writer.test.cjs tests/settings-store.test.cjs tests/window-visibility-state.test.cjs tests/window-visibility-integration.test.cjs",
+    "test:focused-workspace:browser": "node tests/focused-workspace-browser.cjs",
+    "test:focused-workspace:native": "node tests/focused-workspace-electron-smoke.cjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
     "@napi-rs/canvas": "1.0.3",
-    "@xterm/addon-fit": "^0.11.0",
-    "@xterm/xterm": "^5.5.0",
     "pdfjs-dist": "6.2.108",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -474,11 +475,12 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.8.0",
     "node-gyp": "^13.0.1",
+    "playwright": "1.62.1",
     "prettier": "^3.8.4",
     "typescript": "^5.9.3",
     "undici": "7.29.1",
     "unzipper": "^0.12.3",
-    "vite": "^7.3.1",
+    "vite": "7.3.7",
     "vite-plugin-electron": "^0.29.1",
     "vite-plugin-electron-renderer": "^1.0.0"
   }

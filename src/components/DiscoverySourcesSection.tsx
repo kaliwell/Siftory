@@ -14,6 +14,7 @@ import type {
   UnifiedSearchResponse,
   UnifiedSearchResultItem,
 } from '../../shared/ipc-contract'
+import { useStore } from '../stores/useStore'
 import { useTranslation } from '../i18n/useTranslation'
 import SubjectPickerModal, { type SubjectPickerData } from './SubjectPickerModal'
 import { mediaSearchBridge } from '../services/mediaSearchBridge'
@@ -129,6 +130,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   enableEmbeddedSearch = false,
 }) => {
   const { t } = useTranslation()
+  const isVisible = useStore((state) => state.showImageSearch)
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [sources, setSources] = useState<DiscoverySourceListItem[]>([])
   const [statuses, setStatuses] = useState<Record<string, DiscoveryScanStatus>>({})
@@ -197,6 +199,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   }, [])
 
   useEffect(() => {
+    if (!isVisible) return
     void refresh()
     const unsubscribe = window.electronAPI.discoveryCatalog.onScanStatusChanged((status) => {
       setStatuses((previous) => ({ ...previous, [status.sourceId]: status }))
@@ -207,7 +210,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
       unsubscribe()
       clearInterval(timer)
     }
-  }, [refresh])
+  }, [isVisible, refresh])
 
   useEffect(() => {
     void refreshCollections().catch(() => {})
@@ -277,8 +280,13 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   }, [enableEmbeddedSearch, query, referenceImagePath, subject, catalogSearchRevision])
 
   useEffect(() => {
-    void window.electronAPI.unifiedSearch.setVisiblePaths(results.map((item) => item.displayPath))
-  }, [results])
+    if (!isVisible || !enableEmbeddedSearch) return
+    void window.electronAPI.unifiedSearch
+      .setVisiblePaths(
+        results.filter((item) => item.source.type !== 'sftp').map((item) => item.displayPath),
+      )
+      .catch(() => {})
+  }, [enableEmbeddedSearch, isVisible, results])
 
   useEffect(() => {
     let cancelled = false

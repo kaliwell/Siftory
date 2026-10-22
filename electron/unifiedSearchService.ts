@@ -164,6 +164,7 @@ function boundedModelSources(
 }
 
 function recallHitType(lane: UnifiedSearchLane): UnifiedSearchEvidence['hitType'] {
+  if (lane === 'image-fingerprint') return 'image-fingerprint'
   if (lane === 'semantic') return 'image-semantic'
   if (lane === 'subject') return 'subject'
   if (lane === 'duplicate') return 'duplicate'
@@ -268,6 +269,7 @@ export interface UnifiedLexicalRecallResult {
 
 export interface UnifiedSearchServiceDeps {
   lexicalRecall: (request: UnifiedSearchRequest) => UnifiedLexicalRecallResult
+  imageFingerprintRecall?: (request: UnifiedSearchRequest) => Promise<UnifiedRecallHit[]>
   semanticRecall?: (request: UnifiedSearchRequest) => Promise<UnifiedRecallHit[]>
   subjectRecall?: (
     request: UnifiedSearchRequest,
@@ -430,6 +432,16 @@ export class UnifiedSearchService {
       hits: UnifiedRecallHit[]
       applicable: boolean
     }> = [
+      ...(this.deps.imageFingerprintRecall
+        ? [
+            {
+              lane: 'image-fingerprint' as const,
+              recall: this.deps.imageFingerprintRecall,
+              hits: [],
+              applicable: Boolean(request.referenceImagePath && !request.subject),
+            },
+          ]
+        : []),
       {
         lane: 'semantic',
         recall: this.deps.semanticRecall,
@@ -648,7 +660,7 @@ export class UnifiedSearchService {
             existing.videoHits = videoHits.slice(0, MAX_RAW_VIDEO_EVIDENCE_HITS)
             existing.videoHitMs = existing.videoHits[0]?.timestampMs
           }
-          anyAiContribution = true
+          if (aiLane.lane !== 'image-fingerprint') anyAiContribution = true
         }
       }
     }
@@ -672,13 +684,17 @@ export class UnifiedSearchService {
     const degradedAiLane = lanes.find(
       (lane) =>
         lane.lane !== 'lexical' &&
+        lane.lane !== 'image-fingerprint' &&
         lane.status !== 'ok' &&
         lane.status !== 'not-applicable' &&
         lane.degradedReason,
     )
     const aiUnavailableReason = degradedAiLane?.degradedReason
     for (const item of items.values()) {
-      const level: UnifiedIndexStateLevel = item.scoreBreakdown
+      const hasAiScores = Object.keys(item.scoreBreakdown ?? {}).some(
+        (lane) => lane !== 'image-fingerprint',
+      )
+      const level: UnifiedIndexStateLevel = hasAiScores
         ? anyAiContribution && aiUnavailableReason
           ? 'partial'
           : 'full'
@@ -726,7 +742,10 @@ export class UnifiedSearchService {
       })
 
     const applicableAiLanes = lanes.filter(
-      (lane) => lane.lane !== 'lexical' && lane.status !== 'not-applicable',
+      (lane) =>
+        lane.lane !== 'lexical' &&
+        lane.lane !== 'image-fingerprint' &&
+        lane.status !== 'not-applicable',
     )
     const anyAiLaneReady = applicableAiLanes.some((lane) => lane.status === 'ok')
     const aiEnhancement: UnifiedSearchResponse['aiEnhancement'] =

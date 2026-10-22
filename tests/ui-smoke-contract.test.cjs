@@ -241,22 +241,23 @@ test('UI smoke interactions use stable test ids instead of translated labels', (
   }
 })
 
-test('Phase 6 workspace navigation exposes six user domains and nests remote tools under Sources', () => {
+test('focused workspace keeps primary domains and retires remote terminal tools', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const smoke = source('electron/uiSmokeService.ts')
   const sources = source('src/components/DiscoverySourcesSection.tsx')
   const imagePanel = source('src/components/ImageSearchPanel.tsx')
   const collapsible = source('src/components/CollapsibleSearchSection.tsx')
-  for (const domain of ['Search', 'Sources', 'Library', 'Organize', 'Tasks', 'Settings']) {
+  for (const domain of ['Search', 'Sources', 'Library', 'Tasks', 'Settings']) {
     assert.match(navigator, new RegExp(`['"]${domain}['"]`))
   }
-  assert.match(navigator, /workspace-remote-advanced/)
-  assert.match(navigator, /workspace-search-advanced-toggle/)
-  assert.match(navigator, /workspace-search-library/)
-  assert.match(navigator, /focusPanel\('showRemoteTerminal'\)/)
+  assert.doesNotMatch(
+    navigator,
+    /workspace-remote-advanced|showRemoteTerminal|workspace-search-advanced-toggle/,
+  )
+  assert.match(navigator, /panel: 'unifiedSearch'/)
+  assert.match(navigator, /panel: 'assetLibrary'/)
   const settings = source('src/components/SettingsPanel.tsx')
-  assert.match(settings, /sourceAdvancedToolItems/)
-  assert.match(settings, /renderPanelVisibilityGroup\('Source advanced tools'/)
+  assert.doesNotMatch(settings, /sourceAdvancedToolItems/)
   assert.match(navigator, /getSchedulerStats\(\)/)
   assert.match(sources, /workspace-sources-focus/)
   assert.match(imagePanel, /testId="image-search-sources-section"/)
@@ -286,8 +287,8 @@ test('Phase 6 workspace navigation exposes six user domains and nests remote too
 test('unified search is a first-class page with safe result actions', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const panel = source('src/components/UnifiedSearchPanel.tsx')
-  assert.match(navigator, /focusPanel\('showUnifiedSearch'\)/)
-  assert.match(navigator, /workspace-search-unified/)
+  assert.match(navigator, /panel: 'unifiedSearch'/)
+  assert.match(navigator, /openWorkspacePanel/)
   for (const testId of [
     'unified-search-page',
     'unified-search-query',

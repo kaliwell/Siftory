@@ -174,20 +174,12 @@ import type {
 } from './app-core'
 import type {
   RemoteTerminalProfile,
-  RemoteTerminalConnectRequest,
-  RemoteTerminalTestRequest,
-  RemoteTerminalTestResult,
-  RemoteServerMetricsRequest,
-  RemoteServerMetricsSnapshot,
-  RemoteTerminalSessionStatus,
-  RemoteTerminalDataEvent,
   RemoteDirectoryResult,
   RemoteDirectoryPage,
   RemoteOperationResult,
   RemoteTransferTask,
   RemoteTransferSelection,
 } from './remote-terminal'
-import type { AppStorageScanStatus, AppStorageScanResult } from './app-storage'
 import type {
   SubjectBBox,
   SubjectDetectionResult,
@@ -441,22 +433,10 @@ export interface ElectronAPI {
     resumeScan: () => Promise<{ ok: boolean }>
     isScanPaused: () => Promise<{ paused: boolean }>
   }
-  appStorage: {
-    scan: () => Promise<AppStorageScanResult>
-    stop: () => Promise<{ ok: boolean }>
-    getStatus: () => Promise<AppStorageScanStatus>
-    loadCached: () => Promise<AppStorageScanResult | null>
-    clearCached: () => Promise<{ ok: boolean; error?: string }>
-    openPath: (folderPath: string) => Promise<{ ok: boolean; error?: string }>
-    onStatusChanged: (cb: (status: AppStorageScanStatus) => void) => () => void
-  }
   remoteTerminal: {
     listProfiles: () => Promise<RemoteTerminalProfile[]>
     saveProfile: (profile: RemoteTerminalProfile) => Promise<{ ok: boolean; error?: string }>
     deleteProfile: (id: string) => Promise<{ ok: boolean; error?: string }>
-    connect: (req: RemoteTerminalConnectRequest) => Promise<RemoteTerminalSessionStatus>
-    testConnection: (req: RemoteTerminalTestRequest) => Promise<RemoteTerminalTestResult>
-    collectMetrics: (req: RemoteServerMetricsRequest) => Promise<RemoteServerMetricsSnapshot>
     credentialStatus: (
       profileId: string,
     ) => Promise<{ available: boolean; stored: boolean; kind?: 'password' | 'passphrase' }>
@@ -520,14 +500,6 @@ export interface ElectronAPI {
     cancelTransfer: (taskId: string) => Promise<{ ok: boolean; error?: string }>
     clearTransferHistory: () => Promise<{ ok: boolean }>
     onTransferChanged: (cb: (task: RemoteTransferTask) => void) => () => void
-    disconnect: (sessionId: string) => Promise<{ ok: boolean; error?: string }>
-    write: (sessionId: string, data: string) => Promise<{ ok: boolean; error?: string }>
-    resize: (
-      sessionId: string,
-      size: { cols: number; rows: number },
-    ) => Promise<{ ok: boolean; error?: string }>
-    onData: (cb: (event: RemoteTerminalDataEvent) => void) => () => void
-    onStatusChanged: (cb: (status: RemoteTerminalSessionStatus) => void) => () => void
   }
   duplicateFinder: {
     scanDuplicates: (opts: DupScanOptions) => Promise<{ ok: boolean; error?: string }>

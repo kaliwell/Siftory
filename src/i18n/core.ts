@@ -35,6 +35,13 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Remote file': '远程文件',
+  'Manage Siftory indexes and generated caches. Original assets are kept.':
+    '管理寻藏的索引与生成缓存，保留原始素材。',
+
+  'Collections and export': '收藏与导出',
+  'Search by name or describe an image': '输入文件名，或描述想找的画面',
+
   'Siftory · 寻藏': 'Siftory · 寻藏',
   'Alpha test · v{version}': 'Alpha 测试版 · v{version}',
   'User agreement': '用户协议',
@@ -558,6 +565,7 @@ const zhCN: Record<string, string> = {
   'AI generated': 'AI生成',
   'Filename match': '文件名命中',
   'Image semantic match': '图片语义命中',
+  'Image fingerprint match': '图片指纹命中',
   'Subject match': '主体命中',
   'Duplicate match': '重复项命中',
   'Video visual match': '视频画面命中',
@@ -1623,6 +1631,10 @@ const zhCN: Record<string, string> = {
   'Add tag': '添加标签',
   Previous: '上一页',
   Next: '下一页',
+  'Search pages': '搜索结果分页',
+  'Showing {start}–{end} of {total}': '显示 {start}–{end}，共 {total} 条',
+  'Showing up to 500 candidates. Refine your search to see more.':
+    '最多显示 500 个候选结果，请细化搜索条件以查看其他素材。',
   'Filter by file name or path...': '按文件名或路径筛选…',
   'Import assets from the current Image Search manifest': '从当前图片搜索清单导入素材',
   'Export a library report (stats, categories, tags, deletion history) as JSON':
@@ -1977,6 +1989,8 @@ const zhCN: Record<string, string> = {
   'No existing failed files to retry': '没有仍存在且可重试的失败文件',
   'Retry {reason}': '重试 {reason}',
   Retry: '重试',
+  'Settings could not be saved. Retry before closing the app.':
+    '设置未能保存，请在关闭应用前重试。',
   '{label} started: {count} failed files': '{label}已启动：{count} 个失败文件',
   'Retry failed': '重试失败',
   'DINO unique images / current hash index total records: {count}':

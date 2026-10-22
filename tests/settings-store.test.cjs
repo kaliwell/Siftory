@@ -114,11 +114,11 @@ test('both settings reset paths include the batch rename panel size', () => {
   assert.match(source, /DEFAULT_BATCH_RENAME_H/)
 })
 
-test('default panel visibility opens only settings and unified search', () => {
+test('default panel visibility opens only unified search', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'stores', 'useStore.ts'), 'utf8')
   assert.match(source, /\.\.\.PRODUCT_PRIMARY_WORKSPACE_VISIBILITY/)
   assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showClock, false)
-  assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showSettings, true)
+  assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showSettings, false)
   assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showImageSearch, false)
   assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showUnifiedSearch, true)
   assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showMediaSearch, false)

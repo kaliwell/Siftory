@@ -8,7 +8,6 @@ import {
   PRODUCT_HEALTH_IPC,
   UNIFIED_SEARCH_IPC,
   type AssetLibraryTaskProgress,
-  type AppStorageScanStatus,
   type BatchRenameProgress,
   type DiscoveryScanStatus,
   type DupScanProgress,
@@ -18,8 +17,6 @@ import {
   type ImageSearchStatus,
   type ImageSearchPreparationProgress,
   type MediaSearchTaskProgress,
-  type RemoteTerminalDataEvent,
-  type RemoteTerminalSessionStatus,
   type RemoteTransferTask,
   type WindowVisibilityEvent,
   type WorkspaceWorkArea,
@@ -308,27 +305,11 @@ const api: ElectronAPI = {
     isScanPaused: () => ipcRenderer.invoke('imageSearch:isScanPaused'),
   },
   // AppStorage APIs
-  appStorage: {
-    scan: () => ipcRenderer.invoke('appStorage:scan'),
-    stop: () => ipcRenderer.invoke('appStorage:stop'),
-    getStatus: () => ipcRenderer.invoke('appStorage:getStatus'),
-    loadCached: () => ipcRenderer.invoke('appStorage:loadCached'),
-    clearCached: () => ipcRenderer.invoke('appStorage:clearCached'),
-    openPath: (folderPath) => ipcRenderer.invoke('appStorage:openPath', folderPath),
-    onStatusChanged: (cb) => {
-      const handler = (_event: IpcRendererEvent, status: AppStorageScanStatus) => cb(status)
-      ipcRenderer.on('appStorage:onStatusChanged', handler)
-      return () => ipcRenderer.removeListener('appStorage:onStatusChanged', handler)
-    },
-  },
   // RemoteTerminal APIs
   remoteTerminal: {
     listProfiles: () => ipcRenderer.invoke('remoteTerminal:listProfiles'),
     saveProfile: (profile) => ipcRenderer.invoke('remoteTerminal:saveProfile', profile),
     deleteProfile: (id) => ipcRenderer.invoke('remoteTerminal:deleteProfile', id),
-    connect: (req) => ipcRenderer.invoke('remoteTerminal:connect', req),
-    testConnection: (req) => ipcRenderer.invoke('remoteTerminal:testConnection', req),
-    collectMetrics: (req) => ipcRenderer.invoke('remoteTerminal:collectMetrics', req),
     credentialStatus: (profileId) =>
       ipcRenderer.invoke('remoteTerminal:credentialStatus', profileId),
     saveCredential: (profileId, kind, secret) =>
@@ -393,19 +374,6 @@ const api: ElectronAPI = {
       const handler = (_event: IpcRendererEvent, task: RemoteTransferTask) => cb(task)
       ipcRenderer.on('remoteTerminal:onTransferChanged', handler)
       return () => ipcRenderer.removeListener('remoteTerminal:onTransferChanged', handler)
-    },
-    disconnect: (sessionId) => ipcRenderer.invoke('remoteTerminal:disconnect', sessionId),
-    write: (sessionId, data) => ipcRenderer.invoke('remoteTerminal:write', sessionId, data),
-    resize: (sessionId, size) => ipcRenderer.invoke('remoteTerminal:resize', sessionId, size),
-    onData: (cb) => {
-      const handler = (_event: IpcRendererEvent, event: RemoteTerminalDataEvent) => cb(event)
-      ipcRenderer.on('remoteTerminal:onData', handler)
-      return () => ipcRenderer.removeListener('remoteTerminal:onData', handler)
-    },
-    onStatusChanged: (cb) => {
-      const handler = (_event: IpcRendererEvent, status: RemoteTerminalSessionStatus) => cb(status)
-      ipcRenderer.on('remoteTerminal:onStatusChanged', handler)
-      return () => ipcRenderer.removeListener('remoteTerminal:onStatusChanged', handler)
     },
   },
   duplicateFinder: {
