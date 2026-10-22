@@ -5,6 +5,9 @@ const { loadTsModule } = require('./guard-utils.cjs')
 const { buildWorkspaceTopology, normalizeDisplayScope } = loadTsModule(
   'electron/workspaceDisplay.ts',
 )
+const { restoreFocusedDisplayScope, FOCUSED_DISPLAY_SCOPE_VERSION } = loadTsModule(
+  'shared/workspaceDisplayPolicy.ts',
+)
 const { clampPanelToWorkspace, findPanelWorkArea, findWorkspaceAreaAtPoint } = loadTsModule(
   'src/services/workspaceGeometry.ts',
 )
@@ -57,13 +60,46 @@ test('missing selected display safely falls back to primary after hot unplug', (
 })
 
 test('display scope parser rejects untrusted shapes and accepts explicit modes', () => {
-  assert.deepEqual(normalizeDisplayScope(null), { mode: 'all' })
-  assert.deepEqual(normalizeDisplayScope({ mode: 'display', displayId: '' }), { mode: 'all' })
+  assert.deepEqual(normalizeDisplayScope(null), { mode: 'primary' })
+  assert.deepEqual(normalizeDisplayScope({ mode: 'display', displayId: '' }), { mode: 'primary' })
+  assert.deepEqual(normalizeDisplayScope({ mode: 'unknown' }), { mode: 'primary' })
+  assert.deepEqual(normalizeDisplayScope({ mode: 'all' }), { mode: 'all' })
   assert.deepEqual(normalizeDisplayScope({ mode: 'primary' }), { mode: 'primary' })
   assert.deepEqual(normalizeDisplayScope({ mode: 'display', displayId: '2' }), {
     mode: 'display',
     displayId: '2',
   })
+})
+
+test('fresh and legacy overlay profiles use one primary work area', () => {
+  for (const settings of [{}, { displayScope: { mode: 'all' } }, { displayScope: null }]) {
+    const scope = restoreFocusedDisplayScope(settings)
+    const topology = buildWorkspaceTopology(displays, 1, scope)
+    assert.deepEqual(topology.scope, { mode: 'primary' })
+    assert.deepEqual(topology.bounds, displays[0].workArea)
+    assert.equal(topology.workArea.displays.length, 1)
+  }
+})
+
+test('a selected monitor survives migration and handles negative coordinates', () => {
+  const scope = restoreFocusedDisplayScope({ displayScope: { mode: 'display', displayId: '2' } })
+  const topology = buildWorkspaceTopology(displays, 1, scope)
+  assert.deepEqual(topology.bounds, displays[1].workArea)
+  assert.equal(topology.workArea.displays.length, 1)
+})
+
+test('an explicit all-displays choice survives later restarts after migration', () => {
+  const saved = {
+    displayScope: { mode: 'all' },
+    focusedDisplayScopeVersion: FOCUSED_DISPLAY_SCOPE_VERSION,
+  }
+  assert.deepEqual(restoreFocusedDisplayScope(JSON.parse(JSON.stringify(saved))), { mode: 'all' })
+  for (const version of [undefined, null, 0, NaN, Infinity, '1']) {
+    assert.deepEqual(
+      restoreFocusedDisplayScope({ ...saved, focusedDisplayScopeVersion: version }),
+      { mode: 'primary' },
+    )
+  }
 })
 
 test('panel movement crosses displays but cannot settle in virtual-desktop gaps', () => {
@@ -79,8 +115,8 @@ test('panel movement crosses displays but cannot settle in virtual-desktop gaps'
 test('drag target follows the pointer before the panel center crosses a display edge', () => {
   const workArea = buildWorkspaceTopology(displays, 1, { mode: 'all' }).workArea
   assert.equal(findWorkspaceAreaAtPoint(workArea, 2550, 500).x, 0)
-  assert.deepEqual(
-    clampPanelToWorkspace(workArea, 2500, 400, 600, 400, { x: 2550, y: 500 }),
-    { x: 1960, y: 400 },
-  )
+  assert.deepEqual(clampPanelToWorkspace(workArea, 2500, 400, 600, 400, { x: 2550, y: 500 }), {
+    x: 1960,
+    y: 400,
+  })
 })

@@ -272,6 +272,7 @@ export interface AppSettingsData {
   fontScaleIdx?: number
   linkedMove?: boolean
   displayScope?: DisplayScope
+  focusedDisplayScopeVersion?: number
   workspaceNavigatorPos?: { x: number; y: number } | null
   clockPos?: { x: number; y: number }
   foldersPos?: { x: number; y: number }

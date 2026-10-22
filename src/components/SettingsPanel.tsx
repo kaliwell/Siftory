@@ -826,7 +826,7 @@ const SettingsPanel: React.FC = () => {
       showDate: true,
       transparency: 0,
       fontScaleIdx: 0,
-      displayScope: { mode: 'all' },
+      displayScope: { mode: 'primary' },
       tabs: createDefaultTabs(),
       promptTabs: createDefaultPromptTabs(),
       editPrompts: [],
@@ -854,7 +854,7 @@ const SettingsPanel: React.FC = () => {
       mediaSearchUiPreferences: { ...DEFAULT_MEDIA_SEARCH_UI_PREFERENCES },
       configDirty: true, // ensure reset is persisted to disk
     })
-    void window.electronAPI.setDisplayScope({ mode: 'all' })
+    void window.electronAPI.setDisplayScope({ mode: 'primary' })
     // Also reset FM store to defaults
     useFMStore.setState({
       fmLayout: 'single',

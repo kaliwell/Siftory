@@ -35,7 +35,7 @@ async function run() {
       alwaysOnTop: false,
       themeId: 'matrix-light',
       themeMode: 'light',
-      displayScope: { mode: 'primary' },
+      displayScope: { mode: 'all' },
     }),
   )
   const before = []
@@ -88,6 +88,15 @@ async function run() {
     }))
     assert.equal(path.resolve(identity.userData), path.resolve(profile))
     assert.equal(identity.sandbox, true)
+    await page.waitForFunction(
+      async () => (await window.electronAPI.getDisplayTopology()).scope.mode === 'primary',
+    )
+    const windowGeometry = await application.evaluate(({ BrowserWindow, screen }) => ({
+      bounds: BrowserWindow.getAllWindows()[0].getBounds(),
+      primaryWorkArea: screen.getPrimaryDisplay().workArea,
+      displayCount: screen.getAllDisplays().length,
+    }))
+    assert.deepEqual(windowGeometry.bounds, windowGeometry.primaryWorkArea)
     await page.waitForFunction(
       () =>
         [...document.querySelectorAll('.panel[data-panel]')].filter(
@@ -226,6 +235,9 @@ async function run() {
       passed: true,
       realElectron: true,
       sandbox: identity.sandbox,
+      legacyAllMigratedToPrimary: true,
+      primaryDisplayBoundsVerified: true,
+      displayCount: windowGeometry.displayCount,
       isolatedProfile: true,
       generatedMaterialCount: before.length,
       originalFilesUnchanged: true,

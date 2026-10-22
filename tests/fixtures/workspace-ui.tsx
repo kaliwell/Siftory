@@ -73,8 +73,9 @@ const items = Array.from({ length: 8 }, (_, i) => ({
   indexState: ['full'],
   evidence: [],
 }))
+let selectedDisplayScope = { mode: 'primary' }
 const topology = () => ({
-  scope: { mode: 'all' },
+  scope: selectedDisplayScope,
   displays: [],
   workArea: { x: 0, y: 0, width: innerWidth, height: innerHeight, displays: [] },
 })
@@ -88,6 +89,7 @@ const idle = {
   skipped: 0,
 }
 let persistedSettings: any = {
+  displayScope: { mode: 'all' },
   language: 'zh-CN',
   themeId: 'midnight-dark',
   themeMode: 'dark',
@@ -118,7 +120,10 @@ const handlers: Record<string, (...args: any[]) => any> = {
   saveConfig: () => ({ ok: true }),
   setIgnoreMouseEvents: () => true,
   getWorkArea: () => topology().workArea,
-  setDisplayScope: topology,
+  setDisplayScope: (scope: { mode: string }) => {
+    selectedDisplayScope = scope
+    return topology()
+  },
   getDisplayTopology: topology,
   setOverlayShape: () => ({ x: 0, y: 0 }),
   getWindowAlwaysOnTop: () => false,

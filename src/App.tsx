@@ -27,6 +27,10 @@ import {
   PANEL_VISIBILITY_DEFAULTS_VERSION,
 } from './types'
 import type { WindowVisibilityEvent, WorkspaceWorkArea } from '../shared/ipc-contract'
+import {
+  FOCUSED_DISPLAY_SCOPE_VERSION,
+  restoreFocusedDisplayScope,
+} from '../shared/workspaceDisplayPolicy'
 import { clampPanelToWorkspace } from './services/workspaceGeometry'
 import {
   getThemePreset,
@@ -740,6 +744,10 @@ const App: React.FC = () => {
       .then((settings) => {
         if (settings) {
           // Validate & sanitize stored values
+          const restoredDisplayScope = restoreFocusedDisplayScope(settings)
+          const migrateDisplayScope =
+            settings.focusedDisplayScopeVersion !== FOCUSED_DISPLAY_SCOPE_VERSION ||
+            JSON.stringify(settings.displayScope) !== JSON.stringify(restoredDisplayScope)
           const t = Number(settings.transparency)
           const fsi = Number(settings.fontScaleIdx)
           const migratePanelSizes =
@@ -866,7 +874,7 @@ const App: React.FC = () => {
             transparency: isFinite(t) ? Math.max(0, Math.min(60, t)) : 0,
             fontScaleIdx: isFinite(fsi) ? Math.max(0, Math.min(3, fsi)) : 0,
             linkedMove: settings.linkedMove === true,
-            displayScope: settings.displayScope ?? { mode: 'all' },
+            displayScope: restoredDisplayScope,
             ...(safePoint(settings.workspaceNavigatorPos) && {
               workspaceNavigatorPos: safePoint(settings.workspaceNavigatorPos),
             }),
@@ -961,21 +969,22 @@ const App: React.FC = () => {
             imageSearchUiPreferences,
             mediaSearchUiPreferences,
           })
-          void window.electronAPI
-            .setDisplayScope(settings.displayScope ?? { mode: 'all' })
-            .then((topology) => {
-              useStore.setState({
-                displayScope: topology.scope,
-                workArea: topology.workArea,
-              })
+          void window.electronAPI.setDisplayScope(restoredDisplayScope).then((topology) => {
+            useStore.setState({
+              displayScope: topology.scope,
+              workArea: topology.workArea,
             })
+          })
           if (
             migratePanelSizes ||
             migratePanelVisibility ||
             migrateTheme ||
-            migrateSearchUiPreferences
+            migrateSearchUiPreferences ||
+            migrateDisplayScope
           ) {
             scheduleSettingsWrite({
+              displayScope: restoredDisplayScope,
+              focusedDisplayScopeVersion: FOCUSED_DISPLAY_SCOPE_VERSION,
               theme: legacyThemeIndex(migratedThemeId),
               themeId: migratedThemeId,
               themeMode: migratedThemeMode,

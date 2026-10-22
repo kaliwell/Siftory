@@ -58,6 +58,8 @@ async function run() {
       const saved = window.__workspaceTest.getSettings()
       return (
         saved.showClock === false &&
+        saved.displayScope?.mode === 'primary' &&
+        saved.focusedDisplayScopeVersion === 1 &&
         saved.showRemoteTerminal === false &&
         saved.showSettings === false
       )
@@ -65,6 +67,20 @@ async function run() {
     assert.deepEqual(await page.evaluate(() => window.__workspaceTest.getSettings().fmFavorites), [
       { path: 'C:/kept', name: 'Kept' },
     ])
+    await page.getByTestId('workspace-domain-settings').click()
+    await page.getByTestId('display-scope').selectOption('all')
+    await page.waitForFunction(
+      () => window.__workspaceTest.getSettings().displayScope?.mode === 'all',
+    )
+    assert.equal(
+      await page.evaluate(() => window.__workspaceTest.getSettings().focusedDisplayScopeVersion),
+      1,
+    )
+    await page.getByTestId('display-scope').selectOption('primary')
+    await page.waitForFunction(
+      () => window.__workspaceTest.getSettings().displayScope?.mode === 'primary',
+    )
+    await page.getByTestId('workspace-domain-search').click()
     const search = page.getByTestId('unified-search-query')
     await search.fill('A')
     await page.getByTestId('unified-search-result').first().waitFor()
@@ -333,6 +349,8 @@ async function run() {
         checks: [
           'legacy migration',
           'canonical startup persistence',
+          'legacy display scope migration',
+          'explicit display choice persistence',
           'single foreground',
           'narrow details',
           'cold lazy navigation',

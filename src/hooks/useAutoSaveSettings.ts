@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../stores/useStore'
 import { scheduleSettingsWrite } from './settingsWriter'
+import { FOCUSED_DISPLAY_SCOPE_VERSION } from '../../shared/workspaceDisplayPolicy'
 
 /**
  * Auto-saves app settings whenever relevant store fields change.
@@ -31,6 +32,7 @@ export function useAutoSaveSettings(ready: boolean): void {
         fontScaleIdx: state.fontScaleIdx,
         linkedMove: state.linkedMove,
         displayScope: state.displayScope,
+        focusedDisplayScopeVersion: FOCUSED_DISPLAY_SCOPE_VERSION,
         workspaceNavigatorPos: state.workspaceNavigatorPos,
         clockPos: state.clockPos,
         foldersPos: state.foldersPos,

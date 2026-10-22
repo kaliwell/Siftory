@@ -4,6 +4,8 @@ import type {
   WorkspaceRect,
   WorkspaceTopology,
 } from '../shared/ipc-contract'
+import { normalizeDisplayScope } from '../shared/workspaceDisplayPolicy'
+export { normalizeDisplayScope } from '../shared/workspaceDisplayPolicy'
 
 export interface DisplayLike {
   id: number | string
@@ -21,16 +23,6 @@ function unionRects(rects: WorkspaceRect[]): WorkspaceRect {
   const right = Math.max(...rects.map((rect) => rect.x + rect.width))
   const bottom = Math.max(...rects.map((rect) => rect.y + rect.height))
   return { x: left, y: top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) }
-}
-
-export function normalizeDisplayScope(raw: unknown): DisplayScope {
-  if (!raw || typeof raw !== 'object') return { mode: 'all' }
-  const value = raw as Partial<DisplayScope>
-  if (value.mode === 'primary') return { mode: 'primary' }
-  if (value.mode === 'display' && typeof value.displayId === 'string' && value.displayId) {
-    return { mode: 'display', displayId: value.displayId }
-  }
-  return { mode: 'all' }
 }
 
 export function buildWorkspaceTopology(

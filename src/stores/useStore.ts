@@ -841,7 +841,7 @@ export const useStore = create<AppStore>((set, get) => ({
   snapToGrid: false,
   gridSize: 20,
   workArea: { x: 0, y: 0, width: 1920, height: 1080, displays: [] },
-  displayScope: { mode: 'all' },
+  displayScope: { mode: 'primary' },
   workspaceNavigatorPos: null,
 
   // ── Simple setters ────────────────────────────

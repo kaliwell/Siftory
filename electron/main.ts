@@ -164,7 +164,7 @@ let termsController: EndUserTermsController | undefined
 let applicationStarting = true
 let applicationServicesStarted = false
 let thumbCacheMaintenance: ThumbCacheMaintenanceHandle | null = null
-let displayScope: DisplayScope = { mode: 'all' }
+let displayScope: DisplayScope = { mode: 'primary' }
 let workspaceTopology: WorkspaceTopology = {
   scope: displayScope,
   primaryDisplayId: '',
