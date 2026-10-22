@@ -171,19 +171,6 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 /* ── Calculator buttons ─────────────────────────── */
-.calc-op {
-  background: rgba(var(--date), 0.4);
-}
-.calc-op:hover {
-  background: rgba(var(--fg), 0.55);
-}
-
-.calc-eq {
-  background: rgba(0, 200, 100, 0.35);
-}
-.calc-eq:hover {
-  background: rgba(var(--fg), 0.55);
-}
 
 /* Subject picker modal */
 .subject-picker-backdrop {

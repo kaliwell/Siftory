@@ -408,7 +408,11 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
         aria-label={displayTitle ?? t(title)}
       >
         <header className="panel-header">
-          <span className="panel-title">{displayTitle ?? t(title)}</span>
+          <div className="workspace-page-heading">
+            <span>{t('Workspace')}</span>
+            <h1 className="panel-title">{displayTitle ?? t(title)}</h1>
+          </div>
+          <span className="workspace-local-badge">{t('Local processing')}</span>
         </header>
         <div className="panel-body">{children}</div>
       </section>

@@ -20,7 +20,7 @@ test('global shortcut contract keeps R primary, Q compatible, and P for panel sn
   assert.match(manual, /`Ctrl\+Shift\+Alt\+R` \| 隐藏或恢复工作区（主快捷键）/)
 })
 
-test('native visibility transaction hides safely and only shows after renderer readiness', () => {
+test('standard windows hide and reveal natively while diagnostic overlays retain their handshake', () => {
   const core = source('electron/appCoreIpc.ts')
   const main = source('electron/main.ts')
   const app = source('src/App.tsx')
@@ -36,7 +36,16 @@ test('native visibility transaction hides safely and only shows after renderer r
   assert.ok(
     hideBlock.indexOf('applyWindowShape(mainWindow, [])') < hideBlock.indexOf('setOpacity(0)'),
   )
-  assert.doesNotMatch(hideBlock, /mainWindow\.hide\(\)/)
+  const standardBlock = hideBlock.slice(
+    hideBlock.indexOf('if (options.standardWindow)'),
+    hideBlock.indexOf('const previousSnapshot'),
+  )
+  assert.match(standardBlock, /mainWindow\.setOpacity\(1\)/)
+  assert.match(standardBlock, /applyMouseTransparency\(mainWindow, false\)/)
+  assert.match(standardBlock, /mainWindow\.hide\(\)/)
+  assert.match(standardBlock, /mainWindow\.show\(\)/)
+  assert.match(standardBlock, /mainWindow\.focus\(\)/)
+  assert.doesNotMatch(standardBlock, /applyWindowShape|setOpacity\(0\)/)
   assert.match(
     core,
     /completeGlobalWindowReveal[\s\S]*snapshot\.state === 'visible'[\s\S]*return true/,
@@ -53,21 +62,11 @@ test('native visibility transaction hides safely and only shows after renderer r
   assert.equal((core.match(/mainWindow\.showInactive\(\)/g) ?? []).length, 1)
   assert.doesNotMatch(main, /mainWindow\.on\('show'/)
 
-  const showHandshake = app.slice(
-    app.indexOf('const onWindowVisibilityPrepareShow'),
-    app.indexOf('const onViewportChanged'),
-  )
-  assert.doesNotMatch(app, /onToggleGlobalVisibility[\s\S]{0,700}toggleGlobalVisibility\(\)/)
-  assert.match(app, /shapeUpdatesEnabled = state === 'visible' \|\| state === 'preparing-show'/)
-  assert.match(app, /const channel = new MessageChannel\(\)/)
-  assert.equal((showHandshake.match(/scheduleVisibilityLayoutTurn/g) ?? []).length, 2)
-  assert.ok(
-    showHandshake.indexOf('syncShape(true)') < showHandshake.indexOf('showWindow(generation)'),
-  )
-  assert.match(showHandshake, /visibilityGenerationRef\.current !== generation/)
-  assert.match(app, /window-visibility-native-prewarmed/)
-  assert.equal((app.match(/scheduleVisibilityPaintTurn\(\(\) =>/g) ?? []).length, 2)
-  assert.match(app, /revealWindow\(generation\)/)
+  assert.match(main, /standardWindow: !uiSmokeMode/)
+  assert.match(app, /const applyNativeVisibility = \(event: WindowVisibilityEvent\)/)
+  assert.match(app, /const visible =\s*event\.state === 'visible'/)
+  assert.equal((app.match(/applyNativeVisibility\(event\)/g) ?? []).length, 2)
+  assert.doesNotMatch(app, /setOverlayShape\(|useMouseTransparency\(|scheduleVisibilityPaintTurn/)
 })
 
 test('stale shape and mouse requests are generation guarded', () => {
@@ -105,7 +104,8 @@ test('mouse transparency commits after IPC success and all drags have cancellati
   assert.match(panel, /window-visibility-cancel-interactions/)
   assert.match(panel, /window\.addEventListener\('blur'/)
   assert.doesNotMatch(navigator, /onMouseDown=\{startMove\}/)
-  assert.match(navigator, /workspace-window-hide/)
+  assert.doesNotMatch(navigator, /workspace-window-hide|workspace-window-pin/)
+  assert.doesNotMatch(source('src/App.tsx'), /useMouseTransparency\(/)
 })
 
 test('real Electron UI smoke executes repeated native hide and renderer-ready show cycles', () => {

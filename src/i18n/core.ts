@@ -3,6 +3,7 @@ export type AppLanguage = 'en' | 'zh-CN'
 export type TranslationValues = Record<string, string | number>
 
 const enUS: Record<string, string> = {
+  'Ctrl+K': 'Ctrl+K',
   桌面: 'Desktop',
   下载: 'Downloads',
   文档: 'Documents',
@@ -35,6 +36,21 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Ctrl+K': 'Ctrl+K',
+  'Library tools': '同步、备份与维护',
+  'Batch actions': '批量操作',
+  'Your local media workspace': '本地素材工作台',
+  'Local workspace': '本地工作区',
+  'Local processing': '本地运行',
+  'Search your library': '搜索素材',
+  'Search by image': '以图搜图',
+  'From a reference image to your original file': '从一张图，找到原文件',
+  'Choose a reference image': '选择参考图片',
+  Manage: '管理',
+  Filters: '筛选条件',
+  'Index your folders once. Search them whenever you need.':
+    '先为素材目录建立索引，以后随时找回需要的文件。',
+  'Some search features need preparation': '部分检索能力尚未就绪',
   'Remote file': '远程文件',
   'Manage Siftory indexes and generated caches. Original assets are kept.':
     '管理寻藏的索引与生成缓存，保留原始素材。',

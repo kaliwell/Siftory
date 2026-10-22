@@ -33,6 +33,7 @@ type VideoDiagnosticMode =
 type GetMainWindow = () => BrowserWindow | null
 
 export interface AppCoreIpcOptions {
+  standardWindow?: boolean
   getMainWindow: GetMainWindow
   getWorkArea: () => WorkspaceWorkArea
   getDisplayTopology: () => WorkspaceTopology
@@ -221,6 +222,27 @@ export function setGlobalWindowVisibility(
 ): boolean {
   const mainWindow = options.getMainWindow()
   if (!mainWindow || mainWindow.isDestroyed()) return false
+  if (options.standardWindow) {
+    const transition =
+      visibilityMachine.begin(visible, reason) ??
+      (visible && !mainWindow.isVisible() ? visibilityMachine.restartVisible(reason) : null)
+    clearVisibilityShowTimer()
+    mainWindow.setOpacity(1)
+    applyMouseTransparency(mainWindow, false)
+    mainWindow.webContents.setBackgroundThrottling(!visible)
+    if (visible) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.show()
+      mainWindow.focus()
+      if (transition) visibilityMachine.completeVisible(transition.generation)
+      mainWindow.webContents.send('show-global-visibility', visibilityEvent())
+    } else {
+      mainWindow.hide()
+      if (transition) visibilityMachine.completeHidden(transition.generation)
+      mainWindow.webContents.send('toggle-global-visibility', visibilityEvent())
+    }
+    return true
+  }
   const previousSnapshot = visibilityMachine.current()
   if (!visible && previousSnapshot.state === 'visible') {
     const currentOpacity = mainWindow.getOpacity()
@@ -326,11 +348,20 @@ export function recoverGlobalWindowTopology(
   options: AppCoreIpcOptions,
   installTopology: () => void,
 ): boolean {
+  if (options.standardWindow) {
+    if (!hasRecoveryWindow(options)) return false
+    installTopology()
+    return true
+  }
   if (!hasRecoveryWindow(options)) return false
   return recoverWindowVisibility(options, visibilityMachine.invalidate(), installTopology)
 }
 
 export function suspendGlobalWindowVisibility(options: AppCoreIpcOptions): boolean {
+  if (options.standardWindow) {
+    options.getMainWindow()?.webContents.setBackgroundThrottling(true)
+    return true
+  }
   if (!hasRecoveryWindow(options)) return false
   return recoverWindowVisibility(options, visibilityMachine.suspend(), () => {})
 }
@@ -339,6 +370,13 @@ export function resumeGlobalWindowVisibility(
   options: AppCoreIpcOptions,
   installTopology: () => void,
 ): boolean {
+  if (options.standardWindow) {
+    const mainWindow = options.getMainWindow()
+    if (!mainWindow || mainWindow.isDestroyed()) return false
+    installTopology()
+    mainWindow.webContents.setBackgroundThrottling(!mainWindow.isVisible())
+    return true
+  }
   if (!hasRecoveryWindow(options)) return false
   // Resume can be the first event observed after startup/listener registration.
   // Refresh geometry even when no suspend was observed, preserving user intent.
@@ -479,12 +517,22 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
   secureIpcMain.handle('show-window', (_event, rawGeneration: unknown) => {
     const generation = Number(rawGeneration)
     if (!Number.isSafeInteger(generation) || generation < 0) return false
+    if (options.standardWindow)
+      return (
+        visibilityMachine.acceptsRendererMutation(generation) &&
+        setGlobalWindowVisibility(options, true, 'recovery')
+      )
     return prewarmGlobalWindowShow(options, generation)
   })
 
   secureIpcMain.handle('reveal-window', (_event, rawGeneration: unknown) => {
     const generation = Number(rawGeneration)
     if (!Number.isSafeInteger(generation) || generation < 0) return false
+    if (options.standardWindow)
+      return (
+        visibilityMachine.acceptsRendererMutation(generation) &&
+        setGlobalWindowVisibility(options, true, 'recovery')
+      )
     return completeGlobalWindowReveal(options, generation)
   })
 
@@ -498,6 +546,7 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
   secureIpcMain.handle('set-transparency', (_event, rawOpacity: unknown) => {
     const opacity = normalizeTransparency(rawOpacity)
     if (opacity === null) return { ok: false, error: 'Invalid opacity' }
+    if (options.standardWindow) return { ok: true }
     visibleWindowOpacity = 1 - opacity / 100
     if (visibilityMachine.current().state === 'visible') {
       options.getMainWindow()?.setOpacity(visibleWindowOpacity)
@@ -509,6 +558,10 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
     const generation = Number(rawGeneration)
     const mainWindow = options.getMainWindow()
     if (!mainWindow || mainWindow.isDestroyed()) return
+    if (options.standardWindow) {
+      applyMouseTransparency(mainWindow, false)
+      return
+    }
     const ignore = typeof rawIgnore === 'boolean' ? rawIgnore : true
     if (
       !Number.isSafeInteger(generation) ||
@@ -528,6 +581,7 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
       const generation = Number(rawGeneration)
       const workArea = options.getWorkArea()
       const emptyViewport = { x: 0, y: 0, width: workArea.width, height: workArea.height }
+      if (options.standardWindow) return emptyViewport
       const mainWindow = options.getMainWindow()
       if (
         !mainWindow ||

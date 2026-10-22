@@ -141,9 +141,9 @@ function mouseFixture(overrides = {}) {
 }
 
 function rendererFixture(overrides = {}) {
-  const source = read('src/App.tsx')
+  const source = read('src/components/LegacyOverlayDiagnostics.tsx')
   const ast = ts.createSourceFile(
-    'App.tsx',
+    'LegacyOverlayDiagnostics.tsx',
     source,
     ts.ScriptTarget.Latest,
     true,
@@ -161,7 +161,7 @@ function rendererFixture(overrides = {}) {
     ts.forEachChild(node, visit)
   }
   visit(ast)
-  assert.equal(matches.length, 1, 'extract the actual native Shape effect from App.tsx')
+  assert.equal(matches.length, 1, 'extract the actual legacy diagnostic Shape effect')
   const q = queues(),
     ev = events(),
     calls = [],

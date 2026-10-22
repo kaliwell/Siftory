@@ -71,6 +71,7 @@ import {
   shutdownAiControlApi,
 } from './aiControlApi'
 import { buildWorkspaceTopology, normalizeDisplayScope } from './workspaceDisplay'
+import { standardWindowBounds } from './standardWindowGeometry'
 import {
   PRODUCT_DISPLAY_NAME,
   PRODUCT_NAME,
@@ -174,7 +175,7 @@ let workspaceTopology: WorkspaceTopology = {
 }
 let workArea: WorkspaceWorkArea = workspaceTopology.workArea
 let appCoreOptions: Parameters<typeof registerAppCoreIpc>[0] | null = null
-let windowAlwaysOnTop = !uiSmokeMode && videoDiagnosticMode !== 'no-topmost'
+let windowAlwaysOnTop = false
 
 function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
@@ -446,7 +447,7 @@ function readWorkspaceTopology(): WorkspaceTopology {
   return buildWorkspaceTopology(
     screen.getAllDisplays(),
     screen.getPrimaryDisplay().id,
-    displayScope,
+    !uiSmokeMode && displayScope.mode === 'all' ? { mode: 'primary' } : displayScope,
   )
 }
 
@@ -455,8 +456,14 @@ function installWorkspaceTopology(notifyRenderer: boolean): WorkspaceTopology {
   displayScope = workspaceTopology.scope
   workArea = workspaceTopology.workArea
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.setBounds(workspaceTopology.bounds, false)
-    if (notifyRenderer) mainWindow.webContents.send('work-area-changed', workArea)
+    if (uiSmokeMode) {
+      mainWindow.setBounds(workspaceTopology.bounds, false)
+    } else if (!mainWindow.isMaximized()) {
+      const current = mainWindow.getBounds()
+      const display = screen.getDisplayMatching(current)
+      mainWindow.setBounds(standardWindowBounds(display.workArea, current), false)
+    }
+    if (notifyRenderer) mainWindow.webContents.send('work-area-changed', clientWorkArea())
   }
   return workspaceTopology
 }
@@ -472,7 +479,32 @@ function applyWorkspaceTopology(notifyRenderer: boolean): WorkspaceTopology {
 
 function setDisplayScope(scope: DisplayScope): WorkspaceTopology {
   displayScope = normalizeDisplayScope(scope)
+  if (!uiSmokeMode) {
+    if (displayScope.mode === 'all') displayScope = { mode: 'primary' }
+    workspaceTopology = readWorkspaceTopology()
+    workArea = workspaceTopology.workArea
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      const current = mainWindow.getBounds()
+      if (mainWindow.isMaximized()) mainWindow.unmaximize()
+      mainWindow.setBounds(
+        standardWindowBounds(workArea, {
+          ...current,
+          x: workArea.x + (workArea.width - current.width) / 2,
+          y: workArea.y + (workArea.height - current.height) / 2,
+        }),
+        false,
+      )
+      mainWindow.webContents.send('work-area-changed', clientWorkArea())
+    }
+    return workspaceTopology
+  }
   return applyWorkspaceTopology(true)
+}
+
+function clientWorkArea(): WorkspaceWorkArea {
+  if (uiSmokeMode || !mainWindow || mainWindow.isDestroyed()) return workArea
+  const { width, height } = mainWindow.getContentBounds()
+  return { x: 0, y: 0, width, height, displays: [] }
 }
 
 /**
@@ -618,7 +650,7 @@ function createWindow() {
     workspaceTopology = readWorkspaceTopology()
   }
   workArea = workspaceTopology.workArea
-  const { x, y, width, height } = workArea
+  const { x, y, width, height } = uiSmokeMode ? workArea : standardWindowBounds(workArea)
   const windowIconPath = path.join(app.getAppPath(), 'build', 'icon.ico')
 
   // Packaged builds never load renderer code from an environment-controlled URL.
@@ -631,25 +663,24 @@ function createWindow() {
     y,
     width,
     height,
-    minWidth: uiSmokeMode ? width : undefined,
-    minHeight: uiSmokeMode ? height : undefined,
+    minWidth: uiSmokeMode ? width : Math.min(960, width),
+    minHeight: uiSmokeMode ? height : Math.min(640, height),
     useContentSize: uiSmokeMode,
-    transparent: true,
-    frame: false,
+    transparent: uiSmokeMode,
+    frame: !uiSmokeMode,
     alwaysOnTop: windowAlwaysOnTop,
     show: !uiSmokeMode,
     paintWhenInitiallyHidden: true,
-    skipTaskbar: true,
-    // Panels implement their own drag/resize behavior inside this transparent
-    // workspace. Native resize borders would intercept the pointer at the
-    // desktop edge and resize or move the entire overlay out of alignment.
-    resizable: false,
-    movable: false,
-    maximizable: false,
-    fullscreenable: false,
-    thickFrame: false,
-    hasShadow: false,
-    backgroundColor: '#00000000', // fully transparent
+    skipTaskbar: uiSmokeMode,
+    // Legacy overlay diagnostics retain panel-owned geometry. The normal app
+    // uses the system title bar, resize borders, and taskbar presence.
+    resizable: !uiSmokeMode,
+    movable: !uiSmokeMode,
+    maximizable: !uiSmokeMode,
+    fullscreenable: !uiSmokeMode,
+    thickFrame: !uiSmokeMode,
+    hasShadow: !uiSmokeMode,
+    backgroundColor: uiSmokeMode ? '#00000000' : '#f5f7fb',
     icon: fs.existsSync(windowIconPath) ? windowIconPath : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -705,13 +736,22 @@ function createWindow() {
 
   // Packaged builds never load renderer code from an environment-controlled URL.
   if (devServerUrl) {
-    loadDevServerUrlWithRetry(mainWindow, devServerUrl)
+    const rendererUrl = new URL(devServerUrl)
+    if (uiSmokeMode) rendererUrl.searchParams.set('legacyOverlay', '1')
+    loadDevServerUrlWithRetry(mainWindow, rendererUrl.href)
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'), {
+      query: uiSmokeMode ? { legacyOverlay: '1' } : {},
+    })
   }
 
-  // Make transparent areas click-through (like original LWA_COLORKEY)
-  mainWindow.setIgnoreMouseEvents(true, { forward: true })
+  mainWindow.setIgnoreMouseEvents(uiSmokeMode, { forward: true })
+  if (!uiSmokeMode) {
+    mainWindow.setMenuBarVisibility(false)
+    mainWindow.on('resize', () => {
+      mainWindow?.webContents.send('work-area-changed', clientWorkArea())
+    })
+  }
 
   ensureWindowOnTop()
 
@@ -783,8 +823,9 @@ if (!hasSingleInstanceLock) {
     initAppStorageService(app.getPath('userData'))
     initAssetLibraryService(app.getPath('userData'))
     appCoreOptions = {
+      standardWindow: !uiSmokeMode,
       getMainWindow: () => mainWindow,
-      getWorkArea: () => workArea,
+      getWorkArea: clientWorkArea,
       getDisplayTopology: () => workspaceTopology,
       setDisplayScope,
       ensureWindowOnTop,

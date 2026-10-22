@@ -1,6 +1,6 @@
 import type { DisplayScope } from './ipc/app-core'
 
-export const FOCUSED_DISPLAY_SCOPE_VERSION = 1
+export const FOCUSED_DISPLAY_SCOPE_VERSION = 2
 
 /** Invalid or absent scopes must never expand a focused window across screens. */
 export function normalizeDisplayScope(raw: unknown): DisplayScope {
@@ -13,16 +13,11 @@ export function normalizeDisplayScope(raw: unknown): DisplayScope {
   return { mode: 'primary' }
 }
 
-/** Old overlay profiles saved all by default; require a new explicit choice to keep it. */
+/** A conventional application window always starts on one display. */
 export function restoreFocusedDisplayScope(settings: {
   displayScope?: unknown
   focusedDisplayScopeVersion?: unknown
 }): DisplayScope {
   const scope = normalizeDisplayScope(settings.displayScope)
-  const version = settings.focusedDisplayScopeVersion
-  const confirmed =
-    typeof version === 'number' &&
-    Number.isFinite(version) &&
-    version >= FOCUSED_DISPLAY_SCOPE_VERSION
-  return scope.mode === 'all' && !confirmed ? { mode: 'primary' } : scope
+  return scope.mode === 'all' ? { mode: 'primary' } : scope
 }

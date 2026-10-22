@@ -41,7 +41,7 @@ export const EMPTY_ASSET_FEEDBACK_STATUS: AssetFeedbackModelStatus = {
 }
 
 export const assetLibraryButtonStyle: CSSProperties = {
-  fontSize: 10,
+  fontSize: 13,
   padding: '4px 8px',
   whiteSpace: 'nowrap',
 }
@@ -52,7 +52,7 @@ export const assetLibraryInputStyle: CSSProperties = {
   border: '1px solid rgba(var(--date),0.28)',
   color: 'rgb(var(--date))',
   padding: '4px 6px',
-  fontSize: 10,
+  fontSize: 13,
 }
 
 // Stable across member-selection re-renders so memoized thumbnails can skip work.

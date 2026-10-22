@@ -102,8 +102,8 @@ function fixture() {
   const powerMonitor = new EventEmitter()
   const topology = loadTsModule('electron/workspaceDisplay.ts')
   const context = vm.createContext({
-    uiSmokeMode: false,
-    workspaceTopology: {},
+    uiSmokeMode: true,
+    workspaceTopology: topology.buildWorkspaceTopology(displays, 1, { mode: 'all' }),
     displayScope: { mode: 'all' },
     workArea: nativeWindow.bounds,
     mainWindow: nativeWindow,
@@ -139,6 +139,7 @@ function fixture() {
         'installWorkspaceTopology',
         'applyWorkspaceTopology',
         'setDisplayScope',
+        'clientWorkArea',
       ].includes(node.name?.text)
     )
       snippets.push(node.getText(ast))
@@ -155,7 +156,7 @@ function fixture() {
   }
   collect(ast)
   // Execute production event wiring, not a reproduction of the intended wiring.
-  assert.equal(snippets.length, 11)
+  assert.equal(snippets.length, 12)
   vm.runInContext(compile(snippets.join('\n;\n')), context)
   context.applyWorkspaceTopology(false)
   const options = {
@@ -173,6 +174,11 @@ function fixture() {
   const event = (name = 'display-metrics-changed', width = 600, scaleFactor = 1) => {
     const bounds = { x: 0, y: 0, width, height: 600 }
     displays = [{ ...displays[0], bounds, workArea: bounds, scaleFactor }]
+    // Overlay diagnostics use an explicit topology instead of the desktop
+    // window's automatic display selection. Supply its next test topology.
+    context.workspaceTopology = topology.buildWorkspaceTopology(displays, 1, {
+      mode: 'all',
+    })
     screen.emit(name, {}, displays[0], ['bounds', 'scaleFactor'])
   }
   const last = (kind) => calls.filter(([key]) => key === kind).at(-1)

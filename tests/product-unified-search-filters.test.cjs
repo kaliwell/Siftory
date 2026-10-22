@@ -126,7 +126,7 @@ test('service filters the merged authoritative result before pagination', async 
   assert.equal(response.items[0].durationMs, 120_000)
 })
 
-test('simple unified search UI keeps every core filter directly reachable', () => {
+test('unified search keeps core filters reachable through its labeled disclosure', () => {
   const ui = fs.readFileSync(path.join(ROOT, 'src/components/UnifiedSearchPanel.tsx'), 'utf8')
   for (const id of [
     'unified-search-source-filter',
@@ -139,5 +139,7 @@ test('simple unified search UI keeps every core filter directly reachable', () =
   }
   assert.match(ui, /type="date"/)
   assert.match(ui, /Object\.keys\(filters\)\.length \? \{ filters \} : \{\}/)
-  assert.doesNotMatch(ui, /<details[^>]*>(?:(?!<\/details>)[\s\S])*unified-search-filters/)
+  assert.match(ui, /<details[^>]*[\s\S]*?data-testid="unified-search-filter-options"/)
+  assert.match(ui, /<summary[\s\S]*?t\('Filters'\)/)
+  assert.match(ui, /data-testid="unified-search-filters"/)
 })

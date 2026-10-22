@@ -59,7 +59,7 @@ async function run() {
       return (
         saved.showClock === false &&
         saved.displayScope?.mode === 'primary' &&
-        saved.focusedDisplayScopeVersion === 1 &&
+        saved.focusedDisplayScopeVersion === 2 &&
         saved.showRemoteTerminal === false &&
         saved.showSettings === false
       )
@@ -68,13 +68,10 @@ async function run() {
       { path: 'C:/kept', name: 'Kept' },
     ])
     await page.getByTestId('workspace-domain-settings').click()
-    await page.getByTestId('display-scope').selectOption('all')
-    await page.waitForFunction(
-      () => window.__workspaceTest.getSettings().displayScope?.mode === 'all',
-    )
+    assert.equal(await page.getByTestId('display-scope').locator('option[value="all"]').count(), 0)
     assert.equal(
       await page.evaluate(() => window.__workspaceTest.getSettings().focusedDisplayScopeVersion),
-      1,
+      2,
     )
     await page.getByTestId('display-scope').selectOption('primary')
     await page.waitForFunction(
@@ -350,7 +347,7 @@ async function run() {
           'legacy migration',
           'canonical startup persistence',
           'legacy display scope migration',
-          'explicit display choice persistence',
+          'single-display settings',
           'single foreground',
           'narrow details',
           'cold lazy navigation',

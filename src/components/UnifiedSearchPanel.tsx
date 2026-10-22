@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import '../styles/unified-search-workspace.css'
 import type {
   MediaPlayerHitContext,
   SubjectBBox,
@@ -31,6 +32,8 @@ import {
 import ThumbnailImage from './filemanager/ThumbnailImage'
 import DraggablePanel from './DraggablePanel'
 import SearchEmptyState from './SearchEmptyState'
+import WorkspaceIcon from './WorkspaceIcon'
+import { requestWorkspaceNavigation } from '../services/workspaceNavigation'
 import SubjectPickerModal, { type SubjectPickerData } from './SubjectPickerModal'
 
 type DurationFilter = '' | 'under-minute' | 'one-five' | 'five-thirty' | 'over-thirty'
@@ -155,6 +158,17 @@ const UnifiedSearchPanel: React.FC = () => {
   const [timelineFrameRate, setTimelineFrameRate] = useState<UnifiedTimelineFrameRate>(25)
   const detailRef = useRef<HTMLElement | null>(null)
   const queryInputRef = useRef<HTMLInputElement | null>(null)
+  useEffect(() => {
+    if (!isVisible) return
+    const focusSearch = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        queryInputRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', focusSearch)
+    return () => window.removeEventListener('keydown', focusSearch)
+  }, [isVisible])
   const resultsPaneRef = useRef<HTMLElement | null>(null)
   const hasActiveFilters = Boolean(
     sourceId ||
@@ -657,11 +671,28 @@ const UnifiedSearchPanel: React.FC = () => {
     </div>
   )
 
+  const chooseReferenceImage = () =>
+    void runAction('reference', async () => {
+      const path = await window.electronAPI.imageSearch.selectImage()
+      if (!path) return
+      setReferenceImagePath(path)
+      setSubject(undefined)
+      setSegmentationSessionId('')
+    })
+  const openSources = () => {
+    useStore.setState({ showImageSearch: true })
+    requestWorkspaceNavigation(
+      'imageSearch',
+      'workspace-sources-focus',
+      () => useStore.getState().showImageSearch,
+    )
+  }
+
   return (
     <DraggablePanel
       panelId="unifiedSearch"
       title="Unified Search"
-      displayTitle={t('Unified search')}
+      displayTitle={t('Search your library')}
       dataPanel="unified-search"
       x={position.x}
       y={position.y}
@@ -705,46 +736,30 @@ const UnifiedSearchPanel: React.FC = () => {
       >
         <div className="split-tool-workspace unified-search-workspace">
           <aside className="split-tool-control-pane unified-search-control-pane">
-            <div
-              className="unified-search-toolbar"
-              style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}
-            >
-              <input
-                ref={queryInputRef}
-                data-testid="unified-search-query"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t('Search by name or describe an image')}
-                autoFocus
-                style={{ flex: '1 1 260px' }}
-              />
-              <select
-                data-testid="unified-search-source-filter"
-                value={sourceId}
-                onChange={(event) => setSourceId(event.target.value)}
-                aria-label={t('Sources')}
-              >
-                <option value="">{t('All sources')}</option>
-                {sources.map((source) => (
-                  <option key={source.id} value={source.id}>
-                    {source.displayName}
-                  </option>
-                ))}
-              </select>
+            <div className="unified-search-toolbar">
+              <div className="unified-search-input-group">
+                <WorkspaceIcon name="search" />
+                <input
+                  ref={queryInputRef}
+                  data-testid="unified-search-query"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t('Search by name or describe an image')}
+                  aria-label={t('Search')}
+                  autoFocus
+                />
+                <kbd>{t('Ctrl+K')}</kbd>
+              </div>
               <button
+                className="workspace-button-primary"
                 data-testid="unified-search-reference"
-                onClick={() =>
-                  void window.electronAPI.imageSearch.selectImage().then((path) => {
-                    if (!path) return
-                    setReferenceImagePath(path)
-                    setSubject(undefined)
-                    setSegmentationSessionId('')
-                  })
-                }
+                onClick={chooseReferenceImage}
               >
-                {t('Reference image')}
+                <WorkspaceIcon name="image" />
+                {t('Search by image')}
               </button>
               <button
+                className="workspace-button-secondary"
                 data-testid="unified-search-paste-image"
                 onClick={() =>
                   void runAction('paste', async () => {
@@ -758,7 +773,211 @@ const UnifiedSearchPanel: React.FC = () => {
               >
                 {t('Paste image')}
               </button>
-              {referenceImagePath ? (
+            </div>
+            <div className="unified-search-options-row">
+              <select
+                data-testid="unified-search-source-filter"
+                value={sourceId}
+                onChange={(event) => setSourceId(event.target.value)}
+                aria-label={t('Sources')}
+              >
+                <option value="">{t('All sources')}</option>
+                {sources.map((source) => (
+                  <option key={source.id} value={source.id}>
+                    {source.displayName}
+                  </option>
+                ))}
+              </select>
+              <details
+                className="unified-search-filter-disclosure"
+                data-testid="unified-search-filter-options"
+              >
+                <summary>
+                  <WorkspaceIcon name="filter" />
+                  {t('Filters')}
+                  {hasActiveFilters && <span className="workspace-filter-dot" />}
+                </summary>
+                <div
+                  className="unified-search-filters"
+                  data-testid="unified-search-filters"
+                  style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}
+                >
+                  <select
+                    data-testid="unified-search-media-filter"
+                    value={mediaType}
+                    onChange={(event) => setMediaType(event.target.value)}
+                    aria-label={t('Media type')}
+                  >
+                    <option value="">{t('All media')}</option>
+                    <option value="image">{t('Images')}</option>
+                    <option value="video">{t('Videos')}</option>
+                    <option value="audio">{t('Audio')}</option>
+                    <option value="file">{t('Other files')}</option>
+                  </select>
+                  <select
+                    data-testid="unified-search-duration-filter"
+                    value={durationFilter}
+                    onChange={(event) => setDurationFilter(event.target.value as DurationFilter)}
+                    aria-label={t('Duration')}
+                  >
+                    <option value="">{t('All durations')}</option>
+                    <option value="under-minute">{t('Under 1 minute')}</option>
+                    <option value="one-five">{t('1 to 5 minutes')}</option>
+                    <option value="five-thirty">{t('5 to 30 minutes')}</option>
+                    <option value="over-thirty">{t('Over 30 minutes')}</option>
+                  </select>
+                  <select
+                    data-testid="unified-search-orientation-filter"
+                    value={orientation}
+                    onChange={(event) => setOrientation(event.target.value)}
+                    aria-label={t('Orientation')}
+                  >
+                    <option value="">{t('All orientations')}</option>
+                    <option value="landscape">{t('Landscape')}</option>
+                    <option value="portrait">{t('Portrait')}</option>
+                    <option value="square">{t('Square')}</option>
+                  </select>
+                  <select
+                    data-testid="unified-search-index-filter"
+                    value={indexLevel}
+                    onChange={(event) => setIndexLevel(event.target.value)}
+                    aria-label={t('Index readiness')}
+                  >
+                    <option value="">{t('All index states')}</option>
+                    <option value="metadata-only">{t('Metadata only')}</option>
+                    <option value="partial">{t('Partial AI index')}</option>
+                    <option value="full">{t('Full AI index')}</option>
+                  </select>
+                  <label>
+                    {t('From date')}
+                    <input
+                      type="date"
+                      value={modifiedAfter}
+                      onChange={(event) => setModifiedAfter(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    {t('To date')}
+                    <input
+                      type="date"
+                      value={modifiedBefore}
+                      onChange={(event) => setModifiedBefore(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    disabled={!hasActiveFilters}
+                    onClick={() => {
+                      setSourceId('')
+                      setMediaType('')
+                      setDurationFilter('')
+                      setOrientation('')
+                      setIndexLevel('')
+                      setModifiedAfter('')
+                      setModifiedBefore('')
+                    }}
+                  >
+                    {t('Clear filters')}
+                  </button>
+                </div>
+              </details>
+              {hasQuery && (
+                <details
+                  className="unified-search-more"
+                  data-testid="unified-search-export-options"
+                >
+                  <summary>{t('Collections and export')}</summary>
+                  <div className="unified-search-more__content">
+                    <select
+                      data-testid="unified-search-collection-select"
+                      value={collectionId}
+                      onChange={(event) => setCollectionId(Number(event.target.value))}
+                    >
+                      <option value={0}>{t('Select collection')}</option>
+                      {collections.map((collection) => (
+                        <option key={collection.id} value={collection.id}>
+                          {collection.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      data-testid="unified-search-collect-selected"
+                      disabled={!collectionId || selectedIds.size === 0 || Boolean(actionPending)}
+                      onClick={() =>
+                        void collect(results.filter((item) => selectedIds.has(item.fileEntryId)))
+                      }
+                    >
+                      {t('Collect selected')} ({selectedIds.size})
+                    </button>
+                    <button
+                      data-testid="unified-search-export-json"
+                      disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                      onClick={() => void exportSelected('json')}
+                    >
+                      {t('Export JSON')}
+                    </button>
+                    <button
+                      data-testid="unified-search-export-csv"
+                      disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                      onClick={() => void exportSelected('csv')}
+                    >
+                      {t('Export CSV')}
+                    </button>
+                    <select
+                      data-testid="unified-search-timeline-frame-rate"
+                      value={timelineFrameRate}
+                      onChange={(event) =>
+                        setTimelineFrameRate(Number(event.target.value) as UnifiedTimelineFrameRate)
+                      }
+                      aria-label={t('Timeline frame rate')}
+                    >
+                      {[23.976, 24, 25, 29.97, 30, 50, 59.94, 60].map((frameRate) => (
+                        <option key={frameRate} value={frameRate}>
+                          {t('{rate} fps', { rate: frameRate })}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      data-testid="unified-search-export-edl"
+                      disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                      onClick={() => void exportSelected('edl')}
+                    >
+                      {t('Export EDL')}
+                    </button>
+                    <button
+                      data-testid="unified-search-export-fcpxml"
+                      disabled={selectedIds.size === 0 || Boolean(actionPending)}
+                      onClick={() => void exportSelected('fcpxml')}
+                    >
+                      {t('Export FCPXML')}
+                    </button>
+                    {exportStatus ? (
+                      <span data-testid="unified-search-export-status">{exportStatus}</span>
+                    ) : null}
+                  </div>
+                </details>
+              )}
+            </div>
+            {referenceImagePath && (
+              <div className="unified-search-reference-card">
+                <ThumbnailImage
+                  filePath={referenceImagePath}
+                  ext={'.' + (referenceImagePath.split('.').pop() ?? '')}
+                  isDirectory={false}
+                  viewMode="thumbnail-grid"
+                  style={{ width: 64, height: 64 }}
+                />
+                <div className="unified-search-reference-card__name">
+                  <span>{t('Reference image')}</span>
+                  <strong title={referenceImagePath}>
+                    {referenceImagePath.split(/[\\/]/).pop()}
+                  </strong>
+                  {subject && (
+                    <small data-testid="unified-search-subject">
+                      {t('Subject')}: {subject.label}
+                      {segmentationSessionId ? ' · ' + t('Fine mask') : ''}
+                    </small>
+                  )}
+                </div>
                 <button
                   data-testid="unified-search-refine-subject"
                   disabled={Boolean(actionPending)}
@@ -766,8 +985,6 @@ const UnifiedSearchPanel: React.FC = () => {
                 >
                   {t('Refine subject on the original image')}
                 </button>
-              ) : null}
-              {referenceImagePath ? (
                 <button
                   onClick={() => {
                     setReferenceImagePath('')
@@ -777,186 +994,21 @@ const UnifiedSearchPanel: React.FC = () => {
                 >
                   {t('Remove')}
                 </button>
-              ) : null}
-            </div>
-            <details className="unified-search-more">
-              <summary>{t('Collections and export')}</summary>
-              <div className="unified-search-more__content">
-                <select
-                  data-testid="unified-search-collection-select"
-                  value={collectionId}
-                  onChange={(event) => setCollectionId(Number(event.target.value))}
-                >
-                  <option value={0}>{t('Select collection')}</option>
-                  {collections.map((collection) => (
-                    <option key={collection.id} value={collection.id}>
-                      {collection.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  data-testid="unified-search-collect-selected"
-                  disabled={!collectionId || selectedIds.size === 0 || Boolean(actionPending)}
-                  onClick={() =>
-                    void collect(results.filter((item) => selectedIds.has(item.fileEntryId)))
-                  }
-                >
-                  {t('Collect selected')} ({selectedIds.size})
-                </button>
-                <button
-                  data-testid="unified-search-export-json"
-                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                  onClick={() => void exportSelected('json')}
-                >
-                  {t('Export JSON')}
-                </button>
-                <button
-                  data-testid="unified-search-export-csv"
-                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                  onClick={() => void exportSelected('csv')}
-                >
-                  {t('Export CSV')}
-                </button>
-                <select
-                  data-testid="unified-search-timeline-frame-rate"
-                  value={timelineFrameRate}
-                  onChange={(event) =>
-                    setTimelineFrameRate(Number(event.target.value) as UnifiedTimelineFrameRate)
-                  }
-                  aria-label={t('Timeline frame rate')}
-                >
-                  {[23.976, 24, 25, 29.97, 30, 50, 59.94, 60].map((frameRate) => (
-                    <option key={frameRate} value={frameRate}>
-                      {t('{rate} fps', { rate: frameRate })}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  data-testid="unified-search-export-edl"
-                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                  onClick={() => void exportSelected('edl')}
-                >
-                  {t('Export EDL')}
-                </button>
-                <button
-                  data-testid="unified-search-export-fcpxml"
-                  disabled={selectedIds.size === 0 || Boolean(actionPending)}
-                  onClick={() => void exportSelected('fcpxml')}
-                >
-                  {t('Export FCPXML')}
-                </button>
-                {exportStatus ? (
-                  <span data-testid="unified-search-export-status">{exportStatus}</span>
-                ) : null}
               </div>
-            </details>
-            <div
-              className="unified-search-filters"
-              data-testid="unified-search-filters"
-              style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}
-            >
-              <select
-                data-testid="unified-search-media-filter"
-                value={mediaType}
-                onChange={(event) => setMediaType(event.target.value)}
-                aria-label={t('Media type')}
-              >
-                <option value="">{t('All media')}</option>
-                <option value="image">{t('Images')}</option>
-                <option value="video">{t('Videos')}</option>
-                <option value="audio">{t('Audio')}</option>
-                <option value="file">{t('Other files')}</option>
-              </select>
-              <select
-                data-testid="unified-search-duration-filter"
-                value={durationFilter}
-                onChange={(event) => setDurationFilter(event.target.value as DurationFilter)}
-                aria-label={t('Duration')}
-              >
-                <option value="">{t('All durations')}</option>
-                <option value="under-minute">{t('Under 1 minute')}</option>
-                <option value="one-five">{t('1 to 5 minutes')}</option>
-                <option value="five-thirty">{t('5 to 30 minutes')}</option>
-                <option value="over-thirty">{t('Over 30 minutes')}</option>
-              </select>
-              <select
-                data-testid="unified-search-orientation-filter"
-                value={orientation}
-                onChange={(event) => setOrientation(event.target.value)}
-                aria-label={t('Orientation')}
-              >
-                <option value="">{t('All orientations')}</option>
-                <option value="landscape">{t('Landscape')}</option>
-                <option value="portrait">{t('Portrait')}</option>
-                <option value="square">{t('Square')}</option>
-              </select>
-              <select
-                data-testid="unified-search-index-filter"
-                value={indexLevel}
-                onChange={(event) => setIndexLevel(event.target.value)}
-                aria-label={t('Index readiness')}
-              >
-                <option value="">{t('All index states')}</option>
-                <option value="metadata-only">{t('Metadata only')}</option>
-                <option value="partial">{t('Partial AI index')}</option>
-                <option value="full">{t('Full AI index')}</option>
-              </select>
-              <label>
-                {t('From date')}
-                <input
-                  type="date"
-                  value={modifiedAfter}
-                  onChange={(event) => setModifiedAfter(event.target.value)}
-                />
-              </label>
-              <label>
-                {t('To date')}
-                <input
-                  type="date"
-                  value={modifiedBefore}
-                  onChange={(event) => setModifiedBefore(event.target.value)}
-                />
-              </label>
-              <button
-                disabled={!hasActiveFilters}
-                onClick={() => {
-                  setSourceId('')
-                  setMediaType('')
-                  setDurationFilter('')
-                  setOrientation('')
-                  setIndexLevel('')
-                  setModifiedAfter('')
-                  setModifiedBefore('')
-                }}
-              >
-                {t('Clear filters')}
-              </button>
-            </div>
-            {referenceImagePath ? (
-              <div style={{ display: 'flex', gap: 5, opacity: 0.65 }}>
-                {subject ? (
-                  <span data-testid="unified-search-subject">
-                    {t('Subject')}: {subject.label}
-                    {segmentationSessionId ? ` · ${t('Fine mask')}` : ''}
-                  </span>
-                ) : null}
-                <span
-                  title={referenceImagePath}
-                  style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                >
-                  {referenceImagePath}
-                </span>
-              </div>
-            ) : null}
+            )}
             {response?.degradedReason ? (
-              <div
+              <details
+                className="unified-search-readiness"
                 data-testid="unified-search-degraded"
                 title={response.actionableHint}
                 style={{ color: '#e3b45f' }}
               >
-                {response.degradedReason}
-                {response.actionableHint ? ` · ${response.actionableHint}` : ''}
-              </div>
+                <summary>{t('Some search features need preparation')}</summary>
+                <p>
+                  {t(unifiedDegradedLabelKey(response.degradedReason))}
+                  {response.actionableHint ? ' · ' + response.actionableHint : ''}
+                </p>
+              </details>
             ) : null}
             {error ? (
               <div data-testid="unified-search-error" style={{ color: '#ff8a8a' }}>
@@ -1079,11 +1131,21 @@ const UnifiedSearchPanel: React.FC = () => {
                 {!hasQuery && !pending ? (
                   <SearchEmptyState
                     testId="unified-search-empty-state"
-                    title={t('Search all indexed sources')}
+                    title={t('From a reference image to your original file')}
                     description={t(
                       'Enter natural language, a file name, or choose a reference image to begin.',
                     )}
-                  />
+                  >
+                    <button className="workspace-button-primary" onClick={chooseReferenceImage}>
+                      <WorkspaceIcon name="image" />
+                      {t('Choose a reference image')}
+                    </button>
+                    <button onClick={openSources}>
+                      <WorkspaceIcon name="folder" />
+                      {t('Add a source')}
+                    </button>
+                    <small>{t('Index your folders once. Search them whenever you need.')}</small>
+                  </SearchEmptyState>
                 ) : hasQuery && !pending && results.length === 0 ? (
                   <SearchEmptyState
                     testId="unified-search-empty-state"

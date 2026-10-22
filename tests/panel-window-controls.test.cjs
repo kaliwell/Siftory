@@ -105,15 +105,16 @@ test('shared panel header exposes move, maximize, restore, and close controls', 
   assert.match(panel, /!maximized &&/)
 })
 
-test('focused workspace uses fixed navigation and retains generation-safe native shape updates', () => {
+test('desktop workspace owns its viewport and leaves native window geometry to Electron', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const styles = source('src/styles/focused-workspace.css')
   const app = source('src/App.tsx')
   assert.doesNotMatch(navigator, /onMouseDown=\{startMove\}|workspace-navigator-move/)
-  assert.match(styles, /\.workspace-sidebar\s*\{[\s\S]*?position: absolute/)
+  assert.match(styles, /\.workspace-sidebar\s*\{[\s\S]*?grid-column: 1/)
   assert.match(styles, /data-docked='true'/)
-  assert.match(app, /scheduleSettledShapeSync/)
-  assert.match(app, /overflow: 'clip'/)
+  assert.match(app, /data-presentation="desktop"/)
+  assert.match(app, /innerWidth/)
+  assert.doesNotMatch(app, /scheduleSettledShapeSync|setOverlayShape\(|useMouseTransparency\(/)
   assert.match(app, /window-visibility-state/)
   assert.match(navigator, /<FirstRunGuide/)
   assert.match(navigator, /workspace-first-run-guide/)
@@ -135,15 +136,18 @@ test('startup restores the workspace navigator with the saved panel snapshot', (
   assert.doesNotMatch(restoreBlock, /globalVisible: settings\.globalVisible/)
 })
 
-test('fixed workspace replaces per-panel layout controls with application window controls', () => {
+test('docked pages use the system title bar instead of floating desktop controls', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const panel = source('src/components/DraggablePanel.tsx')
   assert.doesNotMatch(
     navigator,
     /workspace-layout-toggle|arrangeHorizontal\(\)|arrangeVertical\(\)/,
   )
-  assert.match(navigator, /workspace-window-pin/)
-  assert.match(navigator, /workspace-window-hide/)
+  assert.doesNotMatch(navigator, /workspace-window-pin|workspace-window-hide/)
+  const main = source('electron/main.ts')
+  assert.match(main, /frame: !uiSmokeMode/)
+  assert.match(main, /resizable: !uiSmokeMode/)
+  assert.match(main, /transparent: uiSmokeMode/)
   assert.match(panel, /if \(docked\)/)
   assert.match(panel, /data-docked="true"/)
 })

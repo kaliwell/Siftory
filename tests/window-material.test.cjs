@@ -27,7 +27,7 @@ test('window material maps zero to opaque and bounds frosted glass strength', ()
   assert.deepEqual(resolveWindowMaterial(Number.NaN), resolveWindowMaterial(0))
 })
 
-test('window design system keeps modern flat geometry, optional glass, and solid fallbacks', () => {
+test('desktop design system uses opaque surfaces while legacy material helpers remain isolated', () => {
   const themes = fs.readFileSync(path.join(root, 'src/styles/themes.css'), 'utf8')
   const windows = fs.readFileSync(path.join(root, 'src/styles/window-system.css'), 'utf8')
   const app = fs.readFileSync(path.join(root, 'src/App.tsx'), 'utf8')
@@ -41,6 +41,12 @@ test('window design system keeps modern flat geometry, optional glass, and solid
   )
   assert.match(windows, /html\[data-surface='solid'\]\s+\.panel/)
   assert.match(windows, /prefers-reduced-transparency:\s*reduce/)
-  assert.match(app, /resolveWindowMaterial\(transparency\)/)
+  const desktop = fs.readFileSync(path.join(root, 'src/styles/focused-workspace.css'), 'utf8')
+  const settings = fs.readFileSync(path.join(root, 'src/components/SettingsPanel.tsx'), 'utf8')
+  assert.match(desktop, /--panel-surface-alpha: 1/)
+  assert.match(desktop, /--panel-shadow: none/)
+  assert.match(app, /data-presentation="desktop"/)
+  assert.doesNotMatch(app, /resolveWindowMaterial\(transparency\)/)
+  assert.doesNotMatch(settings, /t\('Glass'\)|t\('Transparency'\)/)
   assert.doesNotMatch(app, /electronAPI\.setTransparency/)
 })

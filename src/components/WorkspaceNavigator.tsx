@@ -14,7 +14,7 @@ import {
   type WorkspacePanel,
 } from '../services/focusedWorkspace'
 import { requestWorkspaceNavigation } from '../services/workspaceNavigation'
-import { useWindowAlwaysOnTop } from '../hooks/useWindowAlwaysOnTop'
+import WorkspaceIcon from './WorkspaceIcon'
 import FirstRunGuide from './FirstRunGuide'
 import '../styles/workspace-status.css'
 import ProductReadinessCenter from './ProductReadinessCenter'
@@ -27,6 +27,8 @@ import {
 } from '../hooks/settingsWriter'
 
 export const WORKSPACE_DOMAINS = ['Search', 'Library', 'Sources', 'Tasks', 'Settings'] as const
+// Product marks retain the same spelling in every locale.
+const BRAND = { mark: 'S', name: 'Siftory', localName: '寻藏' } as const
 
 export function openWorkspacePanel(panel: WorkspacePanel, eventName?: string): void {
   const current = useStore.getState()
@@ -56,7 +58,6 @@ const WorkspaceNavigator: React.FC = () => {
   const [tasksOpen, setTasksOpen] = useState(false)
   const [guideMounted, setGuideMounted] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
-  const { alwaysOnTop, toggleAlwaysOnTop } = useWindowAlwaysOnTop()
   const [stats, setStats] = useState<UnifiedSchedulerStats | null>(null)
   const [taskError, setTaskError] = useState('')
   const [resourceBusy, setResourceBusy] = useState(false)
@@ -110,11 +111,11 @@ const WorkspaceNavigator: React.FC = () => {
       stats.lanes.gpu.queued
     : 0
   const entries = [
-    { label: 'Search', panel: 'unifiedSearch', icon: '⌕' },
-    { label: 'Library', panel: 'assetLibrary', icon: '▦' },
-    { label: 'Sources', panel: 'imageSearch', icon: '+' },
-    { label: 'Video indexing', panel: 'mediaSearch', icon: '▷' },
-    { label: 'Duplicate Finder', panel: 'duplicateFinder', icon: '▤' },
+    { label: 'Search', panel: 'unifiedSearch', icon: 'search' },
+    { label: 'Library', panel: 'assetLibrary', icon: 'library' },
+    { label: 'Sources', panel: 'imageSearch', icon: 'folder' },
+    { label: 'Video indexing', panel: 'mediaSearch', icon: 'video' },
+    { label: 'Duplicate Finder', panel: 'duplicateFinder', icon: 'duplicate' },
   ] as const
 
   return (
@@ -130,9 +131,17 @@ const WorkspaceNavigator: React.FC = () => {
       }}
     >
       <div className="workspace-sidebar__brand">
-        <strong>{t('Siftory · 寻藏')}</strong>
-        <span>v{appVersion}</span>
+        <span className="workspace-brand-mark" aria-hidden="true">
+          {BRAND.mark}
+        </span>
+        <div>
+          <strong>
+            {BRAND.name} <span>{BRAND.localName}</span>
+          </strong>
+          <small>{t('Your local media workspace')}</small>
+        </div>
       </div>
+      <span className="workspace-nav-label">{t('Workspace')}</span>
       <div className="workspace-sidebar__links" role="group" aria-label={t('Workspace')}>
         {entries.map((entry, index) => (
           <button
@@ -156,16 +165,18 @@ const WorkspaceNavigator: React.FC = () => {
               )
             }
           >
-            <span aria-hidden="true">{entry.icon}</span>
+            <WorkspaceIcon name={entry.icon} />
             {t(entry.label)}
           </button>
         ))}
       </div>
       <div className="workspace-sidebar__maintenance">
+        <span className="workspace-nav-label">{t('Manage')}</span>
         <button
           aria-current={activePanel === 'appStorage' ? 'page' : undefined}
           onClick={() => navigate('appStorage')}
         >
+          <WorkspaceIcon name="database" />
           {t('Index and maintenance')}
         </button>
         <button
@@ -173,6 +184,7 @@ const WorkspaceNavigator: React.FC = () => {
           aria-current={activePanel === 'settings' ? 'page' : undefined}
           onClick={() => navigate('settings')}
         >
+          <WorkspaceIcon name="settings" />
           {t('Settings')}
         </button>
       </div>
@@ -182,25 +194,6 @@ const WorkspaceNavigator: React.FC = () => {
           <button onClick={() => void flushSettingsWrites().catch(() => {})}>{t('Retry')}</button>
         </div>
       )}
-      <div className="workspace-sidebar__window-controls">
-        <button
-          data-testid="workspace-window-pin"
-          aria-pressed={alwaysOnTop}
-          onClick={toggleAlwaysOnTop}
-        >
-          {t(alwaysOnTop ? 'Stop keeping window on top' : 'Keep window on top')}
-        </button>
-        <button
-          data-testid="workspace-window-hide"
-          onClick={() =>
-            void window.electronAPI
-              .hideWindow()
-              .catch(() => setTaskError(t('The operation failed.')))
-          }
-        >
-          {t('Hide')}
-        </button>
-      </div>
       <button
         className="workspace-sidebar__tasks"
         data-testid="workspace-domain-tasks"
@@ -211,8 +204,17 @@ const WorkspaceNavigator: React.FC = () => {
           setTasksOpen(!tasksOpen)
         }}
       >
-        {t('Tasks')} · {count}
+        <WorkspaceIcon name="tasks" />
+        <span>{t('Tasks')}</span>
+        <span className="workspace-task-count">{count}</span>
       </button>
+      <div className="workspace-sidebar__footer">
+        <span>
+          <i />
+          {t('Local workspace')}
+        </span>
+        <small>v{appVersion}</small>
+      </div>
       {tasksOpen && (
         <section
           data-portal=""

@@ -159,8 +159,8 @@ test('mode switcher and quick navigation are keyboard reachable with visible foc
   assert.match(navigator, /aria-expanded=/)
   assert.doesNotMatch(navigator, /moveNavigatorWithKeyboard|advancedSearchOpen/)
   assert.match(windowStyles, /button:focus-visible/)
-  assert.match(navigatorStyles, /button:focus-visible/)
-  assert.match(navigatorStyles, /@media \(max-width: 760px\)/)
+  assert.match(navigatorStyles, /:is\(button, input, select, textarea, summary\):focus-visible/)
+  assert.match(navigatorStyles, /@media \(max-width: 850px\)/)
   for (const evidence of [
     'coreActionParity',
     'keyboardReachable',

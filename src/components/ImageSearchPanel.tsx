@@ -70,6 +70,7 @@ function normalizeImageSearchRoot(value?: string): string {
 }
 
 const ImageSearchPanel: React.FC = () => {
+  const sourcesOnly = new URLSearchParams(window.location.search).get('legacyOverlay') !== '1'
   const { t } = useTranslation()
   const imageSearchPos = useStore((s) => s.imageSearchPos)
   const setImageSearchPos = useStore((s) => s.setImageSearchPos)
@@ -781,6 +782,7 @@ const ImageSearchPanel: React.FC = () => {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (sourcesOnly) return
       if (!useStore.getState().showImageSearch) return
       if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'v') return
       const target = event.target as HTMLElement | null
@@ -793,7 +795,7 @@ const ImageSearchPanel: React.FC = () => {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [handlePasteClipboardImage, searching])
+  }, [handlePasteClipboardImage, searching, sourcesOnly])
 
   const handleSelectPaths = useCallback(async () => {
     const paths = await imageSearchBridge.selectPaths()
@@ -1156,7 +1158,7 @@ const ImageSearchPanel: React.FC = () => {
     <DraggablePanel
       panelId="imageSearch"
       title="Image Search"
-      displayTitle={t('Search')}
+      displayTitle={t(sourcesOnly ? 'Sources' : 'Search')}
       x={imageSearchPos.x}
       y={imageSearchPos.y}
       defaultX={319}
@@ -1174,6 +1176,7 @@ const ImageSearchPanel: React.FC = () => {
     >
       <div
         className="image-search-shell"
+        data-sources-only={sourcesOnly}
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1187,11 +1190,12 @@ const ImageSearchPanel: React.FC = () => {
             className="image-search-control-pane"
             aria-label={t('Search controls')}
             onDragOver={(event) => {
+              if (sourcesOnly) return
               event.preventDefault()
               setDragOver(true)
             }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
+            onDrop={sourcesOnly ? undefined : handleDrop}
           >
             <ImageSearchToastBanner toast={toast} />
 
@@ -1204,11 +1208,13 @@ const ImageSearchPanel: React.FC = () => {
             <SearchControlSectionsToolbar
               panelId="image-search"
               leadingControl={
-                <SearchExperienceModeBar
-                  mode={experienceMode}
-                  workflow={setupWorkflow}
-                  onModeChange={handleExperienceModeChange}
-                />
+                !sourcesOnly && (
+                  <SearchExperienceModeBar
+                    mode={experienceMode}
+                    workflow={setupWorkflow}
+                    onModeChange={handleExperienceModeChange}
+                  />
+                )
               }
               onExpandAll={() => setAllControlSectionsExpanded(true)}
               onCollapseAll={() => setAllControlSectionsExpanded(false)}
@@ -1230,6 +1236,7 @@ const ImageSearchPanel: React.FC = () => {
             </CollapsibleSearchSection>
 
             <ImageSearchControls
+              hideQuery={sourcesOnly}
               experienceMode={experienceMode}
               workflowRunning={setupRunning}
               isScanning={isScanning}
@@ -1369,30 +1376,32 @@ const ImageSearchPanel: React.FC = () => {
             </CollapsibleSearchSection>
           </aside>
 
-          <main className="image-search-results-pane">
-            <SearchProgressBar
-              searching={searching}
-              lastQueryKind={lastQueryKind}
-              semanticProgress={semanticProgress}
-              layeredProgress={layeredProgress}
-              onStop={handleStopSearch}
-            />
+          {!sourcesOnly && (
+            <main className="image-search-results-pane">
+              <SearchProgressBar
+                searching={searching}
+                lastQueryKind={lastQueryKind}
+                semanticProgress={semanticProgress}
+                layeredProgress={layeredProgress}
+                onStop={handleStopSearch}
+              />
 
-            <ImageSearchResultGrid
-              results={sortedResults}
-              rawResultCount={sortedResults.length}
-              queryHash={queryHash}
-              statusState={status.state}
-              searchQuery={searchQuery}
-              searchMetrics={searchMetrics}
-              showExtendedScores={showExtendedScores}
-              onOpenFile={handleOpenFile}
-              onOpenFolder={handleOpenFolder}
-              onCopyPath={handleCopyPath}
-              onSearchSimilar={handleSearchSimilar}
-              onSubjectSearch={handleSubjectSearch}
-            />
-          </main>
+              <ImageSearchResultGrid
+                results={sortedResults}
+                rawResultCount={sortedResults.length}
+                queryHash={queryHash}
+                statusState={status.state}
+                searchQuery={searchQuery}
+                searchMetrics={searchMetrics}
+                showExtendedScores={showExtendedScores}
+                onOpenFile={handleOpenFile}
+                onOpenFolder={handleOpenFolder}
+                onCopyPath={handleCopyPath}
+                onSearchSimilar={handleSearchSimilar}
+                onSubjectSearch={handleSubjectSearch}
+              />
+            </main>
+          )}
         </div>
       </div>
 

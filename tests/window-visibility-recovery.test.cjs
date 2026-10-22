@@ -28,14 +28,14 @@ for (const eventName of ['display-metrics-changed', 'display-added', 'display-re
   })
 }
 
-test('same logical bounds with a new DPI still retire old geometry; scope uses the same boundary', () => {
+test('DPI and pinned diagnostic scope refresh retire old renderer work', () => {
   const f = fixture()
   f.event('display-metrics-changed', 800, 1.5)
   assert.equal(f.generation(), 1)
   f.finish()
   f.invoke('set-display-scope', { mode: 'primary' })
   assert.equal(f.generation(), 2)
-  assert.equal(f.context.workspaceTopology.scope.mode, 'primary')
+  assert.equal(f.context.workspaceTopology.scope.mode, 'all', 'diagnostic geometry stays pinned')
   f.finish()
 })
 

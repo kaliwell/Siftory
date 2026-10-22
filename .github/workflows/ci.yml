@@ -28,3 +28,4 @@ jobs:
       - run: npm run ci:verify:source
       - run: npx playwright install chromium
       - run: npm run test:focused-workspace:browser
+      - run: npm run test:modern-desktop:browser

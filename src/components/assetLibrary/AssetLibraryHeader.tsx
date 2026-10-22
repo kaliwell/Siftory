@@ -51,109 +51,113 @@ export default function AssetLibraryHeader({
   const { t } = useTranslation()
   return (
     <>
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button
-          disabled={activeTask}
-          onClick={onSync}
-          style={buttonStyle}
-          title={t('Import assets from the current Image Search manifest')}
-        >
-          {t('Sync Image Index')}
-        </button>
-        <button onClick={onRefresh} style={buttonStyle}>
-          {t('Refresh')}
-        </button>
-        <button
-          data-testid="asset-backups-toggle"
-          onClick={onToggleBackups}
-          style={{
-            ...buttonStyle,
-            color: backupOpen ? 'rgb(85,220,160)' : undefined,
-            borderColor: backupOpen ? 'rgb(85,220,160)' : undefined,
-          }}
-        >
-          {t('Backups')} ({formatNumber(backupCount)})
-        </button>
-        <button
-          onClick={onExportReport}
-          title={t('Export a library report (stats, categories, tags, deletion history) as JSON')}
-          style={buttonStyle}
-        >
-          {t('Report')}
-        </button>
-        <button
-          disabled={activeTask || feedbackStatus.state === 'building'}
-          onClick={onRebuildLearning}
-          style={buttonStyle}
-          title={t(
-            'Rebuild the local search model from accepted, rejected, and manual classifications',
-          )}
-        >
-          {t('Build Search Learning')}
-        </button>
-        <label
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9 }}
-          title={t(
-            'Apply accepted and rejected NekoSearch samples to Image Search semantic ranking',
-          )}
-        >
-          <input
-            type="checkbox"
-            checked={feedbackStatus.enabled}
+      <details className="workspace-disclosure" data-testid="asset-library-tools">
+        <summary>{t('Library tools')}</summary>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
             disabled={activeTask}
-            onChange={(event) => onLearningEnabledChange(event.target.checked)}
-          />
-          {t('Learning')}
-        </label>
-        <button disabled={!activeTask} onClick={onStop} style={buttonStyle}>
-          {t('Stop')}
-        </button>
-        <span style={{ fontSize: 9, opacity: 0.65 }}>
-          {t('Assets')} {formatNumber(stats.totalAssets)} / {t('Classified')}{' '}
-          {formatNumber(stats.classifiedAssets)} / {t('Unclassified')}{' '}
-          {formatNumber(stats.unclassifiedAssets)} / {t('Suggestions')}{' '}
-          {formatNumber(stats.suggestedCount)} / {t('Removed')} {formatNumber(stats.archivedAssets)}
-        </span>
-        {stats.storageState !== 'ready' && (
-          <span
-            style={{ fontSize: 9, color: 'rgb(255,105,105)' }}
-            title={stats.storageError || t('Asset metadata storage requires repair')}
+            onClick={onSync}
+            style={buttonStyle}
+            title={t('Import assets from the current Image Search manifest')}
           >
-            {t('Data')} {t(stats.storageState === 'read_only' ? 'read-only' : 'unavailable')}
-            {stats.storageCorruptRows > 0
-              ? ` (${t('{count} damaged rows', {
-                  count: formatNumber(stats.storageCorruptRows),
-                })})`
-              : ''}
+            {t('Sync Image Index')}
+          </button>
+          <button onClick={onRefresh} style={buttonStyle}>
+            {t('Refresh')}
+          </button>
+          <button
+            data-testid="asset-backups-toggle"
+            onClick={onToggleBackups}
+            style={{
+              ...buttonStyle,
+              color: backupOpen ? 'rgb(85,220,160)' : undefined,
+              borderColor: backupOpen ? 'rgb(85,220,160)' : undefined,
+            }}
+          >
+            {t('Backups')} ({formatNumber(backupCount)})
+          </button>
+          <button
+            onClick={onExportReport}
+            title={t('Export a library report (stats, categories, tags, deletion history) as JSON')}
+            style={buttonStyle}
+          >
+            {t('Report')}
+          </button>
+          <button
+            disabled={activeTask || feedbackStatus.state === 'building'}
+            onClick={onRebuildLearning}
+            style={buttonStyle}
+            title={t(
+              'Rebuild the local search model from accepted, rejected, and manual classifications',
+            )}
+          >
+            {t('Build Search Learning')}
+          </button>
+          <label
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9 }}
+            title={t(
+              'Apply accepted and rejected NekoSearch samples to Image Search semantic ranking',
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={feedbackStatus.enabled}
+              disabled={activeTask}
+              onChange={(event) => onLearningEnabledChange(event.target.checked)}
+            />
+            {t('Learning')}
+          </label>
+          <button disabled={!activeTask} onClick={onStop} style={buttonStyle}>
+            {t('Stop')}
+          </button>
+          <span style={{ fontSize: 9, opacity: 0.65 }}>
+            {t('Assets')} {formatNumber(stats.totalAssets)} / {t('Classified')}{' '}
+            {formatNumber(stats.classifiedAssets)} / {t('Unclassified')}{' '}
+            {formatNumber(stats.unclassifiedAssets)} / {t('Suggestions')}{' '}
+            {formatNumber(stats.suggestedCount)} / {t('Removed')}{' '}
+            {formatNumber(stats.archivedAssets)}
           </span>
-        )}
-        <span
-          style={{
-            fontSize: 9,
-            color:
-              feedbackStatus.state === 'ready'
-                ? 'rgb(75,220,155)'
-                : feedbackStatus.state === 'error'
-                  ? 'rgb(255,105,105)'
-                  : 'rgb(235,185,90)',
-          }}
-          title={
-            feedbackStatus.error ||
-            feedbackStatus.dirtyReason ||
-            t('{positive} positive and {negative} negative prototypes', {
-              positive: feedbackStatus.positivePrototypeCount,
-              negative: feedbackStatus.negativePrototypeCount,
-            })
-          }
-        >
-          {t('Search learning')}: {t(feedbackStatus.enabled ? feedbackStatus.state : 'off')}{' '}
-          {t('Revision {built}/{current}', {
-            built: feedbackStatus.builtRevision,
-            current: feedbackStatus.revision,
-          })}{' '}
-          ({t('{count} targets', { count: feedbackStatus.targetCount })})
-        </span>
-      </div>
+          {stats.storageState !== 'ready' && (
+            <span
+              style={{ fontSize: 9, color: 'rgb(255,105,105)' }}
+              title={stats.storageError || t('Asset metadata storage requires repair')}
+            >
+              {t('Data')} {t(stats.storageState === 'read_only' ? 'read-only' : 'unavailable')}
+              {stats.storageCorruptRows > 0
+                ? ` (${t('{count} damaged rows', {
+                    count: formatNumber(stats.storageCorruptRows),
+                  })})`
+                : ''}
+            </span>
+          )}
+          <span
+            style={{
+              fontSize: 9,
+              color:
+                feedbackStatus.state === 'ready'
+                  ? 'rgb(75,220,155)'
+                  : feedbackStatus.state === 'error'
+                    ? 'rgb(255,105,105)'
+                    : 'rgb(235,185,90)',
+            }}
+            title={
+              feedbackStatus.error ||
+              feedbackStatus.dirtyReason ||
+              t('{positive} positive and {negative} negative prototypes', {
+                positive: feedbackStatus.positivePrototypeCount,
+                negative: feedbackStatus.negativePrototypeCount,
+              })
+            }
+          >
+            {t('Search learning')}: {t(feedbackStatus.enabled ? feedbackStatus.state : 'off')}{' '}
+            {t('Revision {built}/{current}', {
+              built: feedbackStatus.builtRevision,
+              current: feedbackStatus.revision,
+            })}{' '}
+            ({t('{count} targets', { count: feedbackStatus.targetCount })})
+          </span>
+        </div>
+      </details>
 
       <div
         style={{

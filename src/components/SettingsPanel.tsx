@@ -549,7 +549,6 @@ const SettingsPanel: React.FC = () => {
   )
   const showDate = useStore((s) => s.showDate)
   const setShowDate = useStore((s) => s.setShowDate)
-  const transparency = useStore((s) => s.transparency)
   const setTransparency = useStore((s) => s.setTransparency)
   const fontScaleIdx = useStore((s) => s.fontScaleIdx)
   const setFontScaleIdx = useStore((s) => s.setFontScaleIdx)
@@ -1063,7 +1062,6 @@ const SettingsPanel: React.FC = () => {
               onChange={(event) => void changeDisplayScope(event.target.value)}
               style={{ flex: 1, fontSize: 11, padding: '2px 4px' }}
             >
-              <option value="all">{t('All displays')}</option>
               <option value="primary">{t('Primary display')}</option>
               {workspaceDisplays.map((display, index) => (
                 <option key={display.id} value={display.id}>
@@ -1155,46 +1153,6 @@ const SettingsPanel: React.FC = () => {
             >
               {t(showDate ? 'Show' : 'Hide')}
             </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>{t('Material')}</span>
-            <button
-              data-testid="window-material-solid"
-              className={transparency === 0 ? 'is-selected' : undefined}
-              onClick={() => setTransparency(0)}
-              aria-pressed={transparency === 0}
-              style={{ flex: 1, fontSize: 11, padding: '3px 6px' }}
-            >
-              {t('Solid')}
-            </button>
-            <button
-              data-testid="window-material-glass"
-              className={transparency > 0 ? 'is-selected' : undefined}
-              onClick={() => setTransparency(Math.max(32, transparency))}
-              aria-pressed={transparency > 0}
-              style={{ flex: 1, fontSize: 11, padding: '3px 6px' }}
-            >
-              {t('Glass')}
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>{t('Glass')}</span>
-            <input
-              data-testid="window-glass-strength"
-              type="range"
-              min={1}
-              max={60}
-              value={Math.max(1, transparency)}
-              onChange={(e) => setTransparency(Number(e.target.value))}
-              disabled={transparency === 0}
-              aria-label={t('Glass strength')}
-              style={{ flex: 1, margin: 0 }}
-            />
-            <span style={{ fontSize: 10, opacity: 0.5, minWidth: 30 }}>
-              {transparency === 0 ? t('Off') : `${transparency}%`}
-            </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

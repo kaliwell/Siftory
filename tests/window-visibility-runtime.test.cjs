@@ -78,6 +78,49 @@ function fixture(t, shortcutOverrides = {}) {
   return { core, options, calls, callbacks, invoke, snapshot, window }
 }
 
+test('standard windows hide and reveal natively without clipping or click-through', async (t) => {
+  const { core, options, calls, invoke, window } = fixture(t)
+  options.standardWindow = true
+  let visible = true
+  window.isVisible = () => visible
+  window.isMinimized = () => false
+  window.hide = () => {
+    visible = false
+    calls.push(['native-hide'])
+  }
+  window.show = () => {
+    visible = true
+    calls.push(['native-show'])
+  }
+  window.focus = () => calls.push(['native-focus'])
+  invoke('set-overlay-shape', [{ x: 3, y: 4, width: 50, height: 50 }], 0)
+  invoke('set-ignore-mouse', true, 0)
+  invoke('set-transparency', 60)
+  assert.equal(
+    calls.some(([name, value]) => name === 'shape' || (name === 'mouse' && value === true)),
+    false,
+  )
+  core.setGlobalWindowVisibility(options, false, 'settings')
+  assert.equal(visible, false)
+  assert.equal(invoke('show-window', 0), false)
+  assert.equal(invoke('reveal-window', 0), false)
+  assert.equal(visible, false, 'stale renderer ACKs must not reverse a native hide')
+  core.revealGlobalWindow(options)
+  assert.equal(invoke('show-window', 2), true)
+  assert.equal(visible, true)
+  assert.ok(calls.some(([name]) => name === 'native-focus'))
+  assert.equal(
+    calls.some(([name, value]) => name === 'opacity' && value !== 1),
+    false,
+  )
+  core.setGlobalWindowVisibility(options, false, 'settings')
+  let restoredGeometry = 0
+  core.recoverGlobalWindowTopology(options, () => restoredGeometry++)
+  core.resumeGlobalWindowVisibility(options, () => restoredGeometry++)
+  assert.equal(restoredGeometry, 2)
+  assert.equal(visible, false, 'display changes and resume must not reveal a hidden app')
+})
+
 test('shortcut conflicts and registration exceptions remain per-key and recover on retry', async (t) => {
   let failing = true
   const { core, options, snapshot } = fixture(t, {

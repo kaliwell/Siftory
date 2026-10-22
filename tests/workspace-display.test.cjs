@@ -88,12 +88,14 @@ test('a selected monitor survives migration and handles negative coordinates', (
   assert.equal(topology.workArea.displays.length, 1)
 })
 
-test('an explicit all-displays choice survives later restarts after migration', () => {
+test('conventional windows restore old all-displays profiles onto one screen', () => {
   const saved = {
     displayScope: { mode: 'all' },
     focusedDisplayScopeVersion: FOCUSED_DISPLAY_SCOPE_VERSION,
   }
-  assert.deepEqual(restoreFocusedDisplayScope(JSON.parse(JSON.stringify(saved))), { mode: 'all' })
+  assert.deepEqual(restoreFocusedDisplayScope(JSON.parse(JSON.stringify(saved))), {
+    mode: 'primary',
+  })
   for (const version of [undefined, null, 0, NaN, Infinity, '1']) {
     assert.deepEqual(
       restoreFocusedDisplayScope({ ...saved, focusedDisplayScopeVersion: version }),

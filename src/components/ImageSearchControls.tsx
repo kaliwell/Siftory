@@ -19,6 +19,7 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
 type ScanMode = 'addNew' | 'update' | 'updateAll'
 
 interface ImageSearchControlsProps {
+  hideQuery?: boolean
   experienceMode: SearchExperienceMode
   workflowRunning: boolean
   isScanning: boolean
@@ -70,6 +71,7 @@ interface ImageSearchControlsProps {
 }
 
 const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
+  hideQuery = false,
   experienceMode,
   workflowRunning,
   isScanning,
@@ -317,163 +319,165 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
         </div>
       </CollapsibleSearchSection>
 
-      <CollapsibleSearchSection
-        id="image-search-query-section"
-        step="03"
-        title={t('Search input')}
-        description={t('Search with an image, filename filter, or natural-language description.')}
-        expanded={true}
-        collapsible={false}
-        pinned
-        tone="query"
-        testId="image-search-query-section"
-        summary={searching ? t('Searching...') : t('Ready')}
-      >
-        <div
-          className="image-search-query-controls"
-          style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}
+      {!hideQuery && (
+        <CollapsibleSearchSection
+          id="image-search-query-section"
+          step="03"
+          title={t('Search input')}
+          description={t('Search with an image, filename filter, or natural-language description.')}
+          expanded={true}
+          collapsible={false}
+          pinned
+          tone="query"
+          testId="image-search-query-section"
+          summary={searching ? t('Searching...') : t('Ready')}
         >
-          <button
-            data-testid="image-search-query-image"
-            onClick={onQueryImage}
-            disabled={searching || workflowRunning}
-            style={{ fontSize: 11, padding: '3px 12px' }}
-          >
-            {t('Query')}
-          </button>
-          <button
-            onClick={onPasteClipboardImage}
-            disabled={searching || workflowRunning}
-            style={{ fontSize: 11, padding: '3px 10px' }}
-          >
-            {t('Paste')}
-          </button>
-          <button
-            onClick={onRefreshSearch}
-            disabled={searching || workflowRunning}
-            style={{ fontSize: 11, padding: '3px 10px' }}
-          >
-            {t('Refresh')}
-          </button>
-          <input
-            readOnly
-            value={testImagePath || ''}
-            placeholder={
-              dragOver
-                ? t('Drop image to search...')
-                : t('Drop an image, click Query, or Paste clipboard image...')
-            }
-            style={{ flex: '1 1 220px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
-            title={testImagePath || undefined}
-          />
-          {testImagePath && (
-            <button
-              onClick={onClearQueryImage}
-              disabled={searching || workflowRunning}
-              style={{ fontSize: 10, padding: '3px 8px' }}
-            >
-              {t('Clear')}
-            </button>
-          )}
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('Filter by name (optional)...')}
-            style={{ flex: '1 1 160px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
-          />
-        </div>
-
-        <div
-          className="image-search-semantic-controls"
-          style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
-        >
-          <button
-            data-testid="image-search-semantic-query"
-            onClick={onSemanticSearch}
-            disabled={searching || workflowRunning || !semanticModelReady}
-            title={!semanticModelReady ? t('The selected model is not ready.') : undefined}
-            style={{ fontSize: 11, padding: '3px 10px' }}
-          >
-            {t('Semantic')}
-          </button>
-          <input
-            value={semanticQuery}
-            onChange={(e) => setSemanticQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') onSemanticSearch()
-            }}
-            placeholder={t('Semantic text: red screenshot, phone, avatar...')}
-            style={{ flex: '1 1 240px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
-          />
-        </div>
-
-        {experienceMode === 'advanced' && (
           <div
-            className="image-search-parameter-controls"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              flexWrap: 'wrap',
-              fontSize: 10,
-            }}
+            className="image-search-query-controls"
+            style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}
           >
-            <span style={{ opacity: 0.6 }}>{t('Threshold')}:</span>
+            <button
+              data-testid="image-search-query-image"
+              onClick={onQueryImage}
+              disabled={searching || workflowRunning}
+              style={{ fontSize: 11, padding: '3px 12px' }}
+            >
+              {t('Query')}
+            </button>
+            <button
+              onClick={onPasteClipboardImage}
+              disabled={searching || workflowRunning}
+              style={{ fontSize: 11, padding: '3px 10px' }}
+            >
+              {t('Paste')}
+            </button>
+            <button
+              onClick={onRefreshSearch}
+              disabled={searching || workflowRunning}
+              style={{ fontSize: 11, padding: '3px 10px' }}
+            >
+              {t('Refresh')}
+            </button>
             <input
-              type="range"
-              min={0.5}
-              max={1}
-              step={0.01}
-              value={threshold}
-              onChange={(e) => setThreshold(Number(e.target.value))}
-              style={{ width: 80 }}
+              readOnly
+              value={testImagePath || ''}
+              placeholder={
+                dragOver
+                  ? t('Drop image to search...')
+                  : t('Drop an image, click Query, or Paste clipboard image...')
+              }
+              style={{ flex: '1 1 220px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
+              title={testImagePath || undefined}
             />
-            <span>{Math.round(threshold * 100)}%</span>
-            <span style={{ opacity: 0.6 }}>{t('Top')}:</span>
-            <select
-              value={topK}
-              onChange={(e) => setTopK(Number(e.target.value))}
-              style={{ fontSize: 10 }}
-            >
-              {IMAGE_SEARCH_TOPK_OPTIONS.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-            <span style={{ opacity: 0.6 }}>{t('Sort')}:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as ImageSearchSortMode)}
-              style={{ fontSize: 10 }}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {t(option.label)}
-                </option>
-              ))}
-            </select>
-            <span style={{ opacity: 0.6 }}>{t('Search')}:</span>
-            <select
-              value={searchMode}
-              onChange={(e) => setSearchMode(e.target.value as SearchMode)}
-              style={{ fontSize: 10 }}
-            >
-              <option value="fast">{t('Fast')}</option>
-              <option value="standard">{t('Standard')}</option>
-              <option value="precise">{t('Precise')}</option>
-            </select>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
-              <input
-                type="checkbox"
-                checked={showExtendedScores}
-                onChange={(e) => setShowExtendedScores(e.target.checked)}
-              />
-              {t('Scores')}
-            </label>
+            {testImagePath && (
+              <button
+                onClick={onClearQueryImage}
+                disabled={searching || workflowRunning}
+                style={{ fontSize: 10, padding: '3px 8px' }}
+              >
+                {t('Clear')}
+              </button>
+            )}
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('Filter by name (optional)...')}
+              style={{ flex: '1 1 160px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
+            />
           </div>
-        )}
-      </CollapsibleSearchSection>
+
+          <div
+            className="image-search-semantic-controls"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
+          >
+            <button
+              data-testid="image-search-semantic-query"
+              onClick={onSemanticSearch}
+              disabled={searching || workflowRunning || !semanticModelReady}
+              title={!semanticModelReady ? t('The selected model is not ready.') : undefined}
+              style={{ fontSize: 11, padding: '3px 10px' }}
+            >
+              {t('Semantic')}
+            </button>
+            <input
+              value={semanticQuery}
+              onChange={(e) => setSemanticQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onSemanticSearch()
+              }}
+              placeholder={t('Semantic text: red screenshot, phone, avatar...')}
+              style={{ flex: '1 1 240px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
+            />
+          </div>
+
+          {experienceMode === 'advanced' && (
+            <div
+              className="image-search-parameter-controls"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+                fontSize: 10,
+              }}
+            >
+              <span style={{ opacity: 0.6 }}>{t('Threshold')}:</span>
+              <input
+                type="range"
+                min={0.5}
+                max={1}
+                step={0.01}
+                value={threshold}
+                onChange={(e) => setThreshold(Number(e.target.value))}
+                style={{ width: 80 }}
+              />
+              <span>{Math.round(threshold * 100)}%</span>
+              <span style={{ opacity: 0.6 }}>{t('Top')}:</span>
+              <select
+                value={topK}
+                onChange={(e) => setTopK(Number(e.target.value))}
+                style={{ fontSize: 10 }}
+              >
+                {IMAGE_SEARCH_TOPK_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <span style={{ opacity: 0.6 }}>{t('Sort')}:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as ImageSearchSortMode)}
+                style={{ fontSize: 10 }}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.label)}
+                  </option>
+                ))}
+              </select>
+              <span style={{ opacity: 0.6 }}>{t('Search')}:</span>
+              <select
+                value={searchMode}
+                onChange={(e) => setSearchMode(e.target.value as SearchMode)}
+                style={{ fontSize: 10 }}
+              >
+                <option value="fast">{t('Fast')}</option>
+                <option value="standard">{t('Standard')}</option>
+                <option value="precise">{t('Precise')}</option>
+              </select>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
+                <input
+                  type="checkbox"
+                  checked={showExtendedScores}
+                  onChange={(e) => setShowExtendedScores(e.target.checked)}
+                />
+                {t('Scores')}
+              </label>
+            </div>
+          )}
+        </CollapsibleSearchSection>
+      )}
     </div>
   )
 }

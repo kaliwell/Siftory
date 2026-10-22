@@ -85,9 +85,19 @@ async function run() {
     const identity = await application.evaluate(({ app, BrowserWindow }) => ({
       userData: app.getPath('userData'),
       sandbox: BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences().sandbox,
+      resizable: BrowserWindow.getAllWindows()[0].isResizable(),
+      movable: BrowserWindow.getAllWindows()[0].isMovable(),
+      maximizable: BrowserWindow.getAllWindows()[0].isMaximizable(),
+      alwaysOnTop: BrowserWindow.getAllWindows()[0].isAlwaysOnTop(),
+      background: BrowserWindow.getAllWindows()[0].getBackgroundColor(),
     }))
     assert.equal(path.resolve(identity.userData), path.resolve(profile))
     assert.equal(identity.sandbox, true)
+    assert.equal(identity.resizable, true)
+    assert.equal(identity.movable, true)
+    assert.equal(identity.maximizable, true)
+    assert.equal(identity.alwaysOnTop, false)
+    assert.equal(identity.background.toLowerCase(), '#f5f7fb')
     await page.waitForFunction(
       async () => (await window.electronAPI.getDisplayTopology()).scope.mode === 'primary',
     )
@@ -96,7 +106,62 @@ async function run() {
       primaryWorkArea: screen.getPrimaryDisplay().workArea,
       displayCount: screen.getAllDisplays().length,
     }))
-    assert.deepEqual(windowGeometry.bounds, windowGeometry.primaryWorkArea)
+    const { bounds, primaryWorkArea: area } = windowGeometry
+    assert.ok(
+      bounds.x >= area.x &&
+        bounds.y >= area.y &&
+        bounds.x + bounds.width <= area.x + area.width &&
+        bounds.y + bounds.height <= area.y + area.height,
+    )
+    assert.ok(bounds.width < area.width && bounds.height < area.height)
+    for (const size of [
+      { width: 1000, height: 740 },
+      { width: 1320, height: 860 },
+    ]) {
+      await application.evaluate(
+        ({ BrowserWindow }, size) =>
+          BrowserWindow.getAllWindows()[0].setSize(size.width, size.height),
+        size,
+      )
+      await page.waitForTimeout(150)
+      const fits = await page.evaluate(() => {
+        const rect = document.querySelector('[data-testid="app-root"]').getBoundingClientRect()
+        return (
+          rect.x === 0 &&
+          rect.y === 0 &&
+          Math.abs(rect.width - innerWidth) < 2 &&
+          Math.abs(rect.height - innerHeight) < 2 &&
+          document.documentElement.scrollWidth <= innerWidth
+        )
+      })
+      assert.equal(fits, true)
+    }
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].maximize())
+    await page.waitForTimeout(150)
+    assert.equal(
+      await application.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0].isMaximized(),
+      ),
+      true,
+    )
+    await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].unmaximize())
+    await page.waitForTimeout(150)
+    await page.evaluate(() => window.electronAPI.hideWindow())
+    assert.equal(
+      await application.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0].isVisible(),
+      ),
+      false,
+    )
+    assert.equal(await page.evaluate(() => window.electronAPI.showWindow(0)), false)
+    await application.evaluate(({ app }) => app.emit('second-instance', {}, [], process.cwd()))
+    assert.equal(
+      await application.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0].isVisible(),
+      ),
+      true,
+    )
+    await page.getByTestId('workspace-domain-search').waitFor()
     await page.waitForFunction(
       () =>
         [...document.querySelectorAll('.panel[data-panel]')].filter(
@@ -237,6 +302,8 @@ async function run() {
       sandbox: identity.sandbox,
       legacyAllMigratedToPrimary: true,
       primaryDisplayBoundsVerified: true,
+      standardWindowVerified: true,
+      resizeMaximizeAndRevealVerified: true,
       displayCount: windowGeometry.displayCount,
       isolatedProfile: true,
       generatedMaterialCount: before.length,
