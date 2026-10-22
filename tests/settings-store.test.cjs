@@ -28,6 +28,7 @@ test('search UI preferences are normalized into settings-safe values', () => {
 
   assert.deepEqual(
     normalizeImageSearchUiPreferences({
+      workspaceView: 'search',
       embeddingGpuJobs: 1,
       embeddingBatchSize: 8,
       buildScanThumbnails: false,
@@ -37,6 +38,7 @@ test('search UI preferences are normalized into settings-safe values', () => {
       thumbnailBatchSize: 6,
     }),
     {
+      workspaceView: 'search',
       embeddingGpuJobs: 1,
       embeddingBatchSize: 8,
       buildScanThumbnails: false,
@@ -49,6 +51,7 @@ test('search UI preferences are normalized into settings-safe values', () => {
 
   assert.deepEqual(
     normalizeImageSearchUiPreferences({
+      workspaceView: 'unknown',
       embeddingGpuJobs: 99,
       embeddingBatchSize: -1,
       buildScanThumbnails: 'false',

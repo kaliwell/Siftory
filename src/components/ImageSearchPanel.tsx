@@ -70,7 +70,10 @@ function normalizeImageSearchRoot(value?: string): string {
 }
 
 const ImageSearchPanel: React.FC = () => {
-  const sourcesOnly = new URLSearchParams(window.location.search).get('legacyOverlay') !== '1'
+  const workspaceView = useStore((s) => s.imageSearchUiPreferences.workspaceView)
+  const sourcesOnly =
+    workspaceView !== 'search' &&
+    new URLSearchParams(window.location.search).get('legacyOverlay') !== '1'
   const { t } = useTranslation()
   const imageSearchPos = useStore((s) => s.imageSearchPos)
   const setImageSearchPos = useStore((s) => s.setImageSearchPos)
@@ -163,11 +166,12 @@ const ImageSearchPanel: React.FC = () => {
   }, [])
   useEffect(() => {
     const expandSources = () => {
+      setImageSearchUiPreferences({ workspaceView: 'sources' })
       setExpandedControlSections((sections) => ({ ...sections, sources: true }))
     }
     window.addEventListener('workspace-sources-focus', expandSources)
     return () => window.removeEventListener('workspace-sources-focus', expandSources)
-  }, [])
+  }, [setImageSearchUiPreferences])
   const [setupWorkflow, setSetupWorkflow] = useState(IDLE_SETUP_WORKFLOW)
   const setupTaskIdRef = useRef<string | null>(null)
   const handledPreparationTaskRef = useRef<string | null>(null)
@@ -1158,7 +1162,7 @@ const ImageSearchPanel: React.FC = () => {
     <DraggablePanel
       panelId="imageSearch"
       title="Image Search"
-      displayTitle={t(sourcesOnly ? 'Sources' : 'Search')}
+      displayTitle={t(sourcesOnly ? 'Sources' : 'Image Search')}
       x={imageSearchPos.x}
       y={imageSearchPos.y}
       defaultX={319}

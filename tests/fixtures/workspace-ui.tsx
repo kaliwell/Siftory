@@ -111,11 +111,15 @@ let persistedSettings: any = {
   },
 }
 const handlers: Record<string, (...args: any[]) => any> = {
-  loadSettings: () => structuredClone(persistedSettings),
+  loadSettings: () =>
+    JSON.parse(
+      sessionStorage.getItem('workspace-ui-settings') || JSON.stringify(persistedSettings),
+    ),
   loadConfig: () => null,
   saveSettings: (settings: any) => {
     if (failSettings) throw new Error('Synthetic disk write failed')
     persistedSettings = structuredClone(settings)
+    sessionStorage.setItem('workspace-ui-settings', JSON.stringify(settings))
   },
   saveConfig: () => ({ ok: true }),
   setIgnoreMouseEvents: () => true,
@@ -175,6 +179,44 @@ const handlers: Record<string, (...args: any[]) => any> = {
     indexedCount: 8,
     pendingCount: 0,
     message: 'Ready',
+  }),
+  'imageSearch.selectImage': () => 'C:/fixtures/reference.jpg',
+  'imageSearch.search': () => ({
+    results: [
+      { path: 'C:/fixtures/original.jpg', score: 0.99, distance: 1, width: 160, height: 120 },
+    ],
+    status: { state: 'idle', indexedCount: 8, pendingCount: 0 },
+    queryHash: '0123456789abcdef',
+    scannedCount: 8,
+    candidateCount: 1,
+    searchMs: 1,
+  }),
+  'vector.searchLayered': (request: any) => ({
+    results: [
+      {
+        imageId: 'original',
+        path: 'C:/fixtures/original.jpg',
+        finalScore: 0.99,
+        hashScore: 0.99,
+        vectorScore: 0.9,
+        colorScore: 0.8,
+        shapeScore: 0.8,
+        localFeatureScore: 0,
+        ocrScore: 0,
+        matchLevel: 'exact',
+        reasons: [],
+        indexSources: ['hash', 'vector'],
+        width: 160,
+        height: 120,
+      },
+    ],
+    mode: request.mode,
+    searchMode: request.mode,
+    degraded: false,
+    degradationReasons: [],
+    hashCandidateCount: 1,
+    mergedCandidateCount: 1,
+    totalMs: 1,
   }),
   'imageSearch.listDrives': () => [],
   'imageSearch.getPreparationProgress': () => ({

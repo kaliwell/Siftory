@@ -12,6 +12,7 @@ export type {
 } from './ipc/app-core'
 
 export const DEFAULT_IMAGE_SEARCH_UI_PREFERENCES: ImageSearchUiPreferences = {
+  workspaceView: 'sources',
   embeddingGpuJobs: 2,
   embeddingBatchSize: 0,
   buildScanThumbnails: true,
@@ -45,6 +46,7 @@ export function normalizeImageSearchUiPreferences(value: unknown): ImageSearchUi
   const thumbnailBatchSize = Number(input.thumbnailBatchSize)
   const thumbnailRebuildBackend = input.thumbnailRebuildBackend
   return {
+    workspaceView: input.workspaceView === 'search' ? 'search' : 'sources',
     embeddingGpuJobs: embeddingGpuJobs === 1 || embeddingGpuJobs === 2 ? embeddingGpuJobs : 2,
     embeddingBatchSize:
       Number.isInteger(embeddingBatchSize) && embeddingBatchSize >= 0 && embeddingBatchSize <= 16

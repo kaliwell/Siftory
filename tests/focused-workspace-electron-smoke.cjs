@@ -279,6 +279,26 @@ async function run() {
       await page.waitForTimeout(400)
     }
     await page.screenshot({ path: path.join(evidence, 'workspace.png') })
+    await page.getByTestId('workspace-domain-image-search').click()
+    const originalSearch = page.locator('[data-panel="image-search"]')
+    await originalSearch.getByTestId('search-mode-advanced').click()
+    await application.evaluate(({ dialog }, file) => {
+      dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [file] })
+    }, before[0].file)
+    for (const mode of ['fast', 'standard', 'precise']) {
+      await originalSearch.locator('select:has(option[value="fast"])').selectOption(mode)
+      await originalSearch.getByTestId('image-search-query-image').click()
+      await page.waitForFunction(
+        (expected) => {
+          const results =
+            document.querySelector('[data-testid="image-search-results"]')?.textContent || ''
+          return results.includes('sample-0.jpg') && results.includes(expected)
+        },
+        mode,
+        { timeout: 30000 },
+      )
+      await page.screenshot({ path: path.join(evidence, `original-image-${mode}.png`) })
+    }
     fs.writeFileSync(
       path.join(evidence, 'geometry.json'),
       JSON.stringify(
@@ -312,6 +332,7 @@ async function run() {
       nativeVersion: initial.nativeVersion,
       matchingResults: result.results.length,
       shiftedReferenceFoundOriginal: true,
+      originalImageSearchModes: ['fast', 'standard', 'precise'],
       referenceHammingDistance,
       pageErrors: errors,
     }

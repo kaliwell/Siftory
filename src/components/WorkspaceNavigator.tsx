@@ -53,6 +53,9 @@ const WorkspaceNavigator: React.FC = () => {
     WORKSPACE_PANELS.find((panel) => state[PANEL_IDENTITIES[panel].visibilityKey]),
   )
   const globalVisible = useStore((state) => state.globalVisible)
+  const imageSearchWorkspaceView = useStore(
+    (state) => state.imageSearchUiPreferences.workspaceView ?? 'sources',
+  )
   const saveStatus = useSyncExternalStore(subscribeSettingsWriteStatus, getSettingsWriteStatus)
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const [tasksOpen, setTasksOpen] = useState(false)
@@ -86,7 +89,13 @@ const WorkspaceNavigator: React.FC = () => {
     }
   }, [globalVisible])
 
-  const navigate = (panel: WorkspacePanel, eventName?: string) => {
+  const navigate = (
+    panel: WorkspacePanel,
+    eventName?: string,
+    imageView: 'sources' | 'search' = 'sources',
+  ) => {
+    if (panel === 'imageSearch')
+      useStore.getState().setImageSearchUiPreferences({ workspaceView: imageView })
     setTasksOpen(false)
     setGuideOpen(false)
     openWorkspacePanel(panel, eventName)
@@ -112,8 +121,9 @@ const WorkspaceNavigator: React.FC = () => {
     : 0
   const entries = [
     { label: 'Search', panel: 'unifiedSearch', icon: 'search' },
+    { label: 'Image Search', panel: 'imageSearch', icon: 'image', view: 'search' },
     { label: 'Library', panel: 'assetLibrary', icon: 'library' },
-    { label: 'Sources', panel: 'imageSearch', icon: 'folder' },
+    { label: 'Sources', panel: 'imageSearch', icon: 'folder', view: 'sources' },
     { label: 'Video indexing', panel: 'mediaSearch', icon: 'video' },
     { label: 'Duplicate Finder', panel: 'duplicateFinder', icon: 'duplicate' },
   ] as const
@@ -145,12 +155,17 @@ const WorkspaceNavigator: React.FC = () => {
       <div className="workspace-sidebar__links" role="group" aria-label={t('Workspace')}>
         {entries.map((entry, index) => (
           <button
-            key={entry.panel}
+            key={entry.label}
             ref={(element) => {
               refs.current[index] = element
             }}
             data-testid={`workspace-domain-${entry.label.toLowerCase().replaceAll(' ', '-')}`}
-            aria-current={activePanel === entry.panel ? 'page' : undefined}
+            aria-current={
+              activePanel === entry.panel &&
+              (!('view' in entry) || imageSearchWorkspaceView === entry.view)
+                ? 'page'
+                : undefined
+            }
             onKeyDown={(event) => {
               const next = nextRovingIndex(index, entries.length, event.key)
               if (next !== null) {
@@ -161,7 +176,8 @@ const WorkspaceNavigator: React.FC = () => {
             onClick={() =>
               navigate(
                 entry.panel,
-                entry.panel === 'imageSearch' ? 'workspace-sources-focus' : undefined,
+                entry.label === 'Sources' ? 'workspace-sources-focus' : undefined,
+                'view' in entry ? entry.view : undefined,
               )
             }
           >

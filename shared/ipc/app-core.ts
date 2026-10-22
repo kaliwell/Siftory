@@ -119,6 +119,7 @@ export const PANEL_ID_BY_VISIBILITY = Object.freeze(
 ) as Record<PanelVisibilityKey, PanelId>
 
 export interface ImageSearchUiPreferences {
+  workspaceView?: 'sources' | 'search'
   embeddingGpuJobs: number
   embeddingBatchSize: number
   buildScanThumbnails: boolean

@@ -138,6 +138,76 @@ async function run() {
     }
     assert.equal(await page.getByTestId('window-material-glass').count(), 0)
     assert.equal(await page.getByTestId('workspace-window-hide').count(), 0)
+    await page.getByTestId('workspace-domain-image-search').click()
+    const originalSearch = page.locator('[data-panel="image-search"]')
+    await page.getByTestId('image-search-query-section').waitFor()
+    assert.equal(await page.locator('.workspace-sidebar [aria-current="page"]').count(), 1)
+    assert.equal(
+      await page.getByTestId('workspace-domain-image-search').getAttribute('aria-current'),
+      'page',
+    )
+    await originalSearch.getByTestId('search-mode-simple').click()
+    await page.screenshot({ path: path.join(evidence, 'image-search-simple.png') })
+    await originalSearch.getByTestId('search-mode-advanced').click()
+    const engine = originalSearch.locator('select:has(option[value="fast"])')
+    assert.deepEqual(
+      await engine
+        .locator('option')
+        .evaluateAll((options) => options.map((option) => option.value)),
+      ['fast', 'standard', 'precise'],
+    )
+    for (const mode of ['fast', 'standard', 'precise']) {
+      await engine.selectOption(mode)
+      await originalSearch.getByTestId('image-search-query-image').click()
+      await page.waitForFunction(
+        (expected) =>
+          window.__workspaceTest.calls.some((call) =>
+            expected === 'fast'
+              ? call.method === 'imageSearch.search' && call.args[0].searchMode === expected
+              : call.method === 'vector.searchLayered' && call.args[0].mode === expected,
+          ),
+        mode,
+      )
+      await originalSearch.getByTestId('image-search-query-image').waitFor({ state: 'visible' })
+      await page.waitForFunction(
+        () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
+      )
+    }
+    await page.screenshot({ path: path.join(evidence, 'image-search-advanced.png') })
+    await page.setViewportSize({ width: 760, height: 850 })
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    await page.screenshot({ path: path.join(evidence, 'image-search-760.png') })
+    await page.setViewportSize({ width: 1320, height: 850 })
+    await page.getByTestId('workspace-domain-sources').click()
+    assert.equal(await page.getByTestId('image-search-query-section').count(), 0)
+    assert.equal(
+      await page.getByTestId('workspace-domain-sources').getAttribute('aria-current'),
+      'page',
+    )
+    await page.getByTestId('workspace-domain-image-search').click()
+    assert.equal(
+      await engine.inputValue(),
+      'precise',
+      'returning to the original search retains its controls',
+    )
+    await page.waitForFunction(
+      () =>
+        window.__workspaceTest.getSettings().imageSearchUiPreferences?.workspaceView === 'search',
+    )
+    await page.reload()
+    await page.locator('[data-ready="true"]').waitFor()
+    assert.equal(
+      await page.evaluate(
+        () => window.__workspaceTest.store.getState().imageSearchUiPreferences.workspaceView,
+      ),
+      'search',
+    )
+    await page.getByTestId('workspace-domain-image-search').click()
+    await originalSearch.getByTestId('search-mode-advanced').waitFor()
+    assert.equal(
+      await originalSearch.getByTestId('search-mode-advanced').getAttribute('aria-checked'),
+      'true',
+    )
     const overlayCalls = await page.evaluate(() =>
       window.__workspaceTest.calls.filter(({ method }) =>
         ['setOverlayShape', 'setIgnoreMouseEvents', 'setTransparency'].includes(method),
@@ -151,13 +221,22 @@ async function run() {
       darkAndLight: true,
       collapsedFilters: true,
       keyboardSearch: true,
+      originalImageSearchRestored: true,
+      originalSearchModesWired: true,
+      imageWorkspaceSelectionPersisted: true,
       overlayApisUnused: true,
       geometry,
       errors,
     }
     fs.writeFileSync(path.join(evidence, 'report.json'), JSON.stringify(report, null, 2))
     console.log(
-      JSON.stringify({ passed: true, screenshots: 10, viewports: geometry.length, pageErrors: 0 }),
+      JSON.stringify({
+        passed: true,
+        screenshots: 13,
+        viewports: geometry.length,
+        originalSearchModesWired: true,
+        pageErrors: 0,
+      }),
     )
   } catch (error) {
     if (page) {
