@@ -1,8 +1,8 @@
 // ── Model Service ──────────────────────────────────────────
 // Manages local vision model lifecycle: download, verify, load, unload.
-// Development models live in the app-local ai-models directory. Packaged
-// downloads live in userData/models, while Offline bundles are a read-only
-// fallback under resources/ai-models.
+// Development downloads live in app-local ai-models, with verified models
+// from the active userData profile as a read-only fallback. Packaged downloads
+// live in userData/models; Offline bundles fall back to resources/ai-models.
 // Source of truth for available models: models/manifest.json (shipped with app).
 
 import fs from 'fs'
@@ -76,9 +76,13 @@ export function getBundledModelStorageDir(): string | null {
 }
 
 export function getModelReadStorageDirs(): string[] {
-  const roots = [getModelStorageDir(), getBundledModelStorageDir()].filter((root): root is string =>
-    Boolean(root),
-  )
+  const runtimeApp = getRuntimeApp()
+  const userDataPath = configuredUserDataPath || runtimeApp?.getPath?.('userData')
+  const roots = [
+    getModelStorageDir(),
+    userDataPath ? path.join(userDataPath, 'models') : null,
+    getBundledModelStorageDir(),
+  ].filter((root): root is string => Boolean(root))
   return [...new Set(roots.map((root) => path.resolve(root)))]
 }
 

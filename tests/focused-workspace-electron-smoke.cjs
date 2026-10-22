@@ -22,6 +22,33 @@ async function run() {
     ? fs.mkdtempSync(path.join(publicParent, 'Siftory-Alpha2-Demo-'))
     : path.join(root, 'materials')
   fs.mkdirSync(profile)
+  const reusedModels = []
+  const modelFilesBefore = []
+  if (process.env.SIFTORY_TEST_EXISTING_MODEL_ROOT) {
+    const modelRoot = fs.realpathSync.native(process.env.SIFTORY_TEST_EXISTING_MODEL_ROOT)
+    const { loadTsModule } = require('./guard-utils.cjs')
+    const { getRequiredModelFiles, getModelFilePath } = loadTsModule(
+      'electron/modelServiceCompanions.ts',
+    )
+    const manifest = JSON.parse(fs.readFileSync(path.join(repo, 'models/manifest.json'), 'utf8'))
+    for (const name of ['dinov2_vitb14', 'clip_vit_base_patch32']) {
+      const info = manifest.models.find((model) => model.name === name)
+      for (const file of getRequiredModelFiles(info)) {
+        const source = getModelFilePath(modelRoot, name, file.filename)
+        assert.equal(fs.lstatSync(source).isSymbolicLink(), false)
+        assert.equal(hash(source), file.sha256, 'existing model must match the pinned manifest')
+        modelFilesBefore.push({
+          file: source,
+          hash: file.sha256,
+          mtime: fs.statSync(source).mtimeMs,
+        })
+        const destination = getModelFilePath(path.join(profile, 'models'), name, file.filename)
+        fs.mkdirSync(path.dirname(destination), { recursive: true })
+        fs.linkSync(source, destination)
+      }
+      reusedModels.push(name)
+    }
+  }
   if (!publicParent) fs.mkdirSync(materials)
   const library = path.join(materials, 'library')
   fs.mkdirSync(library)
@@ -98,8 +125,16 @@ async function run() {
     assert.equal(identity.maximizable, true)
     assert.equal(identity.alwaysOnTop, false)
     assert.equal(identity.background.toLowerCase(), '#f5f7fb')
-    await page.waitForFunction(
-      async () => (await window.electronAPI.getDisplayTopology()).scope.mode === 'primary',
+    for (const model of reusedModels) {
+      const state = await page.evaluate(
+        (name) => window.electronAPI.vector.getModelStatus(name),
+        model,
+      )
+      assert.equal(state.state, 'downloaded', model + ' must be discovered in the isolated profile')
+    }
+    assert.equal(
+      await page.evaluate(async () => (await window.electronAPI.getDisplayTopology()).scope.mode),
+      'primary',
     )
     const windowGeometry = await application.evaluate(({ BrowserWindow, screen }) => ({
       bounds: BrowserWindow.getAllWindows()[0].getBounds(),
@@ -201,33 +236,37 @@ async function run() {
       added.source.id,
     )
     assert.equal(discovery.ok, true, discovery.error)
-    await page.waitForFunction(
-      async (id) => {
-        const status = await window.electronAPI.discoveryCatalog.getScanStatus(id)
-        return (
+    await page.evaluate(async (id) => {
+      const deadline = Date.now() + 30000
+      while (Date.now() < deadline) {
+        const statuses = await window.electronAPI.discoveryCatalog.getScanStatus(id)
+        const status = statuses.find((item) => item.sourceId === id)
+        if (
+          status &&
           !status.running &&
           status.session?.state === 'completed' &&
           status.session.committedCount >= 3
         )
-      },
-      added.source.id,
-      { timeout: 30000 },
-    )
+          return
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+      throw new Error('Generated source catalog scan did not complete')
+    }, added.source.id)
     await page.evaluate(
       (paths) =>
         window.electronAPI.imageSearch.startScan({ paths, mode: 'fast', scanMode: 'full' }),
       [library],
     )
-    await page.waitForFunction(
-      async () => {
+    await page.evaluate(async () => {
+      const deadline = Date.now() + 45000
+      while (Date.now() < deadline) {
         const status = await window.electronAPI.imageSearch.getStatus()
-        return (
-          status.indexedCount >= 3 && status.state !== 'scanning' && status.state !== 'indexing'
-        )
-      },
-      null,
-      { timeout: 45000 },
-    )
+        if (status.indexedCount >= 3 && status.state !== 'scanning' && status.state !== 'indexing')
+          return
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+      throw new Error('Generated image scan did not complete')
+    })
     const fingerprints = await page.evaluate(
       async (files) =>
         Promise.all(files.map((file) => window.electronAPI.imageSearch.hashImage(file))),
@@ -255,6 +294,69 @@ async function run() {
     assert.ok(
       result.results.some((item) => path.resolve(item.path) === path.resolve(before[0].file)),
     )
+    const modelRuns = []
+    for (const modelName of reusedModels) {
+      console.log(
+        JSON.stringify({
+          buildingModel: modelName,
+          generatedImages: before.length,
+          backend: 'cpu',
+        }),
+      )
+      const submittedAfter = Date.now()
+      const started = await page.evaluate(
+        async ({ modelName, files }) =>
+          window.electronAPI.vector.startEmbeddingBuild({
+            modelName,
+            embeddingType: 'global',
+            imageIds: files,
+            backend: 'cpu',
+            maxConcurrentEmbeddings: 1,
+            batchSize: 1,
+          }),
+        { modelName, files: before.map((item) => item.file) },
+      )
+      assert.equal(started.ok, true, JSON.stringify(started))
+      const progress = await page.evaluate(
+        async ({ submittedAfter, count }) => {
+          const deadline = Date.now() + 180000
+          let progress
+          while (Date.now() < deadline) {
+            progress = await window.electronAPI.vector.getEmbeddingProgress()
+            if (
+              (progress.startedAt ?? 0) >= submittedAfter &&
+              (progress.state === 'error' ||
+                (progress.state === 'done' &&
+                  progress.completed + progress.failed + progress.skipped >= count))
+            )
+              return progress
+            await new Promise((resolve) => setTimeout(resolve, 200))
+          }
+          throw new Error('Model inference timed out: ' + JSON.stringify(progress))
+        },
+        { submittedAfter, count: before.length },
+      )
+      fs.writeFileSync(
+        path.join(evidence, modelName + '-embedding-progress.json'),
+        JSON.stringify(progress, null, 2),
+      )
+      assert.equal(progress.state, 'done', progress.error)
+      assert.equal(progress.failed, 0)
+      assert.equal(progress.completed, before.length)
+      modelRuns.push({ modelName, completed: progress.completed, failed: progress.failed })
+      console.log(JSON.stringify({ modelRunComplete: modelName, completed: progress.completed }))
+    }
+    if (reusedModels.length) {
+      const semantic = await page.evaluate(() =>
+        window.electronAPI.vector.searchSemantic({ text: 'a blue circle', topK: 3 }),
+      )
+      fs.writeFileSync(
+        path.join(evidence, 'existing-model-semantic-query.json'),
+        JSON.stringify(semantic, null, 2),
+      )
+      assert.ok(semantic.results.length > 0, 'verified CLIP must execute a real text query')
+      assert.equal(semantic.degraded, false, JSON.stringify(semantic.degradationReasons))
+    }
     {
       await page.screenshot({ path: path.join(evidence, 'workspace-before.png') })
       // Only the file-picker result is supplied by the fixture; search and rendering use real IPC.
@@ -269,6 +371,26 @@ async function run() {
           .filter({ hasText: 'sample-0.jpg' })
           .waitFor({ timeout: 15000 })
       } catch (error) {
+        const searchDebug = await page.evaluate(
+          async (referenceImagePath) => ({
+            native: await window.electronAPI.imageSearch.getStatus(),
+            fingerprint: await window.electronAPI.imageSearch.search({
+              imagePath: referenceImagePath,
+              threshold: 9,
+              topK: 10,
+              searchMode: 'balanced',
+            }),
+            unified: await window.electronAPI.unifiedSearch.query({
+              referenceImagePath,
+              limit: 50,
+            }),
+          }),
+          reference,
+        )
+        fs.writeFileSync(
+          path.join(evidence, 'ui-query-debug.json'),
+          JSON.stringify(searchDebug, null, 2),
+        )
         fs.writeFileSync(
           path.join(evidence, 'ui-debug.txt'),
           await page.locator('body').innerText(),
@@ -316,6 +438,10 @@ async function run() {
     assert.deepEqual(errors, [])
     for (const item of before) assert.equal(hash(item.file), item.hash)
     assert.equal(hash(reference), referenceHash)
+    for (const item of modelFilesBefore) {
+      assert.equal(hash(item.file), item.hash)
+      assert.equal(fs.statSync(item.file).mtimeMs, item.mtime)
+    }
     const report = {
       passed: true,
       realElectron: true,
@@ -333,6 +459,14 @@ async function run() {
       matchingResults: result.results.length,
       shiftedReferenceFoundOriginal: true,
       originalImageSearchModes: ['fast', 'standard', 'precise'],
+      ...(reusedModels.length
+        ? {
+            existingModelsVerified: reusedModels,
+            existingModelInference: modelRuns,
+            modelFilesUnchanged: true,
+            clipTextQueryVerified: true,
+          }
+        : {}),
       referenceHammingDistance,
       pageErrors: errors,
     }
