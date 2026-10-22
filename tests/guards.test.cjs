@@ -129,12 +129,14 @@ test('window topmost can be disabled and is only reaffirmed while enabled', () =
   assert.match(ipcSource, /options\.setWindowAlwaysOnTop\(value\)/)
 })
 
-test('transparent workspace disables native window movement and resize borders', () => {
+test('normal workspace supports native movement and borders while overlay diagnostics stay fixed', () => {
   const source = require('node:fs').readFileSync(
     path.join(__dirname, '..', 'electron', 'main.ts'),
     'utf8',
   )
-  assert.match(source, /resizable:\s*false/)
-  assert.match(source, /movable:\s*false/)
-  assert.match(source, /thickFrame:\s*false/)
+  assert.match(source, /resizable:\s*!uiSmokeMode/)
+  assert.match(source, /movable:\s*!uiSmokeMode/)
+  assert.match(source, /thickFrame:\s*!uiSmokeMode/)
+  assert.match(source, /transparent:\s*uiSmokeMode/)
+  assert.match(source, /frame:\s*!uiSmokeMode/)
 })
