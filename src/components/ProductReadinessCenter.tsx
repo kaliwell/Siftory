@@ -268,6 +268,7 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   const [modelMessage, setModelMessage] = useState('')
   const [taskBusy, setTaskBusy] = useState<string | null>(null)
   const [taskMessage, setTaskMessage] = useState('')
+  const [showCompleted, setShowCompleted] = useState(false)
   const [healthReport, setHealthReport] = useState<ProductHealthReport | null>(null)
   const [healthBusy, setHealthBusy] = useState(false)
   const [healthMessage, setHealthMessage] = useState('')
@@ -473,6 +474,13 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
     }
   }
 
+  const taskPriority = (state: ProductTaskState) =>
+    ACTIVE_TASK_STATES.has(state) ? 0 : state === 'failed' ? 1 : state === 'completed' ? 3 : 2
+  const orderedTasks = [...snapshot.tasks].sort(
+    (a, b) => taskPriority(a.state) - taskPriority(b.state),
+  )
+  const visibleTasks = orderedTasks.filter((task) => showCompleted || task.state !== 'completed')
+  const completedCount = snapshot.tasks.filter((task) => task.state === 'completed').length
   const activeTaskCount = snapshot.tasks.filter((task) => ACTIVE_TASK_STATES.has(task.state)).length
 
   return (
@@ -482,57 +490,6 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
       aria-label={t('Preparation center')}
       aria-busy={refreshing}
     >
-      <div className="product-readiness__header">
-        <strong>{t('Preparation center')}</strong>
-        <span className={`product-readiness__overall is-${snapshot.state}`}>
-          {t(STATE_LABELS[snapshot.state])} · {snapshot.progress}%
-        </span>
-        <button
-          className="product-readiness__refresh"
-          data-testid="product-readiness-refresh"
-          onClick={() => void refresh()}
-          disabled={refreshing}
-        >
-          {t('Refresh status')}
-        </button>
-      </div>
-
-      <progress
-        className="product-readiness__progress"
-        aria-label={t('Overall preparation progress')}
-        max={100}
-        value={snapshot.progress}
-      />
-
-      <div className="product-readiness__capabilities" aria-label={t('Available searches')}>
-        {CAPABILITY_LABELS.map(([capability, label]) => (
-          <span
-            key={capability}
-            className={snapshot.capabilities[capability] ? 'is-ready' : 'is-pending'}
-            data-testid={`product-capability-${capability}`}
-          >
-            {snapshot.capabilities[capability] ? '✓' : '○'} {t(label)}
-          </span>
-        ))}
-      </div>
-
-      <div className="product-readiness__stages">
-        {snapshot.stages.map((stage) => (
-          <article
-            key={stage.id}
-            className={`product-readiness__stage is-${stage.state}`}
-            data-testid={`product-readiness-stage-${stage.id}`}
-          >
-            <div>
-              <strong>{t(STAGE_LABELS[stage.id])}</strong>
-              <span>{stage.progress}%</span>
-            </div>
-            <small>{t(STAGE_STATE_LABELS[stage.state])}</small>
-            <small>{t(REASON_LABELS[stage.reason])}</small>
-          </article>
-        ))}
-      </div>
-
       <section className="product-readiness__tasks" data-testid="product-task-center">
         <div className="product-readiness__task-header">
           <strong>{t('Task center')}</strong>
@@ -570,11 +527,11 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
           )}
         </div>
 
-        {snapshot.tasks.length === 0 ? (
-          <p className="product-readiness__task-empty">{t('No recorded tasks')}</p>
+        {visibleTasks.length === 0 ? (
+          <p className="product-readiness__task-empty">{t('No tasks need attention')}</p>
         ) : (
           <div className="product-readiness__task-list">
-            {snapshot.tasks.map((task) => {
+            {visibleTasks.map((task) => {
               const busy = taskBusy === task.id
               const taskLabel = t(TASK_KIND_LABELS[task.kind])
               const controls: ProductTaskControlAction[] = []
@@ -644,9 +601,68 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
             })}
           </div>
         )}
+        {completedCount > 0 && (
+          <button
+            data-testid="task-history-toggle"
+            aria-expanded={showCompleted}
+            onClick={() => setShowCompleted((value) => !value)}
+          >
+            {t(showCompleted ? 'Hide completed tasks' : 'Show completed tasks')} · {completedCount}
+          </button>
+        )}
         {taskMessage && <p className="product-readiness__task-message">{taskMessage}</p>}
       </section>
 
+      <details className="workspace-preparation-details">
+        <summary>{t('Search readiness')}</summary>{' '}
+        <div className="product-readiness__header">
+          <strong>{t('Preparation center')}</strong>
+          <span className={`product-readiness__overall is-${snapshot.state}`}>
+            {t(STATE_LABELS[snapshot.state])} · {snapshot.progress}%
+          </span>
+          <button
+            className="product-readiness__refresh"
+            data-testid="product-readiness-refresh"
+            onClick={() => void refresh()}
+            disabled={refreshing}
+          >
+            {t('Refresh status')}
+          </button>
+        </div>
+        <progress
+          className="product-readiness__progress"
+          aria-label={t('Overall preparation progress')}
+          max={100}
+          value={snapshot.progress}
+        />
+        <div className="product-readiness__capabilities" aria-label={t('Available searches')}>
+          {CAPABILITY_LABELS.map(([capability, label]) => (
+            <span
+              key={capability}
+              className={snapshot.capabilities[capability] ? 'is-ready' : 'is-pending'}
+              data-testid={`product-capability-${capability}`}
+            >
+              {snapshot.capabilities[capability] ? '✓' : '○'} {t(label)}
+            </span>
+          ))}
+        </div>
+        <div className="product-readiness__stages">
+          {snapshot.stages.map((stage) => (
+            <article
+              key={stage.id}
+              className={`product-readiness__stage is-${stage.state}`}
+              data-testid={`product-readiness-stage-${stage.id}`}
+            >
+              <div>
+                <strong>{t(STAGE_LABELS[stage.id])}</strong>
+                <span>{stage.progress}%</span>
+              </div>
+              <small>{t(STAGE_STATE_LABELS[stage.state])}</small>
+              <small>{t(REASON_LABELS[stage.reason])}</small>
+            </article>
+          ))}
+        </div>
+      </details>
       <details
         className="product-readiness__health"
         data-testid="product-health-center"

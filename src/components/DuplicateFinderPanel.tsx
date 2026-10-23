@@ -5,6 +5,7 @@ import { useLinkedMove } from '../hooks/useLinkedMove'
 import { DEFAULT_DUPLICATE_FINDER_W, DEFAULT_DUPLICATE_FINDER_H } from '../types'
 import type { DupGroup, DupScanProgress, LargestFile } from '../types/electron'
 import { useTranslation } from '../i18n/useTranslation'
+import SearchEmptyState from './SearchEmptyState'
 
 type Tab = 'duplicates' | 'largest' | 'similar'
 
@@ -156,12 +157,17 @@ const DuplicateFinderPanel: React.FC = () => {
       >
         <div className="split-tool-workspace duplicate-finder-workspace">
           <aside className="split-tool-control-pane duplicate-finder-control-pane">
+            <ol className="workspace-scan-steps" aria-label={t('File review workflow')}>
+              <li>{t('Choose a folder')}</li>
+              <li>{t('Review matches')}</li>
+              <li>{t('Open files to inspect')}</li>
+            </ol>
             {error && (
               <div
                 title={error}
                 style={{
                   padding: '3px 8px',
-                  fontSize: 10,
+                  fontSize: 12,
                   textAlign: 'center',
                   background: 'rgba(255,80,80,0.3)',
                   color: 'rgb(255,150,150)',
@@ -190,10 +196,11 @@ const DuplicateFinderPanel: React.FC = () => {
               {(['duplicates', 'largest', 'similar'] as const).map((item) => (
                 <button
                   key={item}
+                  aria-pressed={tab === item}
                   onClick={() => setTab(item)}
                   disabled={scanning}
                   style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     padding: '3px 9px',
                     background: tab === item ? 'rgba(var(--date),0.28)' : 'transparent',
                     borderColor: tab === item ? 'rgba(var(--date),0.55)' : 'rgba(var(--date),0.2)',
@@ -211,14 +218,14 @@ const DuplicateFinderPanel: React.FC = () => {
               <span style={{ flex: 1 }} />
               <span
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   padding: '2px 8px',
                   borderRadius: 3,
                   color: '#fff',
                   background: STATUS_COLORS[progress.state],
                 }}
               >
-                {progress.state.toUpperCase()}
+                {t(progress.state)}
               </span>
             </div>
 
@@ -241,7 +248,7 @@ const DuplicateFinderPanel: React.FC = () => {
                 style={{
                   flex: 1,
                   minWidth: 80,
-                  fontSize: 10,
+                  fontSize: 12,
                   padding: '3px 6px',
                   background: 'rgba(var(--bg),0.6)',
                   color: 'rgb(var(--fg))',
@@ -252,7 +259,7 @@ const DuplicateFinderPanel: React.FC = () => {
               <button
                 onClick={chooseDirectory}
                 disabled={scanning}
-                style={{ fontSize: 11, padding: '3px 8px' }}
+                style={{ fontSize: 13, padding: '3px 8px' }}
               >
                 {t('Browse')}
               </button>
@@ -260,7 +267,7 @@ const DuplicateFinderPanel: React.FC = () => {
                 <button
                   onClick={startScan}
                   disabled={scanning || !dirPath.trim()}
-                  style={{ fontSize: 11, padding: '3px 10px' }}
+                  style={{ fontSize: 13, padding: '3px 10px' }}
                 >
                   {t(tab === 'duplicates' ? 'Scan' : 'Analyze')}
                 </button>
@@ -268,7 +275,7 @@ const DuplicateFinderPanel: React.FC = () => {
               <button
                 onClick={stopScan}
                 disabled={!scanning}
-                style={{ fontSize: 11, padding: '3px 10px' }}
+                style={{ fontSize: 13, padding: '3px 10px' }}
               >
                 {t('Stop')}
               </button>
@@ -279,7 +286,7 @@ const DuplicateFinderPanel: React.FC = () => {
                 padding: '4px 6px',
                 borderBottom: '1px solid rgba(var(--date),0.12)',
                 flexShrink: 0,
-                fontSize: 10,
+                fontSize: 12,
                 opacity: 0.78,
               }}
             >
@@ -394,6 +401,7 @@ const DuplicateFinderPanel: React.FC = () => {
               {tab === 'largest' &&
                 (largestFiles.length === 0 ? (
                   <EmptyState
+                    title={t('Largest Files')}
                     text={
                       scanning
                         ? t('Measuring files…')
@@ -413,13 +421,13 @@ const DuplicateFinderPanel: React.FC = () => {
                 ))}
 
               {tab === 'similar' && (
-                <div style={{ textAlign: 'center', padding: 20, opacity: 0.65, fontSize: 11 }}>
+                <div style={{ textAlign: 'center', padding: 20, opacity: 0.65, fontSize: 13 }}>
                   <div style={{ marginBottom: 8 }}>
                     {t('Perceptual similarity is handled by the indexed Image Search engine.')}
                   </div>
                   <button
                     onClick={() => setShowImageSearch(true)}
-                    style={{ fontSize: 11, padding: '4px 12px' }}
+                    style={{ fontSize: 13, padding: '4px 12px' }}
                   >
                     {t('Open Image Search')}
                   </button>
@@ -433,12 +441,19 @@ const DuplicateFinderPanel: React.FC = () => {
   )
 }
 
-const EmptyState: React.FC<{ text: string }> = ({ text }) => (
-  <div style={{ textAlign: 'center', padding: 20, opacity: 0.35, fontSize: 11 }}>{text}</div>
-)
+const EmptyState: React.FC<{ text: string; title?: string }> = ({ text, title }) => {
+  const { t } = useTranslation()
+  return (
+    <SearchEmptyState
+      title={title || t('Find duplicate files')}
+      description={text}
+      testId="duplicate-finder-empty-state"
+    />
+  )
+}
 
 const ResultSummary: React.FC<{ items: string; detail: string }> = ({ items, detail }) => (
-  <div style={{ display: 'flex', gap: 12, padding: '2px 6px', fontSize: 9, opacity: 0.58 }}>
+  <div style={{ display: 'flex', gap: 12, padding: '2px 6px', fontSize: 12, opacity: 0.58 }}>
     <span>{items}</span>
     <span>{detail}</span>
   </div>
@@ -461,7 +476,7 @@ const FileRow: React.FC<{
         padding: '4px 6px',
         border: '1px solid rgba(var(--date),0.14)',
         borderRadius: 3,
-        fontSize: 10,
+        fontSize: 12,
       }}
     >
       {rank != null && (
@@ -484,7 +499,7 @@ const FileRow: React.FC<{
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             opacity: 0.45,
-            fontSize: 9,
+            fontSize: 12,
           }}
         >
           {file.path}
@@ -503,7 +518,7 @@ const FileRow: React.FC<{
       >
         {formatBytes(file.size)}
       </span>
-      <button onClick={() => onOpen(file.path)} style={{ fontSize: 9, padding: '2px 7px' }}>
+      <button onClick={() => onOpen(file.path)} style={{ fontSize: 12, padding: '2px 7px' }}>
         {t('Show')}
       </button>
     </div>

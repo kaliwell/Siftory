@@ -152,7 +152,7 @@ test('docked pages use the system title bar instead of floating desktop controls
   assert.match(panel, /data-docked="true"/)
 })
 
-test('settings are grouped into accessible collapsible categories', () => {
+test('settings category navigation retains accessible lazy sections', () => {
   const settings = source('src/components/SettingsPanel.tsx')
   for (const id of ['appearance', 'panels', 'searchModels', 'dataReset', 'aiControl', 'system']) {
     assert.match(settings, new RegExp(`id="${id}"`))
@@ -161,8 +161,10 @@ test('settings are grouped into accessible collapsible categories', () => {
   assert.match(settings, /aria-expanded=\{expanded\}/)
   assert.match(settings, /aria-controls=\{`settings-category-content-\$\{id\}`\}/)
   assert.match(settings, /hasMountedBody\.current \? children : null/)
-  assert.match(settings, /setAllSectionsExpanded\(true\)/)
-  assert.match(settings, /setAllSectionsExpanded\(false\)/)
+  assert.match(settings, /aria-current=\{activeSection === section.id \? 'page' : undefined\}/)
+  assert.match(settings, /hidden=\{!active\}/)
+  assert.match(settings, /setActiveSection\('searchModels'\)/)
+  assert.match(settings, /setActiveSection\('dataReset'\)/)
   assert.doesNotMatch(settings, /const Section:/)
 
   const styles = source('src/styles/window-system.css')

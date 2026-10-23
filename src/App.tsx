@@ -3,7 +3,6 @@ import { focusedWorkspaceVisibility } from './services/focusedWorkspace'
 import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { normalizeImageSearchScanPaths, useStore } from './stores/useStore'
 import { useFMStore } from './stores/useFMStore'
-import SettingsPanel from './components/SettingsPanel'
 import WorkspaceNavigator from './components/WorkspaceNavigator'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { createDefaultTabs, createDefaultPromptTabs } from './config/default'
@@ -53,6 +52,7 @@ type IdleWindow = Window & {
 
 const legacyOverlay = new URLSearchParams(location.search).get('legacyOverlay') === '1'
 const LegacyOverlayDiagnostics = React.lazy(() => import('./components/LegacyOverlayDiagnostics'))
+const SettingsPanel = React.lazy(() => import('./components/SettingsPanel'))
 
 const lazyPanels = lazyPanelRegistry
   .map((panel) => ({
@@ -711,7 +711,9 @@ const App: React.FC = () => {
       )}
       {ready && showSettings && (
         <ErrorBoundary name="Settings">
-          <SettingsPanel />
+          <Suspense fallback={null}>
+            <SettingsPanel />
+          </Suspense>
         </ErrorBoundary>
       )}
       {ready &&

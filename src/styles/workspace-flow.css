@@ -1,0 +1,257 @@
+/* Navigation and progressive disclosure for the focused media workflow. */
+.workspace-section-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 0 30px 16px;
+  border-bottom: 1px solid var(--ui-border);
+}
+.focused-workspace .workspace-section-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--workspace-muted);
+}
+.focused-workspace .workspace-section-tabs button[aria-current='page'] {
+  color: rgb(var(--color-accent));
+  background: var(--ui-accent-soft);
+  font-weight: 600;
+}
+.workspace-section-tabs svg {
+  width: 17px;
+  height: 17px;
+}
+.focused-workspace:has(.workspace-sidebar[data-collapsed='true']) {
+  --workspace-sidebar-width: 76px;
+}
+.workspace-sidebar[data-collapsed='true'] {
+  padding-inline: 10px;
+}
+.workspace-sidebar[data-collapsed='true'] .workspace-sidebar__brand {
+  padding-inline: 9px;
+}
+.workspace-sidebar[data-collapsed='true']
+  :is(
+    .workspace-sidebar__brand > div,
+    .workspace-nav-label,
+    .workspace-sidebar__footer,
+    .workspace-sidebar__links button > span,
+    .workspace-sidebar__maintenance button > span,
+    .workspace-sidebar__tasks > span,
+    .workspace-sidebar-toggle > span
+  ) {
+  display: none;
+}
+.workspace-sidebar[data-collapsed='true']
+  :is(
+    .workspace-sidebar__links button,
+    .workspace-sidebar__maintenance button,
+    .workspace-sidebar__tasks,
+    .workspace-sidebar-toggle
+  ) {
+  justify-content: center;
+  padding-inline: 12px;
+}
+.focused-workspace .workspace-sidebar-toggle {
+  margin: -12px 0 18px;
+  min-height: 34px;
+  color: var(--workspace-muted);
+  font-size: 12px;
+}
+.workspace-sidebar__tasks {
+  position: relative;
+}
+.workspace-preparation-link {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--ui-surface-subtle);
+  color: var(--workspace-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.focused-workspace .workspace-preparation-link button {
+  justify-self: start;
+  color: rgb(var(--color-accent));
+}
+.focused-workspace .media-search-shell[data-sources-only='true'] .media-search-workspace {
+  display: block;
+  overflow: auto;
+}
+.focused-workspace .media-search-shell[data-sources-only='true'] .media-search-control-pane {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  border: 0;
+  overflow: visible;
+}
+.focused-workspace .media-search-shell[data-sources-only='true'] .media-search-controls {
+  max-width: 1100px;
+  margin-inline: auto;
+}
+.focused-workspace .media-search-shell[data-sources-only='true'] .media-search-library-controls {
+  flex-wrap: wrap;
+}
+.settings-layout {
+  max-width: 880px;
+  grid-template-columns: 168px minmax(0, 688px);
+  gap: 24px;
+}
+.settings-row {
+  grid-template-columns: minmax(105px, 1fr) minmax(180px, 290px);
+  gap: 24px;
+}
+.settings-save-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-shortcut-list {
+  line-height: 2.2;
+  font-size: 13px;
+  color: var(--workspace-muted);
+  padding: 12px 16px;
+  background: var(--ui-surface-subtle);
+  border-radius: 10px;
+}
+.focused-workspace .settings-category__subheading {
+  border: 0;
+  padding-bottom: 0;
+}
+.workspace-advanced-maintenance,
+.workspace-preparation-details {
+  min-width: 0;
+  border-top: 1px solid var(--ui-border);
+  padding-top: 14px;
+  margin-top: 12px;
+}
+.workspace-advanced-maintenance > summary,
+.workspace-preparation-details > summary {
+  cursor: pointer;
+  padding: 9px 0;
+  font-weight: 600;
+  font-size: 13px;
+}
+.workspace-advanced-maintenance > p,
+.workspace-maintenance-explanation {
+  font-size: 13px;
+  color: var(--workspace-muted);
+  line-height: 1.8;
+  margin: 10px 0;
+}
+.workspace-advanced-maintenance__content {
+  display: grid;
+  gap: 16px;
+}
+.focused-workspace .product-readiness__tasks {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  gap: 12px;
+}
+.focused-workspace .product-readiness__task-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.focused-workspace .product-readiness__task {
+  padding: 12px;
+}
+.focused-workspace .product-readiness__task-empty {
+  padding: 18px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  background: var(--ui-surface-subtle);
+}
+.workspace-preparation-details .product-readiness__header {
+  margin: 14px 0 10px;
+}
+.workspace-preparation-details .product-readiness__stages {
+  margin-top: 10px;
+}
+.focused-workspace .product-readiness__storage {
+  order: 5;
+  border-top: 1px solid var(--ui-border);
+  padding-top: 12px;
+}
+.focused-workspace .image-search-shell:not([data-sources-only='true']) .image-search-control-pane,
+.focused-workspace .media-search-shell:not([data-sources-only='true']) .media-search-control-pane {
+  padding-top: 6px;
+}
+.focused-workspace .index-overview-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+.focused-workspace .index-overview-metrics strong {
+  font-size: 21px !important;
+  font-weight: 600;
+}
+.focused-workspace .index-overview-metrics > div {
+  padding: 16px !important;
+}
+@media (max-width: 1200px) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 850px) {
+  .workspace-section-tabs {
+    padding-inline: 18px;
+    gap: 4px;
+  }
+  .focused-workspace .workspace-section-tabs button {
+    padding: 8px 12px;
+  }
+  .settings-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .focused-workspace .index-overview-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+.image-search-control-pane > .workspace-preparation-link {
+  order: 10;
+}
+.workspace-scan-steps {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  list-style: none;
+  counter-reset: review-step;
+  margin: 0 0 16px;
+  padding: 0;
+  color: var(--workspace-muted);
+  font-size: 12px;
+}
+.workspace-scan-steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.workspace-scan-steps li::before {
+  counter-increment: review-step;
+  content: counter(review-step);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ui-accent-soft);
+  color: rgb(var(--color-accent));
+}
+
+.workspace-index-diagnostics > summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-size: 13px;
+  color: rgb(var(--color-accent));
+}
+.workspace-index-diagnostics[open] > div:first-of-type {
+  margin-bottom: 14px;
+}

@@ -97,7 +97,7 @@ async function run() {
     const detail = await page.locator('.unified-search-detail').boundingBox()
     assert.ok(
       detail.y < 400 && detail.x + detail.width <= 760,
-      'narrow detail must be reachable without scrolling past the whole grid',
+      `narrow detail must be reachable without scrolling past the whole grid: ${JSON.stringify(detail)}`,
     )
     await page.locator('.unified-search-detail__close').click()
     await page.getByTestId('workspace-domain-sources').click()
@@ -136,6 +136,8 @@ async function run() {
     await page.locator('.unified-search-tile__preview').first().click()
     await page.evaluate(() => window.__workspaceTest.delayQuery('A', 700))
     await page.getByTestId('unified-search-feedback-relevant').click()
+    // The compact detail covers the workspace; return to its search controls.
+    await page.locator('.unified-search-detail__close').click()
     await search.fill('B')
     await page.waitForFunction(() =>
       document.querySelector('.unified-search-tile strong')?.textContent.startsWith('B'),

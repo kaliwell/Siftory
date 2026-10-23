@@ -33,7 +33,7 @@ import ThumbnailImage from './filemanager/ThumbnailImage'
 import DraggablePanel from './DraggablePanel'
 import SearchEmptyState from './SearchEmptyState'
 import WorkspaceIcon from './WorkspaceIcon'
-import { requestWorkspaceNavigation } from '../services/workspaceNavigation'
+import { openWorkspaceRoute } from '../services/openWorkspace'
 import SubjectPickerModal, { type SubjectPickerData } from './SubjectPickerModal'
 
 type DurationFilter = '' | 'under-minute' | 'one-five' | 'five-thirty' | 'over-thirty'
@@ -679,14 +679,7 @@ const UnifiedSearchPanel: React.FC = () => {
       setSubject(undefined)
       setSegmentationSessionId('')
     })
-  const openSources = () => {
-    useStore.setState({ showImageSearch: true })
-    requestWorkspaceNavigation(
-      'imageSearch',
-      'workspace-sources-focus',
-      () => useStore.getState().showImageSearch,
-    )
-  }
+  const openSources = () => openWorkspaceRoute('image-sources', 'workspace-sources-focus')
 
   return (
     <DraggablePanel
@@ -1131,9 +1124,15 @@ const UnifiedSearchPanel: React.FC = () => {
                 {!hasQuery && !pending ? (
                   <SearchEmptyState
                     testId="unified-search-empty-state"
-                    title={t('From a reference image to your original file')}
+                    title={t(
+                      sources.length === 0
+                        ? 'Connect your first source'
+                        : 'From a reference image to your original file',
+                    )}
                     description={t(
-                      'Enter natural language, a file name, or choose a reference image to begin.',
+                      sources.length === 0
+                        ? 'Add a folder in Sources, then prepare its index to start searching.'
+                        : 'Enter natural language, a file name, or choose a reference image to begin.',
                     )}
                   >
                     <button className="workspace-button-primary" onClick={chooseReferenceImage}>
@@ -1150,7 +1149,11 @@ const UnifiedSearchPanel: React.FC = () => {
                   <SearchEmptyState
                     testId="unified-search-empty-state"
                     title={t('No results')}
-                    description={t('Try clearing filters or use a broader query.')}
+                    description={t(
+                      sources.length === 0
+                        ? 'Add a folder in Sources, then prepare its index to start searching.'
+                        : 'Try clearing filters or use a broader query.',
+                    )}
                   />
                 ) : null}
               </div>

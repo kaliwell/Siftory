@@ -23,6 +23,7 @@ export const DEFAULT_IMAGE_SEARCH_UI_PREFERENCES: ImageSearchUiPreferences = {
 }
 
 export const DEFAULT_MEDIA_SEARCH_UI_PREFERENCES: MediaSearchUiPreferences = {
+  workspaceView: 'sources',
   experienceMode: 'simple',
 }
 
@@ -70,5 +71,8 @@ export function normalizeImageSearchUiPreferences(value: unknown): ImageSearchUi
 
 export function normalizeMediaSearchUiPreferences(value: unknown): MediaSearchUiPreferences {
   const input = record(value)
-  return { experienceMode: experienceMode(input.experienceMode) }
+  return {
+    workspaceView: input.workspaceView === 'search' ? 'search' : 'sources',
+    experienceMode: experienceMode(input.experienceMode),
+  }
 }

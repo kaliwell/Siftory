@@ -130,6 +130,7 @@ export interface ImageSearchUiPreferences {
 }
 
 export interface MediaSearchUiPreferences {
+  workspaceView?: 'sources' | 'search'
   experienceMode: SearchExperiencePreference
 }
 

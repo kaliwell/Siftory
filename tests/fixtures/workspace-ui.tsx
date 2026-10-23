@@ -14,6 +14,7 @@ let profile = 'balanced'
 let failSettings = false
 let failResourceProfile = false
 let searchResultCount = 8
+let mediaTask: Record<string, unknown> | null = null
 const methodDelays: Record<string, number> = {}
 const inFlight: Record<string, number> = {}
 const maximumInFlight: Record<string, number> = {}
@@ -227,6 +228,37 @@ const handlers: Record<string, (...args: any[]) => any> = {
   }),
   'imageSearch.getThumbnailRebuildProgress': () => idle,
   'imageSearch.getFolderDataEditProgress': () => ({ state: 'idle' }),
+  'imageSearch.getDataCatalogProgress': () => ({ state: 'idle' }),
+  'imageSearch.getDataOverview': () => ({
+    ok: true,
+    catalogState: 'ready',
+    builtAt: 1792713600000,
+    totalBytes: 12400000,
+    unionPathCount: 8,
+    nativeUniqueCount: 8,
+    dinoUniqueCount: 0,
+    clipUniqueCount: 0,
+    completeCount: 0,
+    missingDinoCount: 8,
+    missingClipCount: 8,
+    vectorOnlyCount: 0,
+    duplicateRows: 0,
+    malformedRows: 0,
+  }),
+  'imageSearch.listDataFolders': () => ({ ok: true, records: [], total: 0, offset: 0, limit: 100 }),
+  'imageSearch.queryData': () => ({ ok: true, records: [], hasMore: false, total: 0 }),
+  'imageSearch.getDataStats': () => ({ ok: true, count: 8, totalBytes: 12400000 }),
+  'duplicateFinder.getProgress': () => ({
+    state: 'done',
+    scanned: 0,
+    totalBytes: 0,
+    duplicates: 0,
+  }),
+  'duplicateFinder.getResults': () => ({ groups: [] }),
+  'mediaSearch.listVideos': () => [],
+  'mediaSearch.listFrames': () => [],
+  'mediaSearch.listDrives': () => [],
+  'mediaSearch.getFrameEmbeddingStats': () => ({ total: 0, dino: 0, clip: 0 }),
   'imageSearch.pasteClipboardImage': () => ({ ok: true, path: 'C:/fixtures/pasted.jpg' }),
   'vector.getEmbeddingProgress': () => idle,
   'vector.getVectorIndexStatus': () => ({ built: true, count: 8 }),
@@ -247,11 +279,11 @@ const handlers: Record<string, (...args: any[]) => any> = {
     ffprobeConfigured: false,
     updatedAt: 1,
   }),
-  'mediaSearch.getTaskProgress': () => [],
+  'mediaSearch.getTaskProgress': () => mediaTask,
   'assetLibrary.getStats': () => ({
-    totalAssets: 0,
+    totalAssets: 8,
     classifiedAssets: 0,
-    unclassifiedAssets: 0,
+    unclassifiedAssets: 8,
     suggestedCount: 0,
     lowConfidenceCount: 0,
     categoryCount: 0,
@@ -283,7 +315,26 @@ const handlers: Record<string, (...args: any[]) => any> = {
     skippedSampleCount: 0,
     updatedAt: 0,
   }),
-  'assetLibrary.listAssets': () => ({ items: [], total: 0 }),
+  'assetLibrary.listAssets': () => ({
+    items: items.map((item, index) => ({
+      asset: {
+        id: index + 1,
+        path: item.displayPath,
+        kind: 'image',
+        source: 'image_search',
+        width: 1600,
+        height: 1200,
+        fileSize: item.sizeBytes,
+        modifiedTime: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        missing: false,
+      },
+      categories: [],
+      tags: [],
+    })),
+    total: items.length,
+  }),
   'mediaSearch.getVideoSemanticStatus': () => ({
     runtime: { adapterId: 'qwen3-vl', state: 'not-installed' },
     indexState: 'empty',
@@ -316,8 +367,10 @@ const handlers: Record<string, (...args: any[]) => any> = {
     values.map((item) => ({ path: item.path, dataUrl: picture })),
   fmGetThumbnail: () => ({ dataUrl: picture }),
 }
-const api = (prefix = ''): any =>
-  new Proxy(() => {}, {
+const bridgeObjects = new Map<string, any>()
+const api = (prefix = ''): any => {
+  if (bridgeObjects.has(prefix)) return bridgeObjects.get(prefix)
+  const instance = new Proxy(() => {}, {
     get: (_, key) =>
       key === 'then' ? undefined : api(prefix ? prefix + '.' + String(key) : String(key)),
     apply: (_, __, args) => {
@@ -338,6 +391,9 @@ const api = (prefix = ''): any =>
         })
     },
   })
+  bridgeObjects.set(prefix, instance)
+  return instance
+}
 ;(window as any).electronAPI = api()
 ;(window as any).__workspaceTest = {
   store: useStore,
@@ -354,6 +410,9 @@ const api = (prefix = ''): any =>
   },
   setResultCount: (value: number) => {
     searchResultCount = value
+  },
+  setMediaTask: (value: Record<string, unknown> | null) => {
+    mediaTask = value
   },
   delayMethod: (name: string, delay: number) => {
     methodDelays[name] = delay

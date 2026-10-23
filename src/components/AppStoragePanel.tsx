@@ -19,10 +19,13 @@ const AppStoragePanel: React.FC = () => {
       defaultW={1000}
       defaultH={700}
     >
-      <div style={{ padding: 20, overflow: 'auto', minHeight: 0 }}>
-        <p>{t('Manage Siftory indexes and generated caches. Original assets are kept.')}</p>
+      <div className="workspace-maintenance-page">
+        <p className="workspace-info-banner">
+          {t('Manage Siftory indexes and generated caches. Original assets are kept.')}
+        </p>
         {message && <p role="status">{message}</p>}
         <ImageSearchDataManager
+          standalone
           scanPaths={scanPaths}
           showToast={showToast}
           onChanged={() => setMessage(t('Updated'))}

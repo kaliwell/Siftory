@@ -20,6 +20,7 @@ type ScanMode = 'addNew' | 'update' | 'updateAll'
 
 interface ImageSearchControlsProps {
   hideQuery?: boolean
+  hideLibrary?: boolean
   experienceMode: SearchExperienceMode
   workflowRunning: boolean
   isScanning: boolean
@@ -72,6 +73,7 @@ interface ImageSearchControlsProps {
 
 const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   hideQuery = false,
+  hideLibrary = false,
   experienceMode,
   workflowRunning,
   isScanning,
@@ -130,194 +132,198 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
       data-experience-mode={experienceMode}
       data-core-actions={productSearchCoreActionIds('image', experienceMode).join(' ')}
     >
-      <CollapsibleSearchSection
-        id="image-search-library-section"
-        step="02"
-        title={t('Library preparation')}
-        description={t('Choose folders, scan changes, and build the searchable library.')}
-        expanded={libraryExpanded}
-        onToggle={onToggleLibrary}
-        tone="library"
-        testId="image-search-library-section"
-        summary={`${scanPaths.length}/64`}
-      >
-        <div
-          className="image-search-scan-controls"
-          style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}
+      {!hideLibrary && (
+        <CollapsibleSearchSection
+          id="image-search-library-section"
+          step="02"
+          title={t('Library preparation')}
+          description={t('Choose folders, scan changes, and build the searchable library.')}
+          expanded={libraryExpanded}
+          onToggle={onToggleLibrary}
+          tone="library"
+          testId="image-search-library-section"
+          summary={`${scanPaths.length}/64`}
         >
-          <button
-            data-testid="search-prepare-library"
-            data-onboarding-action="image-prepare-library"
-            onClick={onPrepareLibrary}
-            disabled={taskBusy || scanPaths.length === 0}
-            style={{ fontSize: 11, padding: '3px 12px' }}
-            title={t(
-              'Scan images, build missing DINO and CLIP embeddings, then build the vector index',
-            )}
+          <div
+            className="image-search-scan-controls"
+            style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}
           >
-            {t('Prepare Library')}
-          </button>
-          <button
-            onClick={workflowRunning ? onCancelSetup : onStopScan}
-            disabled={!taskBusy}
-            style={{ fontSize: 11, padding: '3px 10px', opacity: taskBusy ? 1 : 0.45 }}
-          >
-            {t('Stop')}
-          </button>
-          {experienceMode === 'advanced' && (
-            <>
-              <button
-                data-testid="image-search-start-scan"
-                onClick={onStartScan}
-                disabled={taskBusy || scanPaths.length === 0}
-                style={{ fontSize: 11, padding: '3px 10px' }}
-              >
-                {t('Start Scan')}
-              </button>
-              <select
-                value={scanMode}
-                onChange={(e) => setScanMode(e.target.value as ScanMode)}
-                disabled={taskBusy}
-                style={{ fontSize: 10, padding: '3px 6px' }}
-                title={t('Scan mode')}
-              >
-                <option value="addNew">{t('Add New')}</option>
-                <option value="update">{t('Update')}</option>
-                <option value="updateAll">{t('Update All')}</option>
-              </select>
-              <label
-                title={t(
-                  'Reuse the native scan decode to build JPEG thumbnails for new or changed images',
-                )}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9 }}
-              >
-                <input
-                  type="checkbox"
-                  checked={buildScanThumbnails}
-                  disabled={taskBusy}
-                  onChange={(event) => setBuildScanThumbnails(event.target.checked)}
-                />
-                {t('Native thumbs')}
-              </label>
-            </>
-          )}
-          <button
-            data-testid="image-search-select-folders"
-            onClick={onSelectPaths}
-            disabled={taskBusy}
-            style={{ fontSize: 10, padding: '3px 8px' }}
-          >
-            + {t('Folders')}
-          </button>
-          <div style={{ position: 'relative' }}>
             <button
-              onClick={onToggleDrivePicker}
-              disabled={taskBusy}
-              style={{ fontSize: 10, padding: '3px 8px' }}
+              data-testid="search-prepare-library"
+              data-onboarding-action="image-prepare-library"
+              onClick={onPrepareLibrary}
+              disabled={taskBusy || scanPaths.length === 0}
+              style={{ fontSize: 13, padding: '3px 12px' }}
+              title={t(
+                'Scan images, build missing DINO and CLIP embeddings, then build the vector index',
+              )}
             >
-              + {t('Drive')}
+              {t('Prepare Library')}
             </button>
-            {showDrivePicker && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  zIndex: 10,
-                  minWidth: 80,
-                  background: 'rgba(var(--bg),0.98)',
-                  border: '1px solid rgba(var(--date),0.3)',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.35)',
-                }}
-              >
-                {availableDrives.map((drive) => (
-                  <button
-                    key={drive}
-                    onClick={() => onAddDrive(drive)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      textAlign: 'left',
-                      fontSize: 10,
-                      padding: '4px 8px',
-                      background: 'transparent',
-                      color: 'rgb(var(--fg))',
-                      border: 'none',
-                    }}
-                  >
-                    {drive}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <input
-            data-testid="image-search-manual-path"
-            value={manualPath}
-            onChange={(e) => setManualPath(e.target.value)}
-            onKeyDown={onManualKeyDown}
-            disabled={taskBusy}
-            placeholder={t('Image folder or drive path...')}
-            style={{ flex: '1 1 220px', minWidth: 180, fontSize: 10, padding: '4px 7px' }}
-          />
-          <button
-            data-testid="image-search-add-path"
-            onClick={onManualAdd}
-            disabled={taskBusy || !manualPath.trim()}
-            style={{ fontSize: 10, padding: '3px 8px' }}
-          >
-            {t('Add')}
-          </button>
-          <button
-            onClick={onClearPaths}
-            disabled={taskBusy || scanPaths.length === 0}
-            style={{ fontSize: 10, padding: '3px 8px', color: 'rgb(255,130,130)' }}
-          >
-            {t('Clear All')}
-          </button>
-        </div>
-
-        <div className="image-search-scan-paths">
-          <span style={{ fontSize: 10, opacity: 0.65 }}>
-            {t('Scan Paths')} ({scanPaths.length}/64)
-          </span>
-          {scanPaths.map((p) => (
-            <span
-              key={p}
-              title={p}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 3,
-                maxWidth: 190,
-                padding: '2px 5px',
-                background: 'rgba(var(--date),0.12)',
-                border: '1px solid rgba(var(--date),0.12)',
-                fontSize: 9,
-              }}
+            <button
+              onClick={workflowRunning ? onCancelSetup : onStopScan}
+              disabled={!taskBusy}
+              style={{ fontSize: 13, padding: '3px 10px', opacity: taskBusy ? 1 : 0.45 }}
             >
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {p}
-              </span>
+              {t('Stop')}
+            </button>
+            {experienceMode === 'advanced' && (
+              <>
+                <button
+                  data-testid="image-search-start-scan"
+                  onClick={onStartScan}
+                  disabled={taskBusy || scanPaths.length === 0}
+                  style={{ fontSize: 13, padding: '3px 10px' }}
+                >
+                  {t('Start Scan')}
+                </button>
+                <select
+                  value={scanMode}
+                  onChange={(e) => setScanMode(e.target.value as ScanMode)}
+                  disabled={taskBusy}
+                  style={{ fontSize: 12, padding: '3px 6px' }}
+                  title={t('Scan mode')}
+                >
+                  <option value="addNew">{t('Add New')}</option>
+                  <option value="update">{t('Update')}</option>
+                  <option value="updateAll">{t('Update All')}</option>
+                </select>
+                <label
+                  title={t(
+                    'Reuse the native scan decode to build JPEG thumbnails for new or changed images',
+                  )}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12 }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={buildScanThumbnails}
+                    disabled={taskBusy}
+                    onChange={(event) => setBuildScanThumbnails(event.target.checked)}
+                  />
+                  {t('Native thumbs')}
+                </label>
+              </>
+            )}
+            <button
+              data-testid="image-search-select-folders"
+              onClick={onSelectPaths}
+              disabled={taskBusy}
+              style={{ fontSize: 12, padding: '3px 8px' }}
+            >
+              + {t('Folders')}
+            </button>
+            <div style={{ position: 'relative' }}>
               <button
-                onClick={() => onRemovePath(p)}
+                onClick={onToggleDrivePicker}
                 disabled={taskBusy}
-                aria-label={`${t('Remove')}: ${p}`}
+                style={{ fontSize: 12, padding: '3px 8px' }}
+              >
+                + {t('Drive')}
+              </button>
+              {showDrivePicker && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 10,
+                    minWidth: 80,
+                    background: 'rgba(var(--bg),0.98)',
+                    border: '1px solid rgba(var(--date),0.3)',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.35)',
+                  }}
+                >
+                  {availableDrives.map((drive) => (
+                    <button
+                      key={drive}
+                      onClick={() => onAddDrive(drive)}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        textAlign: 'left',
+                        fontSize: 12,
+                        padding: '4px 8px',
+                        background: 'transparent',
+                        color: 'rgb(var(--fg))',
+                        border: 'none',
+                      }}
+                    >
+                      {drive}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input
+              data-testid="image-search-manual-path"
+              value={manualPath}
+              onChange={(e) => setManualPath(e.target.value)}
+              onKeyDown={onManualKeyDown}
+              disabled={taskBusy}
+              placeholder={t('Image folder or drive path...')}
+              style={{ flex: '1 1 220px', minWidth: 180, fontSize: 12, padding: '4px 7px' }}
+            />
+            <button
+              data-testid="image-search-add-path"
+              onClick={onManualAdd}
+              disabled={taskBusy || !manualPath.trim()}
+              style={{ fontSize: 12, padding: '3px 8px' }}
+            >
+              {t('Add')}
+            </button>
+            <button
+              onClick={onClearPaths}
+              disabled={taskBusy || scanPaths.length === 0}
+              style={{ fontSize: 12, padding: '3px 8px', color: 'rgb(255,130,130)' }}
+            >
+              {t('Clear All')}
+            </button>
+          </div>
+
+          <div className="image-search-scan-paths">
+            <span style={{ fontSize: 12, opacity: 0.65 }}>
+              {t('Scan Paths')} ({scanPaths.length}/64)
+            </span>
+            {scanPaths.map((p) => (
+              <span
+                key={p}
+                title={p}
                 style={{
-                  border: 'none',
-                  background: 'transparent',
-                  color: 'inherit',
-                  opacity: taskBusy ? 0.35 : 0.8,
-                  padding: 0,
-                  cursor: taskBusy ? 'default' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 3,
+                  maxWidth: 190,
+                  padding: '2px 5px',
+                  background: 'rgba(var(--date),0.12)',
+                  border: '1px solid rgba(var(--date),0.12)',
+                  fontSize: 12,
                 }}
               >
-                x
-              </button>
-            </span>
-          ))}
-        </div>
-      </CollapsibleSearchSection>
+                <span
+                  style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {p}
+                </span>
+                <button
+                  onClick={() => onRemovePath(p)}
+                  disabled={taskBusy}
+                  aria-label={`${t('Remove')}: ${p}`}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'inherit',
+                    opacity: taskBusy ? 0.35 : 0.8,
+                    padding: 0,
+                    cursor: taskBusy ? 'default' : 'pointer',
+                  }}
+                >
+                  x
+                </button>
+              </span>
+            ))}
+          </div>
+        </CollapsibleSearchSection>
+      )}
 
       {!hideQuery && (
         <CollapsibleSearchSection
@@ -340,21 +346,21 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               data-testid="image-search-query-image"
               onClick={onQueryImage}
               disabled={searching || workflowRunning}
-              style={{ fontSize: 11, padding: '3px 12px' }}
+              style={{ fontSize: 13, padding: '3px 12px' }}
             >
               {t('Query')}
             </button>
             <button
               onClick={onPasteClipboardImage}
               disabled={searching || workflowRunning}
-              style={{ fontSize: 11, padding: '3px 10px' }}
+              style={{ fontSize: 13, padding: '3px 10px' }}
             >
               {t('Paste')}
             </button>
             <button
               onClick={onRefreshSearch}
               disabled={searching || workflowRunning}
-              style={{ fontSize: 11, padding: '3px 10px' }}
+              style={{ fontSize: 13, padding: '3px 10px' }}
             >
               {t('Refresh')}
             </button>
@@ -366,14 +372,14 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                   ? t('Drop image to search...')
                   : t('Drop an image, click Query, or Paste clipboard image...')
               }
-              style={{ flex: '1 1 220px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
+              style={{ flex: '1 1 220px', minWidth: 0, fontSize: 13, padding: '4px 8px' }}
               title={testImagePath || undefined}
             />
             {testImagePath && (
               <button
                 onClick={onClearQueryImage}
                 disabled={searching || workflowRunning}
-                style={{ fontSize: 10, padding: '3px 8px' }}
+                style={{ fontSize: 12, padding: '3px 8px' }}
               >
                 {t('Clear')}
               </button>
@@ -382,7 +388,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('Filter by name (optional)...')}
-              style={{ flex: '1 1 160px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
+              style={{ flex: '1 1 160px', minWidth: 0, fontSize: 13, padding: '4px 8px' }}
             />
           </div>
 
@@ -395,7 +401,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               onClick={onSemanticSearch}
               disabled={searching || workflowRunning || !semanticModelReady}
               title={!semanticModelReady ? t('The selected model is not ready.') : undefined}
-              style={{ fontSize: 11, padding: '3px 10px' }}
+              style={{ fontSize: 13, padding: '3px 10px' }}
             >
               {t('Semantic')}
             </button>
@@ -406,7 +412,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 if (e.key === 'Enter') onSemanticSearch()
               }}
               placeholder={t('Semantic text: red screenshot, phone, avatar...')}
-              style={{ flex: '1 1 240px', minWidth: 0, fontSize: 11, padding: '4px 8px' }}
+              style={{ flex: '1 1 240px', minWidth: 0, fontSize: 13, padding: '4px 8px' }}
             />
           </div>
 
@@ -418,7 +424,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 alignItems: 'center',
                 gap: 8,
                 flexWrap: 'wrap',
-                fontSize: 10,
+                fontSize: 12,
               }}
             >
               <span style={{ opacity: 0.6 }}>{t('Threshold')}:</span>
@@ -436,7 +442,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               <select
                 value={topK}
                 onChange={(e) => setTopK(Number(e.target.value))}
-                style={{ fontSize: 10 }}
+                style={{ fontSize: 12 }}
               >
                 {IMAGE_SEARCH_TOPK_OPTIONS.map((n) => (
                   <option key={n} value={n}>
@@ -448,7 +454,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as ImageSearchSortMode)}
-                style={{ fontSize: 10 }}
+                style={{ fontSize: 12 }}
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -460,7 +466,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               <select
                 value={searchMode}
                 onChange={(e) => setSearchMode(e.target.value as SearchMode)}
-                style={{ fontSize: 10 }}
+                style={{ fontSize: 12 }}
               >
                 <option value="fast">{t('Fast')}</option>
                 <option value="standard">{t('Standard')}</option>

@@ -52,6 +52,8 @@ export interface ImageSearchMetrics {
 interface ImageSearchResultGridProps {
   results: ImageSearchDisplayResult[]
   rawResultCount: number
+  indexedCount?: number
+  hasSearched?: boolean
   queryHash: string | null
   statusState: string
   searchQuery: string
@@ -75,6 +77,8 @@ function fmtBytes(n: number | undefined): string {
 const ImageSearchResultGrid: React.FC<ImageSearchResultGridProps> = ({
   results,
   rawResultCount,
+  indexedCount = 0,
+  hasSearched = false,
   queryHash,
   statusState,
   searchQuery,
@@ -125,12 +129,12 @@ const ImageSearchResultGrid: React.FC<ImageSearchResultGridProps> = ({
           title: t('No visible image results'),
           description: t('Clear or change the name filter to show matching indexed images.'),
         }
-      : rawResultCount === 0 && queryHash
+      : rawResultCount === 0 && (queryHash || hasSearched)
         ? {
             title: t('No similar images found'),
             description: t('Try another query image or lower the similarity threshold.'),
           }
-        : statusState === 'idle' && !queryHash
+        : statusState === 'idle' && !queryHash && indexedCount === 0
           ? {
               title: t('Prepare image search'),
               description: t(

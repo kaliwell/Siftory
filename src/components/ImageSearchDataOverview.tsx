@@ -67,6 +67,7 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
   const [tab, setTab] = useState<'stores' | 'folders'>('stores')
   const [expandedStores, setExpandedStores] = useState<Set<string>>(() => new Set())
   const [folderQuery, setFolderQuery] = useState('')
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [onlyAnomalies, setOnlyAnomalies] = useState(false)
   const [folderStack, setFolderStack] = useState<string[]>([])
 
@@ -130,9 +131,9 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
   }, [loadOverview])
 
   useEffect(() => {
-    if (!overview?.generation) return
+    if (!overview?.generation || !diagnosticsOpen) return
     void loadFolders({ parent: null, query: '', offset: 0 })
-  }, [overview?.generation]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [overview?.generation, diagnosticsOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!catalogActive) return
@@ -218,8 +219,6 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
       : 0
   const anomalyCount = useMemo(
     () =>
-      (overview?.missingDinoCount || 0) +
-      (overview?.missingClipCount || 0) +
       (overview?.vectorOnlyCount || 0) +
       (overview?.duplicateRows || 0) +
       (overview?.malformedRows || 0),
@@ -259,8 +258,8 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
       }}
     >
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: 10 }}>{t('Image Search Data Overview')}</strong>
-        <span style={{ fontSize: 9, opacity: 0.68 }}>
+        <strong style={{ fontSize: 12 }}>{t('Image Search Data Overview')}</strong>
+        <span style={{ fontSize: 12, opacity: 0.68 }}>
           {overview?.catalogState ? t(overview.catalogState) : t('loading')}
           {overview?.builtAt ? ` · ${t('Snapshot')} ${formatDate(overview.builtAt)}` : ''}
         </span>
@@ -269,7 +268,7 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
           type="button"
           onClick={() => void loadOverview()}
           disabled={loadingOverview || catalogActive}
-          style={{ fontSize: 9 }}
+          style={{ fontSize: 12 }}
         >
           {loadingOverview ? t('Loading...') : t('Refresh Inventory')}
         </button>
@@ -277,13 +276,13 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
           type="button"
           onClick={() => void startCatalogBuild()}
           disabled={disabled || catalogActive || loadingOverview}
-          style={{ fontSize: 9 }}
+          style={{ fontSize: 12 }}
           title={t('Reads Native, DINO, and CLIP once and builds a reusable read-only catalog.')}
         >
           {overview?.generation ? t('Refresh All Data') : t('Analyze All Data')}
         </button>
         {catalogActive && (
-          <button type="button" onClick={() => void cancelCatalogBuild()} style={{ fontSize: 9 }}>
+          <button type="button" onClick={() => void cancelCatalogBuild()} style={{ fontSize: 12 }}>
             {t('Cancel')}
           </button>
         )}
@@ -292,20 +291,18 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
       {overview && (
         <>
           <div
+            className="index-overview-metrics"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(6, minmax(90px, 1fr))',
-              gap: 4,
-              overflowX: 'auto',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 10,
             }}
           >
             {[
               [t('Physical Data'), formatBytes(overview.totalBytes)],
               [t('All Paths'), overview.unionPathCount.toLocaleString()],
-              [t('Native'), overview.nativeUniqueCount.toLocaleString()],
-              ['DINO', overview.dinoUniqueCount.toLocaleString()],
-              ['CLIP', overview.clipUniqueCount.toLocaleString()],
-              [t('Issue Signals'), anomalyCount.toLocaleString()],
+              [t('Indexed images'), overview.nativeUniqueCount.toLocaleString()],
+              [t('Review indicators'), anomalyCount.toLocaleString()],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -316,15 +313,23 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
                   borderRadius: 4,
                 }}
               >
-                <div style={{ fontSize: 8, opacity: 0.62 }}>{label}</div>
-                <strong style={{ fontSize: 10 }}>{value}</strong>
+                <div style={{ fontSize: 11, opacity: 0.62 }}>{label}</div>
+                <strong style={{ fontSize: 12 }}>{value}</strong>
               </div>
             ))}
           </div>
+          <p className="workspace-maintenance-explanation">
+            {t('Visual similarity ready: {count}', { count: overview.dinoUniqueCount })} ·{' '}
+            {t('Language search ready: {count}', { count: overview.clipUniqueCount })}
+            <br />
+            {t(
+              'Missing semantic indexes mean these searches are not prepared; your original files are unaffected.',
+            )}
+          </p>
           {overview.generation && (
             <div
               data-testid="image-search-data-health-breakdown"
-              style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 8, opacity: 0.72 }}
+              style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 11, opacity: 0.72 }}
             >
               {[
                 [t('Complete Paths'), overview.completeCount],
@@ -344,7 +349,7 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
       )}
 
       {(overview?.catalogState === 'no-catalog' || overview?.catalogState === 'stale') && (
-        <div style={{ fontSize: 9, color: 'rgb(245,190,105)' }}>
+        <div style={{ fontSize: 12, color: 'rgb(245,190,105)' }}>
           {overview.catalogState === 'no-catalog'
             ? t(
                 'Run Analyze All Data once to browse Native, DINO, and CLIP folders without rescanning the large JSONL files.',
@@ -355,12 +360,12 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
         </div>
       )}
       {overview?.error && (
-        <div style={{ fontSize: 9, color: 'rgb(255,130,120)' }}>{overview.error}</div>
+        <div style={{ fontSize: 12, color: 'rgb(255,130,120)' }}>{overview.error}</div>
       )}
 
       {(catalogActive || progress.state === 'error') && (
         <div style={{ display: 'grid', gap: 3 }}>
-          <div style={{ display: 'flex', gap: 6, fontSize: 9, opacity: 0.78 }}>
+          <div style={{ display: 'flex', gap: 6, fontSize: 12, opacity: 0.78 }}>
             <span>{progressLabel}</span>
             <span style={{ marginLeft: 'auto' }}>
               {formatBytes(progress.processedBytes)} / {formatBytes(progress.totalBytes)} ·{' '}
@@ -368,301 +373,317 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
             </span>
           </div>
           <progress value={progressPercent} max={100} style={{ width: '100%' }} />
-          <div style={{ fontSize: 8, opacity: 0.58 }}>
+          <div style={{ fontSize: 11, opacity: 0.58 }}>
             {t('Native')} {progress.nativeRecords.toLocaleString()} · {t('DINO')}{' '}
             {progress.dinoRecords.toLocaleString()} · {t('CLIP')}{' '}
             {progress.clipRecords.toLocaleString()}
           </div>
           {progress.error && (
-            <div style={{ fontSize: 9, color: 'rgb(255,130,120)' }}>{progress.error}</div>
+            <div style={{ fontSize: 12, color: 'rgb(255,130,120)' }}>{progress.error}</div>
           )}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 4 }}>
-        <button
-          type="button"
-          onClick={() => setTab('stores')}
-          style={{
-            fontSize: 9,
-            background: tab === 'stores' ? 'rgba(80,150,255,0.28)' : undefined,
-          }}
-        >
-          {t('Major Data Stores')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('folders')}
-          style={{
-            fontSize: 9,
-            background: tab === 'folders' ? 'rgba(80,150,255,0.28)' : undefined,
-          }}
-        >
-          {t('Folder Coverage')}
-        </button>
-      </div>
-
-      {tab === 'stores' && (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9 }}>
-            <thead>
-              <tr style={{ textAlign: 'left', opacity: 0.68 }}>
-                <th style={{ padding: 4 }}>{t('Data Store')}</th>
-                <th style={{ padding: 4 }}>{t('Role')}</th>
-                <th style={{ padding: 4 }}>{t('Files')}</th>
-                <th style={{ padding: 4 }}>{t('Physical Size')}</th>
-                <th style={{ padding: 4 }}>{t('Images / Rows')}</th>
-                <th style={{ padding: 4 }}>{t('Freshness')}</th>
-                <th style={{ padding: 4 }}>{t('Actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(overview?.stores || []).map((store) => {
-                const expanded = expandedStores.has(store.id)
-                return (
-                  <React.Fragment key={store.id}>
-                    <tr style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                      <td style={{ padding: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => toggleStore(store.id)}
-                          style={{ border: 0, background: 'transparent', padding: 0, fontSize: 9 }}
-                          title={t(store.pathCategory)}
-                        >
-                          {store.fileCount > 0 ? (expanded ? '▾ ' : '▸ ') : '· '}
-                          {t(store.label)}
-                        </button>
-                      </td>
-                      <td style={{ padding: 4 }}>{t(store.role)}</td>
-                      <td style={{ padding: 4 }}>
-                        {store.fileCount.toLocaleString()}
-                        {!store.inventoryComplete ? ` ${t('(partial)')}` : ''}
-                      </td>
-                      <td style={{ padding: 4 }}>{formatBytes(store.totalBytes)}</td>
-                      <td style={{ padding: 4 }}>
-                        {store.uniqueCount === undefined
-                          ? '—'
-                          : `${store.uniqueCount.toLocaleString()} / ${(store.recordCount || 0).toLocaleString()}`}
-                      </td>
-                      <td style={{ padding: 4 }}>{t(store.freshness)}</td>
-                      <td style={{ padding: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => void openStoreLocation(store.id)}
-                          disabled={store.fileCount === 0}
-                          style={{ fontSize: 8 }}
-                        >
-                          {t('Open Location')}
-                        </button>
-                      </td>
-                    </tr>
-                    {expanded && store.files.length > 0 && (
-                      <tr>
-                        <td colSpan={7} style={{ padding: '2px 8px 6px 18px' }}>
-                          <div style={{ display: 'grid', gap: 2 }}>
-                            {store.files.map((file) => (
-                              <div
-                                key={file.id}
-                                title={file.relativePath}
-                                style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: 'minmax(180px, 1fr) auto auto',
-                                  gap: 8,
-                                  fontSize: 8,
-                                  opacity: 0.7,
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                  }}
-                                >
-                                  {file.relativePath}
-                                </span>
-                                <span>{formatBytes(file.sizeBytes)}</span>
-                                <span>{formatDate(file.modifiedAt)}</span>
-                              </div>
-                            ))}
-                            {store.filesTruncated && (
-                              <div style={{ fontSize: 8, opacity: 0.55 }}>
-                                {t('Showing the largest {count} files', {
-                                  count: store.files.length,
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === 'folders' && (
-        <div style={{ display: 'grid', gap: 5 }}>
-          <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
-            {folderStack.length > 0 && (
-              <button
-                type="button"
-                onClick={goBack}
-                disabled={loadingFolders}
-                style={{ fontSize: 9 }}
-              >
-                {t('Back')}
-              </button>
-            )}
-            <input
-              value={folderQuery}
-              onChange={(event) => setFolderQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') applyFolderFilter()
-              }}
-              placeholder={t('Search every indexed folder in the snapshot')}
-              style={{ flex: 1, minWidth: 180, fontSize: 9 }}
-            />
-            <label style={{ display: 'flex', gap: 3, alignItems: 'center', fontSize: 9 }}>
-              <input
-                type="checkbox"
-                checked={onlyAnomalies}
-                onChange={(event) => {
-                  const checked = event.target.checked
-                  setOnlyAnomalies(checked)
-                  void loadFolders({ anomalies: checked, offset: 0 })
-                }}
-              />
-              {t('Only anomalies')}
-            </label>
-            <button
-              type="button"
-              onClick={applyFolderFilter}
-              disabled={loadingFolders}
-              style={{ fontSize: 9 }}
-            >
-              {t('Search')}
-            </button>
-          </div>
-          <div
-            title={currentParent || undefined}
-            style={{ fontSize: 8, opacity: 0.58, overflow: 'hidden', textOverflow: 'ellipsis' }}
+      <details
+        className="workspace-index-diagnostics"
+        open={diagnosticsOpen}
+        onToggle={(event) => setDiagnosticsOpen(event.currentTarget.open)}
+      >
+        <summary>{t('Index details and folder coverage')}</summary>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button
+            type="button"
+            onClick={() => setTab('stores')}
+            style={{
+              fontSize: 12,
+              background: tab === 'stores' ? 'rgba(80,150,255,0.28)' : undefined,
+            }}
           >
-            {folderQuery.trim()
-              ? t('Searching the full snapshot')
-              : `${t('Current Folder')}: ${currentParent || t('All indexed roots')}`}
-          </div>
+            {t('Major Data Stores')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('folders')}
+            style={{
+              fontSize: 12,
+              background: tab === 'folders' ? 'rgba(80,150,255,0.28)' : undefined,
+            }}
+          >
+            {t('Folder Coverage')}
+          </button>
+        </div>
 
-          {!overview?.generation ? (
-            <div style={{ padding: 8, fontSize: 9, opacity: 0.66 }}>
-              {t('Analyze all data to create the reusable folder catalog.')}
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 8 }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', opacity: 0.68 }}>
-                    <th style={{ padding: 4 }}>{t('Folder')}</th>
-                    <th style={{ padding: 4 }}>{t('Native')}</th>
-                    <th style={{ padding: 4 }}>{t('DINO')}</th>
-                    <th style={{ padding: 4 }}>{t('CLIP')}</th>
-                    <th style={{ padding: 4 }}>{t('Missing DINO')}</th>
-                    <th style={{ padding: 4 }}>{t('Missing CLIP')}</th>
-                    <th style={{ padding: 4 }}>{t('Vector-only')}</th>
-                    <th style={{ padding: 4 }}>{t('Duplicate Rows')}</th>
-                    <th style={{ padding: 4 }}>{t('Actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {folders.records.map((folder) => {
-                    const anomalies =
-                      folder.missingDino +
-                      folder.missingClip +
-                      folder.vectorOnly +
-                      folder.duplicateRows +
-                      folder.malformedRows
-                    return (
-                      <tr
-                        key={folder.folder}
-                        style={{
-                          borderTop: '1px solid rgba(255,255,255,0.07)',
-                          color: anomalies > 0 ? 'rgb(245,200,125)' : undefined,
-                        }}
-                      >
-                        <td title={folder.folder} style={{ padding: 4, minWidth: 210 }}>
-                          <div
-                            style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {folder.name}
-                          </div>
-                          <div
-                            style={{ opacity: 0.48, overflow: 'hidden', textOverflow: 'ellipsis' }}
-                          >
-                            {folder.folder}
-                          </div>
-                        </td>
-                        <td style={{ padding: 4 }}>{folder.nativeCount.toLocaleString()}</td>
-                        <td style={{ padding: 4 }}>{folder.dinoCount.toLocaleString()}</td>
-                        <td style={{ padding: 4 }}>{folder.clipCount.toLocaleString()}</td>
-                        <td style={{ padding: 4 }}>{folder.missingDino.toLocaleString()}</td>
-                        <td style={{ padding: 4 }}>{folder.missingClip.toLocaleString()}</td>
-                        <td style={{ padding: 4 }}>{folder.vectorOnly.toLocaleString()}</td>
-                        <td style={{ padding: 4 }}>{folder.duplicateRows.toLocaleString()}</td>
-                        <td style={{ padding: 4, whiteSpace: 'nowrap' }}>
-                          {folder.childCount > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => openFolderChildren(folder.folder)}
-                              style={{ fontSize: 8, marginRight: 3 }}
-                            >
-                              {t('Open')} ({folder.childCount})
-                            </button>
-                          )}
+        {tab === 'stores' && (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ textAlign: 'left', opacity: 0.68 }}>
+                  <th style={{ padding: 4 }}>{t('Data Store')}</th>
+                  <th style={{ padding: 4 }}>{t('Role')}</th>
+                  <th style={{ padding: 4 }}>{t('Files')}</th>
+                  <th style={{ padding: 4 }}>{t('Physical Size')}</th>
+                  <th style={{ padding: 4 }}>{t('Images / Rows')}</th>
+                  <th style={{ padding: 4 }}>{t('Freshness')}</th>
+                  <th style={{ padding: 4 }}>{t('Actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(overview?.stores || []).map((store) => {
+                  const expanded = expandedStores.has(store.id)
+                  return (
+                    <React.Fragment key={store.id}>
+                      <tr style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                        <td style={{ padding: 4 }}>
                           <button
                             type="button"
-                            onClick={() => onManageFolder(folder.folder)}
-                            disabled={disabled || catalogActive}
-                            style={{ fontSize: 8 }}
+                            onClick={() => toggleStore(store.id)}
+                            style={{
+                              border: 0,
+                              background: 'transparent',
+                              padding: 0,
+                              fontSize: 12,
+                            }}
+                            title={t(store.pathCategory)}
                           >
-                            {t('Manage Indexes')}
+                            {store.fileCount > 0 ? (expanded ? '▾ ' : '▸ ') : '· '}
+                            {t(store.label)}
+                          </button>
+                        </td>
+                        <td style={{ padding: 4 }}>{t(store.role)}</td>
+                        <td style={{ padding: 4 }}>
+                          {store.fileCount.toLocaleString()}
+                          {!store.inventoryComplete ? ` ${t('(partial)')}` : ''}
+                        </td>
+                        <td style={{ padding: 4 }}>{formatBytes(store.totalBytes)}</td>
+                        <td style={{ padding: 4 }}>
+                          {store.uniqueCount === undefined
+                            ? '—'
+                            : `${store.uniqueCount.toLocaleString()} / ${(store.recordCount || 0).toLocaleString()}`}
+                        </td>
+                        <td style={{ padding: 4 }}>{t(store.freshness)}</td>
+                        <td style={{ padding: 4 }}>
+                          <button
+                            type="button"
+                            onClick={() => void openStoreLocation(store.id)}
+                            disabled={store.fileCount === 0}
+                            style={{ fontSize: 11 }}
+                          >
+                            {t('Open Location')}
                           </button>
                         </td>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-              {folders.records.length === 0 && (
-                <div style={{ padding: 8, fontSize: 9, opacity: 0.62 }}>
-                  {loadingFolders ? t('Loading...') : t('No matching folders')}
-                </div>
+                      {expanded && store.files.length > 0 && (
+                        <tr>
+                          <td colSpan={7} style={{ padding: '2px 8px 6px 18px' }}>
+                            <div style={{ display: 'grid', gap: 2 }}>
+                              {store.files.map((file) => (
+                                <div
+                                  key={file.id}
+                                  title={file.relativePath}
+                                  style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'minmax(180px, 1fr) auto auto',
+                                    gap: 8,
+                                    fontSize: 11,
+                                    opacity: 0.7,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    {file.relativePath}
+                                  </span>
+                                  <span>{formatBytes(file.sizeBytes)}</span>
+                                  <span>{formatDate(file.modifiedAt)}</span>
+                                </div>
+                              ))}
+                              {store.filesTruncated && (
+                                <div style={{ fontSize: 11, opacity: 0.55 }}>
+                                  {t('Showing the largest {count} files', {
+                                    count: store.files.length,
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === 'folders' && (
+          <div style={{ display: 'grid', gap: 5 }}>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+              {folderStack.length > 0 && (
+                <button
+                  type="button"
+                  onClick={goBack}
+                  disabled={loadingFolders}
+                  style={{ fontSize: 12 }}
+                >
+                  {t('Back')}
+                </button>
               )}
+              <input
+                value={folderQuery}
+                onChange={(event) => setFolderQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') applyFolderFilter()
+                }}
+                placeholder={t('Search every indexed folder in the snapshot')}
+                style={{ flex: 1, minWidth: 180, fontSize: 12 }}
+              />
+              <label style={{ display: 'flex', gap: 3, alignItems: 'center', fontSize: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={onlyAnomalies}
+                  onChange={(event) => {
+                    const checked = event.target.checked
+                    setOnlyAnomalies(checked)
+                    void loadFolders({ anomalies: checked, offset: 0 })
+                  }}
+                />
+                {t('Only anomalies')}
+              </label>
+              <button
+                type="button"
+                onClick={applyFolderFilter}
+                disabled={loadingFolders}
+                style={{ fontSize: 12 }}
+              >
+                {t('Search')}
+              </button>
             </div>
-          )}
-          {folders.hasMore && (
-            <button
-              type="button"
-              onClick={() =>
-                void loadFolders({
-                  offset: folders.records.length,
-                  append: true,
-                })
-              }
-              disabled={loadingFolders}
-              style={{ fontSize: 9 }}
+            <div
+              title={currentParent || undefined}
+              style={{ fontSize: 11, opacity: 0.58, overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
-              {t('Load More')} ({folders.records.length}/{folders.total})
-            </button>
-          )}
-        </div>
-      )}
+              {folderQuery.trim()
+                ? t('Searching the full snapshot')
+                : `${t('Current Folder')}: ${currentParent || t('All indexed roots')}`}
+            </div>
+
+            {!overview?.generation ? (
+              <div style={{ padding: 8, fontSize: 12, opacity: 0.66 }}>
+                {t('Analyze all data to create the reusable folder catalog.')}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', opacity: 0.68 }}>
+                      <th style={{ padding: 4 }}>{t('Folder')}</th>
+                      <th style={{ padding: 4 }}>{t('Native')}</th>
+                      <th style={{ padding: 4 }}>{t('DINO')}</th>
+                      <th style={{ padding: 4 }}>{t('CLIP')}</th>
+                      <th style={{ padding: 4 }}>{t('Missing DINO')}</th>
+                      <th style={{ padding: 4 }}>{t('Missing CLIP')}</th>
+                      <th style={{ padding: 4 }}>{t('Vector-only')}</th>
+                      <th style={{ padding: 4 }}>{t('Duplicate Rows')}</th>
+                      <th style={{ padding: 4 }}>{t('Actions')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {folders.records.map((folder) => {
+                      const anomalies =
+                        folder.missingDino +
+                        folder.missingClip +
+                        folder.vectorOnly +
+                        folder.duplicateRows +
+                        folder.malformedRows
+                      return (
+                        <tr
+                          key={folder.folder}
+                          style={{
+                            borderTop: '1px solid rgba(255,255,255,0.07)',
+                            color: anomalies > 0 ? 'rgb(245,200,125)' : undefined,
+                          }}
+                        >
+                          <td title={folder.folder} style={{ padding: 4, minWidth: 210 }}>
+                            <div
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {folder.name}
+                            </div>
+                            <div
+                              style={{
+                                opacity: 0.48,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {folder.folder}
+                            </div>
+                          </td>
+                          <td style={{ padding: 4 }}>{folder.nativeCount.toLocaleString()}</td>
+                          <td style={{ padding: 4 }}>{folder.dinoCount.toLocaleString()}</td>
+                          <td style={{ padding: 4 }}>{folder.clipCount.toLocaleString()}</td>
+                          <td style={{ padding: 4 }}>{folder.missingDino.toLocaleString()}</td>
+                          <td style={{ padding: 4 }}>{folder.missingClip.toLocaleString()}</td>
+                          <td style={{ padding: 4 }}>{folder.vectorOnly.toLocaleString()}</td>
+                          <td style={{ padding: 4 }}>{folder.duplicateRows.toLocaleString()}</td>
+                          <td style={{ padding: 4, whiteSpace: 'nowrap' }}>
+                            {folder.childCount > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => openFolderChildren(folder.folder)}
+                                style={{ fontSize: 11, marginRight: 3 }}
+                              >
+                                {t('Open')} ({folder.childCount})
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onManageFolder(folder.folder)}
+                              disabled={disabled || catalogActive}
+                              style={{ fontSize: 11 }}
+                            >
+                              {t('Manage Indexes')}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+                {folders.records.length === 0 && (
+                  <div style={{ padding: 8, fontSize: 12, opacity: 0.62 }}>
+                    {loadingFolders ? t('Loading...') : t('No matching folders')}
+                  </div>
+                )}
+              </div>
+            )}
+            {folders.hasMore && (
+              <button
+                type="button"
+                onClick={() =>
+                  void loadFolders({
+                    offset: folders.records.length,
+                    append: true,
+                  })
+                }
+                disabled={loadingFolders}
+                style={{ fontSize: 12 }}
+              >
+                {t('Load More')} ({folders.records.length}/{folders.total})
+              </button>
+            )}
+          </div>
+        )}
+      </details>
     </section>
   )
 }

@@ -8,13 +8,10 @@ import { PANEL_IDENTITIES } from '../../shared/ipc/app-core'
 import { useTranslation } from '../i18n/useTranslation'
 import { useStore } from '../stores/useStore'
 import { nextRovingIndex } from '../services/productInformationArchitecture'
-import {
-  focusedWorkspaceVisibility,
-  WORKSPACE_PANELS,
-  type WorkspacePanel,
-} from '../services/focusedWorkspace'
-import { requestWorkspaceNavigation } from '../services/workspaceNavigation'
+import { WORKSPACE_PANELS, type WorkspacePanel } from '../services/focusedWorkspace'
 import WorkspaceIcon from './WorkspaceIcon'
+import { openWorkspacePanel } from '../services/openWorkspace'
+import { resolveWorkspaceRoute } from '../services/workspaceRoutes'
 import FirstRunGuide from './FirstRunGuide'
 import '../styles/workspace-status.css'
 import ProductReadinessCenter from './ProductReadinessCenter'
@@ -30,23 +27,6 @@ export const WORKSPACE_DOMAINS = ['Search', 'Library', 'Sources', 'Tasks', 'Sett
 // Product marks retain the same spelling in every locale.
 const BRAND = { mark: 'S', name: 'Siftory', localName: '寻藏' } as const
 
-export function openWorkspacePanel(panel: WorkspacePanel, eventName?: string): void {
-  const current = useStore.getState()
-  const visibility = focusedWorkspaceVisibility(
-    { ...current, [PANEL_IDENTITIES[panel].visibilityKey]: true },
-    {
-      ...current,
-      [PANEL_IDENTITIES[panel].visibilityKey]: false,
-    },
-  )
-  useStore.setState(visibility)
-  requestWorkspaceNavigation(
-    panel,
-    eventName,
-    () => useStore.getState()[PANEL_IDENTITIES[panel].visibilityKey],
-  )
-}
-
 const WorkspaceNavigator: React.FC = () => {
   const { t } = useTranslation()
   const activePanel = useStore((state) =>
@@ -55,6 +35,15 @@ const WorkspaceNavigator: React.FC = () => {
   const globalVisible = useStore((state) => state.globalVisible)
   const imageSearchWorkspaceView = useStore(
     (state) => state.imageSearchUiPreferences.workspaceView ?? 'sources',
+  )
+  const videoWorkspaceView = useStore((state) => state.mediaSearchUiPreferences.workspaceView)
+  const activeRoute = resolveWorkspaceRoute(
+    activePanel,
+    imageSearchWorkspaceView,
+    videoWorkspaceView,
+  )
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => window.matchMedia('(max-width: 850px)').matches,
   )
   const saveStatus = useSyncExternalStore(subscribeSettingsWriteStatus, getSettingsWriteStatus)
   const refs = useRef<Array<HTMLButtonElement | null>>([])
@@ -96,6 +85,8 @@ const WorkspaceNavigator: React.FC = () => {
   ) => {
     if (panel === 'imageSearch')
       useStore.getState().setImageSearchUiPreferences({ workspaceView: imageView })
+    if (panel === 'mediaSearch')
+      useStore.getState().setMediaSearchUiPreferences({ workspaceView: 'sources' })
     setTasksOpen(false)
     setGuideOpen(false)
     openWorkspacePanel(panel, eventName)
@@ -121,10 +112,8 @@ const WorkspaceNavigator: React.FC = () => {
     : 0
   const entries = [
     { label: 'Search', panel: 'unifiedSearch', icon: 'search' },
-    { label: 'Image Search', panel: 'imageSearch', icon: 'image', view: 'search' },
     { label: 'Library', panel: 'assetLibrary', icon: 'library' },
     { label: 'Sources', panel: 'imageSearch', icon: 'folder', view: 'sources' },
-    { label: 'Video indexing', panel: 'mediaSearch', icon: 'video' },
     { label: 'Duplicate Finder', panel: 'duplicateFinder', icon: 'duplicate' },
   ] as const
 
@@ -132,6 +121,7 @@ const WorkspaceNavigator: React.FC = () => {
     <nav
       className="workspace-sidebar"
       data-portal=""
+      data-collapsed={sidebarCollapsed}
       aria-label={t('Workspace')}
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
@@ -151,6 +141,17 @@ const WorkspaceNavigator: React.FC = () => {
           <small>{t('Your local media workspace')}</small>
         </div>
       </div>
+      <button
+        className="workspace-sidebar-toggle"
+        data-testid="workspace-sidebar-toggle"
+        aria-label={t(sidebarCollapsed ? 'Expand navigation' : 'Collapse navigation')}
+        title={t(sidebarCollapsed ? 'Expand navigation' : 'Collapse navigation')}
+        aria-expanded={!sidebarCollapsed}
+        onClick={() => setSidebarCollapsed((value) => !value)}
+      >
+        <WorkspaceIcon name="filter" />
+        <span>{t('Collapse navigation')}</span>
+      </button>
       <span className="workspace-nav-label">{t('Workspace')}</span>
       <div className="workspace-sidebar__links" role="group" aria-label={t('Workspace')}>
         {entries.map((entry, index) => (
@@ -160,9 +161,16 @@ const WorkspaceNavigator: React.FC = () => {
               refs.current[index] = element
             }}
             data-testid={`workspace-domain-${entry.label.toLowerCase().replaceAll(' ', '-')}`}
+            title={t(entry.label)}
+            aria-label={t(entry.label)}
             aria-current={
-              activePanel === entry.panel &&
-              (!('view' in entry) || imageSearchWorkspaceView === entry.view)
+              (
+                entry.label === 'Search'
+                  ? activeRoute?.endsWith('search')
+                  : entry.label === 'Sources'
+                    ? activeRoute?.endsWith('sources')
+                    : activePanel === entry.panel
+              )
                 ? 'page'
                 : undefined
             }
@@ -173,35 +181,48 @@ const WorkspaceNavigator: React.FC = () => {
                 refs.current[next]?.focus()
               }
             }}
-            onClick={() =>
+            onClick={() => {
+              if (
+                (entry.label === 'Search' && activeRoute?.endsWith('search')) ||
+                (entry.label === 'Sources' && activeRoute?.endsWith('sources'))
+              ) {
+                setTasksOpen(false)
+                setGuideOpen(false)
+                return
+              }
               navigate(
                 entry.panel,
                 entry.label === 'Sources' ? 'workspace-sources-focus' : undefined,
                 'view' in entry ? entry.view : undefined,
               )
-            }
+            }}
           >
             <WorkspaceIcon name={entry.icon} />
-            {t(entry.label)}
+            <span>{t(entry.label)}</span>
           </button>
         ))}
       </div>
       <div className="workspace-sidebar__maintenance">
         <span className="workspace-nav-label">{t('Manage')}</span>
         <button
+          data-testid="workspace-domain-maintenance"
+          title={t('Index and maintenance')}
+          aria-label={t('Index and maintenance')}
           aria-current={activePanel === 'appStorage' ? 'page' : undefined}
           onClick={() => navigate('appStorage')}
         >
           <WorkspaceIcon name="database" />
-          {t('Index and maintenance')}
+          <span>{t('Index and maintenance')}</span>
         </button>
         <button
           data-testid="workspace-domain-settings"
+          title={t('Settings')}
+          aria-label={t('Settings')}
           aria-current={activePanel === 'settings' ? 'page' : undefined}
           onClick={() => navigate('settings')}
         >
           <WorkspaceIcon name="settings" />
-          {t('Settings')}
+          <span>{t('Settings')}</span>
         </button>
       </div>
       {saveStatus === 'error' && (
@@ -213,6 +234,8 @@ const WorkspaceNavigator: React.FC = () => {
       <button
         className="workspace-sidebar__tasks"
         data-testid="workspace-domain-tasks"
+        title={t('Tasks')}
+        aria-label={t('Tasks')}
         aria-expanded={tasksOpen}
         aria-controls="workspace-task-summary"
         onClick={() => {
@@ -257,6 +280,7 @@ const WorkspaceNavigator: React.FC = () => {
           >
             {t('Getting started')}
           </button>
+          <ProductReadinessCenter onAction={onReadinessAction} />
           <div data-testid="resource-governor" className="workspace-resource-policy">
             <label>
               {t('Resource mode')}
@@ -317,7 +341,6 @@ const WorkspaceNavigator: React.FC = () => {
             {t('Cancel queued background tasks')}
           </button>
           {taskError && <p role="alert">{taskError}</p>}
-          <ProductReadinessCenter onAction={onReadinessAction} />
         </section>
       )}
       {guideMounted && (

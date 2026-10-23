@@ -1,4 +1,7 @@
-import { WORKSPACE_PANELS } from '../services/focusedWorkspace'
+import '../styles/workspace-interface.css'
+import '../styles/workspace-flow.css'
+import WorkspaceSectionTabs from './WorkspaceSectionTabs'
+import { WORKSPACE_PANELS, type WorkspacePanel } from '../services/focusedWorkspace'
 import { registerWorkspacePanel } from '../services/workspaceNavigation'
 import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react'
 import { useStore } from '../stores/useStore'
@@ -46,6 +49,7 @@ function workspacePoint(clientX: number, clientY: number) {
 interface DraggablePanelProps {
   title: string
   displayTitle?: string
+  pageDescription?: string
   x?: number
   y?: number
   w?: number
@@ -72,6 +76,7 @@ interface DraggablePanelProps {
 const DraggablePanel: React.FC<DraggablePanelProps> = ({
   title,
   displayTitle,
+  pageDescription,
   x: extX,
   y: extY,
   w: extW,
@@ -398,6 +403,17 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
   }, [closePanel, onClose, panelId])
 
   const docked = panelId !== undefined && (WORKSPACE_PANELS as readonly string[]).includes(panelId)
+  const description = panelId
+    ? {
+        unifiedSearch: 'Find the right asset across your indexed sources.',
+        imageSearch: 'Search images and keep your source libraries ready.',
+        assetLibrary: 'Organize, review, and reuse your visual assets.',
+        mediaSearch: 'Prepare video libraries for frame and semantic search.',
+        duplicateFinder: 'Review duplicate files and recover storage with care.',
+        appStorage: 'Keep indexes, thumbnails, and generated data in order.',
+        settings: 'Personalize your workspace and manage local capabilities.',
+      }[panelId as WorkspacePanel]
+    : undefined
   if (docked)
     return (
       <section
@@ -411,9 +427,11 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
           <div className="workspace-page-heading">
             <span>{t('Workspace')}</span>
             <h1 className="panel-title">{displayTitle ?? t(title)}</h1>
+            {(pageDescription || description) && <p>{pageDescription || t(description!)}</p>}
           </div>
           <span className="workspace-local-badge">{t('Local processing')}</span>
         </header>
+        <WorkspaceSectionTabs panel={panelId as WorkspacePanel} />
         <div className="panel-body">{children}</div>
       </section>
     )

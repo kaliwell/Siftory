@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import SourceDerivedDataCleanup from './SourceDerivedDataCleanup'
 import ThirdPartyLicensesButton from './ThirdPartyLicensesButton'
@@ -20,6 +20,7 @@ import type {
 } from '../../shared/ipc-contract'
 import { DEFAULT_QUICK_ACCESS } from './filemanager/types'
 import DraggablePanel from './DraggablePanel'
+import WorkspaceIcon from './WorkspaceIcon'
 import {
   DEFAULT_SETTINGS_W,
   DEFAULT_SETTINGS_H,
@@ -51,15 +52,18 @@ import {
   DEFAULT_BATCH_RENAME_H,
   PANEL_VISIBILITY_DEFAULTS_VERSION,
   FONT_SCALE_STEPS,
-  FONT_SCALE_COUNT,
 } from '../types'
 import { createDefaultTabs, createDefaultPromptTabs } from '../config/default'
 import { useLinkedMove } from '../hooks/useLinkedMove'
-import { flushSettingsWrites, scheduleSettingsWrite } from '../hooks/settingsWriter'
+import {
+  flushSettingsWrites,
+  scheduleSettingsWrite,
+  subscribeSettingsWriteStatus,
+  getSettingsWriteStatus,
+} from '../hooks/settingsWriter'
 import { useTranslation } from '../i18n/useTranslation'
 import {
   buildThemePalette,
-  getThemePreset,
   rgbCss,
   THEME_PRESETS,
   type ThemeGroup,
@@ -108,27 +112,28 @@ type SettingsSectionId =
   | 'aiControl'
   | 'system'
 
-const SETTINGS_SECTION_IDS: SettingsSectionId[] = [
-  'appearance',
-  'panels',
-  'searchModels',
-  'dataReset',
-  'aiControl',
-  'system',
+const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; icon: string }> = [
+  { id: 'appearance', label: 'Appearance & Display', icon: 'settings' },
+  { id: 'panels', label: 'Panel Management', icon: 'library' },
+  { id: 'searchModels', label: 'Search & Models', icon: 'image' },
+  { id: 'dataReset', label: 'Data & Reset', icon: 'database' },
+  { id: 'aiControl', label: 'AI Control', icon: 'tasks' },
+  { id: 'system', label: 'System & Shortcuts', icon: 'filter' },
 ]
 
 const CollapsibleSettingsSection: React.FC<{
   id: SettingsSectionId
   label: string
   expanded: boolean
+  active: boolean
   onToggle: () => void
   children: React.ReactNode
-}> = React.memo(({ id, label, expanded, onToggle, children }) => {
+}> = React.memo(({ id, label, expanded, active, onToggle, children }) => {
   const hasMountedBody = React.useRef(expanded)
   if (expanded) hasMountedBody.current = true
 
   return (
-    <section className="settings-category" data-settings-category={id}>
+    <section className="settings-category" data-settings-category={id} hidden={!active}>
       <button
         type="button"
         className="settings-category__header"
@@ -197,31 +202,16 @@ const VectorSettings: React.FC = () => {
   }
 
   if (!loaded)
-    return <div style={{ fontSize: 10, opacity: 0.5, padding: 4 }}>{t('Loading')}...</div>
+    return <div style={{ fontSize: 12, opacity: 0.5, padding: 4 }}>{t('Loading')}...</div>
 
   const btn = (label: string, active: boolean, onClick: () => void, disabled?: boolean) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: '100%',
-        textAlign: 'left',
-        fontSize: 11,
-        padding: '3px 8px',
-        background: active ? 'rgba(0, 255, 100, 0.12)' : 'rgba(255, 80, 80, 0.12)',
-        color: 'rgb(var(--fg))',
-        border: '0.5px solid rgba(var(--date), 0.18)',
-        borderRadius: 2,
-        cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.4 : 1,
-      }}
-    >
-      {active ? '☑' : '☐'} {label}
+    <button className="settings-toggle" aria-pressed={active} onClick={onClick} disabled={disabled}>
+      {label}
     </button>
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '2px 0' }}>
+    <div className="vector-settings">
       {btn(t('Vector Retrieval'), vecEnabled, () => {
         const next = !vecEnabled
         setVecEnabled(next)
@@ -242,7 +232,7 @@ const VectorSettings: React.FC = () => {
           display: 'flex',
           gap: 4,
           alignItems: 'center',
-          fontSize: 9,
+          fontSize: 12,
           opacity: 0.5,
           padding: '2px 6px',
         }}
@@ -256,7 +246,7 @@ const VectorSettings: React.FC = () => {
             save({ backend: next })
           }}
           style={{
-            fontSize: 9,
+            fontSize: 12,
             padding: '0 2px',
             background: 'rgba(var(--bg),0.6)',
             color: 'rgb(var(--fg))',
@@ -277,7 +267,7 @@ const VectorSettings: React.FC = () => {
             save({ maxConcurrentEmbeddings: v })
           }}
           style={{
-            fontSize: 9,
+            fontSize: 12,
             padding: '0 2px',
             background: 'rgba(var(--bg),0.6)',
             color: 'rgb(var(--fg))',
@@ -296,7 +286,7 @@ const VectorSettings: React.FC = () => {
           display: 'flex',
           gap: 4,
           alignItems: 'center',
-          fontSize: 9,
+          fontSize: 12,
           opacity: 0.5,
           padding: '2px 6px',
         }}
@@ -310,7 +300,7 @@ const VectorSettings: React.FC = () => {
             save({ textEncoder: next })
           }}
           style={{
-            fontSize: 9,
+            fontSize: 12,
             padding: '0 2px',
             background: 'rgba(var(--bg),0.6)',
             color: 'rgb(var(--fg))',
@@ -396,12 +386,12 @@ const UserModelPlatformSettings: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '2px 0' }}>
-      <div style={{ fontSize: 9, opacity: 0.72, lineHeight: 1.35 }}>
+      <div style={{ fontSize: 12, opacity: 0.72, lineHeight: 1.35 }}>
         {t(
           'Commercial builds do not include these models. Import only models whose license and interface you have verified.',
         )}
       </div>
-      <label style={{ display: 'flex', gap: 5, alignItems: 'flex-start', fontSize: 9 }}>
+      <label style={{ display: 'flex', gap: 5, alignItems: 'flex-start', fontSize: 12 }}>
         <input
           type="checkbox"
           checked={acknowledged}
@@ -424,7 +414,7 @@ const UserModelPlatformSettings: React.FC = () => {
               gap: 3,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 5, fontSize: 12 }}>
               <span>{t(slot.displayName)}</span>
               <span
                 style={{ color: slot.installed ? 'rgb(100,255,150)' : 'rgba(var(--date),0.6)' }}
@@ -432,7 +422,7 @@ const UserModelPlatformSettings: React.FC = () => {
                 {slot.installed ? t('Installed') : t('Not installed')}
               </span>
             </div>
-            <div style={{ fontSize: 8, opacity: 0.62, overflowWrap: 'anywhere' }}>
+            <div style={{ fontSize: 11, opacity: 0.62, overflowWrap: 'anywhere' }}>
               {slot.compatibility}
             </div>
             <select
@@ -444,7 +434,7 @@ const UserModelPlatformSettings: React.FC = () => {
                   [slot.id]: event.target.value,
                 }))
               }
-              style={{ width: '100%', fontSize: 9, padding: '2px 3px' }}
+              style={{ width: '100%', fontSize: 12, padding: '2px 3px' }}
               aria-label={`${t(slot.displayName)} ${t('Compatibility profile')}`}
             >
               {slot.profiles.map((profile) => (
@@ -454,12 +444,12 @@ const UserModelPlatformSettings: React.FC = () => {
               ))}
             </select>
             {selectedProfile && (
-              <div style={{ fontSize: 8, opacity: 0.62, overflowWrap: 'anywhere' }}>
+              <div style={{ fontSize: 11, opacity: 0.62, overflowWrap: 'anywhere' }}>
                 {selectedProfile.compatibility}
               </div>
             )}
             {slot.installed && (
-              <div style={{ fontSize: 8, opacity: 0.62 }}>
+              <div style={{ fontSize: 11, opacity: 0.62 }}>
                 {slot.sourceFileName || slot.targetFileName} · {slot.activeProfileName} ·{' '}
                 {slot.sizeBytes
                   ? t('{size} MiB', { size: (slot.sizeBytes / 1024 / 1024).toFixed(1) })
@@ -467,7 +457,7 @@ const UserModelPlatformSettings: React.FC = () => {
               </div>
             )}
             {slot.installed && slot.inspection && (
-              <details style={{ fontSize: 8, opacity: 0.72 }}>
+              <details style={{ fontSize: 11, opacity: 0.72 }}>
                 <summary>
                   {t('Graph checked')} · {slot.inspection.inputs.length} {t('inputs')} ·{' '}
                   {slot.inspection.outputs.length} {t('outputs')}
@@ -480,7 +470,7 @@ const UserModelPlatformSettings: React.FC = () => {
               </details>
             )}
             {slot.installed && !slot.inspection && (
-              <div style={{ fontSize: 8, color: 'rgb(255,190,90)' }}>
+              <div style={{ fontSize: 11, color: 'rgb(255,190,90)' }}>
                 {t('Legacy model: replace it to run graph compatibility checks')}
               </div>
             )}
@@ -488,7 +478,7 @@ const UserModelPlatformSettings: React.FC = () => {
               <button
                 disabled={!acknowledged || busy !== null}
                 onClick={() => void importModel(slot.id)}
-                style={{ flex: 1, fontSize: 9, padding: '2px 4px' }}
+                style={{ flex: 1, fontSize: 12, padding: '2px 4px' }}
               >
                 {slot.installed ? t('Replace') : t('Import')}
               </button>
@@ -496,7 +486,7 @@ const UserModelPlatformSettings: React.FC = () => {
                 <button
                   disabled={busy !== null}
                   onClick={() => void removeModel(slot.id)}
-                  style={{ fontSize: 9, padding: '2px 4px' }}
+                  style={{ fontSize: 12, padding: '2px 4px' }}
                 >
                   {t('Remove')}
                 </button>
@@ -507,11 +497,11 @@ const UserModelPlatformSettings: React.FC = () => {
       })}
       <button
         onClick={() => void window.electronAPI?.vector.openUserModelFolder()}
-        style={{ width: '100%', fontSize: 10, padding: '3px 6px' }}
+        style={{ width: '100%', fontSize: 12, padding: '3px 6px' }}
       >
         {t('Open User Model Folder')}
       </button>
-      {error && <div style={{ color: 'rgb(255,100,100)', fontSize: 9 }}>{error}</div>}
+      {error && <div style={{ color: 'rgb(255,100,100)', fontSize: 12 }}>{error}</div>}
     </div>
   )
 }
@@ -519,7 +509,10 @@ const UserModelPlatformSettings: React.FC = () => {
 // ── Main Settings Panel ────────────────────────────────────
 
 const SettingsPanel: React.FC = () => {
+  const legacyLayout = new URLSearchParams(location.search).get('legacyOverlay') === '1'
+  const saveStatus = useSyncExternalStore(subscribeSettingsWriteStatus, getSettingsWriteStatus)
   const { language, t } = useTranslation()
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>('appearance')
   const [expandedSections, setExpandedSections] = useState<Record<SettingsSectionId, boolean>>({
     appearance: true,
     panels: true,
@@ -528,13 +521,10 @@ const SettingsPanel: React.FC = () => {
     aiControl: false,
     system: false,
   })
-  const setAllSectionsExpanded = (expanded: boolean) =>
-    setExpandedSections(
-      Object.fromEntries(SETTINGS_SECTION_IDS.map((id) => [id, expanded])) as Record<
-        SettingsSectionId,
-        boolean
-      >,
-    )
+  const selectSection = (id: SettingsSectionId) => {
+    setActiveSection(id)
+    setExpandedSections((sections) => ({ ...sections, [id]: true }))
+  }
   const toggleSection = (id: SettingsSectionId) =>
     setExpandedSections((sections) => ({ ...sections, [id]: !sections[id] }))
   const setLanguage = useStore((s) => s.setLanguage)
@@ -543,10 +533,6 @@ const SettingsPanel: React.FC = () => {
   const themeMode = useStore((s) => s.themeMode)
   const setThemeId = useStore((s) => s.setThemeId)
   const setThemeMode = useStore((s) => s.setThemeMode)
-  const selectedThemeIndex = Math.max(
-    0,
-    THEME_PRESETS.findIndex((theme) => theme.id === themeId),
-  )
   const showDate = useStore((s) => s.showDate)
   const setShowDate = useStore((s) => s.setShowDate)
   const setTransparency = useStore((s) => s.setTransparency)
@@ -769,6 +755,7 @@ const SettingsPanel: React.FC = () => {
 
   useEffect(() => {
     const openModelSettings = () => {
+      setActiveSection('searchModels')
       setExpandedSections((current) => ({ ...current, searchModels: true }))
       requestAnimationFrame(() => {
         document
@@ -782,6 +769,7 @@ const SettingsPanel: React.FC = () => {
 
   useEffect(() => {
     const reviewDerivedReset = () => {
+      setActiveSection('dataReset')
       setExpandedSections((current) => ({ ...current, dataReset: true }))
       setShowClearData(true)
     }
@@ -906,7 +894,7 @@ const SettingsPanel: React.FC = () => {
   }
 
   const btn = (label: string, action: () => void, extra: React.CSSProperties = {}) => (
-    <button onClick={action} style={{ width: '100%', fontSize: 11, padding: '4px 8px', ...extra }}>
+    <button onClick={action} style={{ width: '100%', fontSize: 13, padding: '4px 8px', ...extra }}>
       {label}
     </button>
   )
@@ -968,32 +956,16 @@ const SettingsPanel: React.FC = () => {
   ]
 
   const renderPanelVisibilityGroup = (label: string, items: PanelVisibilityItem[]) => (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        padding: 4,
-        border: '1px solid rgba(var(--date),0.16)',
-      }}
-    >
-      <div style={{ fontSize: 9, opacity: 0.58, padding: '1px 4px 2px' }}>{t(label)}</div>
+    <div className="settings-panel-group">
+      <strong>{t(label)}</strong>
       {items.map(({ key, label: itemLabel, show, toggle, read, disabled }) => (
         <button
           key={itemLabel}
+          aria-pressed={show}
           disabled={disabled}
           onClick={() => void handlePanelVisibilityToggle(key, toggle, read)}
-          style={{
-            width: '100%',
-            textAlign: 'left',
-            fontSize: 11,
-            padding: '3px 8px',
-            background: show ? 'rgba(0, 255, 100, 0.12)' : 'rgba(255, 80, 80, 0.12)',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            opacity: disabled ? 0.62 : 1,
-          }}
         >
-          {show ? '☑' : '☐'} {t(itemLabel)}
+          {t(itemLabel)}
         </button>
       ))}
     </div>
@@ -1019,582 +991,630 @@ const SettingsPanel: React.FC = () => {
       visibilityLocked={visibilityLocked}
       onToggleVisibilityLock={() => toggleVisibilityLock('settings')}
     >
-      <div className="settings-categories">
-        <div className="settings-categories__toolbar">
-          <button type="button" onClick={() => setAllSectionsExpanded(true)}>
-            {t('Expand all')}
-          </button>
-          <button type="button" onClick={() => setAllSectionsExpanded(false)}>
-            {t('Collapse all')}
-          </button>
-        </div>
-
-        <CollapsibleSettingsSection
-          id="appearance"
-          label={t('Appearance & Display')}
-          expanded={expandedSections.appearance}
-          onToggle={() => toggleSection('appearance')}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <label htmlFor="app-language" style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>
-              {t('Language')}
-            </label>
-            <select
-              id="app-language"
-              data-testid="app-language"
-              value={language}
-              onChange={(event) => setLanguage(event.target.value === 'zh-CN' ? 'zh-CN' : 'en')}
-              style={{ flex: 1, fontSize: 11, padding: '2px 4px' }}
-            >
-              <option value="zh-CN">{t('Chinese')}</option>
-              <option value="en">{t('English')}</option>
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <label htmlFor="display-scope" style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>
-              {t('Displays')}
-            </label>
-            <select
-              id="display-scope"
-              data-testid="display-scope"
-              value={displayScope.mode === 'display' ? displayScope.displayId : displayScope.mode}
-              onChange={(event) => void changeDisplayScope(event.target.value)}
-              style={{ flex: 1, fontSize: 11, padding: '2px 4px' }}
-            >
-              <option value="primary">{t('Primary display')}</option>
-              {workspaceDisplays.map((display, index) => (
-                <option key={display.id} value={display.id}>
-                  {t('Display {number}', { number: index + 1 })} · {display.workArea.width}×
-                  {display.workArea.height} · {Math.round(display.scaleFactor * 100)}%
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>{t('Theme')}</span>
-            <button
-              onClick={() =>
-                setThemeId(
-                  THEME_PRESETS[
-                    (selectedThemeIndex - 1 + THEME_PRESETS.length) % THEME_PRESETS.length
-                  ].id,
-                )
-              }
-              style={{ width: 22, padding: '2px 0', fontSize: 11 }}
-            >
-              {'<'}
-            </button>
-            <span style={{ flex: 1, textAlign: 'center', fontSize: 11 }}>
-              {getThemePreset(themeId).name}
-            </span>
-            <button
-              onClick={() =>
-                setThemeId(THEME_PRESETS[(selectedThemeIndex + 1) % THEME_PRESETS.length].id)
-              }
-              style={{ width: 22, padding: '2px 0', fontSize: 11 }}
-            >
-              {'>'}
-            </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <label htmlFor="theme-mode" style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>
-              {t('Mode')}
-            </label>
-            <select
-              id="theme-mode"
-              data-testid="theme-mode"
-              value={themeMode}
-              onChange={(event) => setThemeMode(event.target.value as ThemeMode)}
-              style={{ flex: 1 }}
-            >
-              <option value="system">{t('Follow system')}</option>
-              <option value="light">{t('Light')}</option>
-              <option value="dark">{t('Dark')}</option>
-            </select>
-          </div>
-          <div className="theme-preset-groups" aria-label={t('Window style')}>
-            {THEME_GROUPS.map((group) => (
-              <div key={group} className="theme-preset-group">
-                <small className="theme-preset-group-label">{t(`Theme group: ${group}`)}</small>
-                <div className="theme-style-picker">
-                  {THEME_PRESETS.filter((theme) => theme.group === group).map((theme) => {
-                    const previewMode = theme.defaultMode === 'light' ? 'light' : 'dark'
-                    const palette = buildThemePalette(theme.id, previewMode)
-                    return (
-                      <button
-                        key={theme.id}
-                        className={`theme-style-option ${themeId === theme.id ? 'is-active' : ''}`}
-                        onClick={() => setThemeId(theme.id)}
-                        title={t('{name} window style', { name: theme.name })}
-                        aria-label={t('{name} window style', { name: theme.name })}
-                        aria-pressed={themeId === theme.id}
-                        style={{
-                          color: `rgb(${rgbCss(palette.accent)})`,
-                          background: `rgb(${rgbCss(palette.canvas)})`,
-                        }}
-                      >
-                        <span />
-                        <small>{theme.name}</small>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>{t('Date')}</span>
-            <button
-              onClick={() => setShowDate(!showDate)}
-              style={{ flex: 1, fontSize: 11, padding: '3px 6px' }}
-            >
-              {t(showDate ? 'Show' : 'Hide')}
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ opacity: 0.6, fontSize: 11, minWidth: 58 }}>{t('Font')}</span>
-            <button
-              onClick={() => fontScaleIdx > 0 && setFontScaleIdx(fontScaleIdx - 1)}
-              disabled={fontScaleIdx === 0}
-              style={{ width: 22, padding: '2px 0', fontSize: 11 }}
-            >
-              −
-            </button>
-            <span style={{ flex: 1, textAlign: 'center', fontSize: 11 }}>
-              {Math.round(FONT_SCALE_STEPS[fontScaleIdx] * 100)}%
-            </span>
-            <button
-              onClick={() =>
-                fontScaleIdx < FONT_SCALE_COUNT - 1 && setFontScaleIdx(fontScaleIdx + 1)
-              }
-              disabled={fontScaleIdx === FONT_SCALE_COUNT - 1}
-              style={{ width: 22, padding: '2px 0', fontSize: 11 }}
-            >
-              +
-            </button>
-          </div>
-        </CollapsibleSettingsSection>
-
-        <CollapsibleSettingsSection
-          id="panels"
-          label={t('Panel Management')}
-          expanded={expandedSections.panels}
-          onToggle={() => toggleSection('panels')}
-        >
-          <div style={{ display: 'grid', gap: 5 }}>
-            {renderPanelVisibilityGroup('Search panels', searchPanelVisibilityItems)}
-            {renderPanelVisibilityGroup('Other panels', otherPanelVisibilityItems)}
-          </div>
-        </CollapsibleSettingsSection>
-
-        <CollapsibleSettingsSection
-          id="searchModels"
-          label={t('Search & Models')}
-          expanded={expandedSections.searchModels}
-          onToggle={() => toggleSection('searchModels')}
-        >
-          <div className="settings-category__subheading">{t('Vector / Rerank')}</div>
-          <div style={{ padding: '2px 0' }}>
-            <VectorSettings />
-          </div>
-
-          <div className="settings-category__subheading">{t('Model Platform')}</div>
-          <UserModelPlatformSettings />
-
-          <div className="settings-category__subheading">{t('Video Semantic Model')}</div>
-          <VideoSemanticStatusCard compact />
-        </CollapsibleSettingsSection>
-
-        <CollapsibleSettingsSection
-          id="dataReset"
-          label={t('Data & Reset')}
-          expanded={expandedSections.dataReset}
-          onToggle={() => toggleSection('dataReset')}
-        >
-          {btn(t('Open App Data Folder'), () => window.electronAPI.openConfigDir())}
-          {btn(t('Reset Sizes'), () => {
-            useStore.setState({
-              clockSize: { w: DEFAULT_CLOCK_W, h: DEFAULT_CLOCK_H },
-              foldersSize: { w: DEFAULT_FOLDERS_W, h: DEFAULT_FOLDERS_H },
-              promptsSize: { w: DEFAULT_PROMPTS_W, h: DEFAULT_PROMPTS_H },
-              settingsSize: { w: DEFAULT_SETTINGS_W, h: DEFAULT_SETTINGS_H },
-              calcSize: { w: DEFAULT_CALC_W, h: DEFAULT_CALC_H },
-              fmSize: { w: DEFAULT_FM_W, h: DEFAULT_FM_H },
-              imageSearchSize: { w: DEFAULT_IMAGESEARCH_W, h: DEFAULT_IMAGESEARCH_H },
-              unifiedSearchSize: { w: DEFAULT_UNIFIED_SEARCH_W, h: DEFAULT_UNIFIED_SEARCH_H },
-              appStorageSize: { w: DEFAULT_APPSTORAGE_W, h: DEFAULT_APPSTORAGE_H },
-              remoteTerminalSize: {
-                w: DEFAULT_REMOTE_TERMINAL_W,
-                h: DEFAULT_REMOTE_TERMINAL_H,
-              },
-              dupFinderSize: {
-                w: DEFAULT_DUPLICATE_FINDER_W,
-                h: DEFAULT_DUPLICATE_FINDER_H,
-              },
-              mediaSearchSize: { w: DEFAULT_MEDIA_SEARCH_W, h: DEFAULT_MEDIA_SEARCH_H },
-              assetLibrarySize: { w: DEFAULT_ASSET_LIBRARY_W, h: DEFAULT_ASSET_LIBRARY_H },
-              batchRenameSize: { w: DEFAULT_BATCH_RENAME_W, h: DEFAULT_BATCH_RENAME_H },
-            })
-          })}
-          {btn(t('Reset Config'), () => setShowReset(true), {
-            color: 'rgba(255, 100, 100, 1)',
-          })}
-          <button
-            data-testid="clear-processed-image-data"
-            onClick={() => setShowClearData(true)}
-            style={{
-              width: '100%',
-              fontSize: 11,
-              padding: '4px 8px',
-              color: 'rgba(255, 100, 100, 1)',
-            }}
+      <div className="settings-layout">
+        <nav className="settings-navigation" aria-label={t('Settings categories')}>
+          <span>{t('Preferences')}</span>
+          {SETTINGS_SECTIONS.filter((section) => legacyLayout || section.id !== 'panels').map(
+            (section) => (
+              <button
+                key={section.id}
+                data-testid={`settings-nav-${section.id}`}
+                aria-current={activeSection === section.id ? 'page' : undefined}
+                onClick={() => selectSection(section.id)}
+              >
+                <WorkspaceIcon name={section.icon} />
+                {t(section.label)}
+              </button>
+            ),
+          )}
+          <p className="settings-save-status" data-testid="settings-save-status" role="status">
+            {t(
+              saveStatus === 'pending'
+                ? 'Saving changes...'
+                : saveStatus === 'error'
+                  ? 'Changes could not be saved'
+                  : 'All changes saved',
+            )}
+            {saveStatus === 'error' && (
+              <button onClick={() => void flushSettingsWrites().catch(() => {})}>
+                {t('Retry')}
+              </button>
+            )}
+          </p>
+        </nav>
+        <div className="settings-categories">
+          <CollapsibleSettingsSection
+            id="appearance"
+            active={activeSection === 'appearance'}
+            label={t('Appearance & Display')}
+            expanded={expandedSections.appearance}
+            onToggle={() => toggleSection('appearance')}
           >
-            {t('Clear Processed Image Data')}
-          </button>
-          <SourceDerivedDataCleanup />
+            <p className="settings-section-description">
+              {t('Make your workspace comfortable and easy to read.')}
+            </p>
+            <div className="settings-row">
+              <label htmlFor="app-language">{t('Language')}</label>
+              <select
+                id="app-language"
+                data-testid="app-language"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value === 'zh-CN' ? 'zh-CN' : 'en')}
+              >
+                <option value="zh-CN">{t('Chinese')}</option>
+                <option value="en">{t('English')}</option>
+              </select>
+            </div>
 
-          {/* Clear processed image data modal (portal to body to avoid panel overflow clip) */}
-          {showClearData &&
-            createPortal(
-              <div style={{ pointerEvents: 'auto' }} data-portal="">
-                <div
-                  style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(0,0,0,0.3)' }}
-                  onClick={() => !clearDataBusy && setShowClearData(false)}
-                />
-                <div
-                  style={{
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 100,
-                    background: 'rgba(var(--bg), 0.97)',
-                    border: '1px solid rgba(var(--date), 0.5)',
-                    borderRadius: 6,
-                    padding: 16,
-                    minWidth: 260,
-                    maxWidth: 380,
-                  }}
-                >
-                  <div style={{ marginBottom: 12, fontSize: 13 }}>
-                    {t('Delete all processed image search data?')}
-                    <br />
-                    <span style={{ color: 'rgba(255, 100, 100, 1)', fontSize: 11 }}>
-                      {t(
-                        'This removes the native index, thumbnails, scan logs and all DINO/CLIP vector data. This cannot be undone; you will need to rescan and rebuild embeddings.',
-                      )}
-                    </span>
-                  </div>
-                  {clearDataPreview && (
-                    <div style={{ marginBottom: 12, fontSize: 11, opacity: 0.85 }}>
-                      {t('Files to delete')}: {clearDataPreview.fileCount} (
-                      {formatBytes(clearDataPreview.estimatedBytes)})
-                      {clearDataPreview.categories.map((category) => (
-                        <div key={category.id} style={{ opacity: 0.75 }}>
-                          {category.label}: {category.fileCount} (
-                          {formatBytes(category.estimatedBytes)})
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {clearDataResult && (
-                    <div style={{ marginBottom: 12, fontSize: 11 }}>
-                      {clearDataResult.ok ? (
-                        clearDataResult.deletedFiles > 0 ? (
-                          <>
-                            {t('Deleted {files} files, freed {size}.', {
-                              files: clearDataResult.deletedFiles,
-                              size: formatBytes(clearDataResult.freedBytes),
-                            })}
-                            <br />
-                            {t('Reopen the Image Search panel before searching again.')}
-                          </>
-                        ) : (
-                          t('Nothing to delete.')
+            <div className="settings-row">
+              <label htmlFor="display-scope">{t('Displays')}</label>
+              <select
+                id="display-scope"
+                data-testid="display-scope"
+                value={displayScope.mode === 'display' ? displayScope.displayId : displayScope.mode}
+                onChange={(event) => void changeDisplayScope(event.target.value)}
+              >
+                <option value="primary">{t('Primary display')}</option>
+                {workspaceDisplays.map((display, index) => (
+                  <option key={display.id} value={display.id}>
+                    {t('Display {number}', { number: index + 1 })} · {display.workArea.width}×
+                    {display.workArea.height} · {Math.round(display.scaleFactor * 100)}%
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="settings-row">
+              <label htmlFor="app-theme">{t('Theme')}</label>
+              <select
+                id="app-theme"
+                value={themeId}
+                onChange={(event) =>
+                  setThemeId(
+                    THEME_PRESETS.find((theme) => theme.id === event.target.value)?.id ?? themeId,
+                  )
+                }
+              >
+                {THEME_PRESETS.map((theme) => (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="settings-row">
+              <label htmlFor="theme-mode">{t('Mode')}</label>
+              <select
+                id="theme-mode"
+                data-testid="theme-mode"
+                value={themeMode}
+                onChange={(event) => setThemeMode(event.target.value as ThemeMode)}
+              >
+                <option value="system">{t('Follow system')}</option>
+                <option value="light">{t('Light')}</option>
+                <option value="dark">{t('Dark')}</option>
+              </select>
+            </div>
+            <details className="settings-theme-previews">
+              <summary>{t('Preview theme palettes')}</summary>
+              <div className="theme-preset-groups" aria-label={t('Window style')}>
+                {THEME_GROUPS.map((group) => (
+                  <div key={group} className="theme-preset-group">
+                    <small className="theme-preset-group-label">{t(`Theme group: ${group}`)}</small>
+                    <div className="theme-style-picker">
+                      {THEME_PRESETS.filter((theme) => theme.group === group).map((theme) => {
+                        const previewMode = theme.defaultMode === 'light' ? 'light' : 'dark'
+                        const palette = buildThemePalette(theme.id, previewMode)
+                        return (
+                          <button
+                            key={theme.id}
+                            className={`theme-style-option ${themeId === theme.id ? 'is-active' : ''}`}
+                            onClick={() => setThemeId(theme.id)}
+                            title={t('{name} window style', { name: theme.name })}
+                            aria-label={t('{name} window style', { name: theme.name })}
+                            aria-pressed={themeId === theme.id}
+                            style={
+                              {
+                                '--theme-preview-accent': `rgb(${rgbCss(palette.accent)})`,
+                                '--theme-preview-canvas': `rgb(${rgbCss(palette.canvas)})`,
+                              } as React.CSSProperties
+                            }
+                          >
+                            <span />
+                            <small>{theme.name}</small>
+                          </button>
                         )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            <div className="settings-row">
+              <label htmlFor="settings-show-date">{t('Date')}</label>
+              <label className="settings-checkbox">
+                <input
+                  id="settings-show-date"
+                  type="checkbox"
+                  checked={showDate}
+                  onChange={(event) => setShowDate(event.target.checked)}
+                />
+                {t('Show')}
+              </label>
+            </div>
+
+            <div className="settings-row">
+              <label htmlFor="settings-font-scale">{t('Font')}</label>
+              <select
+                id="settings-font-scale"
+                value={fontScaleIdx}
+                onChange={(event) => setFontScaleIdx(Number(event.target.value))}
+              >
+                {FONT_SCALE_STEPS.map((scale, index) => (
+                  <option key={scale} value={index}>
+                    {Math.round(scale * 100)}%
+                  </option>
+                ))}
+              </select>
+            </div>
+          </CollapsibleSettingsSection>
+
+          <CollapsibleSettingsSection
+            id="panels"
+            active={activeSection === 'panels'}
+            label={t('Panel Management')}
+            expanded={expandedSections.panels}
+            onToggle={() => toggleSection('panels')}
+          >
+            <div style={{ display: 'grid', gap: 5 }}>
+              {renderPanelVisibilityGroup('Search panels', searchPanelVisibilityItems)}
+              {renderPanelVisibilityGroup('Other panels', otherPanelVisibilityItems)}
+            </div>
+          </CollapsibleSettingsSection>
+
+          <CollapsibleSettingsSection
+            id="searchModels"
+            active={activeSection === 'searchModels'}
+            label={t('Search & Models')}
+            expanded={expandedSections.searchModels}
+            onToggle={() => toggleSection('searchModels')}
+          >
+            <p className="settings-section-description">
+              {t(
+                'Models enable visual and language search. Import a compatible model to unlock these capabilities.',
+              )}
+            </p>
+            <div className="settings-category__subheading">{t('Vector / Rerank')}</div>
+            <div style={{ padding: '2px 0' }}>
+              <VectorSettings />
+            </div>
+
+            <div className="settings-category__subheading">{t('Model Platform')}</div>
+            <UserModelPlatformSettings />
+
+            <div className="settings-category__subheading">{t('Video Semantic Model')}</div>
+            <VideoSemanticStatusCard compact />
+          </CollapsibleSettingsSection>
+
+          <CollapsibleSettingsSection
+            id="dataReset"
+            active={activeSection === 'dataReset'}
+            label={t('Data & Reset')}
+            expanded={expandedSections.dataReset}
+            onToggle={() => toggleSection('dataReset')}
+          >
+            {btn(t('Open App Data Folder'), () => window.electronAPI.openConfigDir())}
+            {btn(t('Reset Sizes'), () => {
+              useStore.setState({
+                clockSize: { w: DEFAULT_CLOCK_W, h: DEFAULT_CLOCK_H },
+                foldersSize: { w: DEFAULT_FOLDERS_W, h: DEFAULT_FOLDERS_H },
+                promptsSize: { w: DEFAULT_PROMPTS_W, h: DEFAULT_PROMPTS_H },
+                settingsSize: { w: DEFAULT_SETTINGS_W, h: DEFAULT_SETTINGS_H },
+                calcSize: { w: DEFAULT_CALC_W, h: DEFAULT_CALC_H },
+                fmSize: { w: DEFAULT_FM_W, h: DEFAULT_FM_H },
+                imageSearchSize: { w: DEFAULT_IMAGESEARCH_W, h: DEFAULT_IMAGESEARCH_H },
+                unifiedSearchSize: { w: DEFAULT_UNIFIED_SEARCH_W, h: DEFAULT_UNIFIED_SEARCH_H },
+                appStorageSize: { w: DEFAULT_APPSTORAGE_W, h: DEFAULT_APPSTORAGE_H },
+                remoteTerminalSize: {
+                  w: DEFAULT_REMOTE_TERMINAL_W,
+                  h: DEFAULT_REMOTE_TERMINAL_H,
+                },
+                dupFinderSize: {
+                  w: DEFAULT_DUPLICATE_FINDER_W,
+                  h: DEFAULT_DUPLICATE_FINDER_H,
+                },
+                mediaSearchSize: { w: DEFAULT_MEDIA_SEARCH_W, h: DEFAULT_MEDIA_SEARCH_H },
+                assetLibrarySize: { w: DEFAULT_ASSET_LIBRARY_W, h: DEFAULT_ASSET_LIBRARY_H },
+                batchRenameSize: { w: DEFAULT_BATCH_RENAME_W, h: DEFAULT_BATCH_RENAME_H },
+              })
+            })}
+            {btn(t('Reset Config'), () => setShowReset(true), {
+              color: 'rgba(255, 100, 100, 1)',
+            })}
+            <button
+              data-testid="clear-processed-image-data"
+              onClick={() => setShowClearData(true)}
+              style={{
+                width: '100%',
+                fontSize: 13,
+                padding: '4px 8px',
+                color: 'rgba(255, 100, 100, 1)',
+              }}
+            >
+              {t('Clear Processed Image Data')}
+            </button>
+            <SourceDerivedDataCleanup />
+
+            {/* Clear processed image data modal (portal to body to avoid panel overflow clip) */}
+            {showClearData &&
+              createPortal(
+                <div style={{ pointerEvents: 'auto' }} data-portal="">
+                  <div
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 99,
+                      background: 'rgba(0,0,0,0.3)',
+                    }}
+                    onClick={() => !clearDataBusy && setShowClearData(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 100,
+                      background: 'rgba(var(--bg), 0.97)',
+                      border: '1px solid rgba(var(--date), 0.5)',
+                      borderRadius: 6,
+                      padding: 16,
+                      minWidth: 260,
+                      maxWidth: 380,
+                    }}
+                  >
+                    <div style={{ marginBottom: 12, fontSize: 13 }}>
+                      {t('Delete all processed image search data?')}
+                      <br />
+                      <span style={{ color: 'rgba(255, 100, 100, 1)', fontSize: 13 }}>
+                        {t(
+                          'This removes the native index, thumbnails, scan logs and all DINO/CLIP vector data. This cannot be undone; you will need to rescan and rebuild embeddings.',
+                        )}
+                      </span>
+                    </div>
+                    {clearDataPreview && (
+                      <div style={{ marginBottom: 12, fontSize: 13, opacity: 0.85 }}>
+                        {t('Files to delete')}: {clearDataPreview.fileCount} (
+                        {formatBytes(clearDataPreview.estimatedBytes)})
+                        {clearDataPreview.categories.map((category) => (
+                          <div key={category.id} style={{ opacity: 0.75 }}>
+                            {category.label}: {category.fileCount} (
+                            {formatBytes(category.estimatedBytes)})
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {clearDataResult && (
+                      <div style={{ marginBottom: 12, fontSize: 13 }}>
+                        {clearDataResult.ok ? (
+                          clearDataResult.deletedFiles > 0 ? (
+                            <>
+                              {t('Deleted {files} files, freed {size}.', {
+                                files: clearDataResult.deletedFiles,
+                                size: formatBytes(clearDataResult.freedBytes),
+                              })}
+                              <br />
+                              {t('Reopen the Image Search panel before searching again.')}
+                            </>
+                          ) : (
+                            t('Nothing to delete.')
+                          )
+                        ) : (
+                          <>
+                            {t('Some files could not be deleted:')}
+                            {(clearDataResult.errors.length > 0
+                              ? clearDataResult.errors
+                              : [clearDataResult.error || '']
+                            )
+                              .filter(Boolean)
+                              .map((message) => (
+                                <div key={message} style={{ color: 'rgba(255, 100, 100, 1)' }}>
+                                  {message}
+                                </div>
+                              ))}
+                          </>
+                        )}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                      {clearDataResult ? (
+                        <button onClick={() => setShowClearData(false)}>{t('Close')}</button>
                       ) : (
                         <>
-                          {t('Some files could not be deleted:')}
-                          {(clearDataResult.errors.length > 0
-                            ? clearDataResult.errors
-                            : [clearDataResult.error || '']
-                          )
-                            .filter(Boolean)
-                            .map((message) => (
-                              <div key={message} style={{ color: 'rgba(255, 100, 100, 1)' }}>
-                                {message}
-                              </div>
-                            ))}
+                          <button
+                            onClick={() => void handleClearData()}
+                            disabled={clearDataBusy}
+                            style={{ background: 'rgba(255, 80, 80, 0.35)' }}
+                          >
+                            {clearDataBusy ? t('Deleting…') : t('Yes, delete')}
+                          </button>
+                          <button onClick={() => setShowClearData(false)} disabled={clearDataBusy}>
+                            {t('Cancel')}
+                          </button>
                         </>
                       )}
                     </div>
-                  )}
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                    {clearDataResult ? (
-                      <button onClick={() => setShowClearData(false)}>{t('Close')}</button>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => void handleClearData()}
-                          disabled={clearDataBusy}
-                          style={{ background: 'rgba(255, 80, 80, 0.35)' }}
-                        >
-                          {clearDataBusy ? t('Deleting…') : t('Yes, delete')}
-                        </button>
-                        <button onClick={() => setShowClearData(false)} disabled={clearDataBusy}>
-                          {t('Cancel')}
-                        </button>
-                      </>
-                    )}
                   </div>
-                </div>
-              </div>,
-              document.body,
-            )}
+                </div>,
+                document.body,
+              )}
 
-          {/* Reset modal (portal to body to avoid panel overflow clip) */}
-          {showReset &&
-            createPortal(
-              <div style={{ pointerEvents: 'auto' }} data-portal="">
-                <div
-                  style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(0,0,0,0.3)' }}
-                  onClick={() => setShowReset(false)}
-                />
-                <div
-                  style={{
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 100,
-                    background: 'rgba(var(--bg), 0.97)',
-                    border: '1px solid rgba(var(--date), 0.5)',
-                    borderRadius: 6,
-                    padding: 16,
-                    minWidth: 260,
-                  }}
-                >
-                  <div style={{ marginBottom: 12, fontSize: 13 }}>
-                    {t('Delete all shortcuts and prompts?')}
-                    <br />
-                    {t('This cannot be undone.')}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                    <button onClick={handleReset} style={{ background: 'rgba(255, 80, 80, 0.35)' }}>
-                      {t('Yes, reset')}
-                    </button>
-                    <button onClick={() => setShowReset(false)}>{t('Cancel')}</button>
-                  </div>
-                </div>
-              </div>,
-              document.body,
-            )}
-        </CollapsibleSettingsSection>
-
-        <CollapsibleSettingsSection
-          id="aiControl"
-          label={t('AI Control')}
-          expanded={expandedSections.aiControl}
-          onToggle={() => toggleSection('aiControl')}
-        >
-          <div
-            data-testid="ai-control-settings"
-            style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ minWidth: 58, opacity: 0.65 }}>{t('Local API')}</span>
-              <button
-                data-testid="ai-control-toggle"
-                onClick={() => void toggleAiControl()}
-                disabled={aiControlBusy}
-                style={{ flex: 1, padding: '3px 6px' }}
-              >
-                {t(aiControlSettings.enabled ? 'Disable' : 'Enable')}
-              </button>
-              <span style={{ color: aiControlSettings.running ? 'rgb(var(--accent))' : undefined }}>
-                {t(aiControlSettings.running ? 'Running' : 'Stopped')}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <label htmlFor="ai-control-port" style={{ minWidth: 58, opacity: 0.65 }}>
-                {t('Port')}
-              </label>
-              <input
-                id="ai-control-port"
-                type="number"
-                min={1024}
-                max={65535}
-                value={aiControlPort}
-                disabled={aiControlSettings.enabled}
-                onChange={(event) => setAiControlPort(Number(event.target.value) || 32145)}
-                style={{ flex: 1, minWidth: 0 }}
-              />
-            </div>
-            <code style={{ overflowWrap: 'anywhere', opacity: 0.7 }}>
-              {aiControlSettings.address}
-            </code>
-            <code style={{ overflowWrap: 'anywhere', opacity: 0.7 }}>
-              {aiControlOpenApiAddress}
-            </code>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 7px' }}>
-              {(['read', 'window', 'search', 'control'] as AiControlScope[]).map((scope) => (
-                <label key={scope} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="checkbox"
-                    checked={aiControlScopes.includes(scope)}
-                    disabled={scope === 'read'}
-                    onChange={() => toggleAiControlScope(scope)}
-                  />
-                  {t(scope)}
-                </label>
-              ))}
-            </div>
-            <div style={{ opacity: 0.6 }}>{t('Scope changes apply when the token is rotated')}</div>
-            <div style={{ display: 'flex', gap: 5 }}>
-              <button
-                onClick={() => void rotateAiControlToken()}
-                disabled={aiControlBusy}
-                style={{ flex: 1 }}
-              >
-                {t('Rotate token')}
-              </button>
-              <button
-                onClick={() => void window.electronAPI.copyToClipboard(aiControlToken)}
-                disabled={!aiControlToken}
-                style={{ flex: 1 }}
-              >
-                {t('Copy token')}
-              </button>
-            </div>
-            {aiControlToken && (
-              <div>
-                <div style={{ color: 'rgb(var(--date))' }}>{t('Token is shown only once')}</div>
-                <input
-                  data-testid="ai-control-token"
-                  readOnly
-                  value={aiControlToken}
-                  onFocus={(event) => event.currentTarget.select()}
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                />
-              </div>
-            )}
-            <div style={{ opacity: 0.6 }}>
-              {t('Loopback only')} ·{' '}
-              {t('{count} audit entries', { count: aiControlSettings.auditEntries })} ·{' '}
-              {t('{count} pending confirmations', {
-                count: aiControlSettings.pendingConfirmations,
-              })}
-            </div>
-            <button
-              data-testid="ai-control-confirmations-refresh"
-              onClick={() => void refreshAiControlConfirmations()}
-              style={{ padding: '3px 6px' }}
-            >
-              {t('Review pending confirmations')}
-            </button>
-            {aiControlConfirmations.length > 0 && (
-              <div
-                data-testid="ai-control-confirmations"
-                style={{ display: 'flex', flexDirection: 'column', gap: 5 }}
-              >
-                {aiControlConfirmations.map((confirmation) => (
+            {/* Reset modal (portal to body to avoid panel overflow clip) */}
+            {showReset &&
+              createPortal(
+                <div style={{ pointerEvents: 'auto' }} data-portal="">
                   <div
-                    key={confirmation.id}
-                    style={{ border: '1px solid rgb(var(--border))', padding: 5, borderRadius: 4 }}
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 99,
+                      background: 'rgba(0,0,0,0.3)',
+                    }}
+                    onClick={() => setShowReset(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 100,
+                      background: 'rgba(var(--bg), 0.97)',
+                      border: '1px solid rgba(var(--date), 0.5)',
+                      borderRadius: 6,
+                      padding: 16,
+                      minWidth: 260,
+                    }}
                   >
-                    <div style={{ fontWeight: 600 }}>{confirmation.capabilityId}</div>
-                    <div style={{ opacity: 0.65, overflowWrap: 'anywhere' }}>
-                      {confirmation.inputKeys.join(', ') || t('No input fields')}
+                    <div style={{ marginBottom: 12, fontSize: 13 }}>
+                      {t('Delete all shortcuts and prompts?')}
+                      <br />
+                      {t('This cannot be undone.')}
                     </div>
-                    <code style={{ display: 'block', overflowWrap: 'anywhere', opacity: 0.72 }}>
-                      {JSON.stringify(confirmation.inputPreview)}
-                    </code>
-                    <div style={{ display: 'flex', gap: 5, marginTop: 3 }}>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                       <button
-                        data-testid={`ai-control-approve-${confirmation.id}`}
-                        disabled={aiControlBusy}
-                        onClick={() => void resolveAiControlConfirmation(confirmation.id, true)}
-                        style={{ flex: 1 }}
+                        onClick={handleReset}
+                        style={{ background: 'rgba(255, 80, 80, 0.35)' }}
                       >
-                        {t('Approve once')}
+                        {t('Yes, reset')}
                       </button>
-                      <button
-                        disabled={aiControlBusy}
-                        onClick={() => void resolveAiControlConfirmation(confirmation.id, false)}
-                        style={{ flex: 1 }}
-                      >
-                        {t('Deny')}
-                      </button>
+                      <button onClick={() => setShowReset(false)}>{t('Cancel')}</button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-            <button onClick={() => void refreshAiControlAudit()} style={{ padding: '3px 6px' }}>
-              {t('Show recent audit')}
-            </button>
-            {aiControlAudit.length > 0 && (
-              <div
-                data-testid="ai-control-audit"
-                style={{ maxHeight: 110, overflow: 'auto', fontSize: 9, opacity: 0.78 }}
-              >
-                {aiControlAudit.slice(0, 20).map((entry) => (
-                  <div key={`${entry.timestamp}-${entry.requestId}`}>
-                    {entry.timestamp.slice(0, 19).replace('T', ' ')} · {entry.capabilityId} ·{' '}
-                    {entry.outcome} · {entry.durationMs}ms
-                  </div>
-                ))}
-              </div>
-            )}
-            {(aiControlError || aiControlSettings.lastError) && (
-              <div style={{ color: '#ff7a7a' }}>
-                {aiControlError || aiControlSettings.lastError}
-              </div>
-            )}
-          </div>
-        </CollapsibleSettingsSection>
+                </div>,
+                document.body,
+              )}
+          </CollapsibleSettingsSection>
 
-        <CollapsibleSettingsSection
-          id="system"
-          label={t('System & Shortcuts')}
-          expanded={expandedSections.system}
-          onToggle={() => toggleSection('system')}
-        >
-          <div style={{ fontSize: 10, opacity: 0.5, lineHeight: 1.6 }}>
-            Ctrl+Shift+Alt+R — {t('Toggle visibility')}
-            <br />
-            Ctrl+Shift+Alt+Q — {t('Toggle visibility')} ({t('Legacy')})
-            <br />
-            {t('Ctrl+Shift+Alt+P —')} {t('Snap panels')}
-            <br />
-            Ctrl+Shift+Alt+S — {t('Show all panels')}
-            <br />
-            Shift+Alt+Q — {t('Arrange in a row')}
-            <br />
-            Shift+Alt+W — {t('Arrange in a grid')}
-            <br />
-            Shift+Alt+E — {t('Arrange in a column')}
-            <br />
-            Shift+Escape — {t('Quit')}
-          </div>
-          {hotkeyConflicts.length > 0 && (
-            <div style={{ margin: '4px 0', color: 'var(--warning, #f0b45b)', fontSize: 10 }}>
-              {t('Shortcut conflicts')}:{' '}
-              {hotkeyConflicts.map((entry) => entry.accelerator).join(', ')}
+          <CollapsibleSettingsSection
+            id="aiControl"
+            active={activeSection === 'aiControl'}
+            label={t('AI Control')}
+            expanded={expandedSections.aiControl}
+            onToggle={() => toggleSection('aiControl')}
+          >
+            <div
+              data-testid="ai-control-settings"
+              style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ minWidth: 58, opacity: 0.65 }}>{t('Local API')}</span>
+                <button
+                  data-testid="ai-control-toggle"
+                  onClick={() => void toggleAiControl()}
+                  disabled={aiControlBusy}
+                  style={{ flex: 1, padding: '3px 6px' }}
+                >
+                  {t(aiControlSettings.enabled ? 'Disable' : 'Enable')}
+                </button>
+                <span
+                  style={{ color: aiControlSettings.running ? 'rgb(var(--accent))' : undefined }}
+                >
+                  {t(aiControlSettings.running ? 'Running' : 'Stopped')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <label htmlFor="ai-control-port" style={{ minWidth: 58, opacity: 0.65 }}>
+                  {t('Port')}
+                </label>
+                <input
+                  id="ai-control-port"
+                  type="number"
+                  min={1024}
+                  max={65535}
+                  value={aiControlPort}
+                  disabled={aiControlSettings.enabled}
+                  onChange={(event) => setAiControlPort(Number(event.target.value) || 32145)}
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+              </div>
+              <code style={{ overflowWrap: 'anywhere', opacity: 0.7 }}>
+                {aiControlSettings.address}
+              </code>
+              <code style={{ overflowWrap: 'anywhere', opacity: 0.7 }}>
+                {aiControlOpenApiAddress}
+              </code>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 7px' }}>
+                {(['read', 'window', 'search', 'control'] as AiControlScope[]).map((scope) => (
+                  <label key={scope} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <input
+                      type="checkbox"
+                      checked={aiControlScopes.includes(scope)}
+                      disabled={scope === 'read'}
+                      onChange={() => toggleAiControlScope(scope)}
+                    />
+                    {t(scope)}
+                  </label>
+                ))}
+              </div>
+              <div style={{ opacity: 0.6 }}>
+                {t('Scope changes apply when the token is rotated')}
+              </div>
+              <div style={{ display: 'flex', gap: 5 }}>
+                <button
+                  onClick={() => void rotateAiControlToken()}
+                  disabled={aiControlBusy}
+                  style={{ flex: 1 }}
+                >
+                  {t('Rotate token')}
+                </button>
+                <button
+                  onClick={() => void window.electronAPI.copyToClipboard(aiControlToken)}
+                  disabled={!aiControlToken}
+                  style={{ flex: 1 }}
+                >
+                  {t('Copy token')}
+                </button>
+              </div>
+              {aiControlToken && (
+                <div>
+                  <div style={{ color: 'rgb(var(--date))' }}>{t('Token is shown only once')}</div>
+                  <input
+                    data-testid="ai-control-token"
+                    readOnly
+                    value={aiControlToken}
+                    onFocus={(event) => event.currentTarget.select()}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+              )}
+              <div style={{ opacity: 0.6 }}>
+                {t('Loopback only')} ·{' '}
+                {t('{count} audit entries', { count: aiControlSettings.auditEntries })} ·{' '}
+                {t('{count} pending confirmations', {
+                  count: aiControlSettings.pendingConfirmations,
+                })}
+              </div>
+              <button
+                data-testid="ai-control-confirmations-refresh"
+                onClick={() => void refreshAiControlConfirmations()}
+                style={{ padding: '3px 6px' }}
+              >
+                {t('Review pending confirmations')}
+              </button>
+              {aiControlConfirmations.length > 0 && (
+                <div
+                  data-testid="ai-control-confirmations"
+                  style={{ display: 'flex', flexDirection: 'column', gap: 5 }}
+                >
+                  {aiControlConfirmations.map((confirmation) => (
+                    <div
+                      key={confirmation.id}
+                      style={{
+                        border: '1px solid rgb(var(--border))',
+                        padding: 5,
+                        borderRadius: 4,
+                      }}
+                    >
+                      <div style={{ fontWeight: 600 }}>{confirmation.capabilityId}</div>
+                      <div style={{ opacity: 0.65, overflowWrap: 'anywhere' }}>
+                        {confirmation.inputKeys.join(', ') || t('No input fields')}
+                      </div>
+                      <code style={{ display: 'block', overflowWrap: 'anywhere', opacity: 0.72 }}>
+                        {JSON.stringify(confirmation.inputPreview)}
+                      </code>
+                      <div style={{ display: 'flex', gap: 5, marginTop: 3 }}>
+                        <button
+                          data-testid={`ai-control-approve-${confirmation.id}`}
+                          disabled={aiControlBusy}
+                          onClick={() => void resolveAiControlConfirmation(confirmation.id, true)}
+                          style={{ flex: 1 }}
+                        >
+                          {t('Approve once')}
+                        </button>
+                        <button
+                          disabled={aiControlBusy}
+                          onClick={() => void resolveAiControlConfirmation(confirmation.id, false)}
+                          style={{ flex: 1 }}
+                        >
+                          {t('Deny')}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => void refreshAiControlAudit()} style={{ padding: '3px 6px' }}>
+                {t('Show recent audit')}
+              </button>
+              {aiControlAudit.length > 0 && (
+                <div
+                  data-testid="ai-control-audit"
+                  style={{ maxHeight: 110, overflow: 'auto', fontSize: 12, opacity: 0.78 }}
+                >
+                  {aiControlAudit.slice(0, 20).map((entry) => (
+                    <div key={`${entry.timestamp}-${entry.requestId}`}>
+                      {entry.timestamp.slice(0, 19).replace('T', ' ')} · {entry.capabilityId} ·{' '}
+                      {entry.outcome} · {entry.durationMs}ms
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(aiControlError || aiControlSettings.lastError) && (
+                <div style={{ color: '#ff7a7a' }}>
+                  {aiControlError || aiControlSettings.lastError}
+                </div>
+              )}
             </div>
-          )}
-          {btn(t(hotkeyRegistered ? 'Unregister Hotkeys' : 'Register Hotkeys'), handleHotkeyToggle)}
-          <ThirdPartyLicensesButton />
-          <EndUserTermsButton />
-          {btn(t('Quit'), () => window.close(), {
-            background: 'rgba(255, 80, 80, 0.2)',
-            marginTop: 4,
-          })}
-        </CollapsibleSettingsSection>
+          </CollapsibleSettingsSection>
+
+          <CollapsibleSettingsSection
+            id="system"
+            active={activeSection === 'system'}
+            label={t('System & Shortcuts')}
+            expanded={expandedSections.system}
+            onToggle={() => toggleSection('system')}
+          >
+            <div className="settings-shortcut-list">
+              Ctrl+Shift+Alt+R — {t('Toggle visibility')}
+              <br />
+              Ctrl+Shift+Alt+Q — {t('Toggle visibility')} ({t('Legacy')})
+              <br />
+              {legacyLayout && (
+                <>
+                  {t('Ctrl+Shift+Alt+P —')} {t('Snap panels')}
+                  <br />
+                  Ctrl+Shift+Alt+S — {t('Show all panels')}
+                  <br />
+                  Shift+Alt+Q — {t('Arrange in a row')}
+                  <br />
+                  Shift+Alt+W — {t('Arrange in a grid')}
+                  <br />
+                  Shift+Alt+E — {t('Arrange in a column')}
+                  <br />
+                </>
+              )}
+              Shift+Escape — {t('Quit')}
+            </div>
+            {hotkeyConflicts.length > 0 && (
+              <div style={{ margin: '4px 0', color: 'var(--warning, #f0b45b)', fontSize: 12 }}>
+                {t('Shortcut conflicts')}:{' '}
+                {hotkeyConflicts.map((entry) => entry.accelerator).join(', ')}
+              </div>
+            )}
+            {btn(
+              t(hotkeyRegistered ? 'Unregister Hotkeys' : 'Register Hotkeys'),
+              handleHotkeyToggle,
+            )}
+            <ThirdPartyLicensesButton />
+            <EndUserTermsButton />
+            {btn(t('Quit'), () => window.close(), {
+              background: 'rgba(255, 80, 80, 0.2)',
+              marginTop: 4,
+            })}
+          </CollapsibleSettingsSection>
+        </div>
       </div>
     </DraggablePanel>
   )

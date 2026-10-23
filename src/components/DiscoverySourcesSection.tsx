@@ -625,7 +625,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
     <div ref={sectionRef} className="image-search-sources-content" data-testid="workspace-sources">
       <div className="image-search-sources-content__header">
         <span style={{ fontSize: 12, fontWeight: 600 }}>{t('Sources')}</span>
-        <span style={{ fontSize: 11, opacity: 0.7 }}>
+        <span style={{ fontSize: 13, opacity: 0.7 }}>
           {t('{count} sources', { count: sources.length })}
         </span>
       </div>
@@ -642,7 +642,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               setSourceType(event.target.value as 'local-ntfs' | 'mounted-network' | 'sftp')
             }
             aria-label={t('Source type')}
-            style={{ fontSize: 11, padding: '2px 6px' }}
+            style={{ fontSize: 13, padding: '2px 6px' }}
           >
             <option value="local-ntfs">{t('Local drive')}</option>
             <option value="mounted-network">{t('Mounted network')}</option>
@@ -654,7 +654,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               value={sftpProfileId}
               onChange={(event) => setSftpProfileId(event.target.value)}
               aria-label={t('SFTP profile')}
-              style={{ fontSize: 11, padding: '2px 6px', maxWidth: 140 }}
+              style={{ fontSize: 13, padding: '2px 6px', maxWidth: 140 }}
             >
               <option value="">{t('Select profile')}</option>
               {remoteProfiles.map((profile) => (
@@ -669,14 +669,14 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             placeholder={t('Name')}
-            style={{ width: 110, fontSize: 11, padding: '2px 6px' }}
+            style={{ width: 110, fontSize: 13, padding: '2px 6px' }}
           />
           <input
             className="discovery-source-root"
             value={rootPath}
             onChange={(event) => setRootPath(event.target.value)}
             placeholder={sourceType === 'sftp' ? t('Remote root') : t('Root path')}
-            style={{ flex: 1, fontSize: 11, padding: '2px 6px' }}
+            style={{ flex: 1, fontSize: 13, padding: '2px 6px' }}
           />
           <button
             className="discovery-source-add"
@@ -684,13 +684,13 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
             disabled={
               !displayName.trim() || !rootPath.trim() || (sourceType === 'sftp' && !sftpProfileId)
             }
-            style={{ fontSize: 11, padding: '2px 8px' }}
+            style={{ fontSize: 13, padding: '2px 8px' }}
           >
             {t('Add source')}
           </button>
         </div>
-        {error && <div style={{ fontSize: 11, color: '#e07070' }}>{error}</div>}
-        {notice && <div style={{ fontSize: 11, color: '#62b47a' }}>{notice}</div>}
+        {error && <div style={{ fontSize: 13, color: '#e07070' }}>{error}</div>}
+        {notice && <div style={{ fontSize: 13, color: '#62b47a' }}>{notice}</div>}
 
         <div
           data-testid="asset-collection-tray"
@@ -709,12 +709,12 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
             className="asset-collection-toolbar"
             style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}
           >
-            <strong style={{ fontSize: 11 }}>{t('Collection tray')}</strong>
+            <strong style={{ fontSize: 13 }}>{t('Collection tray')}</strong>
             <select
               data-testid="asset-collection-select"
               value={selectedCollectionId}
               onChange={(event) => setSelectedCollectionId(Number(event.target.value))}
-              style={{ maxWidth: 160, fontSize: 11 }}
+              style={{ maxWidth: 160, fontSize: 13 }}
             >
               <option value={0}>{t('Select collection')}</option>
               {collections.map((collection) => (
@@ -731,13 +731,13 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                 if (event.key === 'Enter') void handleCreateCollection()
               }}
               placeholder={t('New collection name')}
-              style={{ width: 140, fontSize: 11 }}
+              style={{ width: 140, fontSize: 13 }}
             />
             <button
               data-testid="asset-collection-create"
               onClick={() => void handleCreateCollection()}
               disabled={!collectionName.trim() || collectionPending}
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 13 }}
             >
               {t('Create')}
             </button>
@@ -745,7 +745,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               data-testid="asset-collection-rename"
               onClick={() => void handleRenameCollection()}
               disabled={!selectedCollectionId || !collectionName.trim() || collectionPending}
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 13 }}
             >
               {t('Rename')}
             </button>
@@ -757,7 +757,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                 collections.findIndex((collection) => collection.id === selectedCollectionId) <= 0
               }
               title={t('Move up')}
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 13 }}
             >
               ↑
             </button>
@@ -770,23 +770,23 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                   collections.length - 1
               }
               title={t('Move down')}
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 13 }}
             >
               ↓
             </button>
             <button
               onClick={() => void handleDeleteCollection()}
               disabled={!selectedCollectionId || collectionPending}
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 13 }}
             >
               {t('Delete')}
             </button>
-            <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.65 }}>
+            <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.65 }}>
               {t('{count} collected items', { count: collectionItems.length })}
             </span>
           </div>
           {selectedCollectionId && collectionItems.length === 0 && (
-            <div style={{ marginTop: 4, fontSize: 10, opacity: 0.6 }}>
+            <div style={{ marginTop: 4, fontSize: 12, opacity: 0.6 }}>
               {t('Collect search results here without moving the originals.')}
             </div>
           )}
@@ -795,12 +795,12 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               {collectionItems.map((item) => (
                 <div
                   key={item.id}
-                  style={{ display: 'flex', gap: 5, alignItems: 'center', fontSize: 10 }}
+                  style={{ display: 'flex', gap: 5, alignItems: 'center', fontSize: 12 }}
                 >
                   <button
                     onClick={() => void handleOpenCollected(item)}
                     title={item.displayPath}
-                    style={{ flex: 1, textAlign: 'left', fontSize: 10, overflow: 'hidden' }}
+                    style={{ flex: 1, textAlign: 'left', fontSize: 12, overflow: 'hidden' }}
                   >
                     {item.displayName} ({item.source.name})
                   </button>
@@ -809,7 +809,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                   </span>
                   <button
                     onClick={() => void handleRemoveCollected(item.id)}
-                    style={{ fontSize: 10 }}
+                    style={{ fontSize: 12 }}
                   >
                     {t('Remove')}
                   </button>
@@ -821,7 +821,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
 
         <div
           data-testid="source-health-center"
-          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
         >
           <strong>{t('Source health')}</strong>
           <span style={{ marginLeft: 'auto', opacity: 0.66 }}>
@@ -834,7 +834,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
         </div>
 
         {sources.length === 0 ? (
-          <div style={{ fontSize: 11, opacity: 0.6 }}>{t('No sources yet')}</div>
+          <div style={{ fontSize: 13, opacity: 0.6 }}>{t('No sources yet')}</div>
         ) : (
           sourceHealthItems.map((source) => {
             const status = statuses[source.id]
@@ -843,6 +843,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
             return (
               <div
                 key={source.id}
+                className="source-health-card"
                 style={{
                   border: '1px solid rgba(var(--date), 0.25)',
                   borderRadius: 4,
@@ -874,14 +875,14 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                         onClick={() =>
                           void window.electronAPI.discoveryCatalog.cancelScan(source.id)
                         }
-                        style={{ fontSize: 11, padding: '1px 6px' }}
+                        style={{ fontSize: 13, padding: '1px 6px' }}
                       >
                         {t('Cancel')}
                       </button>
                     ) : (
                       <button
                         onClick={() => void handleStartScan(source.id)}
-                        style={{ fontSize: 11, padding: '1px 6px' }}
+                        style={{ fontSize: 13, padding: '1px 6px' }}
                       >
                         {t('Scan')}
                       </button>
@@ -889,14 +890,14 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                     <button
                       onClick={() => void handleProbeSource(source.id)}
                       disabled={running || probePending === source.id}
-                      style={{ fontSize: 11, padding: '1px 6px' }}
+                      style={{ fontSize: 13, padding: '1px 6px' }}
                     >
                       {t(source.primaryAction === 'reconnect' ? 'Reconnect' : 'Check connection')}
                     </button>
                     <button
                       onClick={() => void handleRemoveSource(source.id)}
                       disabled={running}
-                      style={{ fontSize: 11, padding: '1px 6px' }}
+                      style={{ fontSize: 13, padding: '1px 6px' }}
                     >
                       {t('Remove')}
                     </button>
@@ -904,14 +905,14 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                       <button
                         onClick={() => void handleRepairSource(source.id)}
                         disabled={running}
-                        style={{ fontSize: 11, padding: '1px 6px' }}
+                        style={{ fontSize: 13, padding: '1px 6px' }}
                       >
                         {t('Repair path')}
                       </button>
                     )}
                   </span>
                 </div>
-                <div style={{ fontSize: 11, opacity: 0.7, wordBreak: 'break-all' }}>
+                <div style={{ fontSize: 13, opacity: 0.7, wordBreak: 'break-all' }}>
                   {source.displayLocator}
                 </div>
                 <div
@@ -920,7 +921,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: 8,
-                    fontSize: 10,
+                    fontSize: 12,
                     opacity: 0.66,
                   }}
                 >
@@ -949,13 +950,13 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                 {source.detail && (
                   <div
                     data-testid={`source-health-detail-${source.id}`}
-                    style={{ fontSize: 10, color: '#e0a260', wordBreak: 'break-word' }}
+                    style={{ fontSize: 12, color: '#e0a260', wordBreak: 'break-word' }}
                   >
                     {t('Connection detail: {detail}', { detail: source.detail })}
                   </div>
                 )}
                 {session && (
-                  <div style={{ fontSize: 11, opacity: 0.8 }}>
+                  <div style={{ fontSize: 13, opacity: 0.8 }}>
                     {t(sessionStateKey[session.state] || 'Unknown')} ·{' '}
                     {t('{count} files', { count: session.committedCount })}
                     {session.backend !== 'unknown' &&
@@ -974,7 +975,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t('Search file names')}
-              style={{ fontSize: 11, padding: '2px 6px' }}
+              style={{ fontSize: 13, padding: '2px 6px' }}
             />
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <button
@@ -986,7 +987,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                     }
                   })
                 }}
-                style={{ fontSize: 11, padding: '2px 8px' }}
+                style={{ fontSize: 13, padding: '2px 8px' }}
               >
                 {t('Reference image')}
               </button>
@@ -994,18 +995,18 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                 <>
                   <button
                     onClick={() => void handleRefineSubject()}
-                    style={{ fontSize: 11, padding: '2px 8px' }}
+                    style={{ fontSize: 13, padding: '2px 8px' }}
                   >
                     {t('Refine subject on the original image')}
                   </button>
                   {subject && (
-                    <span style={{ fontSize: 11, opacity: 0.75 }}>
+                    <span style={{ fontSize: 13, opacity: 0.75 }}>
                       {t('Subject')}: {subject.label}
                     </span>
                   )}
                   <span
                     title={referenceImagePath}
-                    style={{ flex: 1, fontSize: 11, opacity: 0.7, overflow: 'hidden' }}
+                    style={{ flex: 1, fontSize: 13, opacity: 0.7, overflow: 'hidden' }}
                   >
                     {referenceImagePath}
                   </span>
@@ -1014,7 +1015,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                       setReferenceImagePath('')
                       setSubject(undefined)
                     }}
-                    style={{ fontSize: 11, padding: '2px 8px' }}
+                    style={{ fontSize: 13, padding: '2px 8px' }}
                   >
                     {t('Remove')}
                   </button>
@@ -1022,7 +1023,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               )}
             </div>
             {(query.trim() || referenceImagePath) && searchState?.degradedReason && (
-              <div style={{ fontSize: 11, opacity: 0.75 }} title={searchState.actionableHint}>
+              <div style={{ fontSize: 13, opacity: 0.75 }} title={searchState.actionableHint}>
                 {searchState.aiEnhancement} · {searchState.degradedReason}
                 {searchState.actionableHint && ` · ${searchState.actionableHint}`}
               </div>
@@ -1036,7 +1037,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                     disabled={
                       !selectedCollectionId || selectedResultIds.size === 0 || collectionPending
                     }
-                    style={{ fontSize: 11, marginBottom: 3 }}
+                    style={{ fontSize: 13, marginBottom: 3 }}
                   >
                     {t('Collect selected')} ({selectedResultIds.size})
                   </button>
@@ -1051,7 +1052,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                   }}
                 >
                   {results.length === 0 ? (
-                    <div style={{ fontSize: 11, opacity: 0.6 }}>{t('No results')}</div>
+                    <div style={{ fontSize: 13, opacity: 0.6 }}>{t('No results')}</div>
                   ) : (
                     results.map((item) => (
                       <div
@@ -1061,7 +1062,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                           event.dataTransfer.effectAllowed = 'copy'
                           event.dataTransfer.setData(COLLECTION_DRAG_TYPE, item.fileEntryId)
                         }}
-                        style={{ fontSize: 11, lineHeight: 1.4 }}
+                        style={{ fontSize: 13, lineHeight: 1.4 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <input
@@ -1127,7 +1128,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                             <button
                               onClick={() => void handleRemoteDownload(item)}
                               disabled={downloadPending === item.fileEntryId}
-                              style={{ marginLeft: 'auto', fontSize: 11, padding: '1px 6px' }}
+                              style={{ marginLeft: 'auto', fontSize: 13, padding: '1px 6px' }}
                             >
                               {t('Download')}
                             </button>
@@ -1136,7 +1137,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                             data-testid="asset-collection-add"
                             onClick={() => void handleCollect(item)}
                             disabled={!selectedCollectionId || collectionPending}
-                            style={{ fontSize: 11, padding: '1px 6px' }}
+                            style={{ fontSize: 13, padding: '1px 6px' }}
                           >
                             {t('Collect')}
                           </button>
@@ -1178,7 +1179,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                                     ]
                                       .filter(Boolean)
                                       .join('\n')}
-                                    style={{ fontSize: 10, padding: '1px 5px' }}
+                                    style={{ fontSize: 12, padding: '1px 5px' }}
                                   >
                                     {t(videoHitLabelKey(hit))} · {formatDuration(hit.timestampMs)} ·{' '}
                                     {t('Evidence')}: {evidence.join(' + ')}
@@ -1192,7 +1193,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                     ))
                   )}
                   {resultTotal > results.length && (
-                    <div style={{ fontSize: 11, opacity: 0.6 }}>
+                    <div style={{ fontSize: 13, opacity: 0.6 }}>
                       {t('{count} results total', { count: resultTotal })}
                     </div>
                   )}

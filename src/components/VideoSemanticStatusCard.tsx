@@ -105,10 +105,12 @@ const VideoSemanticStatusCard: React.FC<VideoSemanticStatusCardProps> = ({
 
   const runtimeLabel = status
     ? runtimeLabels[status.runtime.state] || status.runtime.state
-    : 'Loading…'
+    : 'Loading...'
   const modelLabel = status?.runtime.model
     ? `${status.runtime.model.modelId} ${status.runtime.model.quantization}`
-    : status?.runtime.reason || 'model-missing'
+    : status?.runtime.reason && status.runtime.reason !== 'model-missing'
+      ? status.runtime.reason
+      : t('Model not installed')
 
   return (
     <section

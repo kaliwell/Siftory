@@ -15,6 +15,7 @@ import { useStore } from '../stores/useStore'
 interface ImageSearchDataManagerProps {
   scanPaths: string[]
   disabled?: boolean
+  standalone?: boolean
   onChanged: () => void
   showToast: (message: string, type?: 'ok' | 'err') => void
 }
@@ -68,11 +69,13 @@ function statsPrefixChain(term: string): string[] {
 const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
   scanPaths,
   disabled = false,
+  standalone = false,
   onChanged,
   showToast,
 }) => {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(standalone)
+  const [advancedOpen, setAdvancedOpen] = useState(!standalone)
   const [query, setQuery] = useState('')
   const [records, setRecords] = useState<ImageSearchDataRecord[]>([])
   const [hasMore, setHasMore] = useState(false)
@@ -227,6 +230,7 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
     let normalized = folder.trim().replace(/\/+/g, '\\')
     if (!/^[a-zA-Z]:\\$/.test(normalized)) normalized = normalized.replace(/\\+$/, '')
     if (!normalized) return
+    setAdvancedOpen(true)
     setSelectedFolder(normalized)
     setFolderDeleteArmed(false)
     setFolderEditPreview(null)
@@ -349,11 +353,11 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
   }
 
   useEffect(() => {
-    if (!open) return
+    if (!open || !advancedOpen) return
     void runQuery()
     void loadFolderStats()
     void imageSearchBridge.getThumbnailRebuildProgress().then(setRebuild)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, advancedOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (rebuild.state !== 'running' && rebuild.state !== 'stopping') return
@@ -511,25 +515,28 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
     normalizedQueryPath.includes(':\\') || normalizedQueryPath.startsWith('\\')
 
   return (
-    <div className="image-search-data-manager">
-      <button
-        data-testid="image-search-data-manager-toggle"
-        className="image-search-data-manager__toggle"
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        disabled={disabled}
-      >
-        {open ? t('Close Data Editor') : t('Data Editor Manager')}
-      </button>
+    <div className="image-search-data-manager" data-standalone={standalone}>
+      {!standalone && (
+        <button
+          data-testid="image-search-data-manager-toggle"
+          className="image-search-data-manager__toggle"
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          disabled={disabled}
+        >
+          {open ? t('Close Data Editor') : t('Data Editor Manager')}
+        </button>
+      )}
 
       {open && (
         <div
+          className="image-search-data-manager__body"
           style={{
             marginTop: 6,
             padding: 8,
             border: '1px solid rgba(120,180,255,0.35)',
             borderRadius: 6,
-            background: 'rgba(8,14,24,0.96)',
+            background: 'rgb(var(--color-surface))',
             display: 'grid',
             gap: 7,
             maxHeight: '45vh',
@@ -542,595 +549,622 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
             showToast={showToast}
           />
 
-          {scanPaths.length > 0 && (
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: 9, opacity: 0.62 }}>{t('Source Folders')}:</span>
-              {scanPaths.map((folder) => (
-                <button
-                  type="button"
-                  key={folder}
-                  onClick={() => toggleFolder(folder)}
-                  disabled={loading}
-                  title={folder}
-                  style={{
-                    fontSize: 9,
-                    maxWidth: 180,
-                    overflow: 'hidden',
-                    background: selectedFolder === folder ? 'rgba(80,150,255,0.28)' : undefined,
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'block',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {folder}
-                  </span>
-                  {folderStats[folder] && (
-                    <span style={{ display: 'block', opacity: 0.72 }}>
-                      {t('{count} records · {size}', {
-                        count: folderStats[folder].count.toLocaleString(),
-                        size: formatBytes(folderStats[folder].totalBytes),
-                      })}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 5 }}>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') void runQuery()
-              }}
-              placeholder={t('Filter indexed path (empty shows first 200)')}
-              style={{ flex: 1, minWidth: 0, fontSize: 10 }}
-            />
-            <button type="button" onClick={() => void runQuery()} disabled={loading}>
-              {t('Search')}
-            </button>
-            {queryLooksLikePath && (
-              <button
-                type="button"
-                onClick={() => selectFolderForEdit(query)}
-                disabled={disabled || loading || folderEditActive}
-                title={t('Manage every selected index layer under this exact path')}
-              >
-                {t('Manage Folder Indexes')}
-              </button>
-            )}
-          </div>
-
-          {queryStats && (
-            <div style={{ fontSize: 9, opacity: 0.75 }}>
-              {queryStats.count > 0 && queryStats.prefix !== queryStats.term
-                ? t('{prefix} · Total: {count} records · {size}', {
-                    prefix: queryStats.prefix,
-                    count: queryStats.count.toLocaleString(),
-                    size: formatBytes(queryStats.totalBytes),
-                  })
-                : t('Total: {count} records · {size}', {
-                    count: queryStats.count.toLocaleString(),
-                    size: formatBytes(queryStats.totalBytes),
-                  })}
-            </div>
-          )}
-
-          {selectedFolder && (
-            <div
-              data-testid="image-search-folder-index-editor"
-              style={{
-                display: 'grid',
-                gap: 6,
-                padding: 7,
-                border: '1px solid rgba(120,180,255,0.28)',
-                borderRadius: 5,
-                background: 'rgba(30,55,90,0.16)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <strong style={{ fontSize: 10 }}>{t('Folder Index Editor')}</strong>
-                <span
-                  title={selectedFolder}
-                  style={{
-                    minWidth: 0,
-                    flex: 1,
-                    fontSize: 9,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    opacity: 0.82,
-                  }}
-                >
-                  {selectedFolder}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => toggleFolder(selectedFolder)}
-                  disabled={folderEditActive}
-                  style={{ fontSize: 9 }}
-                >
-                  {t('Close')}
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                {(['native', 'dino', 'clip'] as const).map((layer) => (
-                  <label key={layer} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={folderEditLayers[layer]}
-                      onChange={(event) => setFolderLayer(layer, event.target.checked)}
-                      disabled={folderEditActive}
-                    />
-                    <span style={{ fontSize: 10 }}>
-                      {layer === 'native' ? t('Native / Hash') : layer.toUpperCase()}
-                    </span>
-                  </label>
-                ))}
-                <span style={{ fontSize: 9, opacity: 0.65 }}>
-                  {t('Source images are never deleted')}
-                </span>
-              </div>
-
-              {folderEditPreview?.ok && (
-                <>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                      gap: 5,
-                    }}
-                  >
-                    {(['native', 'dino', 'clip'] as const).map((layer) => {
-                      const stats = folderEditPreview[layer]
-                      return (
-                        <div
-                          key={layer}
-                          style={{
-                            padding: '5px 6px',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: 4,
-                            fontSize: 9,
-                          }}
-                        >
-                          <strong>
-                            {layer === 'native' ? t('Native / Hash') : layer.toUpperCase()}
-                          </strong>
-                          <div style={{ marginTop: 2, opacity: 0.78 }}>
-                            {t('{count} images · {records} rows · {size}', {
-                              count: (stats?.count || 0).toLocaleString(),
-                              records: (stats?.recordCount || 0).toLocaleString(),
-                              size: formatBytes(stats?.matchedBytes || 0),
-                            })}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div style={{ fontSize: 9, opacity: 0.68 }}>
-                    {t(
-                      'Atomic vector rewrite may need {size} temporary space. DINO/CLIP caches rebuild automatically; recovery backups are kept for 7 days.',
-                      { size: formatBytes(folderEditPreview.temporaryBytes || 0) },
-                    )}
-                  </div>
-                </>
+          <details
+            className="workspace-advanced-maintenance"
+            open={advancedOpen}
+            onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+          >
+            <summary>{t('Advanced index tools')}</summary>
+            <p>
+              {t(
+                'Inspect records, repair paths, or rebuild thumbnails. Review the selected scope before changing index data.',
               )}
-
-              {(folderEditActive || folderEditProgress.state === 'error') && (
-                <div style={{ display: 'grid', gap: 3 }}>
-                  <div style={{ fontSize: 9, opacity: 0.78 }}>
-                    {folderEditProgress.state === 'previewing'
-                      ? t('Analyzing DINO/CLIP vector shards')
-                      : folderEditProgress.state === 'rewriting'
-                        ? t('Rewriting selected vector shards')
-                        : folderEditProgress.state === 'finalizing'
-                          ? t('Invalidating caches and updating Native index')
-                          : folderEditProgress.error || t('Folder index operation failed')}
-                    {folderEditProgress.currentFile ? ` · ${folderEditProgress.currentFile}` : ''}
-                  </div>
-                  <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                    <progress value={folderEditPercent} max={100} style={{ flex: 1 }} />
-                    <span style={{ fontSize: 9 }}>{folderEditPercent}%</span>
-                  </div>
+            </p>
+            <div className="workspace-advanced-maintenance__content">
+              {scanPaths.length > 0 && (
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, opacity: 0.62 }}>{t('Source Folders')}:</span>
+                  {scanPaths.map((folder) => (
+                    <button
+                      type="button"
+                      key={folder}
+                      onClick={() => toggleFolder(folder)}
+                      disabled={loading}
+                      title={folder}
+                      style={{
+                        fontSize: 12,
+                        maxWidth: 180,
+                        overflow: 'hidden',
+                        background: selectedFolder === folder ? 'rgba(80,150,255,0.28)' : undefined,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'block',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {folder}
+                      </span>
+                      {folderStats[folder] && (
+                        <span style={{ display: 'block', opacity: 0.72 }}>
+                          {t('{count} records · {size}', {
+                            count: folderStats[folder].count.toLocaleString(),
+                            size: formatBytes(folderStats[folder].totalBytes),
+                          })}
+                        </span>
+                      )}
+                    </button>
+                  ))}
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={() => void deleteSelectedFolder()}
-                  disabled={loading || disabled || selectedFolderLayers().length === 0}
-                  style={{ color: folderDeleteArmed ? 'rgb(255,110,100)' : undefined }}
-                  title={t(
-                    'Deletes selected index data under this folder only. Source images are never deleted.',
-                  )}
-                >
-                  {folderDeleteArmed
-                    ? t('Confirm Delete Selected Index Data')
-                    : t('Analyze Selected Index Layers')}
+              <div style={{ display: 'flex', gap: 5 }}>
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') void runQuery()
+                  }}
+                  placeholder={t('Filter indexed path (empty shows first 200)')}
+                  style={{ flex: 1, minWidth: 0, fontSize: 12 }}
+                />
+                <button type="button" onClick={() => void runQuery()} disabled={loading}>
+                  {t('Search')}
                 </button>
-                {folderEditActive && folderEditProgress.state !== 'finalizing' && (
-                  <button type="button" onClick={() => void cancelFolderEdit()}>
-                    {t('Cancel')}
+                {queryLooksLikePath && (
+                  <button
+                    type="button"
+                    onClick={() => selectFolderForEdit(query)}
+                    disabled={disabled || loading || folderEditActive}
+                    title={t('Manage every selected index layer under this exact path')}
+                  >
+                    {t('Manage Folder Indexes')}
                   </button>
                 )}
-                {!folderEditPreview && (
-                  <span style={{ fontSize: 9, opacity: 0.62 }}>
-                    {t('DINO/CLIP analysis reads the large vector shards and can take some time.')}
-                  </span>
-                )}
               </div>
-            </div>
-          )}
 
-          {dirNameStats && (
-            <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 9, opacity: 0.75 }}>
-                {t("Directory name '{name}': Total: {count} records · {size}", {
-                  name: dirNameStats.name,
-                  count: dirNameStats.count.toLocaleString(),
-                  size: formatBytes(dirNameStats.totalBytes),
-                })}
-              </span>
-              {dirNameStats.count > 0 && (
-                <button
-                  type="button"
-                  onClick={() => void deleteDirNameRecords()}
-                  disabled={loading || disabled}
-                  style={{
-                    fontSize: 9,
-                    color: dirNameDeleteArmed ? 'rgb(255,110,100)' : undefined,
-                  }}
-                  title={t(
-                    'Deletes index records under every folder with this name, at any location. Source images are never deleted.',
-                  )}
-                >
-                  {dirNameDeleteArmed
-                    ? t(
-                        "Removes {count} index records ({size}) from every folder named '{name}'; source files are not deleted",
-                        {
-                          name: dirNameStats.name,
-                          count: dirNameStats.count.toLocaleString(),
-                          size: formatBytes(dirNameStats.totalBytes),
-                        },
-                      )
-                    : t('Delete By Directory Name')}
-                </button>
+              {queryStats && (
+                <div style={{ fontSize: 12, opacity: 0.75 }}>
+                  {queryStats.count > 0 && queryStats.prefix !== queryStats.term
+                    ? t('{prefix} · Total: {count} records · {size}', {
+                        prefix: queryStats.prefix,
+                        count: queryStats.count.toLocaleString(),
+                        size: formatBytes(queryStats.totalBytes),
+                      })
+                    : t('Total: {count} records · {size}', {
+                        count: queryStats.count.toLocaleString(),
+                        size: formatBytes(queryStats.totalBytes),
+                      })}
+                </div>
               )}
-            </div>
-          )}
 
-          <div
-            style={{
-              maxHeight: 150,
-              overflow: 'auto',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            {records.length === 0 ? (
-              <div style={{ padding: 8, opacity: 0.6, fontSize: 10 }}>
-                {t('No matching records')}
-              </div>
-            ) : (
-              records.map((record) => (
-                <button
-                  type="button"
-                  key={record.path}
-                  onClick={() => setSelectedPath(record.path)}
-                  title={record.path}
+              {selectedFolder && (
+                <div
+                  data-testid="image-search-folder-index-editor"
                   style={{
                     display: 'grid',
-                    width: '100%',
-                    gridTemplateColumns: '14px 1fr auto',
-                    gap: 5,
-                    padding: '4px 5px',
-                    textAlign: 'left',
-                    border: 0,
-                    borderBottom: '1px solid rgba(255,255,255,0.06)',
-                    background:
-                      selectedPath === record.path ? 'rgba(80,150,255,0.22)' : 'transparent',
-                    color: record.exists ? 'inherit' : 'rgb(255,130,120)',
-                    fontSize: 9,
+                    gap: 6,
+                    padding: 7,
+                    border: '1px solid rgba(120,180,255,0.28)',
+                    borderRadius: 5,
+                    background: 'rgba(30,55,90,0.16)',
                   }}
                 >
-                  <span>{record.exists ? '●' : '×'}</span>
-                  <span
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {record.path}
-                  </span>
-                  <span>
-                    {record.width}×{record.height} · {formatBytes(record.fileSize)}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <strong style={{ fontSize: 12 }}>{t('Folder Index Editor')}</strong>
+                    <span
+                      title={selectedFolder}
+                      style={{
+                        minWidth: 0,
+                        flex: 1,
+                        fontSize: 12,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        opacity: 0.82,
+                      }}
+                    >
+                      {selectedFolder}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleFolder(selectedFolder)}
+                      disabled={folderEditActive}
+                      style={{ fontSize: 12 }}
+                    >
+                      {t('Close')}
+                    </button>
+                  </div>
 
-          {hasMore && (
-            <button
-              type="button"
-              onClick={() => void loadMore()}
-              disabled={loading}
-              style={{ fontSize: 10 }}
-            >
-              {t('Load More')} ({records.length}+)
-            </button>
-          )}
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {(['native', 'dino', 'clip'] as const).map((layer) => (
+                      <label key={layer} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={folderEditLayers[layer]}
+                          onChange={(event) => setFolderLayer(layer, event.target.checked)}
+                          disabled={folderEditActive}
+                        />
+                        <span style={{ fontSize: 12 }}>
+                          {layer === 'native' ? t('Native / Hash') : layer.toUpperCase()}
+                        </span>
+                      </label>
+                    ))}
+                    <span style={{ fontSize: 12, opacity: 0.65 }}>
+                      {t('Source images are never deleted')}
+                    </span>
+                  </div>
 
-          {selected && (
-            <div style={{ fontSize: 9, opacity: 0.78, wordBreak: 'break-all' }}>
-              {t('Selected')}: {selected.path}
-              {!selected.exists && ` ${t('(source missing)')}`}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => void updateSelected()}
-              disabled={loading || !selected?.exists}
-              title={t('Re-read this source image, recalculate hashes, and save the index')}
-            >
-              {t('Update Selected')}
-            </button>
-            <button
-              type="button"
-              onClick={() => void deleteSelected()}
-              disabled={loading || !selectedPath}
-              style={{ color: deleteArmed ? 'rgb(255,110,100)' : undefined }}
-              title={t('Deletes only the index record. The source image is never deleted.')}
-            >
-              {deleteArmed ? t('Confirm Index Delete') : t('Delete From Index')}
-            </button>
-          </div>
-          <div style={{ fontSize: 8, opacity: 0.58 }}>
-            {t(
-              'Index edits are saved immediately. If image content changed, rebuild its DINO/CLIP embeddings afterward.',
-            )}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 5 }}>
-            <input
-              value={replacementPath}
-              onChange={(event) => setReplacementPath(event.target.value)}
-              placeholder={t('New source path for selected missing/moved image')}
-              style={{ minWidth: 0, fontSize: 10 }}
-            />
-            <button type="button" onClick={() => void chooseReplacement()}>
-              {t('Browse')}
-            </button>
-            <button
-              type="button"
-              onClick={() => void repairSelectedPath()}
-              disabled={loading || !selectedPath || !replacementPath.trim()}
-              style={{ gridColumn: '1 / -1' }}
-              title={t('Requires the new file to have the same byte size as the indexed source')}
-            >
-              {t('Repair Selected Path')}
-            </button>
-          </div>
-
-          <div
-            style={{
-              paddingTop: 6,
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              display: 'grid',
-              gap: 5,
-            }}
-          >
-            <strong style={{ fontSize: 10 }}>{t('Rebuild Optimized Thumbnails')}</strong>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9 }}>
-                {t('Acceleration')}
-                <select
-                  value={rebuildBackend}
-                  disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
-                  onChange={(event) => {
-                    const value = event.target.value as ThumbnailRebuildBackend
-                    setImageSearchUiPreferences({ thumbnailRebuildBackend: value })
-                  }}
-                  title={t(
-                    'Native C++ streams JPEG decode/resize/encode through WIC. CUDA requires a compatible Toolkit and nvJPEG runtime.',
+                  {folderEditPreview?.ok && (
+                    <>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                          gap: 5,
+                        }}
+                      >
+                        {(['native', 'dino', 'clip'] as const).map((layer) => {
+                          const stats = folderEditPreview[layer]
+                          return (
+                            <div
+                              key={layer}
+                              style={{
+                                padding: '5px 6px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 4,
+                                fontSize: 12,
+                              }}
+                            >
+                              <strong>
+                                {layer === 'native' ? t('Native / Hash') : layer.toUpperCase()}
+                              </strong>
+                              <div style={{ marginTop: 2, opacity: 0.78 }}>
+                                {t('{count} images · {records} rows · {size}', {
+                                  count: (stats?.count || 0).toLocaleString(),
+                                  records: (stats?.recordCount || 0).toLocaleString(),
+                                  size: formatBytes(stats?.matchedBytes || 0),
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div style={{ fontSize: 12, opacity: 0.68 }}>
+                        {t(
+                          'Atomic vector rewrite may need {size} temporary space. DINO/CLIP caches rebuild automatically; recovery backups are kept for 7 days.',
+                          { size: formatBytes(folderEditPreview.temporaryBytes || 0) },
+                        )}
+                      </div>
+                    </>
                   )}
-                >
-                  <option value="native">{t('Native C++ (JPEG fast)')}</option>
-                  <option value="cuda">{t('CUDA / nvJPEG preferred')}</option>
-                  <option value="auto">{t('Auto (adaptive CPU/GPU)')}</option>
-                  <option value="gpu">{t('GPU preferred')}</option>
-                  <option value="cpu">{t('CPU only')}</option>
-                </select>
-              </label>
-              <label
-                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9 }}
-                title={t(
-                  'Parallel GPU pipeline jobs. Up to 8 physical GPU contexts are reused. Higher values use more RAM.',
+
+                  {(folderEditActive || folderEditProgress.state === 'error') && (
+                    <div style={{ display: 'grid', gap: 3 }}>
+                      <div style={{ fontSize: 12, opacity: 0.78 }}>
+                        {folderEditProgress.state === 'previewing'
+                          ? t('Analyzing DINO/CLIP vector shards')
+                          : folderEditProgress.state === 'rewriting'
+                            ? t('Rewriting selected vector shards')
+                            : folderEditProgress.state === 'finalizing'
+                              ? t('Invalidating caches and updating Native index')
+                              : folderEditProgress.error || t('Folder index operation failed')}
+                        {folderEditProgress.currentFile
+                          ? ` · ${folderEditProgress.currentFile}`
+                          : ''}
+                      </div>
+                      <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                        <progress value={folderEditPercent} max={100} style={{ flex: 1 }} />
+                        <span style={{ fontSize: 12 }}>{folderEditPercent}%</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => void deleteSelectedFolder()}
+                      disabled={loading || disabled || selectedFolderLayers().length === 0}
+                      style={{ color: folderDeleteArmed ? 'rgb(255,110,100)' : undefined }}
+                      title={t(
+                        'Deletes selected index data under this folder only. Source images are never deleted.',
+                      )}
+                    >
+                      {folderDeleteArmed
+                        ? t('Confirm Delete Selected Index Data')
+                        : t('Analyze Selected Index Layers')}
+                    </button>
+                    {folderEditActive && folderEditProgress.state !== 'finalizing' && (
+                      <button type="button" onClick={() => void cancelFolderEdit()}>
+                        {t('Cancel')}
+                      </button>
+                    )}
+                    {!folderEditPreview && (
+                      <span style={{ fontSize: 12, opacity: 0.62 }}>
+                        {t(
+                          'DINO/CLIP analysis reads the large vector shards and can take some time.',
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {dirNameStats && (
+                <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, opacity: 0.75 }}>
+                    {t("Directory name '{name}': Total: {count} records · {size}", {
+                      name: dirNameStats.name,
+                      count: dirNameStats.count.toLocaleString(),
+                      size: formatBytes(dirNameStats.totalBytes),
+                    })}
+                  </span>
+                  {dirNameStats.count > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void deleteDirNameRecords()}
+                      disabled={loading || disabled}
+                      style={{
+                        fontSize: 12,
+                        color: dirNameDeleteArmed ? 'rgb(255,110,100)' : undefined,
+                      }}
+                      title={t(
+                        'Deletes index records under every folder with this name, at any location. Source images are never deleted.',
+                      )}
+                    >
+                      {dirNameDeleteArmed
+                        ? t(
+                            "Removes {count} index records ({size}) from every folder named '{name}'; source files are not deleted",
+                            {
+                              name: dirNameStats.name,
+                              count: dirNameStats.count.toLocaleString(),
+                              size: formatBytes(dirNameStats.totalBytes),
+                            },
+                          )
+                        : t('Delete By Directory Name')}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div
+                style={{
+                  maxHeight: 150,
+                  overflow: 'auto',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                {records.length === 0 ? (
+                  <div style={{ padding: 8, opacity: 0.6, fontSize: 12 }}>
+                    {t('No matching records')}
+                  </div>
+                ) : (
+                  records.map((record) => (
+                    <button
+                      type="button"
+                      key={record.path}
+                      onClick={() => setSelectedPath(record.path)}
+                      title={record.path}
+                      style={{
+                        display: 'grid',
+                        width: '100%',
+                        gridTemplateColumns: '14px 1fr auto',
+                        gap: 5,
+                        padding: '4px 5px',
+                        textAlign: 'left',
+                        border: 0,
+                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                        background:
+                          selectedPath === record.path ? 'rgba(80,150,255,0.22)' : 'transparent',
+                        color: record.exists ? 'inherit' : 'rgb(255,130,120)',
+                        fontSize: 12,
+                      }}
+                    >
+                      <span>{record.exists ? '●' : '×'}</span>
+                      <span
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {record.path}
+                      </span>
+                      <span>
+                        {record.width}×{record.height} · {formatBytes(record.fileSize)}
+                      </span>
+                    </button>
+                  ))
                 )}
-              >
-                {rebuildBackend === 'native' || rebuildBackend === 'cuda'
-                  ? t('Workers')
-                  : t('GPU Jobs')}
-                <select
-                  value={thumbnailGpuJobs}
-                  disabled={
-                    rebuildBackend === 'cpu' ||
-                    rebuild.state === 'running' ||
-                    rebuild.state === 'stopping'
-                  }
-                  onChange={(event) => {
-                    const value = Number(event.target.value)
-                    setImageSearchUiPreferences({ thumbnailGpuJobs: value })
-                  }}
+              </div>
+
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => void loadMore()}
+                  disabled={loading}
+                  style={{ fontSize: 12 }}
                 >
-                  {THUMBNAIL_GPU_JOB_OPTIONS.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label
-                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9 }}
-                title={t(
-                  'Images read ahead per GPU job. The effective value is reduced when needed so total in-flight work stays at 40 or less.',
-                )}
-              >
-                {t('Batch')}
-                <select
-                  value={thumbnailBatchSize}
-                  disabled={
-                    rebuildBackend === 'cpu' ||
-                    rebuildBackend === 'native' ||
-                    rebuildBackend === 'cuda' ||
-                    rebuild.state === 'running' ||
-                    rebuild.state === 'stopping'
-                  }
-                  onChange={(event) => {
-                    const value = Number(event.target.value)
-                    setImageSearchUiPreferences({ thumbnailBatchSize: value })
-                  }}
-                >
-                  {THUMBNAIL_BATCH_OPTIONS.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => void startRebuild(selectedPath ? [selectedPath] : [])}
-                disabled={
-                  rebuild.state === 'running' || rebuild.state === 'stopping' || !selected?.exists
-                }
-              >
-                {t('Selected Image')}
-              </button>
-              <button
-                type="button"
-                onClick={() => void startRebuild(scanPaths)}
-                disabled={
-                  rebuild.state === 'running' ||
-                  rebuild.state === 'stopping' ||
-                  scanPaths.length === 0
-                }
-              >
-                {t('All Scan Paths')}
-              </button>
-              {(rebuild.state === 'running' || rebuild.state === 'stopping') && (
-                <button type="button" onClick={() => void stopRebuild()}>
-                  {t('Stop')}
+                  {t('Load More')} ({records.length}+)
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => void clearThumbnailCache()}
-                disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
-                style={clearCacheArmed ? { color: 'rgb(255,150,150)' } : undefined}
-                title={t(
-                  'Retires only generated thumbnail cache files; source images are never deleted',
-                )}
-              >
-                {clearCacheArmed ? t('Confirm Clear Cache') : t('Clear Legacy Cache')}
-              </button>
-            </div>
-            {rebuild.state !== 'idle' && (
-              <>
-                <div
-                  style={{
-                    height: 5,
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    background: 'rgba(255,255,255,0.1)',
-                  }}
+
+              {selected && (
+                <div style={{ fontSize: 12, opacity: 0.78, wordBreak: 'break-all' }}>
+                  {t('Selected')}: {selected.path}
+                  {!selected.exists && ` ${t('(source missing)')}`}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => void updateSelected()}
+                  disabled={loading || !selected?.exists}
+                  title={t('Re-read this source image, recalculate hashes, and save the index')}
                 >
-                  <div
-                    style={{
-                      width: `${rebuildPercent}%`,
-                      height: '100%',
-                      background: 'rgb(75,185,135)',
-                    }}
-                  />
-                </div>
-                <div style={{ fontSize: 9, opacity: 0.78 }}>
-                  {t(rebuild.state)} · {rebuildProcessed}/{rebuild.total || '?'} · {t('failed')}{' '}
-                  {rebuild.failed} · {t('skipped')} {rebuild.skipped} · {rebuildRate} {t('img/s')}
-                </div>
-                <div style={{ fontSize: 9, opacity: 0.72 }}>
-                  {t('Backend')}:{' '}
-                  {rebuild.effectiveBackend || rebuild.requestedBackend || t('detecting')} ·
-                  {t('Jobs')} {rebuild.gpuJobs || 0} · {t('GPU lanes')} {rebuild.gpuLanes || 0} ·{' '}
-                  {t('CPU lanes')} {rebuild.cpuLanes || 0} · {t('Batch')} {rebuild.batchSize || 1} ·{' '}
-                  {t('In-flight')} {rebuild.inFlight || 0}/{rebuild.peakInFlight || 0} · GPU{' '}
-                  {rebuild.gpuCompleted || 0} · CPU {rebuild.cpuCompleted || 0} · {t('fallback')}{' '}
-                  {rebuild.fallbackCount || 0}
-                </div>
-                <div style={{ fontSize: 8, opacity: 0.58 }}>
-                  {t('Queues')}: GPU {rebuild.gpuQueueDepth || 0} · CPU {rebuild.cpuQueueDepth || 0}{' '}
-                  ·{t('Cache')} {rebuild.cacheQueueDepth || 0} · Auto→CPU{' '}
-                  {rebuild.autoCpuRouted || 0} ·{t('Writes')} {rebuild.cacheWrites || 0}
-                  {(rebuild.cacheWriteFailures || 0) > 0
-                    ? ` · ${t('write failed')} ${rebuild.cacheWriteFailures}`
-                    : ''}
-                </div>
-                {rebuild.gpuDevice && (
-                  <div
-                    title={rebuild.gpuDevice}
-                    style={{
-                      fontSize: 8,
-                      opacity: 0.62,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
+                  {t('Update Selected')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteSelected()}
+                  disabled={loading || !selectedPath}
+                  style={{ color: deleteArmed ? 'rgb(255,110,100)' : undefined }}
+                  title={t('Deletes only the index record. The source image is never deleted.')}
+                >
+                  {deleteArmed ? t('Confirm Index Delete') : t('Delete From Index')}
+                </button>
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.58 }}>
+                {t(
+                  'Index edits are saved immediately. If image content changed, rebuild its DINO/CLIP embeddings afterward.',
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 5 }}>
+                <input
+                  value={replacementPath}
+                  onChange={(event) => setReplacementPath(event.target.value)}
+                  placeholder={t('New source path for selected missing/moved image')}
+                  style={{ minWidth: 0, fontSize: 12 }}
+                />
+                <button type="button" onClick={() => void chooseReplacement()}>
+                  {t('Browse')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void repairSelectedPath()}
+                  disabled={loading || !selectedPath || !replacementPath.trim()}
+                  style={{ gridColumn: '1 / -1' }}
+                  title={t(
+                    'Requires the new file to have the same byte size as the indexed source',
+                  )}
+                >
+                  {t('Repair Selected Path')}
+                </button>
+              </div>
+
+              <div
+                style={{
+                  paddingTop: 6,
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  display: 'grid',
+                  gap: 5,
+                }}
+              >
+                <strong style={{ fontSize: 12 }}>{t('Rebuild Optimized Thumbnails')}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                    {t('Acceleration')}
+                    <select
+                      value={rebuildBackend}
+                      disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
+                      onChange={(event) => {
+                        const value = event.target.value as ThumbnailRebuildBackend
+                        setImageSearchUiPreferences({ thumbnailRebuildBackend: value })
+                      }}
+                      title={t(
+                        'Native C++ streams JPEG decode/resize/encode through WIC. CUDA requires a compatible Toolkit and nvJPEG runtime.',
+                      )}
+                    >
+                      <option value="native">{t('Native C++ (JPEG fast)')}</option>
+                      <option value="cuda">{t('CUDA / nvJPEG preferred')}</option>
+                      <option value="auto">{t('Auto (adaptive CPU/GPU)')}</option>
+                      <option value="gpu">{t('GPU preferred')}</option>
+                      <option value="cpu">{t('CPU only')}</option>
+                    </select>
+                  </label>
+                  <label
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+                    title={t(
+                      'Parallel GPU pipeline jobs. Up to 8 physical GPU contexts are reused. Higher values use more RAM.',
+                    )}
                   >
-                    GPU: {rebuild.gpuDevice}
-                  </div>
-                )}
-                {rebuild.gpuError && (
-                  <div style={{ fontSize: 8, color: 'rgb(255,185,110)' }}>
-                    {t('GPU unavailable')}: {rebuild.gpuError}. {t('CPU fallback remains active.')}
-                  </div>
-                )}
-                <div style={{ fontSize: 8, opacity: 0.52 }}>
-                  {rebuild.effectiveBackend === 'native-cpp'
-                    ? t('Native C++ streams JPEG files through WIC without Node buffers or base64.')
-                    : rebuild.effectiveBackend === 'cuda'
-                      ? t('CUDA nvJPEG decode/resize backend is active.')
-                      : t(
-                          'GPU % covers resize only; decoding and WebP encoding remain CPU work. Compare img/s when tuning.',
-                        )}
-                </div>
-                {rebuild.currentPath && (
-                  <div
-                    title={rebuild.currentPath}
-                    style={{
-                      fontSize: 8,
-                      opacity: 0.55,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
+                    {rebuildBackend === 'native' || rebuildBackend === 'cuda'
+                      ? t('Workers')
+                      : t('GPU Jobs')}
+                    <select
+                      value={thumbnailGpuJobs}
+                      disabled={
+                        rebuildBackend === 'cpu' ||
+                        rebuild.state === 'running' ||
+                        rebuild.state === 'stopping'
+                      }
+                      onChange={(event) => {
+                        const value = Number(event.target.value)
+                        setImageSearchUiPreferences({ thumbnailGpuJobs: value })
+                      }}
+                    >
+                      {THUMBNAIL_GPU_JOB_OPTIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+                    title={t(
+                      'Images read ahead per GPU job. The effective value is reduced when needed so total in-flight work stays at 40 or less.',
+                    )}
                   >
-                    {rebuild.currentPath}
-                  </div>
+                    {t('Batch')}
+                    <select
+                      value={thumbnailBatchSize}
+                      disabled={
+                        rebuildBackend === 'cpu' ||
+                        rebuildBackend === 'native' ||
+                        rebuildBackend === 'cuda' ||
+                        rebuild.state === 'running' ||
+                        rebuild.state === 'stopping'
+                      }
+                      onChange={(event) => {
+                        const value = Number(event.target.value)
+                        setImageSearchUiPreferences({ thumbnailBatchSize: value })
+                      }}
+                    >
+                      {THUMBNAIL_BATCH_OPTIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => void startRebuild(selectedPath ? [selectedPath] : [])}
+                    disabled={
+                      rebuild.state === 'running' ||
+                      rebuild.state === 'stopping' ||
+                      !selected?.exists
+                    }
+                  >
+                    {t('Selected Image')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void startRebuild(scanPaths)}
+                    disabled={
+                      rebuild.state === 'running' ||
+                      rebuild.state === 'stopping' ||
+                      scanPaths.length === 0
+                    }
+                  >
+                    {t('All Scan Paths')}
+                  </button>
+                  {(rebuild.state === 'running' || rebuild.state === 'stopping') && (
+                    <button type="button" onClick={() => void stopRebuild()}>
+                      {t('Stop')}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void clearThumbnailCache()}
+                    disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
+                    style={clearCacheArmed ? { color: 'rgb(255,150,150)' } : undefined}
+                    title={t(
+                      'Retires only generated thumbnail cache files; source images are never deleted',
+                    )}
+                  >
+                    {clearCacheArmed ? t('Confirm Clear Cache') : t('Clear Legacy Cache')}
+                  </button>
+                </div>
+                {rebuild.state !== 'idle' && (
+                  <>
+                    <div
+                      style={{
+                        height: 5,
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        background: 'rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${rebuildPercent}%`,
+                          height: '100%',
+                          background: 'rgb(75,185,135)',
+                        }}
+                      />
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.78 }}>
+                      {t(rebuild.state)} · {rebuildProcessed}/{rebuild.total || '?'} · {t('failed')}{' '}
+                      {rebuild.failed} · {t('skipped')} {rebuild.skipped} · {rebuildRate}{' '}
+                      {t('img/s')}
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.72 }}>
+                      {t('Backend')}:{' '}
+                      {rebuild.effectiveBackend || rebuild.requestedBackend || t('detecting')} ·
+                      {t('Jobs')} {rebuild.gpuJobs || 0} · {t('GPU lanes')} {rebuild.gpuLanes || 0}{' '}
+                      · {t('CPU lanes')} {rebuild.cpuLanes || 0} · {t('Batch')}{' '}
+                      {rebuild.batchSize || 1} · {t('In-flight')} {rebuild.inFlight || 0}/
+                      {rebuild.peakInFlight || 0} · GPU {rebuild.gpuCompleted || 0} · CPU{' '}
+                      {rebuild.cpuCompleted || 0} · {t('fallback')} {rebuild.fallbackCount || 0}
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.58 }}>
+                      {t('Queues')}: GPU {rebuild.gpuQueueDepth || 0} · CPU{' '}
+                      {rebuild.cpuQueueDepth || 0} ·{t('Cache')} {rebuild.cacheQueueDepth || 0} ·
+                      Auto→CPU {rebuild.autoCpuRouted || 0} ·{t('Writes')}{' '}
+                      {rebuild.cacheWrites || 0}
+                      {(rebuild.cacheWriteFailures || 0) > 0
+                        ? ` · ${t('write failed')} ${rebuild.cacheWriteFailures}`
+                        : ''}
+                    </div>
+                    {rebuild.gpuDevice && (
+                      <div
+                        title={rebuild.gpuDevice}
+                        style={{
+                          fontSize: 11,
+                          opacity: 0.62,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        GPU: {rebuild.gpuDevice}
+                      </div>
+                    )}
+                    {rebuild.gpuError && (
+                      <div style={{ fontSize: 11, color: 'rgb(255,185,110)' }}>
+                        {t('GPU unavailable')}: {rebuild.gpuError}.{' '}
+                        {t('CPU fallback remains active.')}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 11, opacity: 0.52 }}>
+                      {rebuild.effectiveBackend === 'native-cpp'
+                        ? t(
+                            'Native C++ streams JPEG files through WIC without Node buffers or base64.',
+                          )
+                        : rebuild.effectiveBackend === 'cuda'
+                          ? t('CUDA nvJPEG decode/resize backend is active.')
+                          : t(
+                              'GPU % covers resize only; decoding and WebP encoding remain CPU work. Compare img/s when tuning.',
+                            )}
+                    </div>
+                    {rebuild.currentPath && (
+                      <div
+                        title={rebuild.currentPath}
+                        style={{
+                          fontSize: 11,
+                          opacity: 0.55,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {rebuild.currentPath}
+                      </div>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          </details>
         </div>
       )}
     </div>

@@ -50,7 +50,7 @@ test('managed model mutations require a visible click and destructive confirmati
 test('task center exposes authoritative progress, restart status, and guarded controls', () => {
   const center = source('src/components/ProductReadinessCenter.tsx')
 
-  assert.match(center, /snapshot\.tasks\.map/)
+  assert.match(center, /visibleTasks\.map/)
   assert.match(center, /task\.itemsPerSecond/)
   assert.match(center, /task\.etaMs/)
   assert.match(center, /task\.persisted \? 'Restores after restart' : 'This-session task'/)

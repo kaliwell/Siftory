@@ -280,16 +280,21 @@ async function run() {
       referenceHammingDistance > 0 && referenceHammingDistance <= 9,
       `Reference distance: ${referenceHammingDistance}`,
     )
-    const result = await page.evaluate(
-      (imagePath) =>
-        window.electronAPI.imageSearch.search({
+    const result = await page.evaluate(async (imagePath) => {
+      const deadline = Date.now() + 30000
+      let result
+      do {
+        result = await window.electronAPI.imageSearch.search({
           imagePath,
           topK: 10,
           threshold: 0,
           searchMode: 'fast',
-        }),
-      before[0].file,
-    )
+        })
+        if (result.status.message !== 'Vector maintenance is running') return result
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      } while (Date.now() < deadline)
+      return result
+    }, before[0].file)
     fs.writeFileSync(path.join(evidence, 'query-debug.json'), JSON.stringify(result, null, 2))
     assert.ok(
       result.results.some((item) => path.resolve(item.path) === path.resolve(before[0].file)),
@@ -305,15 +310,25 @@ async function run() {
       )
       const submittedAfter = Date.now()
       const started = await page.evaluate(
-        async ({ modelName, files }) =>
-          window.electronAPI.vector.startEmbeddingBuild({
-            modelName,
-            embeddingType: 'global',
-            imageIds: files,
-            backend: 'cpu',
-            maxConcurrentEmbeddings: 1,
-            batchSize: 1,
-          }),
+        async ({ modelName, files }) => {
+          // A completed native scan may still hold its short publication lease.
+          // Retry only rejected admissions; accepted jobs and other errors are never retried.
+          const deadline = Date.now() + 30000
+          let result
+          do {
+            result = await window.electronAPI.vector.startEmbeddingBuild({
+              modelName,
+              embeddingType: 'global',
+              imageIds: files,
+              backend: 'cpu',
+              maxConcurrentEmbeddings: 1,
+              batchSize: 1,
+            })
+            if (result.ok || result.runtimeError?.code !== 'VECTOR_CLEANUP_RUNNING') return result
+            await new Promise((resolve) => setTimeout(resolve, 100))
+          } while (Date.now() < deadline)
+          return result
+        },
         { modelName, files: before.map((item) => item.file) },
       )
       assert.equal(started.ok, true, JSON.stringify(started))
@@ -401,7 +416,7 @@ async function run() {
       await page.waitForTimeout(400)
     }
     await page.screenshot({ path: path.join(evidence, 'workspace.png') })
-    await page.getByTestId('workspace-domain-image-search').click()
+    await page.locator('.panel:visible').getByTestId('workspace-tab-image-search').click()
     const originalSearch = page.locator('[data-panel="image-search"]')
     await originalSearch.getByTestId('search-mode-advanced').click()
     await application.evaluate(({ dialog }, file) => {
@@ -421,6 +436,20 @@ async function run() {
       )
       await page.screenshot({ path: path.join(evidence, `original-image-${mode}.png`) })
     }
+    await page.getByTestId('workspace-domain-sources').click()
+    await page.locator('.panel:visible').getByTestId('workspace-tab-image-sources').waitFor()
+    await page.getByTestId('workspace-domain-search').click()
+    await page.locator('.panel:visible').getByTestId('workspace-tab-image-search').click()
+    assert.equal(
+      await originalSearch.locator('select:has(option[value="fast"])').inputValue(),
+      'precise',
+    )
+    await originalSearch
+      .getByTestId('image-search-results')
+      .getByText(/sample-0\.jpg/)
+      .first()
+      .waitFor()
+    await page.screenshot({ path: path.join(evidence, 'original-image-restored.png') })
     fs.writeFileSync(
       path.join(evidence, 'geometry.json'),
       JSON.stringify(
@@ -459,6 +488,7 @@ async function run() {
       matchingResults: result.results.length,
       shiftedReferenceFoundOriginal: true,
       originalImageSearchModes: ['fast', 'standard', 'precise'],
+      imageQueryPreservedAcrossSources: true,
       ...(reusedModels.length
         ? {
             existingModelsVerified: reusedModels,

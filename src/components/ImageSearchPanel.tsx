@@ -1,3 +1,4 @@
+import WorkspacePreparationLink from './WorkspacePreparationLink'
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../stores/useStore'
 import DraggablePanel from './DraggablePanel'
@@ -1162,7 +1163,10 @@ const ImageSearchPanel: React.FC = () => {
     <DraggablePanel
       panelId="imageSearch"
       title="Image Search"
-      displayTitle={t(sourcesOnly ? 'Sources' : 'Image Search')}
+      displayTitle={t(sourcesOnly ? 'Sources' : 'Search')}
+      pageDescription={
+        sourcesOnly ? t('Connect folders and manage your indexed sources.') : undefined
+      }
       x={imageSearchPos.x}
       y={imageSearchPos.y}
       defaultX={319}
@@ -1209,38 +1213,47 @@ const ImageSearchPanel: React.FC = () => {
               onCancel={() => setConfirmWholeDrive(null)}
             />
 
-            <SearchControlSectionsToolbar
-              panelId="image-search"
-              leadingControl={
-                !sourcesOnly && (
+            {sourcesOnly ? (
+              <SearchControlSectionsToolbar
+                panelId="image-search"
+                leadingControl={
                   <SearchExperienceModeBar
                     mode={experienceMode}
                     workflow={setupWorkflow}
                     onModeChange={handleExperienceModeChange}
                   />
-                )
-              }
-              onExpandAll={() => setAllControlSectionsExpanded(true)}
-              onCollapseAll={() => setAllControlSectionsExpanded(false)}
-            />
+                }
+                onExpandAll={() => setAllControlSectionsExpanded(true)}
+                onCollapseAll={() => setAllControlSectionsExpanded(false)}
+              />
+            ) : (
+              <SearchExperienceModeBar
+                mode={experienceMode}
+                workflow={setupWorkflow}
+                onModeChange={handleExperienceModeChange}
+              />
+            )}
 
-            <CollapsibleSearchSection
-              id="image-search-sources-section"
-              step="01"
-              title={t('Data sources and collections')}
-              description={t(
-                'Register storage locations, organize collections, and check connectivity.',
-              )}
-              expanded={expandedControlSections.sources}
-              onToggle={() => toggleControlSection('sources')}
-              tone="sources"
-              testId="image-search-sources-section"
-            >
-              <DiscoverySourcesSection />
-            </CollapsibleSearchSection>
+            {sourcesOnly && (
+              <CollapsibleSearchSection
+                id="image-search-sources-section"
+                step="01"
+                title={t('Data sources and collections')}
+                description={t(
+                  'Register storage locations, organize collections, and check connectivity.',
+                )}
+                expanded={expandedControlSections.sources}
+                onToggle={() => toggleControlSection('sources')}
+                tone="sources"
+                testId="image-search-sources-section"
+              >
+                <DiscoverySourcesSection />
+              </CollapsibleSearchSection>
+            )}
 
             <ImageSearchControls
               hideQuery={sourcesOnly}
+              hideLibrary={!sourcesOnly}
               experienceMode={experienceMode}
               workflowRunning={setupRunning}
               isScanning={isScanning}
@@ -1295,89 +1308,94 @@ const ImageSearchPanel: React.FC = () => {
               onToggleLibrary={() => toggleControlSection('library')}
             />
 
-            <CollapsibleSearchSection
-              id="image-search-maintenance-section"
-              step="04"
-              title={t('Index and maintenance')}
-              description={t('Review index health, storage, rebuild tools, and diagnostics.')}
-              expanded={expandedControlSections.maintenance}
-              onToggle={() => toggleControlSection('maintenance')}
-              tone="maintenance"
-              testId="image-search-maintenance-section"
-              summary={t(status.state)}
-            >
-              <ImageSearchDataManager
-                scanPaths={scanPaths}
-                disabled={isScanning || setupRunning}
-                onChanged={() => {
-                  setResults([])
-                  setLayeredResults([])
-                  void fetchStatus()
-                }}
-                showToast={showToast}
-              />
-
-              {experienceMode === 'simple' && (
-                <SearchSetupProgress
-                  workflow={setupWorkflow}
-                  embeddingProgress={embeddingProgress}
+            {sourcesOnly && (
+              <CollapsibleSearchSection
+                id="image-search-maintenance-section"
+                step="04"
+                title={t('Index and maintenance')}
+                description={t('Review index health, storage, rebuild tools, and diagnostics.')}
+                expanded={expandedControlSections.maintenance}
+                onToggle={() => toggleControlSection('maintenance')}
+                tone="maintenance"
+                testId="image-search-maintenance-section"
+                summary={t(status.state)}
+              >
+                <ImageSearchDataManager
+                  scanPaths={scanPaths}
+                  disabled={isScanning || setupRunning}
+                  onChanged={() => {
+                    setResults([])
+                    setLayeredResults([])
+                    void fetchStatus()
+                  }}
+                  showToast={showToast}
                 />
-              )}
 
-              {experienceMode === 'advanced' && (
-                <>
-                  <EmbeddingBuildControls
-                    searchMode={searchMode}
-                    scanPaths={scanPaths}
-                    dinoModelStatus={dinoModelStatus}
-                    clipModelStatus={clipModelStatus}
+                {experienceMode === 'simple' && (
+                  <SearchSetupProgress
+                    workflow={setupWorkflow}
                     embeddingProgress={embeddingProgress}
-                    gpuJobs={gpuJobs}
-                    setGpuJobs={setGpuJobs}
-                    batchSize={batchSize}
-                    setBatchSize={setBatchSize}
-                    showToast={showToast}
                   />
-                  <VectorMaintenanceBar
-                    indexedCount={status.indexedCount}
-                    gpuJobs={gpuJobs}
-                    buildDisabled={buildDisabled}
-                    showToast={showToast}
-                  />
-                </>
-              )}
+                )}
 
-              <ImageSearchStatusBar
-                status={status}
-                isScanning={isScanning}
-                vectorIndexStatus={vectorIndexStatus}
-              />
+                {experienceMode === 'advanced' && (
+                  <>
+                    <EmbeddingBuildControls
+                      searchMode={searchMode}
+                      scanPaths={scanPaths}
+                      dinoModelStatus={dinoModelStatus}
+                      clipModelStatus={clipModelStatus}
+                      embeddingProgress={embeddingProgress}
+                      gpuJobs={gpuJobs}
+                      setGpuJobs={setGpuJobs}
+                      batchSize={batchSize}
+                      setBatchSize={setBatchSize}
+                      showToast={showToast}
+                    />
+                    <VectorMaintenanceBar
+                      indexedCount={status.indexedCount}
+                      gpuJobs={gpuJobs}
+                      buildDisabled={buildDisabled}
+                      showToast={showToast}
+                    />
+                  </>
+                )}
 
-              {experienceMode === 'advanced' && (
-                <>
-                  <RecentManifestBar
-                    manifests={recentManifests}
-                    onLoad={handleLoadRecentManifest}
-                  />
+                <ImageSearchStatusBar
+                  status={status}
+                  isScanning={isScanning}
+                  vectorIndexStatus={vectorIndexStatus}
+                />
 
-                  <ImageSearchIndexFooter
-                    status={status}
-                    manifestPath={manifestPath}
-                    autoloadState={autoloadState}
-                    onReload={handleReloadIndex}
-                    onClear={handleClearIndex}
-                    onOpenIndexDir={handleOpenIndexDir}
-                  />
+                {experienceMode === 'advanced' && (
+                  <>
+                    <RecentManifestBar
+                      manifests={recentManifests}
+                      onLoad={handleLoadRecentManifest}
+                    />
 
-                  <ImageHashSmokeTest
-                    testImagePath={testImagePath}
-                    hashing={hashing}
-                    hashResult={hashResult}
-                    onSelectTestImage={handleSelectTestImage}
-                  />
-                </>
-              )}
-            </CollapsibleSearchSection>
+                    <ImageSearchIndexFooter
+                      status={status}
+                      manifestPath={manifestPath}
+                      autoloadState={autoloadState}
+                      onReload={handleReloadIndex}
+                      onClear={handleClearIndex}
+                      onOpenIndexDir={handleOpenIndexDir}
+                    />
+
+                    <ImageHashSmokeTest
+                      testImagePath={testImagePath}
+                      hashing={hashing}
+                      hashResult={hashResult}
+                      onSelectTestImage={handleSelectTestImage}
+                    />
+                  </>
+                )}
+              </CollapsibleSearchSection>
+            )}
+            {!sourcesOnly && (
+              <WorkspacePreparationLink kind="image" ready={status.indexedCount > 0} />
+            )}
           </aside>
 
           {!sourcesOnly && (
@@ -1393,6 +1411,8 @@ const ImageSearchPanel: React.FC = () => {
               <ImageSearchResultGrid
                 results={sortedResults}
                 rawResultCount={sortedResults.length}
+                indexedCount={status.indexedCount}
+                hasSearched={lastQueryKind !== null}
                 queryHash={queryHash}
                 statusState={status.state}
                 searchQuery={searchQuery}

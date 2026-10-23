@@ -1,3 +1,4 @@
+import WorkspacePreparationLink from './WorkspacePreparationLink'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   MediaSearchCacheStats,
@@ -105,6 +106,8 @@ function scheduleIdleTask(task: () => void, timeoutMs = 900): () => void {
 }
 
 const MediaSearchPanelInner: React.FC = () => {
+  const workspaceView = useStore((s) => s.mediaSearchUiPreferences.workspaceView)
+  const sourcesOnly = workspaceView !== 'search'
   const { t } = useTranslation()
   const mediaSearchPos = useStore((s) => s.mediaSearchPos)
   const setMediaSearchPos = useStore((s) => s.setMediaSearchPos)
@@ -1262,7 +1265,12 @@ const MediaSearchPanelInner: React.FC = () => {
     <DraggablePanel
       panelId="mediaSearch"
       title="Media Search"
-      displayTitle={t('Video indexing')}
+      displayTitle={t(sourcesOnly ? 'Sources' : 'Search')}
+      pageDescription={t(
+        sourcesOnly
+          ? 'Prepare video libraries for frame and semantic search.'
+          : 'Search video frames by image or description.',
+      )}
       x={mediaSearchPos.x}
       y={mediaSearchPos.y}
       defaultX={160}
@@ -1280,20 +1288,23 @@ const MediaSearchPanelInner: React.FC = () => {
     >
       <div
         className="split-tool-shell media-search-shell"
+        data-sources-only={sourcesOnly}
         onDragOver={(event) => {
+          if (sourcesOnly) return
           event.preventDefault()
           event.dataTransfer.dropEffect = status.state === 'running' ? 'none' : 'copy'
           setDragOverQueryImage(true)
         }}
         onDragLeave={() => setDragOverQueryImage(false)}
         onDrop={(event) => {
-          void handleQueryImageDrop(event)
+          if (!sourcesOnly) void handleQueryImageDrop(event)
         }}
         style={{ fontSize: 11 }}
       >
         <div className="split-tool-workspace media-search-workspace">
           <aside className="split-tool-control-pane media-search-control-pane">
             <MediaSearchControls
+              workspaceView={sourcesOnly ? 'sources' : 'search'}
               expandedSections={expandedControlSections}
               experienceMode={experienceMode}
               workflowRunning={setupRunning}
@@ -1372,22 +1383,26 @@ const MediaSearchPanelInner: React.FC = () => {
               onToggleSection={toggleControlSection}
               onSetAllSectionsExpanded={setAllControlSectionsExpanded}
             />
+            {!sourcesOnly && <WorkspacePreparationLink kind="video" ready={canSearchFrames} />}
           </aside>
 
-          <main className="split-tool-results-pane media-search-results-pane">
-            <MediaSearchResultsView
-              frames={frames}
-              onExtractSubtitles={(videoId) => void extractSubs(videoId)}
-              onOpenMedia={(videoId, timestampMs) =>
-                void mediaSearchBridge.openMediaAtTime({ videoId, timestampMs })
-              }
-              onRevealPath={(input) => void mediaSearchBridge.revealInExplorer(input)}
-              onSearchSimilarFrame={(frame) => void searchSimilarFrame(frame)}
-              selectedPaths={selectedPaths}
-              videos={videos}
-              viewMode={viewMode}
-            />
-          </main>
+          {!sourcesOnly && (
+            <main className="split-tool-results-pane media-search-results-pane">
+              <MediaSearchResultsView
+                searchReady={canSearchFrames}
+                frames={frames}
+                onExtractSubtitles={(videoId) => void extractSubs(videoId)}
+                onOpenMedia={(videoId, timestampMs) =>
+                  void mediaSearchBridge.openMediaAtTime({ videoId, timestampMs })
+                }
+                onRevealPath={(input) => void mediaSearchBridge.revealInExplorer(input)}
+                onSearchSimilarFrame={(frame) => void searchSimilarFrame(frame)}
+                selectedPaths={selectedPaths}
+                videos={videos}
+                viewMode={viewMode}
+              />
+            </main>
+          )}
         </div>
       </div>
     </DraggablePanel>

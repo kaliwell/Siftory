@@ -27,6 +27,14 @@ test('search UI preferences are normalized into settings-safe values', () => {
   )
 
   assert.deepEqual(
+    normalizeMediaSearchUiPreferences({ workspaceView: 'search', experienceMode: 'advanced' }),
+    { workspaceView: 'search', experienceMode: 'advanced' },
+  )
+  assert.deepEqual(
+    normalizeMediaSearchUiPreferences({ workspaceView: 'legacy', experienceMode: 'simple' }),
+    DEFAULT_MEDIA_SEARCH_UI_PREFERENCES,
+  )
+  assert.deepEqual(
     normalizeImageSearchUiPreferences({
       workspaceView: 'search',
       embeddingGpuJobs: 1,

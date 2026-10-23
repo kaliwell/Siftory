@@ -30,6 +30,7 @@ function formatDuration(ms?: number): string {
 }
 
 interface MediaSearchResultsViewProps {
+  searchReady?: boolean
   frames: MediaSearchVideoFrameRecord[]
   onExtractSubtitles: (videoId: string) => void
   onOpenMedia: (videoId: string, timestampMs?: number) => void
@@ -105,6 +106,7 @@ const FramePreview: React.FC<{ deferLoading: boolean; frame: MediaSearchVideoFra
 }
 
 const MediaSearchResultsView: React.FC<MediaSearchResultsViewProps> = ({
+  searchReady = false,
   frames,
   onExtractSubtitles,
   onOpenMedia,
@@ -384,7 +386,7 @@ const MediaSearchResultsView: React.FC<MediaSearchResultsViewProps> = ({
               ))}
             </div>
           </div>
-        ) : selectedPaths.length === 0 ? (
+        ) : selectedPaths.length === 0 && !searchReady ? (
           <SearchEmptyState
             testId="media-search-empty-state"
             title={t('Add videos to begin')}
