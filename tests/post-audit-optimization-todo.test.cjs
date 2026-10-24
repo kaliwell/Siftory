@@ -266,3 +266,39 @@ test('source-only optimization report passes without relying on stale build outp
   assert.equal(report.renderer, null)
   assert.equal(report.electron, null)
 })
+
+test('source-only CLI entry emits a valid machine-readable report without generated files', () => {
+  const { main } = require('../scripts/check-post-audit-build-optimization.cjs')
+  const original = process.stdout.write
+  let output = ''
+  try {
+    process.stdout.write = (chunk) => {
+      output += chunk
+      return true
+    }
+    main(['--source-only'])
+  } finally {
+    process.stdout.write = original
+  }
+  const report = JSON.parse(output)
+  assert.equal(report.ok, true)
+  assert.equal(report.renderer, null)
+  assert.equal(report.electron, null)
+})
+
+test('renderer asset references cannot escape the output directory', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-build-path-'))
+  try {
+    fs.mkdirSync(path.join(root, '.vite'))
+    fs.writeFileSync(
+      path.join(root, '.vite', 'manifest.json'),
+      JSON.stringify({
+        'index.html': { file: '../outside.js', isEntry: true, src: 'index.html' },
+        'media-player.html': { file: 'player.js', isEntry: true, src: 'media-player.html' },
+      }),
+    )
+    assert.throws(() => analyzeRendererBuild(root), /escapes dist/)
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})

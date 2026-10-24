@@ -96,6 +96,7 @@ const plans = new Map<string, SyncPlan>()
 const executions = new Map<string, SyncExecution>()
 const assetLibraryRecoveryChains = new Map<string, Promise<void>>()
 let running = false
+let shuttingDown = false
 let mutationEpoch = 0
 let progress: SourceFileSyncProgress = {
   state: 'idle',
@@ -404,6 +405,28 @@ async function validateSource(sourcePath: string): Promise<{
   dev: number
   ino: number
 }> {
+  let timer: NodeJS.Timeout | undefined
+  try {
+    return await Promise.race([
+      readSourceIdentity(sourcePath),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Source folder check timed out; records were preserved')),
+          DEFAULT_PROBE_TIMEOUT_MS,
+        )
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
+async function readSourceIdentity(sourcePath: string): Promise<{
+  sourcePath: string
+  realPath: string
+  dev: number
+  ino: number
+}> {
   if (
     typeof sourcePath !== 'string' ||
     !sourcePath.trim() ||
@@ -574,6 +597,7 @@ function prunePlans(now = Date.now()): void {
 export async function previewSourceFileSync(options: {
   sourcePath: string
   dependencies: SourceFileSyncDependencies
+  canRetireMissingPath?: (filePath: string) => boolean
 }): Promise<SourceFileSyncPreview> {
   if (running) return emptyPreview('Another source synchronization operation is running')
   const startedAt = Date.now()
@@ -590,6 +614,7 @@ export async function previewSourceFileSync(options: {
   }
   try {
     const source = await validateSource(options.sourcePath)
+    if (shuttingDown) throw new Error('Source synchronization is shutting down')
     const sourceKey = normalizePathKey(source.sourcePath)
     const [allImages, allVideos] = await Promise.all([
       options.dependencies.listImageRecords(),
@@ -627,6 +652,12 @@ export async function previewSourceFileSync(options: {
     // not issue a confirmation token unless the same root is still online.
     await revalidateSourceIdentity(source)
     const inaccessible = imageState.inaccessible + videoState.inaccessible
+    const eligibleImages = imageState.missing.filter(
+      (record) => options.canRetireMissingPath?.(record.path) ?? true,
+    )
+    const eligibleVideos = videoState.missing.filter(
+      (record) => options.canRetireMissingPath?.(record.path) ?? true,
+    )
     const staleIndexedSourceBytes =
       imageState.missing.reduce((sum, record) => sum + Math.max(0, record.fileSize || 0), 0) +
       videoState.missing.reduce((sum, record) => sum + Math.max(0, record.sizeBytes || 0), 0)
@@ -640,8 +671,13 @@ export async function previewSourceFileSync(options: {
       expiresAt: createdAt + PREVIEW_TTL_MS,
       checkedImageRecords: images.length,
       checkedVideoRecords: videos.length,
-      missingImageRecords: imageState.missing.length,
-      missingVideoRecords: videoState.missing.length,
+      missingImageRecords: eligibleImages.length,
+      missingVideoRecords: eligibleVideos.length,
+      pendingMissingRecords:
+        imageState.missing.length +
+        videoState.missing.length -
+        eligibleImages.length -
+        eligibleVideos.length,
       inaccessibleRecords: inaccessible,
       staleIndexedSourceBytes,
       originalFilesAffected: 0,
@@ -663,8 +699,8 @@ export async function previewSourceFileSync(options: {
       probeTimeoutMs,
       createdAt,
       expiresAt: preview.expiresAt!,
-      images: imageState.missing,
-      videos: videoState.missing,
+      images: eligibleImages,
+      videos: eligibleVideos,
       preview,
     })
     progress = {
@@ -967,6 +1003,7 @@ export function executeSourceFileSync(options: {
   prunePlans()
   const existingExecution = executions.get(options.token)
   if (existingExecution) return existingExecution.result
+  if (shuttingDown) return Promise.resolve(emptyResult('Source synchronization is shutting down'))
   if (running) {
     return Promise.resolve(emptyResult('Another source synchronization operation is running'))
   }
@@ -1002,6 +1039,13 @@ export function getExistingSourceFileSyncExecution(
 
 export function getSourceFileSyncProgress(): SourceFileSyncProgress {
   return { ...progress }
+}
+
+/** Stop new work and drain committed transactions before closing index and library stores. */
+export async function shutdownSourceFileSync(): Promise<void> {
+  shuttingDown = true
+  await Promise.allSettled([...executions.values()].map((execution) => execution.result))
+  await Promise.allSettled([...assetLibraryRecoveryChains.values()])
 }
 
 export function isSourceFileSyncRunning(): boolean {

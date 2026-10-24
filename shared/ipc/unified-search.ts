@@ -99,6 +99,13 @@ export interface UnifiedSearchLaneStatus {
 export type UnifiedIndexStateLevel = 'metadata-only' | 'partial' | 'full'
 
 export type UnifiedSearchMediaType = 'image' | 'video' | 'audio' | 'file'
+
+/** Shared by SQL prefilters and the final result classifier. */
+export const UNIFIED_MEDIA_EXTENSIONS = {
+  image: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tif', 'tiff', 'raw', 'cr2', 'nef', 'arw'],
+  video: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
+  audio: ['mp3', 'wav', 'flac'],
+} as const
 export type UnifiedSearchOrientation = 'landscape' | 'portrait' | 'square'
 
 export interface UnifiedSearchFilters {
@@ -272,6 +279,8 @@ export interface UnifiedSearchResultItem {
 }
 
 export interface UnifiedSearchResponse {
+  /** The bounded candidate scan did not exhaust the matching collection. */
+  candidateTruncated?: boolean
   items: UnifiedSearchResultItem[]
   total: number
   lanes: UnifiedSearchLaneStatus[]

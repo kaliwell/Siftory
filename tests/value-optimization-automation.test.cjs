@@ -338,15 +338,15 @@ test('snapshot summary binds both model generations into one stable fingerprint'
   )
 })
 
-test('CUDA probe reads real pending decisions instead of treating them as absent', async () => {
+test('CUDA component approvals remain pending after the project adopts an open source license', async () => {
   const result = await runCudaProbe()
   assert.equal(result.technicalReady, true)
   assert.equal(result.defaultBundled, false)
   assert.equal(result.approval.length, 4)
   assert.ok(result.approval.every((item) => item.status === 'pending'))
   assert.ok(result.approval.every((item) => item.complete === false && item.reasons.length > 0))
-  assert.equal(result.projectApproval.complete, false)
-  assert.ok(result.waitingFor.some((item) => item.includes('project license decision')))
+  assert.equal(result.projectApproval.complete, true)
+  assert.ok(!result.waitingFor.some((item) => item.includes('project license decision')))
   assert.equal(result.postApprovalVerification.status, 'waiting-for-prerequisites')
   assert.equal(result.postApprovalVerification.ran, false)
   assert.equal(result.completionReady, false)

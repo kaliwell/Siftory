@@ -305,6 +305,8 @@ export type {
 } from './ipc/vector-maintenance'
 export {
   SOURCE_DERIVED_DATA_IPC,
+  type AutomaticMaintenanceConfig,
+  type AutomaticMaintenanceStatus,
   type SourceDerivedDataApi,
   type SourceDerivedDataCategory,
   type SourceDerivedDataCategoryId,

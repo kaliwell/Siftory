@@ -1,5 +1,7 @@
 import { secureIpcMain } from './ipcAuthorization'
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, powerMonitor } from 'electron'
+import { AutomaticMaintenanceService } from './automaticMaintenanceService'
+import { expireAutomaticMaintenanceBackups } from './automaticMaintenanceBackups'
 import fs from 'fs'
 import path from 'path'
 import {
@@ -391,6 +393,13 @@ function vectorExclusiveConflict(): string | null {
   return null
 }
 
+let automaticMaintenance: AutomaticMaintenanceService | null = null
+
+export async function shutdownAutomaticMaintenance(): Promise<void> {
+  await automaticMaintenance?.stop()
+  automaticMaintenance = null
+}
+
 export function registerVectorIpc(
   getMainWindow: GetMainWindow,
   userDataPath: string,
@@ -522,6 +531,56 @@ export function registerVectorIpc(
     assetLibraryRecoveryRetryTimer.unref?.()
   }
   scheduleAssetLibraryRecoveryRetry()
+
+  automaticMaintenance = new AutomaticMaintenanceService(userDataPath, {
+    now: () => Date.now(),
+    isIdle: () => {
+      try {
+        return powerMonitor.getSystemIdleTime() >= 120 && !powerMonitor.isOnBatteryPower()
+      } catch {
+        return false
+      }
+    },
+    busyReason: () => sourceDerivedDataBusyError(),
+    acquire: () => {
+      const lease = tryAcquireVectorMaintenanceReservation()
+      if (!lease) return null
+      sourceFileSyncMaintenanceLease = lease
+      return () => {
+        sourceFileSyncMaintenanceLease = null
+        lease()
+      }
+    },
+    flush: () => flushVectorDatabaseWrites(),
+    preview: (sourcePath, canRetireMissingPath, isCancelled) =>
+      previewSourceFileSync({
+        sourcePath,
+        canRetireMissingPath,
+        dependencies: { ...sourceFileSyncDependencies, isCancelled },
+      }),
+    apply: (token, isCancelled) =>
+      executeSourceFileSync({
+        token,
+        dependencies: { ...sourceFileSyncDependencies, isCancelled },
+      }),
+    gcPreview: async (isCancelled) => {
+      const status = getImageSearchStatus()
+      if (!status.segmentPath) throw new Error('Image Search index is not loaded')
+      return previewVectorGc(userDataPath, status.segmentPath, { isCancelled })
+    },
+    gcStart: (token) => startVectorGc(token),
+    gcProgress: () => getVectorGcProgress(),
+    gcCancel: () => {
+      cancelVectorGc()
+    },
+    expireBackups: (isCancelled) => expireAutomaticMaintenanceBackups(userDataPath, isCancelled),
+  })
+  automaticMaintenance.start()
+  secureIpcMain.handle(SOURCE_DERIVED_DATA_IPC.AUTO_STATUS, () => automaticMaintenance!.getStatus())
+  secureIpcMain.handle(SOURCE_DERIVED_DATA_IPC.AUTO_SET, (_event, raw: unknown) =>
+    automaticMaintenance!.configure(raw),
+  )
+  secureIpcMain.handle(SOURCE_DERIVED_DATA_IPC.AUTO_CHECK, () => automaticMaintenance!.run(true))
 
   setHashDelegate({
     searchByImageAsync: (imagePath: string, threshold: number, topK: number, searchMode: string) =>

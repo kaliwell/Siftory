@@ -14,16 +14,6 @@
   color: rgb(var(--color-accent));
   margin-bottom: 8px;
 }
-.asset-library-query-bar {
-  display: flex;
-  align-items: start;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-block: 12px;
-}
-.asset-library-query-bar > input {
-  flex: 1;
-}
 .focused-workspace input:is([type='checkbox'], [type='radio']) {
   min-height: 0;
   width: 15px;

@@ -36,6 +36,11 @@ const api: ElectronAPI = {
   copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
   browseFolder: () => ipcRenderer.invoke('browse-folder'),
   sourceDerivedData: {
+    autoStatus: () => ipcRenderer.invoke('sourceDerivedData:autoStatus'),
+    setAutomaticMaintenance: (config) =>
+      ipcRenderer.invoke('sourceDerivedData:setAutomaticMaintenance', config),
+    startAutomaticMaintenanceCheck: () =>
+      ipcRenderer.invoke('sourceDerivedData:startAutomaticMaintenanceCheck'),
     preview: (request) => ipcRenderer.invoke('sourceDerivedData:preview', request),
     execute: (token) => ipcRenderer.invoke('sourceDerivedData:execute', token),
     progress: () => ipcRenderer.invoke('sourceDerivedData:progress'),

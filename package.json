@@ -2,7 +2,7 @@
   "name": "siftory-desktop",
   "version": "1.0.1-alpha.2",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",
   "engines": {
     "node": "24.22.1",
@@ -100,7 +100,7 @@
     "test:native-scan": "node --test tests/native-scan.test.cjs",
     "test:discovery-catalog": "node --test tests/discovery-catalog.test.cjs tests/source-adapter-contract.test.cjs tests/mounted-network-source.test.cjs tests/sftp-source-adapter.test.cjs tests/remote-catalog-download.test.cjs tests/remote-preview.test.cjs tests/sftp-video-retrieval.test.cjs",
     "test:asset-identity": "node --test tests/asset-identity.test.cjs",
-    "test:unified-search": "node --test tests/unified-task-scheduler.test.cjs tests/unified-task-submission.test.cjs tests/image-search-staged-scan.test.cjs tests/unified-search.test.cjs tests/unified-search-guards.test.cjs tests/unified-duplicate-recall.test.cjs tests/unified-video-search.test.cjs tests/unified-video-semantic-search.test.cjs tests/vector-path-key-repair.test.cjs",
+    "test:unified-search": "node --test tests/automatic-maintenance.test.cjs tests/unified-task-scheduler.test.cjs tests/unified-task-submission.test.cjs tests/image-search-staged-scan.test.cjs tests/unified-search.test.cjs tests/unified-search-guards.test.cjs tests/unified-duplicate-recall.test.cjs tests/unified-video-search.test.cjs tests/unified-video-semantic-search.test.cjs tests/vector-path-key-repair.test.cjs",
     "test:native-decode": "node --test tests/native-decode.test.cjs",
     "test:native-hash": "node --test tests/native-hash.test.cjs",
     "test:native-segment": "node --test tests/native-segment-v3.test.cjs",
@@ -310,7 +310,10 @@
     "test:focused-workspace": "node --test tests/focused-workspace.test.cjs tests/workspace-navigation.test.cjs tests/ipc-registration.test.cjs tests/preload-contract.test.cjs tests/product-information-architecture.test.cjs tests/product-unified-search-filters.test.cjs tests/product-search-evidence.test.cjs tests/product-search-feedback.test.cjs tests/unified-search.test.cjs tests/panel-window-controls.test.cjs tests/ui-smoke-contract.test.cjs tests/product-first-run-guide.test.cjs tests/global-model-readiness.test.cjs tests/product-resource-governor.test.cjs tests/settings-writer.test.cjs tests/settings-store.test.cjs tests/window-visibility-state.test.cjs tests/window-visibility-integration.test.cjs tests/standard-window.test.cjs tests/workspace-display.test.cjs tests/window-visibility-runtime.test.cjs tests/model-service-development-storage.test.cjs",
     "test:focused-workspace:browser": "node tests/focused-workspace-browser.cjs",
     "test:focused-workspace:native": "node tests/focused-workspace-electron-smoke.cjs",
-    "test:modern-desktop:browser": "node tests/modern-desktop-browser.cjs"
+    "test:automatic-maintenance:native": "npm run build:renderer && node tests/automatic-maintenance-electron-smoke.cjs",
+    "test:modern-desktop:browser": "node tests/modern-desktop-browser.cjs",
+    "test:core-behavior": "node --test tests/unified-search.test.cjs tests/unified-search-guards.test.cjs tests/discovery-catalog.test.cjs tests/source-file-sync.test.cjs tests/automatic-maintenance.test.cjs tests/vector-gc.test.cjs tests/product-unified-search-filters.test.cjs tests/license-compliance.test.cjs tests/end-user-terms.test.cjs tests/end-user-terms-ipc.test.cjs tests/source-derived-data-cleanup.test.cjs",
+    "benchmark:core-search": "node scripts/benchmark-core-search.cjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
@@ -442,6 +445,18 @@
       {
         "from": "legal/covered-source",
         "to": "legal/covered-source"
+      },
+      {
+        "from": "LICENSE",
+        "to": "legal/LICENSE"
+      },
+      {
+        "from": "NOTICE",
+        "to": "legal/NOTICE"
+      },
+      {
+        "from": "SOURCE_AVAILABILITY.md",
+        "to": "legal/SOURCE_AVAILABILITY.md"
       }
     ],
     "win": {

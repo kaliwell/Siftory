@@ -21,10 +21,10 @@ function renderApprovalPacket(projectRoot = path.resolve(__dirname, '..')) {
   const rows = components
     .map(
       (entry) =>
-        `| ${entry.upstream.name} | ${entry.upstream.version} | ${entry.license.spdx} | ${entry.license.reviewStatus} | 否 |`,
+        `| ${entry.upstream.name} | ${entry.upstream.version} | ${entry.license.spdx} | ${entry.license.reviewStatus} / ${decisions.components?.[entry.id]?.status || 'pending'} | 否 |`,
     )
     .join('\n')
-  return `# VID-017 分发审批材料包\n\n> 状态：当前  \n> 更新日期：2026-08-17  \n> 范围：llama.cpp 与 Qwen3-VL 候选分发决策材料  \n> 替代文档：无\n\n> 本文档由固定清单生成，不构成批准，不修改许可证决策。\n\n## 候选组件\n\n| 组件 | 固定版本 | SPDX | 当前审查状态 | 默认打包 |\n| --- | --- | --- | --- | --- |\n${rows}\n\n本地验证已覆盖真实推理、严格 JSON、持续推理和 online/offline 排除矩阵；本地安装范围仍为 \`local-evaluation-only\`。项目许可证当前状态：\`${decisions.project?.status || 'unknown'}\`，表达式：\`${decisions.project?.licenseExpression || 'UNLICENSED'}\`。\n\n## 分发选项\n\n1. 保持用户本机安装、不随应用分发（当前推荐，零新增安装包体积）。\n2. 获批后首次运行在线下载，并提供 MIT、Apache-2.0 许可证及 NOTICE。\n3. 获批后离线内置，安装包预计增加约 1.55 GB，并执行真实 packaged matrix。\n\n## 有权审核人必须完成\n\n- [ ] 确认项目 EULA、版权主体与发布权限。\n- [ ] 确认 llama.cpp MIT 再分发义务和许可证文件。\n- [ ] 确认 Qwen3-VL Apache-2.0/模型材料的再分发范围和 NOTICE。\n- [ ] 在 \`legal/license-decisions.json\` 留下真实审核人、时间、证据和允许的 profile。\n\n在以上条目完成前，\`VAL-313\` 保持 blocked，runtime 与模型不得进入安装包。\n`
+  return `# VID-017 分发审批材料包\n\n> 状态：当前  \n> 更新日期：2026-10-24  \n> 范围：llama.cpp 与 Qwen3-VL 候选分发决策材料  \n> 替代文档：无\n\n> 本文档由固定清单生成，不构成批准，不修改许可证决策。\n\n## 候选组件\n\n| 组件 | 固定版本 | SPDX | 当前审查状态 | 默认打包 |\n| --- | --- | --- | --- | --- |\n${rows}\n\n本地验证已覆盖真实推理、严格 JSON、持续推理和 online/offline 排除矩阵；本地安装范围仍为 \`local-evaluation-only\`。项目许可证当前状态：\`${decisions.project?.status || 'unknown'}\`，表达式：\`${decisions.project?.licenseExpression || 'UNLICENSED'}\`。\n\n## 分发选项\n\n1. 保持用户本机安装、不随应用分发（当前推荐，零新增安装包体积）。\n2. 获批后首次运行在线下载，并提供 MIT、Apache-2.0 许可证及 NOTICE。\n3. 获批后离线内置，安装包预计增加约 1.55 GB，并执行真实 packaged matrix。\n\n## 有权审核人必须完成\n\n- [ ] 确认项目开源许可、版权主体与发布权限。\n- [ ] 确认 llama.cpp MIT 再分发义务和许可证文件。\n- [ ] 确认 Qwen3-VL Apache-2.0/模型材料的再分发范围和 NOTICE。\n- [ ] 在 \`legal/license-decisions.json\` 留下真实审核人、时间、证据和允许的 profile。\n\n在以上条目完成前，\`VAL-313\` 保持 blocked，runtime 与模型不得进入安装包。\n`
 }
 
 function main() {

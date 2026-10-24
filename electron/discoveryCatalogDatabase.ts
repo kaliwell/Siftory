@@ -9,6 +9,7 @@
 import fs from 'fs'
 import path from 'path'
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite'
+import { UNIFIED_MEDIA_EXTENSIONS } from '../shared/ipc/unified-search'
 import type {
   DataSource,
   DiscoveredEntry,
@@ -799,6 +800,28 @@ export class DiscoveryCatalogDatabase {
     if (request.sourceId) {
       conditions.push('f.source_id = ?')
       parameters.push(request.sourceId)
+    }
+    if (request.sourceIds?.length) {
+      conditions.push(`f.source_id IN (${request.sourceIds.map(() => '?').join(',')})`)
+      parameters.push(...request.sourceIds)
+    }
+    if (request.modifiedAfter !== undefined) {
+      conditions.push('f.modified_at >= ?')
+      parameters.push(request.modifiedAfter)
+    }
+    if (request.modifiedBefore !== undefined) {
+      conditions.push('f.modified_at <= ?')
+      parameters.push(request.modifiedBefore)
+    }
+    if (request.mediaTypes?.length) {
+      const mediaType = `CASE ${Object.entries(UNIFIED_MEDIA_EXTENSIONS)
+        .map(([type, extensions]) => {
+          parameters.push(...extensions)
+          return `WHEN f.extension IN (${extensions.map(() => '?').join(',')}) THEN '${type}'`
+        })
+        .join(' ')} ELSE 'file' END`
+      conditions.push(`${mediaType} IN (${request.mediaTypes.map(() => '?').join(',')})`)
+      parameters.push(...request.mediaTypes)
     }
     conditions.unshift("f.availability != 'missing'")
     const where = `WHERE ${conditions.join(' AND ')}`

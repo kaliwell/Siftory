@@ -81,6 +81,19 @@ async function run() {
     await page.waitForFunction(() => document.documentElement.dataset.effectiveMode === 'light')
     await page.waitForTimeout(200)
     await page.screenshot({ path: path.join(evidence, 'empty-light.png') })
+    for (const width of [2560, 1920, 1440, 1000, 760]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.waitForTimeout(150)
+      const controls = await page.locator('.unified-search-control-pane').boundingBox()
+      const content = await page.locator('.unified-search-content').boundingBox()
+      if (width >= 1200) {
+        assert.ok(controls.x + controls.width <= content.x)
+        assert.ok(Math.abs(controls.y - content.y) < 2)
+      } else assert.ok(controls.y + controls.height <= content.y + 1)
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      await page.screenshot({ path: path.join(evidence, `unified-split-${width}.png`) })
+    }
+    await page.setViewportSize({ width: 1320, height: 850 })
     fs.writeFileSync(
       path.join(evidence, 'styles.json'),
       JSON.stringify(
@@ -171,9 +184,74 @@ async function run() {
         assert.equal(await page.getByTestId('asset-filter-source').isVisible(), true)
         await page.getByTestId('asset-library-filters').locator('summary').click()
         assert.doesNotMatch(await page.locator('.asset-library-shell').innerText(), /undefined/)
+        for (const width of [2560, 1920, 1440, 1000, 760]) {
+          await page.setViewportSize({ width, height: 900 })
+          const card = page.locator('.asset-library-card').first()
+          await card.waitFor()
+          await page.waitForTimeout(150)
+          const bounds = await card.boundingBox()
+          assert.ok(bounds.width >= 239 && bounds.width < 500, `gallery card width at ${width}`)
+          const preview = await card.locator('.asset-library-card-preview').boundingBox()
+          assert.ok(preview.height >= 179)
+          if (width >= 1200) {
+            const controls = await page.locator('.asset-library-browser-controls').boundingBox()
+            const gallery = await page.locator('.asset-library-gallery').boundingBox()
+            assert.ok(controls.x + controls.width <= gallery.x)
+            assert.ok(Math.abs(controls.y - gallery.y) < 2)
+          }
+          const actions = await card.locator('.asset-library-card-actions').boundingBox()
+          assert.ok(actions.y + actions.height <= bounds.y + bounds.height)
+          assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+          await page.screenshot({ path: path.join(evidence, `library-${width}.png`) })
+        }
+        const size = page.getByTestId('asset-thumbnail-size')
+        await size.fill('320')
+        await page.waitForTimeout(200)
+        assert.ok((await page.locator('.asset-library-card').first().boundingBox()).width >= 319)
+        await page.getByTestId('asset-library-batch-actions').locator('summary').click()
+        assert.ok((await page.locator('.asset-library-gallery').boundingBox()).height > 120)
+        await page.getByTestId('asset-library-batch-actions').locator('summary').click()
+        await size.fill('240')
+        await page.setViewportSize({ width: 1920, height: 900 })
+        await page.evaluate(() => window.__workspaceTest.store.getState().setThemeMode('dark'))
+        await page.waitForFunction(() => document.documentElement.dataset.effectiveMode === 'dark')
+        await page.waitForTimeout(300)
+        await page.screenshot({ path: path.join(evidence, 'library-dark-1920.png') })
+        await page.evaluate(() => window.__workspaceTest.store.getState().setThemeMode('light'))
+        await page.setViewportSize({ width: 1320, height: 850 })
       }
       await page.screenshot({ path: path.join(evidence, domain + '.png') })
     }
+    await go('maintenance')
+    await page.evaluate(() => window.__workspaceTest.setCatalogAnalyzed(false))
+    const inventory = page.getByTestId('image-search-data-overview')
+    await inventory.getByRole('button', { name: '刷新文件清单', exact: true }).click()
+    await inventory
+      .getByText('尚未分析索引统计，已有的搜索数据仍然保留。', { exact: false })
+      .waitFor()
+    assert.equal(
+      (await inventory.locator('.index-overview-metrics strong').allTextContents()).filter(
+        (value) => value === '—',
+      ).length,
+      3,
+    )
+    await page.screenshot({ path: path.join(evidence, 'maintenance-not-analyzed.png') })
+    await page.evaluate(() => window.__workspaceTest.setCatalogAnalyzed(true))
+    await inventory.getByRole('button', { name: '刷新文件清单', exact: true }).click()
+    await page.getByTestId('automatic-maintenance').waitFor()
+    await page.getByTestId('automatic-maintenance-enabled').check()
+    await page.getByTestId('automatic-maintenance-check').click()
+    await page
+      .getByTestId('automatic-maintenance')
+      .getByText('上次检查已完成', { exact: true })
+      .waitFor()
+    for (const width of [1920, 1000, 760]) {
+      await page.setViewportSize({ width, height: 900 })
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      await page.screenshot({ path: path.join(evidence, `automatic-maintenance-${width}.png`) })
+    }
+    await page.getByTestId('automatic-maintenance-enabled').uncheck()
+    await page.setViewportSize({ width: 1320, height: 850 })
     assert.equal(await page.getByTestId('window-material-glass').count(), 0)
     assert.equal(await page.getByTestId('workspace-window-hide').count(), 0)
     await go('image-search')

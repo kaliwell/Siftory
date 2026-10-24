@@ -354,6 +354,70 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+@media (min-width: 1200px) {
+  .focused-workspace .split-tool-workspace.unified-search-workspace {
+    display: grid;
+    grid-template-columns: minmax(340px, 390px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 24px;
+    padding: 22px 28px;
+  }
+  .focused-workspace .unified-search-workspace > .unified-search-control-pane {
+    box-sizing: border-box;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    max-height: none;
+    padding: 16px;
+    overflow: auto;
+    border: 1px solid var(--ui-border);
+    border-radius: 14px;
+    background: rgb(var(--color-surface));
+  }
+  .focused-workspace .unified-search-toolbar {
+    flex-wrap: wrap;
+  }
+  .focused-workspace .unified-search-input-group {
+    flex-basis: 100%;
+  }
+  .focused-workspace .unified-search-toolbar > button {
+    flex: 1;
+    min-height: 38px;
+    padding: 7px 10px;
+  }
+  .focused-workspace .unified-search-options-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .focused-workspace .unified-search-options-row > select {
+    width: 100%;
+    max-width: none;
+  }
+  .focused-workspace .unified-search-filters,
+  .focused-workspace .unified-search-more__content {
+    position: static;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    box-shadow: none;
+  }
+  .focused-workspace .unified-search-reference-card {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .focused-workspace .unified-search-content {
+    min-width: 0;
+    border: 1px solid var(--ui-border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgb(var(--color-surface));
+  }
+  .focused-workspace .unified-search-grid {
+    padding: 16px;
+    gap: 12px;
+  }
+}
 @media (max-width: 1100px) {
   .focused-workspace .unified-search-workspace > .unified-search-control-pane {
     padding: 20px 24px 14px;

@@ -1,4 +1,7 @@
 export const SOURCE_DERIVED_DATA_IPC = {
+  AUTO_STATUS: 'sourceDerivedData:autoStatus',
+  AUTO_SET: 'sourceDerivedData:setAutomaticMaintenance',
+  AUTO_CHECK: 'sourceDerivedData:startAutomaticMaintenanceCheck',
   PREVIEW: 'sourceDerivedData:preview',
   EXECUTE: 'sourceDerivedData:execute',
   PROGRESS: 'sourceDerivedData:progress',
@@ -12,6 +15,7 @@ export interface SourceFileSyncPreviewRequest {
 }
 
 export interface SourceFileSyncPreview {
+  pendingMissingRecords?: number
   ok: boolean
   token?: string
   sourcePath?: string
@@ -156,10 +160,31 @@ export interface SourceDerivedDataCleanupProgress {
 }
 
 export interface SourceDerivedDataApi {
+  autoStatus(): Promise<AutomaticMaintenanceStatus>
+  setAutomaticMaintenance(config: AutomaticMaintenanceConfig): Promise<AutomaticMaintenanceStatus>
+  startAutomaticMaintenanceCheck(): Promise<AutomaticMaintenanceStatus>
   preview(request: SourceDerivedDataPreviewRequest): Promise<SourceDerivedDataPreview>
   execute(token: string): Promise<SourceDerivedDataCleanupResult>
   progress(): Promise<SourceDerivedDataCleanupProgress>
   syncPreview(request: SourceFileSyncPreviewRequest): Promise<SourceFileSyncPreview>
   syncExecute(token: string): Promise<SourceFileSyncResult>
   syncProgress(): Promise<SourceFileSyncProgress>
+}
+
+export interface AutomaticMaintenanceConfig {
+  enabled: boolean
+  scopes: string[]
+}
+
+export interface AutomaticMaintenanceStatus {
+  config: AutomaticMaintenanceConfig
+  phase: 'disabled' | 'waiting' | 'checking' | 'syncing' | 'recycling' | 'completed' | 'error'
+  lastCheckAt?: number
+  nextCheckAt?: number
+  message?: string
+  pendingMissing: number
+  removedImages: number
+  missingVideos: number
+  recoveredBytes: number
+  pendingReleaseBytes: number
 }

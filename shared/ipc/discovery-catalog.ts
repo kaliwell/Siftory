@@ -197,6 +197,10 @@ export type DiscoveryCatalogQuerySort = 'name_asc' | 'size_desc' | 'recent'
 export interface DiscoveryCatalogQueryRequest {
   query?: string
   sourceId?: string
+  sourceIds?: string[]
+  mediaTypes?: Array<'image' | 'video' | 'audio' | 'file'>
+  modifiedAfter?: number
+  modifiedBefore?: number
   offset?: number
   limit?: number
   sort?: DiscoveryCatalogQuerySort

@@ -278,6 +278,13 @@ const UnifiedSearchPanel: React.FC = () => {
           if (!cancelled) {
             setResponse({ request: searchRequest, result })
             announceFirstSearchCompleted('unified')
+            // Compatibility projection may register sources from an existing Native index.
+            void window.electronAPI.discoveryCatalog
+              .listSources()
+              .then((nextSources) => {
+                if (!cancelled) setSources(nextSources)
+              })
+              .catch(() => undefined)
           }
         })
         .catch(() => {
@@ -1042,7 +1049,7 @@ const UnifiedSearchPanel: React.FC = () => {
                 >
                   {t('Next')}
                 </button>
-                {(response?.total ?? 0) > MAX_CANDIDATES && (
+                {(response?.candidateTruncated || (response?.total ?? 0) > MAX_CANDIDATES) && (
                   <small>
                     {t('Showing up to 500 candidates. Refine your search to see more.')}
                   </small>

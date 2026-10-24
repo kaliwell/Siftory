@@ -388,7 +388,7 @@ const UserModelPlatformSettings: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '2px 0' }}>
       <div style={{ fontSize: 12, opacity: 0.72, lineHeight: 1.35 }}>
         {t(
-          'Commercial builds do not include these models. Import only models whose license and interface you have verified.',
+          'Optional models are user-supplied. Import only models whose license and interface you have verified.',
         )}
       </div>
       <label style={{ display: 'flex', gap: 5, alignItems: 'flex-start', fontSize: 12 }}>

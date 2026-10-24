@@ -16,7 +16,7 @@ test('VID-017 preflight separates completed engineering work from approval gates
   assert.equal(report.foundation.adapterTestsRegistered, true)
   assert.equal(report.foundation.runtimeManifestValid, true)
   assert.equal(report.foundation.pendingCandidatesExcludedFromOnlineAndOffline, true)
-  assert.equal(report.approvals.projectLicenseReady, false)
+  assert.equal(report.approvals.projectLicenseReady, true)
   assert.equal(report.approvals.runtimeRedistributionReady, false)
   assert.equal(report.approvals.modelRedistributionReady, false)
   assert.equal(report.payloads.runtimeArchiveDownloaded, false)

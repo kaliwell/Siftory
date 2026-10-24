@@ -145,6 +145,7 @@ export class SourceCatalogService {
   private readonly activeScans = new Map<string, ActiveScan>()
   private readonly sourceWatches = new Map<string, ActiveSourceWatch>()
   private statusListeners = new Set<(status: DiscoveryScanStatus) => void>()
+  private closed = false
 
   constructor(options: SourceCatalogServiceOptions) {
     this.databasePath = path.resolve(options.databasePath)
@@ -164,6 +165,7 @@ export class SourceCatalogService {
   }
 
   close(): void {
+    this.closed = true
     for (const active of this.activeScans.values()) active.controller.abort()
     for (const sourceId of [...this.sourceWatches.keys()]) this.stopIncrementalWatcher(sourceId)
     this.database.close()
@@ -914,11 +916,102 @@ export class SourceCatalogService {
   // ── Catalog queries (lexical; independent of AI models) ─
 
   queryCatalog(request: DiscoveryCatalogQueryRequest): DiscoveryCatalogQueryResponse {
+    if (this.closed) return { items: [], total: 0 }
     return this.database.queryCatalog(request)
   }
 
   findFileEntriesByPaths(displayPaths: readonly string[]) {
+    if (this.closed) return []
     return this.database.findFileEntriesByPaths(displayPaths)
+  }
+
+  /** Project only files proven present in an existing search index; never scan new folders. */
+  async projectExistingSearchFiles(
+    displayPaths: readonly string[],
+    isIndexed: (file: string) => boolean,
+    sourceIds: readonly string[] = [],
+  ): Promise<void> {
+    const files = [...new Set(displayPaths.slice(0, 2000))].filter(
+      (file) => path.isAbsolute(file) && isIndexed(file),
+    )
+    const stats = new Map<string, fs.Stats>()
+    let timedOut = false
+    for (let offset = 0; offset < files.length && !timedOut; offset += 16) {
+      await Promise.all(
+        files.slice(offset, offset + 16).map(async (file) => {
+          let timer: ReturnType<typeof setTimeout> | undefined
+          try {
+            const stat = await Promise.race([
+              fs.promises.stat(file),
+              new Promise<never>((_resolve, reject) => {
+                timer = setTimeout(() => {
+                  timedOut = true
+                  reject(new Error('Existing index file probe timed out'))
+                }, 1500)
+              }),
+            ])
+            if (stat.isFile()) stats.set(file, stat)
+          } catch {
+            // Unavailable sources are never converted into missing-file writes.
+          } finally {
+            if (timer) clearTimeout(timer)
+          }
+        }),
+      )
+    }
+    // Resolve sources after asynchronous probes so concurrent projections share
+    // already-created durable identities instead of creating duplicate sources.
+    if (this.closed) return
+    const sources: DataSource[] = this.database
+      .listSources()
+      .filter(
+        (source) =>
+          source.type !== 'sftp' &&
+          source.type !== 'nas-agent' &&
+          (!sourceIds.length || sourceIds.includes(source.id)),
+      )
+    const groups = new Map<string, DiscoveredEntry[]>()
+    for (const [file, stat] of stats) {
+      let source = sources
+        .filter((candidate) => {
+          const relative = path.relative(candidate.rootLocator, file)
+          return (
+            relative !== '' &&
+            relative !== '..' &&
+            !relative.startsWith(`..${path.sep}`) &&
+            !path.isAbsolute(relative)
+          )
+        })
+        .sort((left, right) => right.rootLocator.length - left.rootLocator.length)[0]
+      if (!source) {
+        if (sourceIds.length) continue
+        const root = path.dirname(file)
+        source = {
+          id: newId('src'),
+          type: 'local-generic',
+          displayName: `Existing index · ${path.basename(root) || root}`,
+          rootLocator: root,
+          readOnly: true,
+          availability: 'online',
+          scanCapability: 'directory',
+        }
+        this.database.insertSource(source, this.now())
+        sources.push(source)
+      }
+      const entries = groups.get(source.id) ?? []
+      entries.push({
+        absolutePath: file,
+        relativePath: path.relative(source.rootLocator, file),
+        name: path.basename(file),
+        extension: path.extname(file).slice(1).toLowerCase(),
+        sizeBytes: stat.size,
+        modifiedAt: stat.mtimeMs,
+      })
+      groups.set(source.id, entries)
+    }
+    for (const [sourceId, entries] of groups) {
+      this.database.upsertDiscoveredBatch(sourceId, null, entries, this.now())
+    }
   }
 
   markLocalFileEntriesMissingByPaths(displayPaths: readonly string[]): number {

@@ -10,10 +10,20 @@ const picture =
     '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#a8bdcf"/><rect x="80" y="70" width="240" height="160" rx="12" fill="#eff3f8"/></svg>',
   )
 let sourceRevision = 1
+let catalogAnalyzed = true
 let profile = 'balanced'
 let failSettings = false
 let failResourceProfile = false
 let searchResultCount = 8
+let automaticMaintenance = {
+  config: { enabled: false, scopes: ['C:/fixtures'] },
+  phase: 'disabled',
+  pendingMissing: 0,
+  removedImages: 0,
+  missingVideos: 0,
+  recoveredBytes: 0,
+  pendingReleaseBytes: 0,
+}
 let mediaTask: Record<string, unknown> | null = null
 const methodDelays: Record<string, number> = {}
 const inFlight: Record<string, number> = {}
@@ -145,6 +155,19 @@ const handlers: Record<string, (...args: any[]) => any> = {
     pendingConfirmations: 0,
   }),
   'unifiedSearch.saveFeedback': () => ({ ok: true, feedbackId: 'synthetic-feedback' }),
+  'sourceDerivedData.autoStatus': () => automaticMaintenance,
+  'sourceDerivedData.setAutomaticMaintenance': (config: { enabled: boolean; scopes: string[] }) => {
+    automaticMaintenance = {
+      ...automaticMaintenance,
+      config,
+      phase: config.enabled ? 'waiting' : 'disabled',
+    }
+    return automaticMaintenance
+  },
+  'sourceDerivedData.startAutomaticMaintenanceCheck': () => {
+    automaticMaintenance = { ...automaticMaintenance, phase: 'completed', pendingMissing: 1 }
+    return automaticMaintenance
+  },
   'unifiedSearch.getSchedulerStats': stats,
   'unifiedSearch.setResourceProfile': (value: string) => {
     if (failResourceProfile) return { ok: false, error: 'Synthetic profile failure' }
@@ -231,8 +254,8 @@ const handlers: Record<string, (...args: any[]) => any> = {
   'imageSearch.getDataCatalogProgress': () => ({ state: 'idle' }),
   'imageSearch.getDataOverview': () => ({
     ok: true,
-    catalogState: 'ready',
-    builtAt: 1792713600000,
+    catalogState: catalogAnalyzed ? 'ready' : 'no-catalog',
+    builtAt: catalogAnalyzed ? 1792713600000 : undefined,
     totalBytes: 12400000,
     unionPathCount: 8,
     nativeUniqueCount: 8,
@@ -410,6 +433,9 @@ const api = (prefix = ''): any => {
   },
   setResultCount: (value: number) => {
     searchResultCount = value
+  },
+  setCatalogAnalyzed: (value: boolean) => {
+    catalogAnalyzed = value
   },
   setMediaTask: (value: Record<string, unknown> | null) => {
     mediaTask = value

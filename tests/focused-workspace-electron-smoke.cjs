@@ -221,37 +221,43 @@ async function run() {
     }
     const initial = await page.evaluate(() => window.electronAPI.imageSearch.getStatus())
     assert.equal(initial.nativeConnected, true)
-    const added = await page.evaluate(
-      (rootLocator) =>
-        window.electronAPI.discoveryCatalog.addSource({
-          type: 'local',
-          displayName: 'Demo materials',
-          rootLocator,
-        }),
-      library,
-    )
-    assert.equal(added.ok, true, added.error)
-    const discovery = await page.evaluate(
-      (id) => window.electronAPI.discoveryCatalog.startScan(id),
-      added.source.id,
-    )
-    assert.equal(discovery.ok, true, discovery.error)
-    await page.evaluate(async (id) => {
-      const deadline = Date.now() + 30000
-      while (Date.now() < deadline) {
-        const statuses = await window.electronAPI.discoveryCatalog.getScanStatus(id)
-        const status = statuses.find((item) => item.sourceId === id)
-        if (
-          status &&
-          !status.running &&
-          status.session?.state === 'completed' &&
-          status.session.committedCount >= 3
-        )
-          return
-        await new Promise((resolve) => setTimeout(resolve, 100))
-      }
-      throw new Error('Generated source catalog scan did not complete')
-    }, added.source.id)
+    const legacyCatalog = process.env.SIFTORY_TEST_LEGACY_CATALOG === '1'
+    if (!legacyCatalog) {
+      const added = await page.evaluate(
+        (rootLocator) =>
+          window.electronAPI.discoveryCatalog.addSource({
+            type: 'local',
+            displayName: 'Demo materials',
+            rootLocator,
+          }),
+        library,
+      )
+      assert.equal(added.ok, true, added.error)
+      const discovery = await page.evaluate(
+        (id) => window.electronAPI.discoveryCatalog.startScan(id),
+        added.source.id,
+      )
+      assert.equal(discovery.ok, true, discovery.error)
+      await page.evaluate(async (id) => {
+        const deadline = Date.now() + 30000
+        while (Date.now() < deadline) {
+          const statuses = await window.electronAPI.discoveryCatalog.getScanStatus(id)
+          const status = statuses.find((item) => item.sourceId === id)
+          if (
+            status &&
+            !status.running &&
+            status.session?.state === 'completed' &&
+            status.session.committedCount >= 3
+          )
+            return
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
+        throw new Error('Generated source catalog scan did not complete')
+      }, added.source.id)
+    } else {
+      const sources = await page.evaluate(() => window.electronAPI.discoveryCatalog.listSources())
+      assert.equal(sources.length, 0, 'legacy regression starts with no Discovery Catalog sources')
+    }
     await page.evaluate(
       (paths) =>
         window.electronAPI.imageSearch.startScan({ paths, mode: 'fast', scanMode: 'full' }),
@@ -371,6 +377,44 @@ async function run() {
       )
       assert.ok(semantic.results.length > 0, 'verified CLIP must execute a real text query')
       assert.equal(semantic.degraded, false, JSON.stringify(semantic.degradationReasons))
+      const unified = await page.evaluate(() =>
+        window.electronAPI.unifiedSearch.query({ query: 'a blue circle', limit: 50 }),
+      )
+      fs.writeFileSync(
+        path.join(evidence, 'unified-legacy-semantic-query.json'),
+        JSON.stringify(unified, null, 2),
+      )
+      assert.equal(
+        unified.lanes.find((lane) => lane.lane === 'semantic')?.status,
+        'ok',
+        JSON.stringify(unified.lanes),
+      )
+      assert.ok(
+        unified.items.length > 0,
+        'unified semantic recall must hydrate existing indexed files',
+      )
+      const fingerprint = await page.evaluate(
+        (referenceImagePath) =>
+          window.electronAPI.unifiedSearch.query({ referenceImagePath, limit: 50 }),
+        reference,
+      )
+      fs.writeFileSync(
+        path.join(evidence, 'unified-legacy-reference-query.json'),
+        JSON.stringify(fingerprint, null, 2),
+      )
+      assert.ok(
+        fingerprint.items.some((item) => item.displayName === 'sample-0.jpg'),
+        'unified reference image must find its original',
+      )
+      const combined = await page.evaluate(
+        (referenceImagePath) => window.electronAPI.unifiedSearch.query({
+          query: 'a blue circle', referenceImagePath, limit: 50,
+        }),
+        reference,
+      )
+      for (const lane of ['image-fingerprint', 'semantic', 'subject'])
+        assert.equal(combined.lanes.find(item => item.lane === lane)?.status, 'ok', JSON.stringify(combined.lanes))
+      assert.ok(combined.items.length > 0, 'combined real-model query must retain results')
     }
     {
       await page.screenshot({ path: path.join(evidence, 'workspace-before.png') })
@@ -481,6 +525,7 @@ async function run() {
       resizeMaximizeAndRevealVerified: true,
       displayCount: windowGeometry.displayCount,
       isolatedProfile: true,
+      legacyCatalogCompatibility: legacyCatalog,
       generatedMaterialCount: before.length,
       originalFilesUnchanged: true,
       nativeConnected: initial.nativeConnected,
@@ -495,6 +540,7 @@ async function run() {
             existingModelInference: modelRuns,
             modelFilesUnchanged: true,
             clipTextQueryVerified: true,
+            combinedTextAndReferenceVerified: true,
           }
         : {}),
       referenceHammingDistance,

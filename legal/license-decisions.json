@@ -2,17 +2,14 @@
   "schemaVersion": 1,
   "kind": "floating-clock-license-decisions",
   "project": {
-    "status": "pending",
-    "releaseMode": "proprietary",
-    "licenseExpression": "UNLICENSED",
-    "licenseFile": null,
-    "approvedBy": null,
-    "approvedAt": null,
-    "evidence": [
-      "docs/current/2026-07-28-project-audit-remediation.md#第七十七批专有发布模式预配置",
-      "docs/current/2026-08-17-commercial-release-readiness.md#1-当前判定"
-    ],
-    "pendingReason": "Individual publisher mode is selected; public publisher identity, final EULA terms, territories and authorized approval remain pending."
+    "status": "approved",
+    "releaseMode": "open-source",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "LICENSE",
+    "approvedBy": "project-owner",
+    "approvedAt": "2026-10-24T08:17:32.995Z",
+    "evidence": ["SOURCE_AVAILABILITY.md", "LICENSE", "NOTICE"],
+    "pendingReason": null
   },
   "components": {
     "dinov2-vitb14-xenova-q4": {

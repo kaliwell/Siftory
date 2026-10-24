@@ -27,7 +27,9 @@ import {
 import { registerUnifiedSearchIpc } from './unifiedSearchIpc'
 import { registerProductHealthIpc } from './productHealthIpc'
 import { registerAssetLibraryIpc } from './assetLibraryIpc'
-import { registerVectorIpc } from './vectorIpc'
+import { registerVectorIpc, shutdownAutomaticMaintenance } from './vectorIpc'
+import { shutdownSourceFileSync } from './sourceFileSyncService'
+import { shutdownVectorGc } from './vectorGcService'
 import { registerRemoteTerminalProfileIpc } from './remoteTerminalProfileIpc'
 import { registerRemoteTerminalSftpIpc } from './remoteTerminalSftpIpc'
 import { registerRemoteTerminalTransferIpc } from './remoteTerminalTransferIpc'
@@ -980,14 +982,19 @@ app.on('will-quit', (event) => {
   if (!imageSearchShutdownRequested) {
     imageSearchShutdownRequested = true
     event.preventDefault()
-    void Promise.all([
-      shutdownImageSearchForQuit(),
-      shutdownImageSearchDataCatalogForQuit(),
-      shutdownAiControlApi(),
-      disposeSemanticSearchModels(),
-      disposeMultilingualTextEncoder(),
-      flushWindowVisibilityDiagnostics(),
-    ])
+    void shutdownAutomaticMaintenance()
+      .then(() => shutdownSourceFileSync())
+      .then(() => shutdownVectorGc())
+      .then(() =>
+        Promise.all([
+          shutdownImageSearchForQuit(),
+          shutdownImageSearchDataCatalogForQuit(),
+          shutdownAiControlApi(),
+          disposeSemanticSearchModels(),
+          disposeMultilingualTextEncoder(),
+          flushWindowVisibilityDiagnostics(),
+        ]),
+      )
       .catch((error) => {
         console.warn('[ImageSearch] shutdown handshake failed:', error)
       })

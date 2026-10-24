@@ -3,6 +3,8 @@ export type AppLanguage = 'en' | 'zh-CN'
 export type TranslationValues = Record<string, string | number>
 
 const enUS: Record<string, string> = {
+  'Index statistics have not been analyzed. Existing search data is preserved.':
+    'Index statistics have not been analyzed. Existing search data is preserved.',
   'Ctrl+K': 'Ctrl+K',
   桌面: 'Desktop',
   下载: 'Downloads',
@@ -36,6 +38,38 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Index statistics have not been analyzed. Existing search data is preserved.':
+    '尚未分析索引统计，已有的搜索数据仍然保留。',
+  'Automatic maintenance': '自动维护',
+  'Remove {name}': '移除 {name}',
+  'Enable automatic maintenance': '启用自动维护',
+  'Checks daily while idle. Missing files are observed for 24 hours. Recovery backups are kept for 7 days.':
+    '每天在空闲且接通电源时检查；文件持续缺失 24 小时后更新；恢复备份保留 7 天后自动清理。',
+  'Watched folders': '自动维护范围',
+  'Add folder': '添加文件夹',
+  Disabled: '未启用',
+  'Waiting for idle time': '等待空闲',
+  'Checking missing files': '正在核对源文件',
+  'Updating indexes': '正在同步索引与素材库',
+  'Recycling vectors': '正在回收失效向量',
+  'Last check completed': '上次检查已完成',
+  'Last check': '上次检查',
+  'Next check': '下次检查',
+  'Observed missing': '缺失观察中',
+  'Updated images': '已更新图片',
+  'Updated videos': '已更新视频',
+  'Freed space': '已释放空间',
+  'Recovery backups pending release': '恢复备份到期后可释放',
+  'Offline folders and inaccessible files are preserved. Large deletion batches require manual review.':
+    '离线目录、无权访问的文件会保留；缺失量异常时会暂停并提示人工核对。',
+  'Check now': '立即检查',
+  'Automatic maintenance is unavailable': '自动维护暂不可用',
+  'Choose at least one source folder': '请先选择至少一个维护文件夹',
+  'Automatic maintenance paused': '自动维护已暂停，将在空闲时重试',
+  'Waiting for searches and indexing to finish': '等待搜索和索引任务完成',
+  'Automatic maintenance settings could not be verified. Configure them again.':
+    '自动维护配置无法验证，请重新设置。',
+  'Thumbnail size': '缩略图大小',
   'Ctrl+K': 'Ctrl+K',
   'Library tools': '同步、备份与维护',
   'Batch actions': '批量操作',
@@ -982,8 +1016,8 @@ const zhCN: Record<string, string> = {
   outputs: '输出',
   'Legacy model: replace it to run graph compatibility checks':
     '旧模型：重新导入后可执行图结构兼容检查',
-  'Commercial builds do not include these models. Import only models whose license and interface you have verified.':
-    '商业版本不包含这些模型。请仅导入已经确认许可证和接口兼容性的模型。',
+  'Optional models are user-supplied. Import only models whose license and interface you have verified.':
+    '可选模型由用户自行提供。请仅导入已经确认许可证和接口兼容性的模型。',
   'I am responsible for the model license and compatibility': '我对模型许可证与兼容性负责',
   'Subject detector': '主体检测模型',
   'Face detector': '人脸检测模型',

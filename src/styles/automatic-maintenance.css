@@ -1,0 +1,53 @@
+.automatic-maintenance-card {
+  padding: 18px;
+  margin-block: 16px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: 12px;
+  background: rgb(var(--color-surface));
+}
+.automatic-maintenance-heading,
+.automatic-maintenance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.automatic-maintenance-heading h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.automatic-maintenance-heading p,
+.automatic-maintenance-actions small {
+  color: rgb(var(--color-text-muted));
+  font-size: 12px;
+}
+.automatic-maintenance-heading label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.automatic-maintenance-scopes,
+.automatic-maintenance-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block: 16px;
+  font-size: 12px;
+}
+.automatic-maintenance-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.automatic-maintenance-status p {
+  width: 100%;
+  white-space: pre-wrap;
+  margin: 0;
+}
+.automatic-maintenance-status [role='alert'] {
+  color: #dc5656;
+}

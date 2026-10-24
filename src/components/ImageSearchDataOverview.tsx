@@ -76,6 +76,7 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
     progress.state === 'building' ||
     progress.state === 'cancelling'
   const currentParent = folderStack.at(-1) || null
+  const hasAnalyzedSnapshot = Boolean(overview?.builtAt)
 
   const loadOverview = useCallback(async () => {
     setLoadingOverview(true)
@@ -300,9 +301,15 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
           >
             {[
               [t('Physical Data'), formatBytes(overview.totalBytes)],
-              [t('All Paths'), overview.unionPathCount.toLocaleString()],
-              [t('Indexed images'), overview.nativeUniqueCount.toLocaleString()],
-              [t('Review indicators'), anomalyCount.toLocaleString()],
+              [
+                t('All Paths'),
+                hasAnalyzedSnapshot ? overview.unionPathCount.toLocaleString() : '—',
+              ],
+              [
+                t('Indexed images'),
+                hasAnalyzedSnapshot ? overview.nativeUniqueCount.toLocaleString() : '—',
+              ],
+              [t('Review indicators'), hasAnalyzedSnapshot ? anomalyCount.toLocaleString() : '—'],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -319,12 +326,19 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
             ))}
           </div>
           <p className="workspace-maintenance-explanation">
-            {t('Visual similarity ready: {count}', { count: overview.dinoUniqueCount })} ·{' '}
-            {t('Language search ready: {count}', { count: overview.clipUniqueCount })}
+            {t('Visual similarity ready: {count}', {
+              count: hasAnalyzedSnapshot ? overview.dinoUniqueCount : '—',
+            })}{' '}
+            ·{' '}
+            {t('Language search ready: {count}', {
+              count: hasAnalyzedSnapshot ? overview.clipUniqueCount : '—',
+            })}
             <br />
-            {t(
-              'Missing semantic indexes mean these searches are not prepared; your original files are unaffected.',
-            )}
+            {hasAnalyzedSnapshot
+              ? t(
+                  'Missing semantic indexes mean these searches are not prepared; your original files are unaffected.',
+                )
+              : t('Index statistics have not been analyzed. Existing search data is preserved.')}
           </p>
           {overview.generation && (
             <div

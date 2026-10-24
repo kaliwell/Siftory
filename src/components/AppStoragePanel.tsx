@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import DraggablePanel from './DraggablePanel'
 import ImageSearchDataManager from './ImageSearchDataManager'
+import AutomaticMaintenancePanel from './AutomaticMaintenancePanel'
 import { useStore } from '../stores/useStore'
 import { useTranslation } from '../i18n/useTranslation'
 
@@ -24,6 +25,7 @@ const AppStoragePanel: React.FC = () => {
           {t('Manage Siftory indexes and generated caches. Original assets are kept.')}
         </p>
         {message && <p role="status">{message}</p>}
+        <AutomaticMaintenancePanel suggestedScopes={scanPaths} />
         <ImageSearchDataManager
           standalone
           scanPaths={scanPaths}

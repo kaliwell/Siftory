@@ -19,11 +19,17 @@ import type {
 import { getAssetIdentityService } from './assetIdentityService'
 import { getSftpVideoProjectionStore } from './sftpVideoProjection'
 import { requireAssetLibraryStores } from './assetLibraryStorageContext'
-import { authoritativeVectorStoreRootFromCacheDir } from './authoritativeVectorStore'
 import { isClipTextModelAvailable, searchSemanticImages } from './semanticSearchService'
 import { getSourceCatalogService } from './sourceCatalogService'
 import { searchBySubject } from './subjectSearchService'
-import { searchImagesAsync } from './imageSearchService'
+import {
+  searchImagesAsync,
+  queryImageSearchData,
+  isImageSearchIndexedPath,
+} from './imageSearchService'
+import { searchLayered } from './rerankService'
+import { getEmbeddingCacheDir, getEmbeddingStorePaths } from './vectorDatabaseService'
+import { probeUnifiedImageVectorHealth } from './unifiedImageVectorHealth'
 import {
   UnifiedRecallError,
   UnifiedSearchService,
@@ -36,7 +42,6 @@ import type { UnifiedResourcePressureSnapshot } from './resourceGovernor'
 import { loadResourceGovernorProfile, saveResourceGovernorProfile } from './resourceGovernor'
 import { collectRuntimeResourceMetrics } from './runtimeResourcePressure'
 import { initUnifiedSearchFeedbackStore } from './unifiedSearchFeedbackStore'
-import { probeVectorIndexHealth } from './vectorIndexHealth'
 import { searchVideoFramesByImage, searchVideoFramesByText } from './videoFrameSearchService'
 import { loadVideoManifest } from './videoScanService'
 import { hasTranscriptIndex, searchTranscripts } from './transcriptService'
@@ -232,9 +237,6 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
     }
     return videoMetadataByPath.get(displayPath.replace(/\//g, '\\').toLowerCase())
   }
-  const storeRoot = authoritativeVectorStoreRootFromCacheDir(
-    path.join(userDataPath, 'vector-db', 'embedding-cache'),
-  )
   configureUnifiedSearchDeps({
     imageFingerprintRecall: async (request) => {
       if (!request.referenceImagePath || request.subject) return []
@@ -261,54 +263,86 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
         evidenceSummary: 'Image fingerprint match',
       }))
     },
-    lexicalRecall: (request) => {
+    lexicalRecall: async (request) => {
       const service = getSourceCatalogService()
       if (!service) return { items: [], total: 0 }
       if (request.referenceImagePath && !request.query?.trim()) return { items: [], total: 0 }
       const filteredSourceId =
         request.sourceId ??
         (request.filters?.sourceIds?.length === 1 ? request.filters.sourceIds[0] : undefined)
-      return service.queryCatalog({
+      const catalogQuery = {
         ...(request.query !== undefined ? { query: request.query } : {}),
         ...(filteredSourceId ? { sourceId: filteredSourceId } : {}),
+        ...(request.filters?.sourceIds?.length ? { sourceIds: request.filters.sourceIds } : {}),
+        ...(request.filters?.mediaTypes?.length ? { mediaTypes: request.filters.mediaTypes } : {}),
+        ...(request.filters?.modifiedAfter !== undefined
+          ? { modifiedAfter: request.filters.modifiedAfter }
+          : {}),
+        ...(request.filters?.modifiedBefore !== undefined
+          ? { modifiedBefore: request.filters.modifiedBefore }
+          : {}),
         offset: request.offset ?? 0,
         limit: request.limit ?? 100,
-      })
+      }
+      let result = service.queryCatalog(catalogQuery)
+      let nativeOffset = 0
+      const deadline = Date.now() + 3000
+      let candidateTruncated = false
+      do {
+        const existing = queryImageSearchData(request.query?.trim() ?? '', nativeOffset, 500)
+        if (!existing.ok) break
+        const records = existing.records ?? []
+        await service.projectExistingSearchFiles(
+          records.map((record) => record.path),
+          isImageSearchIndexedPath,
+          [...(request.sourceId ? [request.sourceId] : []), ...(request.filters?.sourceIds ?? [])],
+        )
+        nativeOffset += records.length
+        result = service.queryCatalog(catalogQuery)
+        if (!existing.hasMore || !records.length) break
+        if (
+          result.items.length >= catalogQuery.limit ||
+          nativeOffset >= 25000 ||
+          Date.now() >= deadline
+        ) {
+          candidateTruncated = true
+          break
+        }
+        await new Promise<void>((resolve) => setImmediate(resolve))
+      } while (nativeOffset < 25000)
+      return { ...result, candidateTruncated }
     },
     vectorHealth: () =>
-      probeVectorIndexHealth(storeRoot, {
-        modelName: 'clip_vit_base_patch32',
-        embeddingType: 'global',
-      }),
-    ...(isClipTextModelAvailable()
-      ? {
-          semanticRecall: async (request) => {
-            const text = request.query?.trim() ?? ''
-            if (!text) return []
-            const task = taskScheduler.enqueue({
-              stage: 'embedding',
-              priority: 0,
-              label: `unified semantic query: ${text.slice(0, 80)}`,
-              run: () =>
-                searchSemanticImages({
-                  text,
-                  topK: Math.min(
-                    500,
-                    Math.max((request.offset ?? 0) + (request.limit ?? 100), 100),
-                  ),
-                  requestId: `unified-${Date.now().toString(36)}`,
-                }),
-            })
-            const response = await task.promise
-            return response.results.map((result) => ({
-              displayPath: result.path,
-              score: result.finalScore,
-              evidenceSummary: result.reasons.join(' · '),
-              modelSources: [{ modelId: 'clip_vit_base_patch32' }],
-            }))
-          },
-        }
-      : {}),
+      probeUnifiedImageVectorHealth(
+        getEmbeddingCacheDir(),
+        getEmbeddingStorePaths('clip_vit_base_patch32', 'global'),
+      ),
+    semanticRecall: async (request) => {
+      const text = request.query?.trim() ?? ''
+      if (!text) return []
+      if (!isClipTextModelAvailable())
+        throw new UnifiedRecallError('CLIP text model is not installed', 'model-missing')
+      const task = taskScheduler.enqueue({
+        stage: 'embedding',
+        priority: 0,
+        label: `unified semantic query: ${text.slice(0, 80)}`,
+        run: () =>
+          searchSemanticImages({
+            text,
+            topK: Math.min(500, Math.max((request.offset ?? 0) + (request.limit ?? 100), 100)),
+            requestId: `unified-${Date.now().toString(36)}`,
+          }),
+      })
+      const response = await task.promise
+      if (response.degraded && response.results.length === 0)
+        throw mediaRecallFailure(response.degradationReasons.join('; '))
+      return response.results.map((result) => ({
+        displayPath: result.path,
+        score: result.finalScore,
+        evidenceSummary: result.reasons.join(' · '),
+        modelSources: [{ modelId: 'clip_vit_base_patch32' }],
+      }))
+    },
     subjectRecall: async (request, context) => {
       if (!request.referenceImagePath) return []
       if (context?.subjectMaskError) {
@@ -323,14 +357,34 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
         stage: 'embedding',
         priority: 0,
         label: `unified subject query: ${path.basename(request.referenceImagePath).slice(0, 80)}`,
-        run: () =>
-          searchBySubject(
+        run: async () => {
+          if (!request.subject) {
+            const response = await searchLayered({
+              imagePath: request.referenceImagePath!,
+              mode: 'standard',
+              vectorTopK: topK,
+              rerankTopK: topK,
+            })
+            if (response.degraded && response.results.length === 0)
+              throw mediaRecallFailure(response.degradationReasons.join('; '))
+            return {
+              ok: true,
+              error: undefined,
+              results: response.results.map((result) => ({
+                imagePath: result.path,
+                score: result.finalScore,
+                modelName: '',
+              })),
+            }
+          }
+          return searchBySubject(
             request.referenceImagePath!,
             topK,
             request.subject,
             undefined,
             context?.subjectMaskSession,
-          ),
+          )
+        },
       })
       const response = await task.promise
       if (!response.ok) {
@@ -341,7 +395,7 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
         displayPath: result.imagePath,
         score: result.score,
         evidenceSummary: request.subject?.label || path.basename(request.referenceImagePath!),
-        modelSources: [{ modelId: result.modelName }],
+        ...(result.modelName ? { modelSources: [{ modelId: result.modelName }] } : {}),
       }))
     },
     duplicateRecall: async (request) => {
@@ -528,13 +582,24 @@ export function initUnifiedSearchRuntime(userDataPath: string): void {
         ]
       })
     },
-    hydrateRecallItems: (displayPaths, request) => {
+    hydrateRecallItems: async (displayPaths, request) => {
       const service = getSourceCatalogService()
       if (!service) return []
-      const rows = [
-        ...service.findFileEntriesByPaths(displayPaths),
-        ...(getSftpVideoProjectionStore()?.hydrate(displayPaths, service) ?? []),
-      ]
+      const knownVideos = new Set(
+        loadVideoManifest()
+          .filter((video) => !video.missing && video.sourceType !== 'sftp')
+          .map((video) => path.resolve(video.path)),
+      )
+      const remoteRows = getSftpVideoProjectionStore()?.hydrate(displayPaths, service) ?? []
+      const remotePaths = new Set(
+        remoteRows.map((row) => path.resolve(row.recallPath ?? row.displayPath).toLowerCase()),
+      )
+      await service.projectExistingSearchFiles(
+        displayPaths.filter((file) => !remotePaths.has(path.resolve(file).toLowerCase())),
+        (file) => isImageSearchIndexedPath(file) || knownVideos.has(path.resolve(file)),
+        [...(request.sourceId ? [request.sourceId] : []), ...(request.filters?.sourceIds ?? [])],
+      )
+      const rows = [...service.findFileEntriesByPaths(displayPaths), ...remoteRows]
       const sourceIds = new Set([
         ...(request.sourceId ? [request.sourceId] : []),
         ...(request.filters?.sourceIds ?? []),

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "node": "24.16.0",
+  "aggregate": {
+    "lines": 84,
+    "branches": 75,
+    "functions": 83
+  },
+  "files": {
+    "assetLibraryBackup.ts": { "lines": 85, "branches": 70, "functions": 84 },
+    "assetMetadataTransaction.ts": { "lines": 84, "branches": 62, "functions": 94 },
+    "ipcValidation.ts": { "lines": 97, "branches": 78, "functions": 99 },
+    "jsonLinesTransaction.ts": { "lines": 85, "branches": 64, "functions": 99 },
+    "pathGuards.ts": { "lines": 83, "branches": 61, "functions": 83 },
+    "vectorGcService.ts": { "lines": 57, "branches": 74, "functions": 65 },
+    "check-commercial-release-readiness.cjs": {
+      "lines": 67,
+      "branches": 89,
+      "functions": 75
+    },
+    "check-license-compliance.cjs": { "lines": 90, "branches": 85, "functions": 90 },
+    "check-post-audit-build-optimization.cjs": {
+      "lines": 85,
+      "branches": 69,
+      "functions": 94
+    },
+    "fetch-runtime-resources.cjs": { "lines": 83, "branches": 67, "functions": 79 },
+    "generate-node-third-party-components.cjs": {
+      "lines": 84,
+      "branches": 87,
+      "functions": 90
+    },
+    "release-gate.cjs": { "lines": 84, "branches": 75, "functions": 80 },
+    "reproducible-build.cjs": { "lines": 54, "branches": 72, "functions": 74 },
+    "core.ts": { "lines": 99, "branches": 99, "functions": 99 }
+  }
+}

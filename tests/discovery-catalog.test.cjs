@@ -42,6 +42,44 @@ function addTestSource(service, root, displayName = 'Test Source') {
   return result.source
 }
 
+test('existing indexed files gain durable catalog identities without scanning or admitting arbitrary hits', async () => {
+  const root = tempDir('siftory-existing-index-')
+  const service = new SourceCatalogService({
+    databasePath: path.join(root, 'catalog.sqlite'),
+    incrementalWatch: false,
+  })
+  try {
+    const files = ['a.jpg', 'b.jpg', 'not-indexed.jpg'].map((name) => path.join(root, name))
+    for (const file of files) fs.writeFileSync(file, 'synthetic fixture')
+    const indexed = new Set(files.slice(0, 2))
+    await service.projectExistingSearchFiles(files, (file) => indexed.has(file), [
+      'unregistered-source',
+    ])
+    assert.equal(
+      service.listSources().length,
+      0,
+      'a source filter must never create an unrelated source',
+    )
+    await service.projectExistingSearchFiles([...files, path.join(root, 'missing.jpg')], (file) =>
+      indexed.has(file),
+    )
+    const first = service.findFileEntriesByPaths(files)
+    assert.equal(first.length, 2)
+    assert.equal(service.listSources().length, 1)
+    assert.equal(service.listSources()[0].readOnly, true)
+    assert.ok(service.getFileEntryForAction(first[0].fileEntryId))
+    await service.projectExistingSearchFiles(files, (file) => indexed.has(file))
+    assert.deepEqual(
+      service.findFileEntriesByPaths(files).map((item) => item.fileEntryId),
+      first.map((item) => item.fileEntryId),
+    )
+    assert.equal(service.queryCatalog({ query: 'a.jpg' }).items.length, 1)
+  } finally {
+    service.close()
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
 async function waitFor(condition, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
@@ -442,6 +480,82 @@ test('exact path move re-points catalog projections without creating a row', () 
     assert.equal(item.fileEntryId, database.queryCatalog({}).items[0].fileEntryId)
   } finally {
     database.close()
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('SQL filters apply media, dates and combined sources before candidate truncation', () => {
+  const root = tempDir('siftory-sql-filters-')
+  const database = new DiscoveryCatalogDatabase(path.join(root, 'catalog.sqlite'))
+  try {
+    for (const id of ['first', 'second']) {
+      database.insertSource(
+        {
+          id,
+          type: 'local-ntfs',
+          displayName: id,
+          rootLocator: root,
+          readOnly: true,
+          availability: 'online',
+          scanCapability: 'directory',
+        },
+        1,
+      )
+    }
+    database.upsertDiscoveredBatch(
+      'first',
+      'scan',
+      [
+        ...Array.from({ length: 600 }, (_, i) => makeEntry(root, `a-${i}.jpg`, 1, 1)),
+        makeEntry(root, 'z-match.mp4', 1, 50),
+        makeEntry(root, 'z-old.mp4', 1, 2),
+        makeEntry(root, 'raw-image.nef', 1, 50),
+      ],
+      2,
+    )
+    database.upsertDiscoveredBatch('second', 'scan', [makeEntry(root, 'z-other.mp4', 1, 50)], 2)
+    const result = database.queryCatalog({
+      mediaTypes: ['video'],
+      sourceIds: ['first'],
+      modifiedAfter: 40,
+      modifiedBefore: 60,
+      limit: 500,
+      sort: 'name_asc',
+    })
+    assert.equal(result.total, 1)
+    assert.equal(result.items[0].displayName, 'z-match.mp4')
+    assert.equal(database.queryCatalog({ mediaTypes: ['image'], query: 'raw-image' }).total, 1)
+    assert.equal(
+      database.queryCatalog({
+        mediaTypes: ['video'],
+        sourceIds: ['first', 'second'],
+        modifiedAfter: 40,
+      }).total,
+      2,
+    )
+  } finally {
+    database.close()
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('an asynchronous projection cannot reopen the catalog after shutdown', async () => {
+  const root = tempDir('siftory-catalog-shutdown-')
+  const databasePath = path.join(root, 'catalog.sqlite')
+  const service = new SourceCatalogService({ databasePath, incrementalWatch: false })
+  try {
+    service.queryCatalog({})
+    const file = path.join(root, 'indexed.jpg')
+    fs.writeFileSync(file, 'fixture')
+    const projection = service.projectExistingSearchFiles([file], () => true)
+    service.close()
+    const before = fs.readFileSync(databasePath)
+    await projection
+    assert.deepEqual(service.queryCatalog({}), { items: [], total: 0 })
+    assert.deepEqual(service.findFileEntriesByPaths([file]), [])
+    assert.deepEqual(fs.readFileSync(databasePath), before)
+  } finally {
+    service.close()
     fs.rmSync(root, { recursive: true, force: true })
   }
 })

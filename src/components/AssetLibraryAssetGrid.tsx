@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import '../styles/asset-library-workspace.css'
 import type { AssetCategory, AssetLibraryAssetItem, AssetTag } from '../../shared/ipc-contract'
 import { useVirtualGrid } from '../hooks/useVirtualGrid'
 import { useTranslation } from '../i18n/useTranslation'
@@ -6,6 +7,7 @@ import { resolveSelectionRange } from '../utils/selectionRange'
 import ThumbnailImage from './filemanager/ThumbnailImage'
 
 interface AssetLibraryAssetGridProps {
+  thumbnailWidth?: number
   items: AssetLibraryAssetItem[]
   categories: AssetCategory[]
   tags: AssetTag[]
@@ -37,6 +39,7 @@ function extension(filePath: string): string {
 }
 
 const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
+  thumbnailWidth = 240,
   items,
   categories,
   tags,
@@ -53,8 +56,9 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
   const selectionAnchorRef = useRef<number | null>(null)
   const categoryById = new Map(categories.map((category) => [category.id, category]))
   const tagById = new Map(tags.map((tag) => [tag.id, tag]))
-  const rowHeight = scoresByAssetId ? 260 : 244
-  const gap = 7
+  const previewHeight = Math.round(thumbnailWidth * 0.75)
+  const rowHeight = previewHeight + (scoresByAssetId ? 150 : 126)
+  const gap = 12
   const {
     columns,
     contentRef,
@@ -66,7 +70,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
     totalHeight,
   } = useVirtualGrid({
     itemCount: items.length,
-    minColumnWidth: 178,
+    minColumnWidth: thumbnailWidth,
     rowHeight,
     gap,
     resetToken,
@@ -107,7 +111,11 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
   }
 
   return (
-    <div ref={rootRef} style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 4 }}>
+    <div
+      ref={rootRef}
+      className="asset-library-gallery"
+      style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 4 }}
+    >
       <div
         ref={contentRef}
         style={{ contain: 'layout paint', height: totalHeight, position: 'relative' }}
@@ -136,33 +144,38 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
             return (
               <div
                 key={item.asset.id}
+                className="asset-library-card"
                 style={{
                   height: rowHeight,
                   minWidth: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 5,
-                  padding: 6,
+                  padding: 10,
                   boxSizing: 'border-box',
                   border: selected
-                    ? '1px solid rgb(75,220,160)'
+                    ? '1px solid rgb(var(--color-accent))'
                     : '1px solid rgba(var(--date),0.18)',
-                  borderRadius: 4,
-                  background: selected ? 'rgba(45,180,125,0.12)' : 'rgba(var(--bg),0.18)',
+                  borderRadius: 10,
+                  background: selected ? 'rgba(var(--color-accent),0.10)' : 'rgba(var(--bg),0.18)',
                   overflow: 'hidden',
                 }}
                 title={item.asset.path}
               >
-                <div style={{ position: 'relative', height: 142, flexShrink: 0 }}>
+                <div
+                  className="asset-library-card-preview"
+                  style={{ position: 'relative', height: previewHeight, flexShrink: 0 }}
+                >
                   <ThumbnailImage
                     deferLoading={isScrolling}
                     filePath={item.asset.path}
                     ext={extension(item.asset.path)}
                     isDirectory={false}
                     loadPriority={10}
-                    targetSize={160}
+                    targetSize={256}
                     viewMode="xlarge-icon"
-                    style={{ width: '100%', height: 142 }}
+                    style={{ width: '100%', height: previewHeight }}
+                    imgStyle={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                   <input
                     data-testid="asset-select"
@@ -180,7 +193,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                 </div>
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: 600,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -248,8 +261,10 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                   ))}
                 </div>
                 <div
+                  className="asset-library-card-actions"
                   style={{
                     display: 'grid',
+                    marginTop: 'auto',
                     gridTemplateColumns:
                       onSimilar || (onRepairMoved && item.asset.missing)
                         ? '1fr 1fr 1fr'

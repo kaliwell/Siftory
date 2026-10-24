@@ -39,16 +39,16 @@ test('current offline distribution excludes user-supplied slots and blocks bundl
       'qwen3-vl-2b-instruct-q4-k-m-gguf-managed-runtime-candidate',
     ],
   )
-  assert.match(report.projectBlockers.join('\n'), /project license decision is not approved/)
+  assert.deepEqual(report.projectBlockers, [])
   assert.equal(packageJson.private, true)
-  assert.equal(packageJson.license, 'UNLICENSED')
-  assert.equal(decisions.project.releaseMode, 'proprietary')
-  assert.equal(decisions.project.licenseExpression, 'UNLICENSED')
-  assert.equal(decisions.project.licenseFile, null)
+  assert.equal(packageJson.license, 'Apache-2.0')
+  assert.equal(decisions.project.releaseMode, 'open-source')
+  assert.equal(decisions.project.licenseExpression, 'Apache-2.0')
+  assert.equal(decisions.project.licenseFile, 'LICENSE')
   assert.doesNotMatch(report.projectBlockers.join('\n'), /release mode is missing/)
   assert.doesNotMatch(report.projectBlockers.join('\n'), /package\.json license does not match/)
-  assert.match(report.projectBlockers.join('\n'), /license or EULA file is missing/)
-  assert.match(report.projectBlockers.join('\n'), /end-user terms remain in review/)
+  assert.ok(fs.readFileSync(path.join(root, 'LICENSE'), 'utf8').includes('Apache License'))
+  assert.equal(require('../legal/end-user-terms/manifest.json').status, 'open-source')
 })
 
 test('online distribution excludes model and tool decisions but still requires project approval', () => {
@@ -82,7 +82,7 @@ test('license CLI uses the shared profile selection while keeping unresolved app
     assert.equal(report.profile, profile)
     assert.equal(report.bundledComponentCount, count)
     assert.equal(report.ok, false)
-    assert.match(report.projectBlockers.join('\n'), /project license decision is not approved/)
+    assert.deepEqual(report.projectBlockers, [])
   }
 })
 
@@ -216,6 +216,8 @@ function withFinalTermsFixture(run) {
     evidence: ['automated-fixture-only'],
   }
   Object.assign(approved.project, approval, {
+    releaseMode: 'proprietary',
+    licenseExpression: 'UNLICENSED',
     licenseFile: 'legal/end-user-terms/EULA.en.txt',
   })
   for (const decision of Object.values(approved.components)) {
@@ -227,6 +229,7 @@ function withFinalTermsFixture(run) {
   }
   const packageFixture = {
     ...packageJson,
+    license: 'UNLICENSED',
     build: {
       extraResources: [{ from: 'legal/end-user-terms', to: 'legal/end-user-terms' }],
     },

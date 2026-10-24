@@ -199,6 +199,13 @@ export interface ElectronAPI {
   copyToClipboard: (text: string) => Promise<void>
   browseFolder: () => Promise<string | null>
   sourceDerivedData: {
+    autoStatus: () => Promise<import('./source-derived-data').AutomaticMaintenanceStatus>
+    setAutomaticMaintenance: (
+      config: import('./source-derived-data').AutomaticMaintenanceConfig,
+    ) => Promise<import('./source-derived-data').AutomaticMaintenanceStatus>
+    startAutomaticMaintenanceCheck: () => Promise<
+      import('./source-derived-data').AutomaticMaintenanceStatus
+    >
     preview: (
       request: import('./source-derived-data').SourceDerivedDataPreviewRequest,
     ) => Promise<import('./source-derived-data').SourceDerivedDataPreview>

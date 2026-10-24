@@ -12,6 +12,39 @@ const { loadTsModule } = require('./guard-utils.cjs')
 
 const { UnifiedSearchService } = loadTsModule('electron/unifiedSearchService.ts')
 
+test('unmigrated CLIP index is verified before unified recall; corrupt CURRENT never falls back', async () => {
+  const fs = require('node:fs')
+  const os = require('node:os')
+  const path = require('node:path')
+  const { probeUnifiedImageVectorHealth } = loadTsModule('electron/unifiedImageVectorHealth.ts')
+  const { authoritativeVectorStoreRootFromCacheDir } = loadTsModule(
+    'electron/authoritativeVectorStore.ts',
+  )
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-unified-legacy-vectors-'))
+  try {
+    const cache = path.join(dir, 'cache')
+    const source = path.join(dir, 'clip.jsonl')
+    assert.equal((await probeUnifiedImageVectorHealth(cache, [])).status, 'index-stale')
+    fs.writeFileSync(
+      source,
+      JSON.stringify({
+        modelName: 'clip_vit_base_patch32',
+        embeddingType: 'global',
+        dim: 512,
+        imageId: 'C:/fixtures/a.jpg',
+        vector: [1, ...Array(511).fill(0)],
+      }) + '\n',
+    )
+    assert.equal((await probeUnifiedImageVectorHealth(cache, [source])).status, 'ready')
+    const root = authoritativeVectorStoreRootFromCacheDir(cache)
+    fs.mkdirSync(root, { recursive: true })
+    fs.writeFileSync(path.join(root, 'CURRENT'), '{broken')
+    assert.equal((await probeUnifiedImageVectorHealth(cache, [source])).status, 'vector-corrupt')
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 function lexicalItem(name, directory = 'D:\\library') {
   return {
     fileEntryId: `fe-${name}`,
@@ -31,6 +64,57 @@ function makeService(overrides = {}) {
     ...overrides,
   })
 }
+
+test('metadata filters inspect later pages before reporting an empty collection', async () => {
+  const records = Array.from({ length: 501 }, (_, index) =>
+    lexicalItem(`asset-${index}.${index === 500 ? 'mp4' : 'jpg'}`),
+  )
+  const service = new UnifiedSearchService({
+    lexicalRecall: (request) => ({
+      items: records.slice(request.offset, request.offset + request.limit),
+      total: records.length,
+    }),
+  })
+  const response = await service.search({ filters: { mediaTypes: ['video'] } })
+  assert.deepEqual(
+    response.items.map((item) => item.displayName),
+    ['asset-500.mp4'],
+  )
+  assert.equal(response.total, 1)
+  assert.equal(response.candidateTruncated, false)
+})
+
+test('orientation filters continue past 500 misses and resolve metadata only once per path', async () => {
+  const records = Array.from({ length: 501 }, (_, index) => lexicalItem(`asset-${index}.jpg`))
+  const calls = new Map()
+  const service = new UnifiedSearchService({
+    lexicalRecall: (request) => ({
+      items: records.slice(request.offset, request.offset + request.limit),
+      total: records.length,
+    }),
+    resolveMediaMetadata: (file) => {
+      calls.set(file, (calls.get(file) ?? 0) + 1)
+      return { width: file.endsWith('asset-500.jpg') ? 200 : 50, height: 100 }
+    },
+  })
+  const response = await service.search({ filters: { orientations: ['landscape'] } })
+  assert.equal(response.items[0].displayName, 'asset-500.jpg')
+  assert.equal(response.total, 1)
+  assert.ok([...calls.values()].every((count) => count === 1))
+})
+
+test('bounded filter scans disclose truncation instead of claiming the collection was exhausted', async () => {
+  const records = Array.from({ length: 501 }, (_, index) => lexicalItem(`asset-${index}.jpg`))
+  const service = new UnifiedSearchService({
+    lexicalRecall: (request) => ({
+      items: records.slice(request.offset, request.offset + request.limit),
+      total: records.length,
+    }),
+  })
+  const response = await service.search({ filters: { mediaTypes: ['image'] }, limit: 500 })
+  assert.equal(response.items.length, 500)
+  assert.equal(response.candidateTruncated, true)
+})
 
 test('reference images retain fingerprint hits without models and do not claim AI indexing', async () => {
   const item = lexicalItem('reference.jpg')
@@ -482,4 +566,44 @@ test('offline SFTP video prioritizes source connectivity over content retrieval 
     (await service.search({ query: 'offline' })).items[0].degradedReason,
     'source-offline',
   )
+})
+
+test('independent recall lanes overlap while reported lane order stays deterministic', async () => {
+  let entered, release
+  const fingerprintEntered = new Promise((resolve) => {
+    entered = resolve
+  })
+  const fingerprintCanFinish = new Promise((resolve) => {
+    release = resolve
+  })
+  const service = new UnifiedSearchService({
+    lexicalRecall: () => ({ items: [], total: 0 }),
+    imageFingerprintRecall: async () => {
+      entered()
+      await fingerprintCanFinish
+      return []
+    },
+    subjectRecall: async () => {
+      await fingerprintEntered
+      release()
+      return []
+    },
+  })
+  let timer
+  try {
+    const result = await Promise.race([
+      service.search({ referenceImagePath: 'D:/fixture.jpg' }),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Error('Independent lanes were serialized')), 1000)
+      }),
+    ])
+    assert.deepEqual(
+      result.lanes.slice(0, 4).map((lane) => lane.lane),
+      ['lexical', 'image-fingerprint', 'semantic', 'subject'],
+    )
+    assert.equal(result.lanes.find((lane) => lane.lane === 'subject').status, 'ok')
+  } finally {
+    clearTimeout(timer)
+    release()
+  }
 })

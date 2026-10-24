@@ -336,6 +336,18 @@ test('receipt write failure keeps the gate closed and does not turn later closur
   assert.equal(await pending, false)
 })
 
+test('open source license is viewable without an acceptance gate or receipt', async (t) => {
+  const f = fixture(t)
+  f.manifest.status = 'open-source'
+  f.writeManifest()
+  assert.equal(await f.controller.ensureAccepted(), true)
+  assert.equal(windows.length, 0)
+  assert.equal(f.controller.view().ok, true)
+  assert.equal(invoke('terms:get', f.window).mode, 'view')
+  invoke('terms:close', f.window)
+  assert.equal(fs.existsSync(f.receipt), false)
+})
+
 test('review has no active agreement; invalid final material fails closed without creating a window', async (t) => {
   const f = fixture(t)
   f.manifest.status = 'review'

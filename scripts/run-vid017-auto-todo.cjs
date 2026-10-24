@@ -3,6 +3,7 @@
 const { spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
+const { isApprovalMetadataComplete } = require('./check-license-compliance.cjs')
 
 const TASKS = [
   [
@@ -37,8 +38,10 @@ function assertBoundary(projectRoot = path.resolve(__dirname, '..')) {
   const decisions = JSON.parse(
     fs.readFileSync(path.join(projectRoot, 'legal', 'license-decisions.json'), 'utf8'),
   )
-  if (decisions.project?.status === 'approved')
-    throw new Error('Automation boundary changed: project approval requires human review')
+  if (TASKS.some(([id]) => /VAL-313|VAL-314/.test(id)))
+    throw new Error('Automation must not execute approval or packaged-distribution tasks')
+  if (decisions.project?.status === 'approved' && !isApprovalMetadataComplete(decisions.project))
+    throw new Error('Project approval requires recorded owner evidence')
   return true
 }
 

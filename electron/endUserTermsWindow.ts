@@ -76,7 +76,7 @@ export class EndUserTermsController {
 
   async ensureAccepted(): Promise<boolean> {
     const loaded = loadEndUserTerms(this.options.resourcesRoot)
-    if (loaded.status === 'review') return true
+    if (loaded.status === 'review' || loaded.status === 'open-source') return true
     if (hasAcceptedEndUserTerms(this.options.userDataPath, loaded.terms)) return true
     return this.open({ terms: loaded.terms, mode: 'accept', language: this.options.language })
       .finished

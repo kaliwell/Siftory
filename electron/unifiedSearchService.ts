@@ -12,6 +12,7 @@
 // electron, models or native addons.
 
 import type { DiscoveryCatalogResultItem } from '../shared/ipc/discovery-catalog'
+import { UNIFIED_MEDIA_EXTENSIONS } from '../shared/ipc/unified-search'
 import type {
   UnifiedDegradedReason,
   UnifiedIndexStateLevel,
@@ -265,10 +266,13 @@ export class UnifiedRecallError extends Error {
 export interface UnifiedLexicalRecallResult {
   items: DiscoveryCatalogResultItem[]
   total: number
+  candidateTruncated?: boolean
 }
 
 export interface UnifiedSearchServiceDeps {
-  lexicalRecall: (request: UnifiedSearchRequest) => UnifiedLexicalRecallResult
+  lexicalRecall: (
+    request: UnifiedSearchRequest,
+  ) => UnifiedLexicalRecallResult | Promise<UnifiedLexicalRecallResult>
   imageFingerprintRecall?: (request: UnifiedSearchRequest) => Promise<UnifiedRecallHit[]>
   semanticRecall?: (request: UnifiedSearchRequest) => Promise<UnifiedRecallHit[]>
   subjectRecall?: (
@@ -280,7 +284,7 @@ export interface UnifiedSearchServiceDeps {
   videoSemanticRecall?: (request: UnifiedSearchRequest) => Promise<UnifiedRecallHit[]>
   subtitleRecall?: (request: UnifiedSearchRequest) => Promise<UnifiedRecallHit[]>
   /** Probe the authoritative vector store before trusting semantic recall. */
-  vectorHealth?: () => VectorIndexHealth
+  vectorHealth?: () => VectorIndexHealth | Promise<VectorIndexHealth>
   videoSemanticHealth?: () => {
     status: 'ready' | UnifiedDegradedReason
     detail?: string
@@ -318,28 +322,11 @@ const HINTS: Record<UnifiedDegradedReason, string> = {
   'remote-content-required': '远程视频仅有元数据；先受控取回原文件，再建立视频帧或字幕索引',
 }
 
-const MEDIA_TYPES: Record<string, string> = {
-  jpg: 'image',
-  jpeg: 'image',
-  png: 'image',
-  gif: 'image',
-  bmp: 'image',
-  webp: 'image',
-  tif: 'image',
-  tiff: 'image',
-  raw: 'image',
-  cr2: 'image',
-  nef: 'image',
-  arw: 'image',
-  mp4: 'video',
-  mov: 'video',
-  mkv: 'video',
-  avi: 'video',
-  webm: 'video',
-  mp3: 'audio',
-  wav: 'audio',
-  flac: 'audio',
-}
+const MEDIA_TYPES: Record<string, string> = Object.fromEntries(
+  Object.entries(UNIFIED_MEDIA_EXTENSIONS).flatMap(([type, extensions]) =>
+    extensions.map((extension) => [extension, type]),
+  ),
+)
 
 function normalizePathKey(value: string): string {
   return value.replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase()
@@ -408,8 +395,76 @@ export class UnifiedSearchService {
 
     // 1. Lexical metadata/filename recall — always runs, model-free.
     let lexical: UnifiedLexicalRecallResult = { items: [], total: 0 }
+    let candidateTruncated = false
+    const mediaMetadata = new Map<
+      string,
+      Awaited<ReturnType<NonNullable<UnifiedSearchServiceDeps['resolveMediaMetadata']>>>
+    >()
+    const resolveMetadata = async (item: DiscoveryCatalogResultItem) => {
+      const key = normalizePathKey(item.displayPath)
+      if (!mediaMetadata.has(key))
+        mediaMetadata.set(key, await this.deps.resolveMediaMetadata?.(item.displayPath, item))
+      return mediaMetadata.get(key)
+    }
     try {
-      lexical = this.deps.lexicalRecall(recallRequest)
+      lexical = await this.deps.lexicalRecall(recallRequest)
+      candidateTruncated = Boolean(lexical.candidateTruncated)
+      if (hasFilters) {
+        const accepted: DiscoveryCatalogResultItem[] = []
+        const awaitingRecallMetadata: DiscoveryCatalogResultItem[] = []
+        let scanned = 0
+        const deadline = Date.now() + 3000
+        // Deterministic SQL filters run in the provider. Metadata-only filters
+        // may need later pages; never treat an unfiltered top-500 as the library.
+        for (;;) {
+          for (const item of lexical.items) {
+            const metadata = await resolveMetadata(item)
+            const missingDuration =
+              metadata?.durationMs === undefined &&
+              (request.filters?.minDurationMs !== undefined ||
+                request.filters?.maxDurationMs !== undefined)
+            const missingOrientation =
+              Boolean(request.filters?.orientations?.length) &&
+              classifyUnifiedOrientation(metadata?.width, metadata?.height) === undefined
+            if (
+              matchesUnifiedSearchFilters(
+                {
+                  ...item,
+                  ...metadata,
+                  mediaType: mediaTypeFor(item.displayPath),
+                } as UnifiedSearchResultItem,
+                {
+                  ...request.filters,
+                  indexLevels: undefined,
+                  ...(missingDuration
+                    ? { minDurationMs: undefined, maxDurationMs: undefined }
+                    : {}),
+                  ...(missingOrientation ? { orientations: undefined } : {}),
+                },
+              )
+            ) {
+              // AI lanes may contribute dimensions/duration later. Preserve
+              // authoritative identities for that merge instead of dropping them.
+              if (missingDuration || missingOrientation) awaitingRecallMetadata.push(item)
+              else accepted.push(item)
+            }
+          }
+          scanned += lexical.items.length
+          const exhausted = scanned >= lexical.total || !lexical.items.length
+          if (exhausted || accepted.length >= 500 || scanned >= 25000 || Date.now() >= deadline) {
+            candidateTruncated =
+              candidateTruncated || !exhausted || awaitingRecallMetadata.length > 500
+            break
+          }
+          await new Promise<void>((resolve) => setImmediate(resolve))
+          lexical = await this.deps.lexicalRecall({ ...recallRequest, offset: scanned, limit: 500 })
+          candidateTruncated = candidateTruncated || Boolean(lexical.candidateTruncated)
+        }
+        lexical = {
+          items: [...accepted.slice(0, 500), ...awaitingRecallMetadata.slice(0, 500)],
+          total: accepted.length,
+        }
+      }
       lanes.push({ lane: 'lexical', status: 'ok' })
     } catch (error) {
       lanes.push({
@@ -491,80 +546,87 @@ export class UnifiedSearchService {
         ),
       },
     ]
-    for (const aiLane of aiLanes) {
-      if (!aiLane.applicable) {
-        const detail =
-          aiLane.lane === 'semantic' ||
-          aiLane.lane === 'video-semantic' ||
-          aiLane.lane === 'subtitle'
-            ? 'Text query not supplied'
-            : 'Reference image not supplied'
-        lanes.push({
-          lane: aiLane.lane,
-          status: 'not-applicable',
-          detail,
-        })
-        continue
-      }
-      if (!aiLane.recall) {
-        const reason: UnifiedDegradedReason =
-          aiLane.lane === 'duplicate'
-            ? 'task-failed'
-            : aiLane.lane === 'subtitle'
-              ? 'index-stale'
-              : 'model-missing'
-        lanes.push({
-          lane: aiLane.lane,
-          status: 'unavailable',
-          degradedReason: reason,
-          detail: `No ${aiLane.lane} recall provider is configured`,
-          actionableHint: HINTS[reason],
-        })
-        continue
-      }
-      if (aiLane.lane === 'semantic' && this.deps.vectorHealth) {
-        const health = this.deps.vectorHealth()
-        if (health.status !== 'ready') {
+    const laneStatuses = new Map<UnifiedSearchLane, UnifiedSearchLaneStatus>()
+    await Promise.all(
+      aiLanes.map(async (aiLane) => {
+        if (!aiLane.applicable) {
+          const detail =
+            aiLane.lane === 'semantic' ||
+            aiLane.lane === 'video-semantic' ||
+            aiLane.lane === 'subtitle'
+              ? 'Text query not supplied'
+              : 'Reference image not supplied'
+          laneStatuses.set(aiLane.lane, {
+            lane: aiLane.lane,
+            status: 'not-applicable',
+            detail,
+          })
+          return
+        }
+        if (!aiLane.recall) {
           const reason: UnifiedDegradedReason =
-            health.status === 'vector-corrupt' ? 'vector-corrupt' : 'index-stale'
-          lanes.push({
-            lane: 'semantic',
+            aiLane.lane === 'duplicate'
+              ? 'task-failed'
+              : aiLane.lane === 'subtitle'
+                ? 'index-stale'
+                : 'model-missing'
+          laneStatuses.set(aiLane.lane, {
+            lane: aiLane.lane,
             status: 'unavailable',
             degradedReason: reason,
-            ...(health.detail !== undefined ? { detail: health.detail } : {}),
+            detail: `No ${aiLane.lane} recall provider is configured`,
             actionableHint: HINTS[reason],
           })
-          continue
+          return
         }
-      }
-      if (aiLane.lane === 'video-semantic' && this.deps.videoSemanticHealth) {
-        const health = this.deps.videoSemanticHealth()
-        if (health.status !== 'ready') {
-          const reason = health.status
-          lanes.push({
-            lane: 'video-semantic',
-            status: reason === 'task-failed' ? 'degraded' : 'unavailable',
+        if (aiLane.lane === 'semantic' && this.deps.vectorHealth) {
+          const health = await this.deps.vectorHealth()
+          if (health.status !== 'ready') {
+            const reason: UnifiedDegradedReason =
+              health.status === 'vector-corrupt' ? 'vector-corrupt' : 'index-stale'
+            laneStatuses.set(aiLane.lane, {
+              lane: 'semantic',
+              status: 'unavailable',
+              degradedReason: reason,
+              ...(health.detail !== undefined ? { detail: health.detail } : {}),
+              actionableHint: HINTS[reason],
+            })
+            return
+          }
+        }
+        if (aiLane.lane === 'video-semantic' && this.deps.videoSemanticHealth) {
+          const health = this.deps.videoSemanticHealth()
+          if (health.status !== 'ready') {
+            const reason = health.status
+            laneStatuses.set(aiLane.lane, {
+              lane: 'video-semantic',
+              status: reason === 'task-failed' ? 'degraded' : 'unavailable',
+              degradedReason: reason,
+              ...(health.detail !== undefined ? { detail: health.detail } : {}),
+              actionableHint: health.actionableHint ?? HINTS[reason],
+            })
+            return
+          }
+        }
+        try {
+          aiLane.hits = await aiLane.recall(recallRequest, context)
+          laneStatuses.set(aiLane.lane, { lane: aiLane.lane, status: 'ok' })
+        } catch (error) {
+          const recallError = error instanceof UnifiedRecallError ? error : undefined
+          const reason = recallError?.degradedReason ?? 'task-failed'
+          laneStatuses.set(aiLane.lane, {
+            lane: aiLane.lane,
+            status: 'degraded',
             degradedReason: reason,
-            ...(health.detail !== undefined ? { detail: health.detail } : {}),
-            actionableHint: health.actionableHint ?? HINTS[reason],
+            detail: error instanceof Error ? error.message : String(error),
+            actionableHint: recallError?.actionableHint ?? HINTS[reason],
           })
-          continue
         }
-      }
-      try {
-        aiLane.hits = await aiLane.recall(recallRequest, context)
-        lanes.push({ lane: aiLane.lane, status: 'ok' })
-      } catch (error) {
-        const recallError = error instanceof UnifiedRecallError ? error : undefined
-        const reason = recallError?.degradedReason ?? 'task-failed'
-        lanes.push({
-          lane: aiLane.lane,
-          status: 'degraded',
-          degradedReason: reason,
-          detail: error instanceof Error ? error.message : String(error),
-          actionableHint: recallError?.actionableHint ?? HINTS[reason],
-        })
-      }
+      }),
+    )
+    for (const aiLane of aiLanes) {
+      const status = laneStatuses.get(aiLane.lane)
+      if (status) lanes.push(status)
     }
 
     // 3. Merge: lexical base ∪ AI hits, deduplicated by normalized path key,
@@ -593,9 +655,7 @@ export class UnifiedSearchService {
       const assetId = this.deps.resolveAssetId
         ? await this.deps.resolveAssetId(item.displayPath, item)
         : undefined
-      const mediaMetadata = this.deps.resolveMediaMetadata
-        ? await this.deps.resolveMediaMetadata(item.displayPath, item)
-        : undefined
+      const mediaMetadata = await resolveMetadata(item)
       items.set(key, {
         fileEntryId: item.fileEntryId,
         mediaType: mediaTypeFor(item.displayPath),
@@ -760,6 +820,7 @@ export class UnifiedSearchService {
       (lane) => lane.status !== 'ok' && lane.status !== 'not-applicable',
     )
     return {
+      candidateTruncated: candidateTruncated || (!hasFilters && lexical.total > 500),
       items: merged.slice(offset, offset + limit).map(([, item]) => item),
       total: hasFilters ? merged.length : Math.max(lexical.total, items.size),
       lanes,

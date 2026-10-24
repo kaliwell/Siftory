@@ -57,15 +57,15 @@ GitHub 的 Windows CI 定义在 [.github/workflows/ci.yml](.github/workflows/ci.
 
 ## 使用与源码授权
 
-项目采用**公开源码、个人非商业使用免费、商业使用付费授权**的方向。公开源码不等于授予不受限制的商业使用或再分发权，也不代表项目采用 MIT、Apache-2.0 等通用开源许可证。
+项目原创源码与文档采用 **[Apache-2.0](LICENSE)** 开源，个人与企业均可按许可证免费使用、修改和再分发，包括商业使用，无须另外购买项目商业授权。
 
-具体授权文本、商业授权取得方式和发行者信息仍待确定；当前 `package.json` 保持 `UNLICENSED`，未发布最终授权合同。详细状态见 [源码与授权说明](SOURCE_AVAILABILITY.md)。第三方组件的许可不受本项目授权方向替代，见 [第三方组件](THIRD_PARTY_COMPONENTS.md)、[Node 依赖清单](NODE_THIRD_PARTY_COMPONENTS.md)和[第三方声明](THIRD_PARTY_NOTICES.md)。
+适用范围和再分发义务见 [开源许可说明](SOURCE_AVAILABILITY.md)与 [NOTICE](NOTICE)。第三方组件、字体、工具及模型保留各自许可证，见 [第三方组件](THIRD_PARTY_COMPONENTS.md)、[Node 依赖清单](NODE_THIRD_PARTY_COMPONENTS.md)和[第三方声明](THIRD_PARTY_NOTICES.md)。项目开源许可不代替第三方二进制发行和安装升级验收。
 
 ## 问题反馈
 
 在 GitHub 或 Gitee 的 Issues 中提供：版本号、Windows 版本、复现步骤、预期行为、实际行为，以及脱敏截图或日志。请先删除姓名、联系方式、账户、访问令牌和真实素材路径。模型相关问题请注明模型名称和 CPU/GPU 后端。
 
-目前尚未提供正式稳定版保证；完整原生第三方清单、最终条款、签名和干净设备安装验收仍在准备中。
+当前为 Alpha 测试版本；项目开源许可已确定，完整原生第三方清单、签名和干净设备安装验收仍在准备中。
 
 ## 仓库上传
 

@@ -6,7 +6,9 @@ import type { EndUserTerms, TermsAcceptResult } from '../shared/ipc/end-user-ter
 const MAX_BYTES = 512 * 1024
 const RECEIPT_NAME = 'end-user-terms-acceptance.json'
 const HASH_PATTERN = /^[a-f0-9]{64}$/
-export type LoadedEndUserTerms = { status: 'review' } | { status: 'final'; terms: EndUserTerms }
+export type LoadedEndUserTerms =
+  | { status: 'review' }
+  | { status: 'final' | 'open-source'; terms: EndUserTerms }
 
 function invalid(): never {
   throw new Error('Invalid end-user terms')
@@ -48,7 +50,7 @@ export function loadEndUserTerms(resourcesRoot: string): LoadedEndUserTerms {
   )
   if (manifest.schemaVersion !== 1) invalid()
   if (manifest.status === 'review') return { status: 'review' }
-  if (manifest.status !== 'final') invalid()
+  if (manifest.status !== 'final' && manifest.status !== 'open-source') invalid()
   const title = boundedString(manifest.title, 200)
   const version = boundedString(manifest.version, 80)
   const publisher = boundedString(manifest.publisher, 200)
@@ -97,7 +99,10 @@ export function loadEndUserTerms(resourcesRoot: string): LoadedEndUserTerms {
   const sha256 = createHash('sha256')
     .update(JSON.stringify({ title, version, publisher, effectiveDate, text }))
     .digest('hex')
-  return { status: 'final', terms: { title, version, publisher, effectiveDate, text, sha256 } }
+  return {
+    status: manifest.status,
+    terms: { title, version, publisher, effectiveDate, text, sha256 },
+  }
 }
 
 export function hasAcceptedEndUserTerms(userDataPath: string, terms: EndUserTerms): boolean {

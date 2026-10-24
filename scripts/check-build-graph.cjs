@@ -142,7 +142,10 @@ const entries = [
   // handlers. The recoverable SQLite migration is also isolated in an 80-line
   // bounded module to retain the existing database and schema caps. These two
   // nodes add no external packages; existing hot-module/byte caps stay fixed.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 310 },
+  // 2026-10-24: automaticMaintenanceService and automaticMaintenanceBackups add
+  // two bounded, dependency-free boundaries for idle scheduling and guarded
+  // recovery-file expiry. Renderer/worker edges and byte budgets are unchanged.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 312 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports

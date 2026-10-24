@@ -355,8 +355,8 @@ function buildReport({ includeBuild = true } = {}) {
   }
 }
 
-function main() {
-  const report = buildReport({ includeBuild: !process.argv.includes('--source-only') })
+function main(argv = process.argv.slice(2)) {
+  const report = buildReport({ includeBuild: !argv.includes('--source-only') })
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
   if (!report.ok) process.exitCode = 1
 }
@@ -364,6 +364,7 @@ function main() {
 if (require.main === module) main()
 
 module.exports = {
+  main,
   BUDGETS,
   EXPECTED_LAZY_PANEL_IDS,
   LAZY_PANEL_SOURCES,

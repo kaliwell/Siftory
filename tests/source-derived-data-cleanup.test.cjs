@@ -59,6 +59,7 @@ function sourcePreviewIpcFixture(t, nativeOverrides = {}) {
   const sync = loadTsModule('electron/sourceFileSyncService.ts')
   const empty = () => undefined
   const mocks = {
+    './automaticMaintenanceService': loadTsModule('electron/automaticMaintenanceService.ts'),
     './ipcAuthorization': { secureIpcMain: { handle: (channel, fn) => handlers.set(channel, fn) } },
     './imageSearchService': {
       ...dataService,
@@ -128,7 +129,8 @@ function sourcePreviewIpcFixture(t, nativeOverrides = {}) {
     // Startup recovery is outside this fixture's scope.
     for (const timer of timers) clearTimeout(timer)
   }
-  t.after(() => {
+  t.after(async () => {
+    await mod.exports.shutdownAutomaticMaintenance()
     assert.equal(fs.readFileSync(original, 'utf8'), 'untouched-original')
     assert.equal(calls.mutations, 0)
     resetImageSearchFolderDataEditForTests()

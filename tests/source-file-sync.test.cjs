@@ -15,6 +15,7 @@ const {
   previewSourceFileSync,
   recordSourceFileSyncAssetLibraryRecoveryFailure,
   retrySourceFileSyncAssetLibraryRecovery,
+  shutdownSourceFileSync,
 } = loadTsModule('electron/sourceFileSyncService.ts')
 const mediaCache = loadTsModule('electron/mediaCacheService.ts')
 const videoScan = loadTsModule('electron/videoScanService.ts')
@@ -132,6 +133,31 @@ test('source sync previews exact missing records and rechecks before applying', 
     assert.deepEqual(fixture.calls.missingVideos, ['missing-video'])
     assert.equal(fixture.calls.assetSync, 1)
     assert.equal(getSourceFileSyncMutationEpoch(), mutationEpochBefore + 1)
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('automatic observation only retires explicitly eligible missing records', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-auto-retire-'))
+  try {
+    const first = path.join(root, 'confirmed.jpg'),
+      second = path.join(root, 'observing.jpg')
+    const fixture = makeDependencies({ images: [{ path: first }, { path: second }], videos: [] })
+    const preview = await previewSourceFileSync({
+      sourcePath: root,
+      dependencies: fixture.dependencies,
+      canRetireMissingPath: (file) => file === first,
+    })
+    assert.equal(preview.ok, true)
+    assert.equal(preview.missingImageRecords, 1)
+    assert.equal(preview.pendingMissingRecords, 1)
+    const result = await executeSourceFileSync({
+      token: preview.token,
+      dependencies: fixture.dependencies,
+    })
+    assert.equal(result.ok, true)
+    assert.deepEqual(fixture.calls.deletedImages, [first])
   } finally {
     fs.rmSync(root, { recursive: true, force: true })
   }
@@ -710,4 +736,50 @@ test('video reconciliation commits missing state only after a complete online sc
     videoScan.invalidateVideoManifestCache()
     fs.rmSync(root, { recursive: true, force: true })
   }
+})
+
+test('shutdown drains a committed manual synchronization and refuses new executions', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-sync-shutdown-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const missing = path.join(root, 'gone.jpg')
+  const fixture = makeDependencies({ images: [{ path: missing, fileSize: 1 }], videos: [] })
+  let release, entered
+  const barrier = new Promise((resolve) => {
+    release = resolve
+  })
+  const started = new Promise((resolve) => {
+    entered = resolve
+  })
+  const originalDelete = fixture.dependencies.deleteImageRecords
+  fixture.dependencies.deleteImageRecords = async (...args) => {
+    entered()
+    await barrier
+    return originalDelete(...args)
+  }
+  const preview = await previewSourceFileSync({
+    sourcePath: root,
+    dependencies: fixture.dependencies,
+  })
+  assert.equal(preview.ok, true)
+  const execution = executeSourceFileSync({
+    token: preview.token,
+    dependencies: fixture.dependencies,
+  })
+  await started
+  let settled = false
+  const shutdown = shutdownSourceFileSync().then(() => {
+    settled = true
+  })
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(settled, false)
+  assert.equal(
+    (await executeSourceFileSync({ token: 'another-token', dependencies: fixture.dependencies }))
+      .ok,
+    false,
+  )
+  release()
+  assert.equal((await execution).ok, true)
+  await shutdown
+  assert.equal(settled, true)
+  assert.deepEqual(fixture.calls.deletedImages, [missing])
 })

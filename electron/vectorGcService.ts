@@ -417,6 +417,8 @@ interface StoredVectorGcPreview {
 
 const storedPreviews = new Map<string, StoredVectorGcPreview>()
 let cancelRequested = false
+let shuttingDown = false
+let currentExecution: Promise<void> | null = null
 let gcProgress: VectorGcProgress = {
   state: 'idle',
   completedShards: 0,
@@ -597,6 +599,7 @@ async function executeVectorGc(stored: StoredVectorGcPreview): Promise<void> {
 }
 
 export function startVectorGc(token: string): { ok: boolean; taskId?: string; error?: string } {
+  if (shuttingDown) return { ok: false, error: 'Vector GC is shutting down' }
   if (gcProgress.state === 'running') return { ok: false, error: 'Vector GC is already running' }
   const stored = storedPreviews.get(token)
   if (!stored) return { ok: false, error: 'Vector GC preview is missing or invalid' }
@@ -619,13 +622,17 @@ export function startVectorGc(token: string): { ok: boolean; taskId?: string; er
     updatedAt: Date.now(),
   }
   storedPreviews.delete(token)
-  void executeVectorGc(stored).catch((error: unknown) => {
-    updateGcProgress({
-      state: 'error',
-      finishedAt: Date.now(),
-      errors: [error instanceof Error ? error.message : String(error)],
+  currentExecution = executeVectorGc(stored)
+    .catch((error: unknown) => {
+      updateGcProgress({
+        state: 'error',
+        finishedAt: Date.now(),
+        errors: [error instanceof Error ? error.message : String(error)],
+      })
     })
-  })
+    .finally(() => {
+      currentExecution = null
+    })
   return { ok: true, taskId }
 }
 
@@ -642,7 +649,16 @@ export function isVectorGcRunning(): boolean {
   return gcProgress.state === 'running'
 }
 
+/** Drain the atomic shard handoff and recovery metadata before process exit. */
+export async function shutdownVectorGc(): Promise<void> {
+  shuttingDown = true
+  cancelVectorGc()
+  await currentExecution
+}
+
 export function resetVectorGcForTests(): void {
+  if (currentExecution) throw new Error('Cannot reset an active Vector GC transaction')
+  shuttingDown = false
   storedPreviews.clear()
   cancelRequested = false
   gcProgress = {
