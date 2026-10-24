@@ -94,8 +94,8 @@ WindTerm 是一个成熟的 SSH/Telnet/Serial/Shell/SFTP 客户端。公开仓�
     - host key 首次确认不是本次失败原因：`ssh2` 默认未配置 `hostVerifier` 时会自动接受 host key。
 
 12. 修复空用户名误报认证失败。
-    - 截图中 profile 显示为 `@114.28.145.113:22`，说明 username 为空。
-    - Windows 终端成功命令是 `ssh root@114.28.145.113`，因此 profile 必须填写 `root`。
+    - 空用户名示例 profile 显示为 `@203.0.113.10:22`，说明 username 为空。本文地址均为文档示例地址。
+    - Windows 终端成功命令是 `ssh example-user@203.0.113.10`，因此 profile 填写实际 SSH 用户名。
     - 主进程保存 profile 时要求 username。
     - renderer 保存按钮要求 username。
     - connect/test 在 username 为空时直接提示 `Username is required`，不再进入 SSH 认证流程。

@@ -5,6 +5,7 @@ const path = require('node:path')
 const test = require('node:test')
 const { spawnSync } = require('node:child_process')
 const { auditHistory, summarizeFindings } = require('../scripts/audit-git-history.cjs')
+const { scanRepository } = require('../scripts/check-tracked-privacy.cjs')
 
 function git(cwd, args) {
   const result = spawnSync('git', args, { cwd, encoding: 'utf8' })
@@ -19,6 +20,29 @@ function createRepo() {
   git(dir, ['config', 'user.email', 'history-audit@local.invalid'])
   return dir
 }
+
+test('source endpoints are blocked before commit and remain detectable after removal from history', () => {
+  const dir = createRepo()
+  try {
+    const address = [8, 8, 8, 8].join('.')
+    const source = path.join(dir, 'example.tsx')
+    fs.writeFileSync(source, `export const host = "demo@${address}:22"`)
+    git(dir, ['add', '.'])
+    const current = scanRepository(dir)
+    assert.ok(current.some((finding) => finding.kind === 'public SSH endpoint'))
+    assert.ok(!JSON.stringify(current).includes(address))
+    git(dir, ['commit', '-m', 'synthetic endpoint fixture'])
+    fs.writeFileSync(source, 'export const host = "demo@203.0.113.10:22"')
+    git(dir, ['add', '.'])
+    git(dir, ['commit', '-m', 'redacted fixture'])
+    assert.deepEqual(scanRepository(dir), [])
+    const history = auditHistory(dir)
+    assert.ok(history.some((finding) => finding.kind === 'public SSH endpoint'))
+    assert.ok(!JSON.stringify(history).includes(address))
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+})
 
 test('history audit catches personal paths removed from the current tree', () => {
   const dir = createRepo()

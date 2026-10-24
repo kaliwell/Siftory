@@ -1,5 +1,6 @@
 const { spawnSync } = require('node:child_process')
 const path = require('node:path')
+const { findPublicEndpoints } = require('./check-public-endpoints.cjs')
 
 const MAX_STAGED_FILE_BYTES = 25 * 1024 * 1024
 const MAX_SECRET_SCAN_BYTES = 2 * 1024 * 1024
@@ -86,7 +87,10 @@ function stagedBlobText(cwd, stagedPath, size) {
 }
 
 function findSecretContent(text) {
-  return SECRET_CONTENT_PATTERNS.filter(({ pattern }) => pattern.test(text)).map(({ name }) => name)
+  return [
+    ...SECRET_CONTENT_PATTERNS.filter(({ pattern }) => pattern.test(text)).map(({ name }) => name),
+    ...new Set(findPublicEndpoints(text).map(({ kind }) => kind)),
+  ]
 }
 
 function checkStagedPath(cwd, stagedPath, errors) {

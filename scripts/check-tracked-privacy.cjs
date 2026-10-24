@@ -1,6 +1,8 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
+const { findPublicEndpoints } = require('./check-public-endpoints.cjs')
+const { findSecretContent } = require('./git-preflight.cjs')
 
 const TEXT_EXTENSIONS = new Set(['.csv', '.json', '.jsonl', '.md', '.tsv', '.txt'])
 const GENERIC_USER_NAMES = new Set(['<user>', '<user_home>', '...', 'user', 'username'])
@@ -95,11 +97,20 @@ function redactPrivacyPaths(text) {
 
 function scanRepository(repoRoot) {
   const findings = []
-  for (const file of trackedTextFiles(repoRoot)) {
+  const pathScanFiles = new Set(trackedTextFiles(repoRoot))
+  for (const file of runGit(['ls-files', '-z'], repoRoot).split('\0').filter(Boolean)) {
     const absolutePath = path.join(repoRoot, file)
     if (!fs.existsSync(absolutePath)) continue
-    const text = fs.readFileSync(absolutePath, 'utf8')
-    for (const issue of findPrivacyIssues(text)) findings.push({ file, ...issue })
+    const bytes = fs.readFileSync(absolutePath)
+    if (bytes.includes(0)) continue
+    const text = bytes.toString('utf8')
+    if (pathScanFiles.has(file)) {
+      for (const issue of findPrivacyIssues(text)) findings.push({ file, ...issue })
+    }
+    for (const issue of findPublicEndpoints(text)) findings.push({ file, ...issue })
+    for (const kind of findSecretContent(text)) {
+      findings.push({ file, kind, line: 1, sample: '[redacted]' })
+    }
   }
   return findings
 }
@@ -126,7 +137,7 @@ function main() {
   }
   const findings = scanRepository(repoRoot)
   if (findings.length > 0) {
-    console.error(`[privacy] blocked: ${findings.length} personal path/account reference(s)`)
+    console.error(`[privacy] blocked: ${findings.length} privacy/secret finding(s)`)
     for (const finding of findings.slice(0, 50)) {
       console.error(`- ${finding.file}:${finding.line}: ${finding.kind}: ${finding.sample}`)
     }
@@ -134,7 +145,7 @@ function main() {
     process.exitCode = 1
     return
   }
-  console.log(`[privacy] passed: ${trackedTextFiles(repoRoot).length} tracked text file(s)`)
+  console.log('[privacy] passed: all tracked text scanned for secrets and public SSH endpoints')
 }
 
 if (require.main === module) {
@@ -146,4 +157,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { findPrivacyIssues, redactPrivacyPaths, trackedTextFiles }
+module.exports = { findPrivacyIssues, redactPrivacyPaths, trackedTextFiles, scanRepository }

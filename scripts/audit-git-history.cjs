@@ -20,18 +20,7 @@ function runGit(args, cwd) {
 
 function auditHistory(repoRoot) {
   const history = runGit(
-    [
-      'log',
-      '--all',
-      `--format=${COMMIT_PREFIX}%H`,
-      '--patch',
-      '--no-color',
-      '--',
-      'docs',
-      '*.md',
-      '*.json',
-      '*.jsonl',
-    ],
+    ['log', '--all', `--format=${COMMIT_PREFIX}%H`, '--patch', '--no-color'],
     repoRoot,
   )
   const findings = []
@@ -51,8 +40,10 @@ function auditHistory(repoRoot) {
     if (line.startsWith('--- ') || line.startsWith('diff --git ') || line.startsWith('@@ '))
       continue
     const content = /^[+ -]/.test(line) ? line.slice(1) : line
-    for (const issue of findPrivacyIssues(content)) {
-      findings.push({ commit, file, kind: issue.kind, sample: issue.sample })
+    if (file.startsWith('docs/') || /\.(?:md|json|jsonl)$/i.test(file)) {
+      for (const issue of findPrivacyIssues(content)) {
+        findings.push({ commit, file, kind: issue.kind, sample: '[redacted]' })
+      }
     }
     for (const kind of findSecretContent(content)) {
       findings.push({ commit, file, kind, sample: '[redacted]' })

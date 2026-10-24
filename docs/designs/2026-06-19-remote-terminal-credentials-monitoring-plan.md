@@ -382,7 +382,7 @@ type MetricsErrorStage =
 
 ```text
 server-1
-root@114.28.145.113:22
+example-user@203.0.113.10:22
 OK 120ms | CPU 3% | MEM 42% | Disk 61%
 ```
 

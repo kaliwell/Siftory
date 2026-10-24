@@ -2,6 +2,30 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const { findPublicEndpoints } = require('../scripts/check-public-endpoints.cjs')
+
+test('SSH endpoint guard redacts public addresses and accepts documentation and local fixtures', () => {
+  const publicAddress = [8, 8, 8, 8].join('.')
+  for (const prefix of ['root@', 'example-user@', '@']) {
+    const findings = findPublicEndpoints(`ssh ${prefix}${publicAddress}:22`)
+    assert.equal(findings.length, 1)
+    assert.equal(findings[0].sample, '[redacted endpoint]')
+    assert.ok(!JSON.stringify(findings).includes(publicAddress))
+  }
+  for (const address of [
+    '203.0.113.10',
+    '192.0.2.5',
+    '198.51.100.1',
+    '127.0.0.1',
+    '10.0.0.1',
+    '192.168.1.1',
+    '172.16.0.1',
+    '999.1.1.1',
+  ]) {
+    assert.deepEqual(findPublicEndpoints(`user@${address}`), [])
+  }
+  assert.deepEqual(findPublicEndpoints('Electron 42.11.12; 1.2.3.4; person@example.com'), [])
+})
 const { findPrivacyIssues, redactPrivacyPaths } = require('../scripts/check-tracked-privacy.cjs')
 
 test('privacy scanner recognizes Windows, JSON, Unix, QQ and WeChat identities', () => {
