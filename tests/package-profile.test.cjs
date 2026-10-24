@@ -63,7 +63,7 @@ test('online profile excludes heavyweight resources and uses a distinct installe
   assert.equal(config.artifactName, '${productName} Online Setup ${version}.${ext}')
   assert.equal(
     expectedInstallerName(packageJson, 'online'),
-    `Siftory Online Setup ${packageJson.version}.exe`,
+    `${packageJson.build.productName} Online Setup ${packageJson.version}.exe`,
   )
 })
 
@@ -91,7 +91,7 @@ test('offline profile bundles approved embeddings but not user-supplied model sl
   assert.equal(config.artifactName, undefined)
   assert.equal(
     expectedInstallerName(packageJson, 'offline'),
-    `Siftory Setup ${packageJson.version}.exe`,
+    `${packageJson.build.productName} Setup ${packageJson.version}.exe`,
   )
 })
 
@@ -194,4 +194,22 @@ test('ordinary package builds verify deterministic native resources before packa
   assert.ok(nativeBuild >= 0)
   assert.ok(resourceVerification > nativeBuild)
   assert.ok(packagePreparation > resourceVerification)
+})
+
+test('Alpha installers use a distinct installation identity and ship backup and license documents', () => {
+  assert.match(packageJson.version, /-alpha\./)
+  assert.equal(packageJson.build.appId, 'com.floating-clock.electron.alpha')
+  assert.equal(packageJson.build.productName, 'Siftory Alpha')
+  assert.equal(packageJson.build.executableName, 'Siftory')
+  assert.equal(packageJson.build.nsis.shortcutName, 'Siftory Alpha')
+  assert.equal(packageJson.build.nsis.runAfterFinish, false)
+  assert.equal(packageJson.build.nsis.deleteAppDataOnUninstall, false)
+  const resources = new Set(packageJson.build.extraResources.map((entry) => entry.to))
+  for (const file of [
+    'legal/LICENSE',
+    'legal/NOTICE',
+    'legal/STB-MIT.txt',
+    'legal/BACKUP_SAFETY.md',
+  ])
+    assert.ok(resources.has(file))
 })

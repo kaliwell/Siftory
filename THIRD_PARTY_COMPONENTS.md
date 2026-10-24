@@ -11,7 +11,7 @@ Manifest: `floating-clock-runtime-resources` schema 1
 | Evn9172/cvlface_adaface_ir101_webface12m_onnx (`cvlface-adaface-ir101-webface12m-onnx`) | model | huggingface-revision:3af39a8cf2f199127f34e247950df9c4d6f227e8 | Apache-2.0 | legal-review-required | no | 1 |
 | Xenova/dinov2-base (`dinov2-vitb14-xenova-q4`) | model | huggingface-revision:d623d125a29e343851bcedff293fdc8b6bda292b | Apache-2.0 | recorded | yes | 3 |
 | Siftory CUDA embedding worker (`floating-clock-cuda-embedding-worker`) | optional-runtime | 1.0.0+onnxruntime-1.24.3 | NOASSERTION | project-license-pending | no | 2 |
-| Siftory fast_scanner (`floating-clock-fast-scanner-electron`) | native-addon | 0.5.38 | NOASSERTION | project-license-pending | yes | 1 |
+| Siftory fast_scanner (`floating-clock-fast-scanner-electron`) | native-addon | 1.0.1-alpha.3 | Apache-2.0 AND MIT | recorded | yes | 1 |
 | IIC FSMN-VAD v2.0.4 and CAM++ v2.0.2 (`fsmn-vad-campplus-funasr-external-diarization-models`) | model | modelscope-tags:fsmn-vad@v2.0.4+model-sha256:b3be75be477f0780277f3bae0fe489f48718f585f3a6e45d7dd1fbb1a4255fc5;campplus@v2.0.2+model-sha256:3388cf5fd3493c9ac9c69851d8e7a8badcfb4f3dc631020c4961371646d5ada8 | Apache-2.0 | recorded | no | 1 |
 | Gyan.dev FFmpeg full build (`gyan-ffmpeg-full-8-1-2`) | tool | 8.1.2-full_build-www.gyan.dev | GPL-3.0-or-later | legal-review-required | yes | 2 |
 | lindevs/yolov8-face (`lindevs-yolov8n-face-onnx`) | model | artifact-sha256:7202335c41e478b4feccdfd7f09d5cec71007d775e02964a8f115b1687f3db87 | MIT | legal-review-required | no | 1 |

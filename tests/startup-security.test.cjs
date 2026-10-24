@@ -385,3 +385,41 @@ test('development and AI smoke launch contracts keep the sandbox enabled', () =>
   assert.doesNotMatch(aiRunner, /symlinkSync|['"]junction['"]/)
   assert.match(aiRunner, /const electronArgs = packaged \? \[\] : \['\.'\]/)
 })
+
+test('packaged validation isolates the normal application behind a matching temp marker and sandbox', () => {
+  withTemporaryDirectory('siftory-package-validation-', (root) => {
+    const userDataPath = path.join(root, 'profile')
+    const nonce = createSmokeSessionMarker(userDataPath, 'packaged')
+    const env = {
+      SIFTORY_PACKAGED_VALIDATION: '1',
+      FLOATING_CLOCK_UI_SMOKE_USER_DATA: userDataPath,
+      FLOATING_CLOCK_SMOKE_SESSION_NONCE: nonce,
+    }
+    const result = validateStartupSecurity({ argv: [], env })
+    assert.equal(result.smokeMode, 'packaged')
+    assert.equal(result.smokeUserDataPath, fs.realpathSync(userDataPath))
+    assert.equal(result.sandboxDisabled, false)
+    assert.throws(() => validateStartupSecurity({ argv: ['--no-sandbox'], env }), /not permitted/)
+    assert.throws(
+      () =>
+        validateStartupSecurity({ argv: [], env: { ...env, SIFTORY_PACKAGED_VALIDATION: '0' } }),
+      /explicitly enabled/,
+    )
+    assert.throws(
+      () =>
+        validateStartupSecurity({
+          argv: [],
+          env: { ...env, FLOATING_CLOCK_SMOKE_SESSION_NONCE: '0'.repeat(64) },
+        }),
+      /does not match/,
+    )
+    assert.throws(
+      () =>
+        validateStartupSecurity({
+          argv: [],
+          env: { ...env, FLOATING_CLOCK_UI_SMOKE_REPORT: 'unused.json' },
+        }),
+      /own isolated profile/,
+    )
+  })
+})

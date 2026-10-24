@@ -182,7 +182,7 @@ test('resource containment rejects sibling-prefix and parent traversal paths', (
 for (const profile of ['online', 'offline']) {
   for (const [id, filename] of [
     ['sharpVipsLibrary', 'libvips-42.dll'],
-    ['sharpVipsCppLibrary', 'libvips-cpp-8.18.6.dll'],
+    ['sharpVipsCppLibrary', 'libvips-cpp-8.18.7.dll'],
   ]) {
     for (const condition of ['missing', 'empty']) {
       test(`${profile} rejects ${condition} ${filename} even when the sharp binding exists`, () => {

@@ -27,6 +27,15 @@ decision and all required license texts and source-offer obligations are satisfi
 
 ---
 
+## Native stb image decoding and resizing
+
+The project native addon includes `native/stb_image.h` and `native/stb_image_resize2.h`
+from Sean Barrett's stb library. The MIT alternative supplied in those files is selected.
+The complete notice, copyright and permission text are shipped as `legal/STB-MIT.txt`.
+The project's original native code is Apache-2.0; this does not replace stb's MIT terms.
+
+---
+
 ## Source Han Sans CN Variable (bundled UI font)
 
 - **Name**: Source Han Sans CN Variable, Simplified Chinese region-specific subset

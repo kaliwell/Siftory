@@ -139,13 +139,18 @@
       "licenseFiles": []
     },
     "floating-clock-fast-scanner-electron": {
-      "status": "pending",
-      "resolution": null,
-      "permittedProfiles": [],
-      "approvedBy": null,
-      "approvedAt": null,
-      "evidence": [],
-      "licenseFiles": []
+      "status": "approved",
+      "resolution": "project-license",
+      "permittedProfiles": ["online"],
+      "approvedBy": "Codex engineering evidence review; owner-authorized Online Alpha release",
+      "approvedAt": "2026-10-24T10:44:28.227Z",
+      "evidence": [
+        "docs/current/2026-10-24-alpha3-windows-release.md",
+        "LICENSE",
+        "NOTICE",
+        "legal/STB-MIT.txt"
+      ],
+      "licenseFiles": ["LICENSE", "NOTICE", "legal/STB-MIT.txt"]
     },
     "sensevoice-small-funasr-external-audio-semantic-model": {
       "status": "pending",
@@ -217,14 +222,14 @@
       "licenseFiles": []
     },
     "adobe-source-han-sans-cn-vf-2-005": {
-      "status": "pending",
-      "resolution": null,
-      "permittedProfiles": [],
-      "approvedBy": null,
-      "approvedAt": null,
+      "status": "approved",
+      "resolution": "upstream-license",
+      "permittedProfiles": ["online"],
+      "approvedBy": "Codex engineering evidence review; owner-authorized Online Alpha release",
+      "approvedAt": "2026-10-24T10:44:28.227Z",
       "evidence": [
-        "https://github.com/adobe-fonts/source-han-sans/releases/tag/2.005R",
-        "https://github.com/adobe-fonts/source-han-sans/blob/2.005R/LICENSE.txt"
+        "docs/current/2026-10-24-alpha3-windows-release.md",
+        "legal/SourceHanSans-OFL-1.1.txt"
       ],
       "licenseFiles": ["legal/SourceHanSans-OFL-1.1.txt"]
     }

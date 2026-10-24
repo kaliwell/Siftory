@@ -10,6 +10,11 @@ const {
 } = require('./package-profile.cjs')
 
 const CORE_RESOURCES = [
+  ['projectLicense', path.join('legal', 'LICENSE')],
+  ['projectNotice', path.join('legal', 'NOTICE')],
+  ['sourceAvailability', path.join('legal', 'SOURCE_AVAILABILITY.md')],
+  ['nativeStbLicense', path.join('legal', 'STB-MIT.txt')],
+  ['alphaBackupSafety', path.join('legal', 'BACKUP_SAFETY.md')],
   ['appAsar', 'app.asar'],
   ['nativeAddon', 'fast_scanner.node'],
   ['duplicateWorker', 'duplicateFinderWorker.js'],
@@ -42,7 +47,7 @@ const CORE_RESOURCES = [
       '@img',
       'sharp-win32-x64',
       'lib',
-      'sharp-win32-x64-0.35.4.node',
+      'sharp-win32-x64-0.35.5.node',
     ),
   ],
   [
@@ -64,7 +69,7 @@ const CORE_RESOURCES = [
       '@img',
       'sharp-win32-x64',
       'lib',
-      'libvips-cpp-8.18.6.dll',
+      'libvips-cpp-8.18.7.dll',
     ),
   ],
   [

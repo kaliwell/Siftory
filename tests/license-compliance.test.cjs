@@ -51,14 +51,11 @@ test('current offline distribution excludes user-supplied slots and blocks bundl
   assert.equal(require('../legal/end-user-terms/manifest.json').status, 'open-source')
 })
 
-test('online distribution excludes model and tool decisions but still requires project approval', () => {
+test('Online Alpha distribution permits only the reviewed native and font components', () => {
   const report = inspectLicenseCompliance({ projectRoot: root, profile: 'online' })
-  assert.equal(report.ok, false)
+  assert.equal(report.ok, true)
   assert.equal(report.bundledComponentCount, 2)
-  assert.deepEqual(
-    report.componentBlockers.map((blocker) => blocker.id),
-    ['floating-clock-fast-scanner-electron', 'adobe-source-han-sans-cn-vf-2-005'],
-  )
+  assert.deepEqual(report.componentBlockers, [])
   assert.equal(report.excludedPendingComponents.length, manifest.components.length - 2)
 })
 
@@ -77,11 +74,11 @@ test('license CLI uses the shared profile selection while keeping unresolved app
       encoding: 'utf8',
       shell: false,
     })
-    assert.equal(result.status, 1, result.stderr)
+    assert.equal(result.status, profile === 'online' ? 0 : 1, result.stderr)
     const report = JSON.parse(result.stdout)
     assert.equal(report.profile, profile)
     assert.equal(report.bundledComponentCount, count)
-    assert.equal(report.ok, false)
+    assert.equal(report.ok, profile === 'online')
     assert.deepEqual(report.projectBlockers, [])
   }
 })

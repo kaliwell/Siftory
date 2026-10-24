@@ -15,21 +15,15 @@
       },
       "license": {
         "spdx": "Apache-2.0",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "recorded"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": true,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -70,21 +64,15 @@
       },
       "license": {
         "spdx": "MIT",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "recorded"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": true,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -173,21 +161,15 @@
       },
       "license": {
         "spdx": "Apache-2.0",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "recorded"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": true,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -292,21 +274,15 @@
       },
       "license": {
         "spdx": "AGPL-3.0-only",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "legal-review-required"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -331,21 +307,15 @@
       },
       "license": {
         "spdx": "MIT",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "legal-review-required"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -370,21 +340,15 @@
       },
       "license": {
         "spdx": "Apache-2.0",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "legal-review-required"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -409,21 +373,15 @@
       },
       "license": {
         "spdx": "MIT",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "legal-review-required"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -448,21 +406,15 @@
       },
       "license": {
         "spdx": "Apache-2.0",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "legal-review-required"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -495,21 +447,15 @@
       },
       "license": {
         "spdx": "GPL-3.0-or-later",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "legal-review-required"
       },
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": true,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -549,12 +495,8 @@
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -650,12 +592,8 @@
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -779,12 +717,8 @@
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -906,12 +840,8 @@
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -938,33 +868,29 @@
       "purpose": "Native image scanning, hashing, indexing, and thumbnail generation",
       "upstream": {
         "name": "Siftory fast_scanner",
-        "version": "0.5.38",
+        "version": "1.0.1-alpha.3",
         "sourceUrl": "native/",
-        "releasedAt": "2026-09-25"
+        "releasedAt": "2026-10-24"
       },
       "license": {
-        "spdx": "NOASSERTION",
-        "licenseFiles": [],
-        "noticeRequired": false,
-        "reviewStatus": "project-license-pending"
+        "spdx": "Apache-2.0 AND MIT",
+        "licenseFiles": ["LICENSE", "NOTICE", "legal/STB-MIT.txt"],
+        "noticeRequired": true,
+        "reviewStatus": "recorded"
       },
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": true,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
           "role": "electron-native-addon",
           "fetchPolicy": "local-build",
           "sourceUrl": "native/",
-          "sha256": "c7096d2a6b58d5b52bd3b1b9f7fd5bda3563875f8eb09095b1cb924a19f9b621",
-          "sizeBytes": 1282048,
+          "sha256": "b45d63594702240ea66aa72e8725283d2af096128a4447c3218b42661c6193ea",
+          "sizeBytes": 1287168,
           "targetPath": "native/build-electron/Release/fast_scanner.node"
         }
       ]
@@ -989,12 +915,8 @@
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -1019,9 +941,7 @@
       },
       "license": {
         "spdx": "Apache-2.0",
-        "licenseFiles": [
-          "THIRD_PARTY_NOTICES.md"
-        ],
+        "licenseFiles": ["THIRD_PARTY_NOTICES.md"],
         "noticeRequired": true,
         "reviewStatus": "recorded",
         "sourceUrl": "https://www.modelscope.cn/models/iic/speech_campplus_sv_zh-cn_16k-common/summary"
@@ -1029,12 +949,8 @@
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -1066,12 +982,8 @@
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -1103,12 +1015,8 @@
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -1141,12 +1049,8 @@
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -1179,12 +1083,8 @@
       "distribution": {
         "firstRunRequired": true,
         "defaultBundled": false,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {
@@ -1209,9 +1109,7 @@
       },
       "license": {
         "spdx": "OFL-1.1",
-        "licenseFiles": [
-          "legal/SourceHanSans-OFL-1.1.txt"
-        ],
+        "licenseFiles": ["legal/SourceHanSans-OFL-1.1.txt"],
         "noticeRequired": true,
         "reviewStatus": "recorded",
         "sourceUrl": "https://github.com/adobe-fonts/source-han-sans/blob/2.005R/LICENSE.txt"
@@ -1219,12 +1117,8 @@
       "distribution": {
         "firstRunRequired": false,
         "defaultBundled": true,
-        "platforms": [
-          "win32"
-        ],
-        "architectures": [
-          "x64"
-        ]
+        "platforms": ["win32"],
+        "architectures": ["x64"]
       },
       "artifacts": [
         {

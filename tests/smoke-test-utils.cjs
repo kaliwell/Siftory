@@ -5,6 +5,7 @@ const path = require('node:path')
 
 const SMOKE_SESSION_MARKER = '.floating-clock-smoke-session.json'
 const SMOKE_ENVIRONMENT_KEYS = [
+  'SIFTORY_PACKAGED_VALIDATION',
   'FLOATING_CLOCK_UI_SMOKE_REPORT',
   'FLOATING_CLOCK_AI_CONTROL_SMOKE_REPORT',
   'FLOATING_CLOCK_UI_SMOKE_USER_DATA',
@@ -92,7 +93,7 @@ function resolveUiSmokeExecutable({ repo, packaged, packagedDirectory, developme
 }
 
 function createSmokeSessionMarker(userDataPath, runner) {
-  if (runner !== 'ui' && runner !== 'ai-control') {
+  if (runner !== 'ui' && runner !== 'ai-control' && runner !== 'packaged') {
     throw new Error(`Unsupported smoke runner: ${runner}`)
   }
   fs.mkdirSync(userDataPath, { recursive: true })

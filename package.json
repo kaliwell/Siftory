@@ -1,6 +1,6 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.2",
+  "version": "1.0.1-alpha.3",
   "private": true,
   "license": "Apache-2.0",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",
@@ -329,8 +329,8 @@
     "sharp": "0.35.5"
   },
   "build": {
-    "appId": "com.floating-clock.electron",
-    "productName": "Siftory",
+    "appId": "com.floating-clock.electron.alpha",
+    "productName": "Siftory Alpha",
     "electronDist": "node_modules/electron/dist",
     "npmRebuild": false,
     "directories": {
@@ -457,6 +457,14 @@
       {
         "from": "SOURCE_AVAILABILITY.md",
         "to": "legal/SOURCE_AVAILABILITY.md"
+      },
+      {
+        "from": "legal/STB-MIT.txt",
+        "to": "legal/STB-MIT.txt"
+      },
+      {
+        "from": "BACKUP_SAFETY.md",
+        "to": "legal/BACKUP_SAFETY.md"
       }
     ],
     "win": {
@@ -473,8 +481,11 @@
       "deleteAppDataOnUninstall": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "Siftory"
-    }
+      "shortcutName": "Siftory Alpha",
+      "include": "build/installer.nsh",
+      "runAfterFinish": false
+    },
+    "executableName": "Siftory"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

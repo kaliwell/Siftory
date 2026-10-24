@@ -15,6 +15,7 @@ export function resolveStableUserDataPath(appDataPath: string): string {
 
 const UI_REPORT_ENV = 'FLOATING_CLOCK_UI_SMOKE_REPORT'
 const AI_REPORT_ENV = 'FLOATING_CLOCK_AI_CONTROL_SMOKE_REPORT'
+const PACKAGED_VALIDATION_ENV = 'SIFTORY_PACKAGED_VALIDATION'
 const USER_DATA_ENV = 'FLOATING_CLOCK_UI_SMOKE_USER_DATA'
 const NONCE_ENV = 'FLOATING_CLOCK_SMOKE_SESSION_NONCE'
 const UI_NO_SANDBOX_ENV = 'FLOATING_CLOCK_UI_SMOKE_ALLOW_NO_SANDBOX'
@@ -81,7 +82,7 @@ export function hardenMainSession(target: Session): void {
   )
 }
 
-export type SmokeStartupMode = 'ui' | 'ai-control'
+export type SmokeStartupMode = 'ui' | 'ai-control' | 'packaged'
 
 export interface StartupSecurityInput {
   argv: readonly string[]
@@ -189,15 +190,28 @@ function argvDisablesSandbox(argv: readonly string[]): boolean {
 export function validateStartupSecurity(input: StartupSecurityInput): StartupSecurityResult {
   const uiSmokeRequested = hasOwnEnvironmentKey(input.env, UI_REPORT_ENV)
   const aiSmokeRequested = hasOwnEnvironmentKey(input.env, AI_REPORT_ENV)
+  const packagedValidationRequested = hasOwnEnvironmentKey(input.env, PACKAGED_VALIDATION_ENV)
   if (uiSmokeRequested && aiSmokeRequested) {
     throw new Error('[StartupSecurity] UI and AI smoke modes cannot run in the same process')
   }
+  if (packagedValidationRequested && (uiSmokeRequested || aiSmokeRequested))
+    throw new Error('[StartupSecurity] Packaged validation must use its own isolated profile')
 
   let smokeMode: SmokeStartupMode | undefined
   let smokeUserDataPath: string | undefined
   if (uiSmokeRequested || aiSmokeRequested) {
     smokeMode = uiSmokeRequested ? 'ui' : 'ai-control'
     nonEmptyEnvironmentValue(input.env, uiSmokeRequested ? UI_REPORT_ENV : AI_REPORT_ENV)
+    smokeUserDataPath = resolveValidatedSmokeUserData(
+      input.env,
+      smokeMode,
+      input.tempDirectory ?? os.tmpdir(),
+    )
+  }
+  if (packagedValidationRequested) {
+    if (nonEmptyEnvironmentValue(input.env, PACKAGED_VALIDATION_ENV) !== '1')
+      throw new Error('[StartupSecurity] Packaged validation must be explicitly enabled')
+    smokeMode = 'packaged'
     smokeUserDataPath = resolveValidatedSmokeUserData(
       input.env,
       smokeMode,
