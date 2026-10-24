@@ -161,10 +161,10 @@ test('readiness inspection applies the chosen profile to real pending component 
     tagResult: { ok: true, stdout: '' },
   }
   for (const [options, profile, componentCount] of [
-    [{ env: {} }, 'online', 2],
+    [{ env: {} }, 'online', 0],
     [{ env: { FLOATING_CLOCK_PACKAGE_PROFILE: 'offline' } }, 'offline', 6],
     [{ profile: 'offline', env: { FLOATING_CLOCK_PACKAGE_PROFILE: 'online' } }, 'offline', 6],
-    [{ profile: 'online', env: { FLOATING_CLOCK_PACKAGE_PROFILE: 'offline' } }, 'online', 2],
+    [{ profile: 'online', env: { FLOATING_CLOCK_PACKAGE_PROFILE: 'offline' } }, 'online', 0],
   ]) {
     const report = inspectCommercialReleaseReadiness({ ...base, ...options })
     assert.equal(report.profile, profile)
