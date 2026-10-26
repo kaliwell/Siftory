@@ -91,6 +91,19 @@ test('system mode reacts to operating-system preference and emits semantic CSS t
   }
 })
 
+test('solid accent controls retain readable text in every theme and mode', () => {
+  for (const preset of THEME_PRESETS) {
+    for (const mode of ['light', 'dark']) {
+      const tokens = themeCssVariables(preset.id, mode)
+      const foreground = tokens['--color-on-accent'].split(',').map(Number)
+      assert.ok(
+        contrastRatio(foreground, buildThemePalette(preset.id, mode).accent) >= 4.5,
+        `${preset.id}/${mode} accent foreground`,
+      )
+    }
+  }
+})
+
 test('window system consumes semantic tokens and preserves accessibility fallbacks', () => {
   const themes = fs.readFileSync(path.join(root, 'src/styles/themes.css'), 'utf8')
   const windows = fs.readFileSync(path.join(root, 'src/styles/window-system.css'), 'utf8')

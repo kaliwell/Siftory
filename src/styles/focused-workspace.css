@@ -35,28 +35,19 @@ html[data-shell='desktop'],
 html[data-shell='desktop'] body,
 html[data-shell='desktop'] #root {
   pointer-events: auto;
-  background: #f5f7fb;
+  background: rgb(var(--color-canvas));
 }
 .focused-workspace {
   --workspace-sidebar-width: 224px;
-  --color-canvas: 246, 248, 252;
-  --color-surface: 255, 255, 255;
-  --color-surface-elevated: 244, 247, 251;
-  --color-text: 29, 43, 65;
-  --color-text-muted: 111, 125, 147;
-  --color-border: 191, 202, 218;
-  --color-accent: 58, 105, 229;
-  --color-selection: 224, 233, 255;
   --fg: var(--color-accent);
   --bg: var(--color-canvas);
-  --color-focus: var(--color-accent);
   --panel-font: 'Source Han Sans CN', 'Microsoft YaHei UI', sans-serif;
   --date: var(--color-text-muted);
-  --ui-border: #e5eaf2;
-  --ui-border-strong: #cbd6e7;
-  --ui-accent-soft: #eaf0ff;
-  --ui-surface-subtle: #f7f9fc;
-  --ui-surface-hover: #edf2fa;
+  --ui-border: rgba(var(--color-border), 0.28);
+  --ui-border-strong: rgba(var(--color-border), 0.65);
+  --ui-accent-soft: rgb(var(--color-selection));
+  --ui-surface-subtle: rgb(var(--color-surface-elevated));
+  --ui-surface-hover: color-mix(in srgb, rgb(var(--color-surface)) 90%, rgb(var(--color-accent)));
   --ui-radius-sm: 7px;
   --panel-surface-alpha: 1;
   --panel-shadow: none;
@@ -77,20 +68,9 @@ html[data-shell='desktop'] #root {
     'Microsoft YaHei UI',
     sans-serif;
 }
-html[data-effective-mode='dark'] .focused-workspace {
-  --color-canvas: 19, 25, 35;
-  --color-surface: 25, 33, 46;
-  --color-surface-elevated: 31, 41, 56;
-  --color-text: 226, 233, 245;
-  --color-text-muted: 143, 160, 184;
-  --color-border: 67, 83, 106;
-  --color-accent: 121, 159, 255;
-  --color-selection: 42, 60, 96;
-  --ui-border: #2b3749;
-  --ui-border-strong: #415471;
-  --ui-accent-soft: #243758;
-  --ui-surface-subtle: #1c2737;
-  --ui-surface-hover: #263448;
+html[data-theme-id='high-contrast'] .focused-workspace {
+  --ui-border: rgb(var(--color-border));
+  --ui-border-strong: rgb(var(--color-border));
 }
 .focused-workspace button,
 .focused-workspace select,
@@ -131,14 +111,15 @@ html[data-effective-mode='dark'] .focused-workspace {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-color: #3969e7;
-  color: #fff;
-  background: #3969e7;
+  border-color: rgb(var(--color-accent));
+  color: rgb(var(--color-on-accent));
+  background: rgb(var(--color-accent));
 }
 .focused-workspace .workspace-button-primary:hover:not(:disabled) {
-  color: #fff;
-  background: #2c59ce;
-  border-color: #2c59ce;
+  color: rgb(var(--color-on-accent));
+  background: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent));
+  box-shadow: inset 0 0 0 1px rgba(var(--color-on-accent), 0.3);
 }
 .workspace-sidebar {
   grid-column: 1;
@@ -165,8 +146,8 @@ html[data-effective-mode='dark'] .focused-workspace {
   flex-shrink: 0;
   border-radius: 11px;
   font: 750 24px/1 sans-serif;
-  background: #3969e7;
-  color: white;
+  background: rgb(var(--color-accent));
+  color: rgb(var(--color-on-accent));
 }
 .workspace-sidebar__brand strong {
   display: block;

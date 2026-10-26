@@ -85,7 +85,7 @@
   width: 76px;
   height: 76px;
   margin-bottom: 5px;
-  border: 1px solid #8da9ea35;
+  border: 1px solid rgba(var(--color-accent), 0.22);
   border-radius: 23px;
   background: var(--ui-accent-soft);
   color: rgb(var(--color-accent));
@@ -423,9 +423,9 @@
     [data-testid='search-prepare-library'],
     [data-testid='media-search-prepare-library']
   ) {
-  color: #fff;
-  background: #3969e7;
-  border-color: #3969e7;
+  color: rgb(var(--color-on-accent));
+  background: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent));
 }
 .focused-workspace .image-search-shell[data-sources-only='true'] .image-search-control-pane {
   max-width: 1100px;
@@ -886,15 +886,16 @@
     [data-testid='search-prepare-library'],
     [data-testid='media-search-prepare-library']
   ):hover:not(:disabled) {
-  color: white;
-  background: #2c59ce;
-  border-color: #2c59ce;
+  color: rgb(var(--color-on-accent));
+  background: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent));
+  box-shadow: inset 0 0 0 1px rgba(var(--color-on-accent), 0.3);
 }
 .workspace-alpha-notice {
   margin: 0;
   padding: 8px 28px;
-  border-bottom: 1px solid var(--border-color, #c7d5ed);
-  color: var(--text-secondary, #5b7092);
+  border-bottom: 1px solid var(--ui-border);
+  color: rgb(var(--color-text-muted));
   font-size: 12px;
   line-height: 1.5;
 }

@@ -386,6 +386,9 @@ export function themeCssVariables(
     '--color-text-muted': rgbCss(palette.textMuted),
     '--color-border': rgbCss(palette.border),
     '--color-accent': rgbCss(palette.accent),
+    '--color-on-accent': rgbCss(
+      contrastRatio(palette.accent, rgb(255, 255, 255)) >= 4.5 ? rgb(255, 255, 255) : rgb(0, 0, 0),
+    ),
     '--color-focus': rgbCss(palette.focus),
     '--color-success': rgbCss(palette.success),
     '--color-warning': rgbCss(palette.warning),
