@@ -99,6 +99,12 @@ import {
 } from './runtimeMemoryTrace'
 
 configureRuntimeMemoryTraceFromEnvironment()
+const startupPhases: Array<{ phase: string; elapsedMs: number }> = []
+function recordStartupPhase(phase: string): void {
+  if (startupPhases.some((item) => item.phase === phase)) return
+  startupPhases.push({ phase, elapsedMs: Math.round(process.uptime() * 1000) })
+}
+recordStartupPhase('main-module-loaded')
 const startupMemoryTraceRunId = runtimeMemoryRootRunId()
 let startupMemoryTraceFinished = false
 if (startupMemoryTraceRunId) {
@@ -691,6 +697,16 @@ function createWindow() {
       sandbox: true,
     },
   })
+  recordStartupPhase('window-created')
+  mainWindow.webContents.once('did-finish-load', () => {
+    recordStartupPhase('renderer-loaded')
+    const report = JSON.stringify({ version: app.getVersion(), phases: startupPhases }, null, 2)
+    const diagnostics = path.join(app.getPath('userData'), 'diagnostics')
+    void fs.promises
+      .mkdir(diagnostics, { recursive: true })
+      .then(() => fs.promises.writeFile(path.join(diagnostics, 'startup-timing.json'), report))
+      .catch(() => undefined)
+  })
   authorizeIpcWebContents(
     mainWindow.webContents,
     createRendererFrameUrlTrust({ appPath: app.getAppPath(), devServerUrl }),
@@ -779,9 +795,11 @@ if (!hasSingleInstanceLock) {
   })
 
   void app.whenReady().then(async () => {
+    recordStartupPhase('electron-ready')
     const dataDirectorySecurity = await hardenDataDirectoryPermissions(app.getPath('userData'), {
       enabled: app.isPackaged && !uiSmokeMode && !aiControlSmokeReportPath,
     })
+    recordStartupPhase('data-security-checked')
     if (!dataDirectorySecurity.applied && dataDirectorySecurity.reason === 'failed') {
       console.warn(
         `[Security] Application data permission hardening failed: ${redactDiagnosticText(dataDirectorySecurity.error)}`,
@@ -814,6 +832,7 @@ if (!hasSingleInstanceLock) {
       return
     }
     applicationServicesStarted = true
+    recordStartupPhase('terms-checked')
     initMediaToolConfig()
     void warmFfmpegStatusCache()
     // Init ImageSearch service with callback to push status to renderer
@@ -937,6 +956,7 @@ if (!hasSingleInstanceLock) {
     registerSamSegmentIpc(() => mainWindow)
 
     registerVectorIpc(() => mainWindow, app.getPath('userData'), getUnifiedTaskScheduler())
+    recordStartupPhase('services-registered')
     // VAL-029: the main session grants no web permissions by default. Install
     // the deny-by-default handlers before any renderer content loads.
     createWindow()

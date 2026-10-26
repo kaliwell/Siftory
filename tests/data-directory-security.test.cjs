@@ -269,6 +269,11 @@ test(
       await hardenDataDirectoryPermissions(root, { enabled: true, platform: 'win32' })
       const result = await probeDataDirectorySecurity(root, { enabled: true, platform: 'win32' })
       assert.deepEqual(result, { applied: true, platform: 'win32' })
+      const repeated = await hardenDataDirectoryPermissions(root, {
+        enabled: true,
+        platform: 'win32',
+      })
+      assert.deepEqual(repeated, { applied: true, platform: 'win32' })
     } finally {
       fs.rmSync(root, { recursive: true, force: true })
     }

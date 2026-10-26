@@ -103,6 +103,18 @@ test('model service requires and selectively repairs every hash-pinned model fil
   assert.equal(statuses.at(-1).state, 'downloaded')
   assert.ok(statuses.at(-1).installedPath)
   assert.equal(fs.existsSync(`${textPath}.verified.json`), true)
+  modelService.initModelService()
+  const readSync = fs.readSync
+  try {
+    fs.readSync = () => {
+      throw new Error('Model status must not synchronously read weights')
+    }
+    const first = modelService.getModelStatusAsync(model.name)
+    assert.equal(first, modelService.getModelStatusAsync(model.name), 'share startup verification')
+    assert.equal((await first).state, 'downloaded')
+  } finally {
+    fs.readSync = readSync
+  }
 
   assert.deepEqual(
     companionIntegrity.getRequiredModelFiles(model).map((file) => file.filename),
@@ -136,6 +148,7 @@ test('model service requires and selectively repairs every hash-pinned model fil
   const corrupted = modelService.getModelStatus(model.name)
   assert.equal(corrupted.state, 'error')
   assert.equal(corrupted.error, 'SHA-256 verification failed')
+  assert.equal((await modelService.getModelStatusAsync(model.name)).state, 'error')
 
   // An unbounded response must fail before it can replace the existing file.
   // The prepared sibling is discarded, leaving the prior invalid file intact.

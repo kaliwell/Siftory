@@ -245,6 +245,53 @@ export function verifyPinnedModelFileSync(
   }
 }
 
+/** Full verification with bounded asynchronous reads, keeping renderer IPC responsive. */
+export async function verifyPinnedModelFileAsync(
+  modelPath: string,
+  file: ModelRequiredFile,
+  writableStorageRoot: string,
+): Promise<boolean> {
+  let handle: fs.promises.FileHandle | undefined
+  try {
+    const before = await fs.promises.lstat(modelPath)
+    if (!before.isFile() || before.isSymbolicLink() || before.size !== file.sizeBytes) return false
+    if (cacheEntryMatches(verificationCache.get(modelPath), before, file)) return true
+    handle = await fs.promises.open(modelPath, 'r')
+    const opened = await handle.stat()
+    if (opened.ino !== before.ino || opened.dev !== before.dev || opened.ctimeMs !== before.ctimeMs)
+      return false
+    const hash = crypto.createHash('sha256')
+    const buffer = Buffer.allocUnsafe(256 * 1024)
+    let total = 0
+    for (;;) {
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, null)
+      if (!bytesRead) break
+      total += bytesRead
+      if (total > file.sizeBytes) return false
+      hash.update(buffer.subarray(0, bytesRead))
+    }
+    const after = await fs.promises.lstat(modelPath)
+    if (
+      total !== file.sizeBytes ||
+      hash.digest('hex') !== file.sha256 ||
+      !after.isFile() ||
+      after.isSymbolicLink() ||
+      after.ino !== before.ino ||
+      after.dev !== before.dev ||
+      after.size !== before.size ||
+      after.mtimeMs !== before.mtimeMs ||
+      after.ctimeMs !== before.ctimeMs
+    )
+      return false
+    rememberVerifiedFile(modelPath, file, writableStorageRoot)
+    return true
+  } catch {
+    return false
+  } finally {
+    await handle?.close()
+  }
+}
+
 export function inspectModelStorageRoot(
   info: ModelInfo,
   storageRoot: string,

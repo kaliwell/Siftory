@@ -24,6 +24,7 @@ import {
   deleteModel,
   downloadModel,
   getModelStatus,
+  getModelStatusAsync,
   initModelService,
   onModelStatusChanged,
 } from './modelService'
@@ -607,7 +608,7 @@ export function registerVectorIpc(
   })
 
   secureIpcMain.handle('vector:getModelStatus', async (_event, modelName: unknown) => {
-    return getModelStatus(normalizeVectorModelName(modelName) || 'dinov2_vitb14')
+    return getModelStatusAsync(normalizeVectorModelName(modelName) || 'dinov2_vitb14')
   })
 
   secureIpcMain.handle('vector:getComputeBackendCapability', async () => {

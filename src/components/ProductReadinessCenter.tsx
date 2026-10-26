@@ -566,32 +566,38 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
           </span>
         </div>
 
-        <div className="product-readiness__storage" data-testid="product-task-storage">
-          <span>{t('Task storage')}</span>
-          {snapshot.taskStorage.totalBytes === undefined ? (
-            <small>
-              {t('Storage is calculated only when requested')}
-              <button type="button" disabled={storageRefreshing} onClick={() => void refresh(true)}>
-                {t(storageRefreshing ? 'Calculating storage...' : 'Calculate storage')}
-              </button>
-            </small>
-          ) : (
-            <small>
-              {t('Total {size}', { size: formatBytes(snapshot.taskStorage.totalBytes) })}
-              {snapshot.taskStorage.imageBytes === undefined
-                ? ''
-                : ` · ${t('Images {size}', {
-                    size: formatBytes(snapshot.taskStorage.imageBytes),
-                  })}`}
-              {snapshot.taskStorage.mediaBytes === undefined
-                ? ''
-                : ` · ${t('Video {size}', {
-                    size: formatBytes(snapshot.taskStorage.mediaBytes),
-                  })}`}
-            </small>
-          )}
-        </div>
-
+        <details className="product-task-storage-panel">
+          <summary>{t('Task storage')}</summary>
+          <div className="product-readiness__storage" data-testid="product-task-storage">
+            <span>{t('Task storage')}</span>
+            {snapshot.taskStorage.totalBytes === undefined ? (
+              <small>
+                {t('Storage is calculated only when requested')}
+                <button
+                  type="button"
+                  disabled={storageRefreshing}
+                  onClick={() => void refresh(true)}
+                >
+                  {t(storageRefreshing ? 'Calculating storage...' : 'Calculate storage')}
+                </button>
+              </small>
+            ) : (
+              <small>
+                {t('Total {size}', { size: formatBytes(snapshot.taskStorage.totalBytes) })}
+                {snapshot.taskStorage.imageBytes === undefined
+                  ? ''
+                  : ` · ${t('Images {size}', {
+                      size: formatBytes(snapshot.taskStorage.imageBytes),
+                    })}`}
+                {snapshot.taskStorage.mediaBytes === undefined
+                  ? ''
+                  : ` · ${t('Video {size}', {
+                      size: formatBytes(snapshot.taskStorage.mediaBytes),
+                    })}`}
+              </small>
+            )}
+          </div>
+        </details>
         {visibleTasks.length === 0 ? (
           <p className="product-readiness__task-empty">{t('No tasks need attention')}</p>
         ) : (
@@ -614,7 +620,11 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
                     <strong>{taskLabel}</strong>
                     <span>{t(TASK_STATE_LABELS[task.state])}</span>
                     <span>
-                      {task.indeterminate ? t('Discovering and indexing') : `${task.progress}%`}
+                      {task.indeterminate
+                        ? t('Discovering and indexing')
+                        : task.progress === 0 && task.completed > 0
+                          ? '<1%'
+                          : `${task.progress}%`}
                     </span>
                   </div>
                   <progress
@@ -646,13 +656,13 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
                       {t(task.persisted ? 'Restores after restart' : 'This-session task')}
                     </small>
                   </div>
-                  {task.currentItem && (
+                  {task.currentItem && !/^[a-f0-9]{24,}$/i.test(task.currentItem) && (
                     <small className="product-readiness__task-current" title={task.currentItem}>
                       {t('Current item: {item}', { item: task.currentItem })}
                     </small>
                   )}
                   {task.error && (
-                    <small className="product-readiness__task-error">{task.error}</small>
+                    <small className="product-readiness__task-error">{t(task.error)}</small>
                   )}
                   {controls.length > 0 && (
                     <div className="product-readiness__task-actions">

@@ -18,6 +18,7 @@ import {
   recoverModelFileTransactions,
   resetModelFileVerificationCache,
   verifyPinnedModelFileSync,
+  verifyPinnedModelFileAsync,
   type ModelRootState,
 } from './modelServiceCompanions'
 
@@ -126,7 +127,11 @@ export function getInstalledModelDir(name: string): string | null {
   return root ? path.resolve(root.storageRoot, name) : null
 }
 
-function buildStatus(name: string, overrides?: Partial<ModelStatus>): ModelStatus {
+function buildStatus(
+  name: string,
+  overrides?: Partial<ModelStatus>,
+  inspectedRoots?: ModelRootState[],
+): ModelStatus {
   const info = manifests.find((m) => m.name === name)
 
   // Never inspect or hash a growing partial file while reporting progress.
@@ -147,11 +152,13 @@ function buildStatus(name: string, overrides?: Partial<ModelStatus>): ModelStatu
     }
   }
 
-  const rootStates = info
-    ? getModelReadStorageDirs().map((storageRoot) =>
-        inspectModelStorageRoot(info, storageRoot, getModelStorageDir()),
-      )
-    : []
+  const rootStates =
+    inspectedRoots ??
+    (info
+      ? getModelReadStorageDirs().map((storageRoot) =>
+          inspectModelStorageRoot(info, storageRoot, getModelStorageDir()),
+        )
+      : [])
   const verifiedRoot = rootStates.find((root) => root.verified)
   const installed = rootStates.some((root) => root.installedCount > 0)
   const invalidCount = rootStates.reduce((sum, root) => sum + root.invalidCount, 0)
@@ -248,6 +255,48 @@ export function getModelStatus(name: string): ModelStatus {
   const info = manifests.find((model) => model.name === name)
   if (info) recoverModelFileTransactions(info, getModelStorageDir())
   return buildStatus(name)
+}
+
+const pendingStatusChecks = new Map<string, Promise<ModelStatus>>()
+
+export function getModelStatusAsync(name: string): Promise<ModelStatus> {
+  const pending = pendingStatusChecks.get(name)
+  if (pending) return pending
+  const request = inspectModelStatusAsync(name).finally(() => pendingStatusChecks.delete(name))
+  pendingStatusChecks.set(name, request)
+  return request
+}
+
+async function inspectModelStatusAsync(name: string): Promise<ModelStatus> {
+  ensureModelManifestLoaded()
+  const info = manifests.find((model) => model.name === name)
+  if (!info || currentDownload?.modelName === name) return buildStatus(name)
+  const writable = getModelStorageDir()
+  recoverModelFileTransactions(info, writable)
+  const roots: ModelRootState[] = []
+  for (const storageRoot of getModelReadStorageDirs()) {
+    let installedCount = 0,
+      missingCount = 0,
+      invalidCount = 0
+    for (const file of getRequiredModelFiles(info)) {
+      const target = getModelPathInStorageRoot(storageRoot, name, file.filename)
+      if (!fs.existsSync(target)) {
+        missingCount++
+        continue
+      }
+      installedCount++
+      if (!(await verifyPinnedModelFileAsync(target, file, writable))) invalidCount++
+    }
+    roots.push({
+      storageRoot,
+      modelPath: getModelPathInStorageRoot(storageRoot, name, info.filename),
+      installedCount,
+      missingCount,
+      invalidCount,
+      verified: missingCount === 0 && invalidCount === 0,
+    })
+  }
+  return buildStatus(name, undefined, roots)
 }
 
 export function onModelStatusChanged(cb: ModelStatusCallback): () => void {

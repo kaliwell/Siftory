@@ -38,6 +38,7 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Resource scheduling': '资源调度与高级控制',
   'Alpha testing only. Back up application data and original files. You are responsible for assessing use and file operations; results may be inaccurate.':
     'Alpha 版本仅用于测试。请先备份应用数据和原始文件；请自行评估使用及文件操作风险，检索结果可能不准确。',
   'Discovering and indexing': '正在发现文件并建库',

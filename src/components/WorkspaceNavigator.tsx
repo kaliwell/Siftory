@@ -276,83 +276,89 @@ const WorkspaceNavigator: React.FC = () => {
         >
           <header>
             <strong>{t('Tasks')}</strong>
-            <button onClick={() => setTasksOpen(false)}>{t('Close')}</button>
-          </header>
-          <button
-            data-testid="workspace-first-run-guide"
-            onClick={() => {
-              setTasksOpen(false)
-              setGuideMounted(true)
-              setGuideOpen(true)
-              if (guideMounted)
-                requestAnimationFrame(() =>
-                  window.dispatchEvent(new Event('workspace-open-first-run-guide')),
-                )
-            }}
-          >
-            {t('Getting started')}
-          </button>
-          <ProductReadinessCenter onAction={onReadinessAction} />
-          <div data-testid="resource-governor" className="workspace-resource-policy">
-            <label>
-              {t('Resource mode')}
-              <select
-                data-testid="resource-governor-profile"
-                value={stats?.resource.profile ?? 'balanced'}
-                disabled={resourceBusy}
-                onChange={(event) => {
-                  if (resourceBusyRef.current) return
-                  const profile = event.target.value as UnifiedResourceProfile
-                  resourceBusyRef.current = true
-                  setResourceBusy(true)
-                  ++statsVersion.current
-                  void window.electronAPI.unifiedSearch
-                    .setResourceProfile(profile)
-                    .then((result) => {
-                      if (!result.ok || !result.stats) throw new Error('resource-profile-failed')
-                      setStats(result.stats)
-                      setTaskError('')
-                    })
-                    .catch(() => setTaskError(t('The operation failed.')))
-                    .finally(() => {
-                      resourceBusyRef.current = false
-                      setResourceBusy(false)
-                    })
+            <div className="workspace-task-header-actions">
+              <button
+                data-testid="workspace-first-run-guide"
+                onClick={() => {
+                  setTasksOpen(false)
+                  setGuideMounted(true)
+                  setGuideOpen(true)
+                  if (guideMounted)
+                    requestAnimationFrame(() =>
+                      window.dispatchEvent(new Event('workspace-open-first-run-guide')),
+                    )
                 }}
               >
-                <option value="power-saver">{t('Power saver')}</option>
-                <option value="balanced">{t('Balanced')}</option>
-                <option value="quality">{t('High quality')}</option>
-              </select>
-            </label>
-            <p data-testid="resource-governor-limits">
-              {t('Local concurrency')}: {stats?.resource.effectiveLocalConcurrency ?? 0} ·{' '}
-              {t('GPU concurrency')}: {stats?.resource.effectiveGpuConcurrency ?? 0}
-            </p>
-            {stats?.resource.backgroundPaused && (
-              <p data-testid="resource-governor-pressure">
-                {t('Background work paused')}: {stats.resource.pressureReasons.join(', ')}
+                {t('Getting started')}
+              </button>
+              <button onClick={() => setTasksOpen(false)}>{t('Close')}</button>
+            </div>
+          </header>
+          <ProductReadinessCenter onAction={onReadinessAction} />
+          <details className="workspace-task-advanced">
+            <summary>{t('Resource scheduling')}</summary>
+            <div data-testid="resource-governor" className="workspace-resource-policy">
+              <label>
+                {t('Resource mode')}
+                <select
+                  data-testid="resource-governor-profile"
+                  value={stats?.resource.profile ?? 'balanced'}
+                  disabled={resourceBusy}
+                  onChange={(event) => {
+                    if (resourceBusyRef.current) return
+                    const profile = event.target.value as UnifiedResourceProfile
+                    resourceBusyRef.current = true
+                    setResourceBusy(true)
+                    ++statsVersion.current
+                    void window.electronAPI.unifiedSearch
+                      .setResourceProfile(profile)
+                      .then((result) => {
+                        if (!result.ok || !result.stats) throw new Error('resource-profile-failed')
+                        setStats(result.stats)
+                        setTaskError('')
+                      })
+                      .catch(() => setTaskError(t('The operation failed.')))
+                      .finally(() => {
+                        resourceBusyRef.current = false
+                        setResourceBusy(false)
+                      })
+                  }}
+                >
+                  <option value="power-saver">{t('Power saver')}</option>
+                  <option value="balanced">{t('Balanced')}</option>
+                  <option value="quality">{t('High quality')}</option>
+                </select>
+              </label>
+              <p data-testid="resource-governor-limits">
+                {t('Local concurrency')}: {stats?.resource.effectiveLocalConcurrency ?? 0} ·{' '}
+                {t('GPU concurrency')}: {stats?.resource.effectiveGpuConcurrency ?? 0}
               </p>
-            )}
-          </div>
-          <p>
-            {t('Local tasks')}: {stats?.lanes.local.running ?? 0} / {stats?.lanes.local.queued ?? 0}
-          </p>
-          <p>
-            {t('AI tasks')}: {stats?.lanes.gpu.running ?? 0} / {stats?.lanes.gpu.queued ?? 0}
-          </p>
-          <button
-            data-testid="resource-governor-cancel-background"
-            onClick={() =>
-              void window.electronAPI.unifiedSearch
-                .cancelBackgroundTasks()
-                .then(() => setTaskError(''))
-                .catch(() => setTaskError(t('The operation failed.')))
-            }
-          >
-            {t('Cancel queued background tasks')}
-          </button>
-          {taskError && <p role="alert">{taskError}</p>}
+              {stats?.resource.backgroundPaused && (
+                <p data-testid="resource-governor-pressure">
+                  {t('Background work paused')}: {stats.resource.pressureReasons.join(', ')}
+                </p>
+              )}
+            </div>
+            <p>
+              {t('Local tasks')}: {stats?.lanes.local.running ?? 0} /{' '}
+              {stats?.lanes.local.queued ?? 0}
+            </p>
+            <p>
+              {t('AI tasks')}: {stats?.lanes.gpu.running ?? 0} / {stats?.lanes.gpu.queued ?? 0}
+            </p>
+            <button
+              data-testid="resource-governor-cancel-background"
+              onClick={() =>
+                void window.electronAPI.unifiedSearch
+                  .cancelBackgroundTasks()
+                  .then(() => setTaskError(''))
+                  .catch(() => setTaskError(t('The operation failed.')))
+              }
+            >
+              {t('Cancel queued background tasks')}
+            </button>
+            {taskError && <p role="alert">{taskError}</p>}
+          </details>
         </section>
       )}
       {guideMounted && (

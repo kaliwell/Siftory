@@ -204,6 +204,7 @@ async function run() {
     assert.equal(await page.evaluate(() => window.__workspaceTest.getSettings().linkedMove), true)
 
     await page.getByTestId('workspace-domain-tasks').click()
+    await page.locator('.workspace-task-advanced > summary').click()
     await page.evaluate(() => window.__workspaceTest.failResourceProfile(true))
     await page.getByTestId('resource-governor-profile').selectOption('quality')
     await page.getByTestId('workspace-task-summary').getByRole('alert').waitFor()
