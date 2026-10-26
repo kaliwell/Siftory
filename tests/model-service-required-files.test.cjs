@@ -45,9 +45,16 @@ fs.mkdirSync(path.dirname(mainPath), { recursive: true })
 fs.writeFileSync(mainPath, mainBytes)
 
 const originalLoad = Module._load
+let chromiumFetchCalls = 0
 Module._load = function patchedLoad(request, parent, isMain) {
   if (request === 'electron') {
     return {
+      net: {
+        fetch: (...args) => {
+          chromiumFetchCalls += 1
+          return global.fetch(...args)
+        },
+      },
       app: {
         isPackaged: false,
         getAppPath: () => fixtureRoot,
@@ -72,6 +79,8 @@ test('model service requires and selectively repairs every hash-pinned model fil
 
   const mainBefore = fs.statSync(mainPath)
   const originalFetch = global.fetch
+  const statuses = []
+  const unsubscribe = modelService.onModelStatusChanged((status) => statuses.push(status))
   const requested = []
   global.fetch = async (url) => {
     requested.push(String(url))
@@ -87,9 +96,12 @@ test('model service requires and selectively repairs every hash-pinned model fil
   }
 
   assert.deepEqual(requested, [model.requiredFiles[0].url])
+  assert.equal(chromiumFetchCalls, 1, 'downloads must use Chromium system-proxy networking')
   assert.deepEqual(fs.readFileSync(textPath), textBytes)
   assert.equal(fs.statSync(mainPath).mtimeMs, mainBefore.mtimeMs)
   assert.equal(modelService.getModelStatus(model.name).state, 'downloaded')
+  assert.equal(statuses.at(-1).state, 'downloaded')
+  assert.ok(statuses.at(-1).installedPath)
   assert.equal(fs.existsSync(`${textPath}.verified.json`), true)
 
   assert.deepEqual(
@@ -142,6 +154,8 @@ test('model service requires and selectively repairs every hash-pinned model fil
     const oversized = await modelService.downloadModel(model.name)
     assert.equal(oversized.ok, false)
     assert.match(oversized.error, /exceeded pinned size/i)
+    assert.equal(modelService.getModelStatus(model.name).state, 'error')
+    assert.match(modelService.getModelStatus(model.name).error, /exceeded pinned size/i)
   } finally {
     global.fetch = originalFetch
   }
@@ -161,4 +175,5 @@ test('model service requires and selectively repairs every hash-pinned model fil
   }
   assert.deepEqual(fs.readFileSync(textPath), textBytes)
   assert.equal(modelService.getModelStatus(model.name).state, 'downloaded')
+  unsubscribe()
 })

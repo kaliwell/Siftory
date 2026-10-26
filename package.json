@@ -1,6 +1,6 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.3",
+  "version": "1.0.1-alpha.4",
   "private": true,
   "license": "Apache-2.0",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",
@@ -225,7 +225,7 @@
     "test:copyright-source": "node --test tests/copyright-source.test.cjs",
     "copyright:source": "node scripts/prepare-copyright-source.cjs",
     "test:optimization-todo": "node --test tests/optimization-todo.test.cjs tests/value-optimization-todo.test.cjs tests/value-optimization-automation.test.cjs tests/image-search-simple-optimization-todo.test.cjs tests/post-audit-optimization-todo.test.cjs",
-    "test:productization": "node --test tests/productization-todo.test.cjs tests/product-readiness.test.cjs tests/product-readiness-center.test.cjs tests/product-source-health.test.cjs tests/product-unified-search-filters.test.cjs tests/product-search-evidence.test.cjs tests/product-search-feedback.test.cjs tests/product-player-hit-navigation.test.cjs tests/product-search-export.test.cjs tests/product-edl-export.test.cjs tests/product-fcpxml-export.test.cjs tests/product-incremental-source-watch.test.cjs tests/product-resource-governor.test.cjs tests/product-fault-matrix.test.cjs tests/product-health-repair.test.cjs tests/product-information-architecture.test.cjs tests/product-first-run-guide.test.cjs tests/product-install-upgrade-recovery.test.cjs",
+    "test:productization": "node --test tests/search-model-installation.test.cjs tests/productization-todo.test.cjs tests/product-readiness.test.cjs tests/product-readiness-center.test.cjs tests/product-source-health.test.cjs tests/product-unified-search-filters.test.cjs tests/product-search-evidence.test.cjs tests/product-search-feedback.test.cjs tests/product-player-hit-navigation.test.cjs tests/product-search-export.test.cjs tests/product-edl-export.test.cjs tests/product-fcpxml-export.test.cjs tests/product-incremental-source-watch.test.cjs tests/product-resource-governor.test.cjs tests/product-fault-matrix.test.cjs tests/product-health-repair.test.cjs tests/product-information-architecture.test.cjs tests/product-first-run-guide.test.cjs tests/product-install-upgrade-recovery.test.cjs",
     "test:qa-toolchain": "node --test tests/qa-toolchain-coverage.test.cjs && npm run test:runtime-memory && node --test tests/runtime-memory-model-session.test.cjs tests/jpeg-decode-recovery.test.cjs tests/media-search-single-video-source.test.cjs",
     "test:audit-regressions": "node --test tests/commercial-release-readiness.test.cjs tests/documentation-standard.test.cjs tests/media-frame-embedding-state.test.cjs tests/neko-search-accuracy-gate.test.cjs tests/packaged-validation-matrix.test.cjs tests/panel-layer-order.test.cjs tests/phase0-temp-cleanup.test.cjs tests/vid017-automation.test.cjs tests/video-semantic-llama-operations.test.cjs tests/video-semantic-llama-preflight.test.cjs",
     "docs:check": "node scripts/check-documentation-standard.cjs",
@@ -313,7 +313,8 @@
     "test:automatic-maintenance:native": "npm run build:renderer && node tests/automatic-maintenance-electron-smoke.cjs",
     "test:modern-desktop:browser": "node tests/modern-desktop-browser.cjs",
     "test:core-behavior": "node --test tests/unified-search.test.cjs tests/unified-search-guards.test.cjs tests/discovery-catalog.test.cjs tests/source-file-sync.test.cjs tests/automatic-maintenance.test.cjs tests/vector-gc.test.cjs tests/product-unified-search-filters.test.cjs tests/license-compliance.test.cjs tests/end-user-terms.test.cjs tests/end-user-terms-ipc.test.cjs tests/source-derived-data-cleanup.test.cjs",
-    "benchmark:core-search": "node scripts/benchmark-core-search.cjs"
+    "benchmark:core-search": "node scripts/benchmark-core-search.cjs",
+    "test:model-preparation:browser": "node tests/model-preparation-browser.cjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",

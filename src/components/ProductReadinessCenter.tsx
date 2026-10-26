@@ -22,6 +22,8 @@ import type {
   ProductTaskState,
 } from '../services/productReadiness'
 import { loadProductReadiness, runProductTaskControl } from '../services/productReadiness'
+import { installSearchModels } from '../services/installSearchModels'
+import type { ModelStatus } from '../../shared/vectorTypes'
 
 interface ProductReadinessCenterProps {
   onAction: (action: ProductReadinessAction) => void
@@ -266,6 +268,9 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   const [refreshing, setRefreshing] = useState(false)
   const [modelBusy, setModelBusy] = useState<ProductModelLifecycleItem['id'] | null>(null)
   const [modelMessage, setModelMessage] = useState('')
+  const [installingModels, setInstallingModels] = useState(false)
+  const modelEventsRef = useRef(new Map<string, ModelStatus>())
+  const modelRevisionRef = useRef(0)
   const [taskBusy, setTaskBusy] = useState<string | null>(null)
   const [taskMessage, setTaskMessage] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
@@ -273,6 +278,7 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   const [healthBusy, setHealthBusy] = useState(false)
   const [healthMessage, setHealthMessage] = useState('')
   const modelManagerRef = useRef<HTMLDetailsElement | null>(null)
+  const modelManagerRequested = useRef(false)
   const refreshInFlightRef = useRef(false)
   const [storageRefreshing, setStorageRefreshing] = useState(false)
 
@@ -280,12 +286,19 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
     const api = window.electronAPI
     if (!api || refreshInFlightRef.current) return
     refreshInFlightRef.current = true
+    const revision = modelRevisionRef.current
     setRefreshing(true)
     if (includeStorage) setStorageRefreshing(true)
     try {
       const next = await loadProductReadiness(api, { includeStorage })
       setSnapshot((current) => ({
         ...next,
+        models: next.models.map((model) => {
+          const event = modelEventsRef.current.get(model.id)
+          return revision !== modelRevisionRef.current && event
+            ? { ...model, state: event.state, progress: event.progress }
+            : model
+        }),
         taskStorage:
           !includeStorage && current?.taskStorage.totalBytes !== undefined
             ? current.taskStorage
@@ -298,6 +311,28 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
     }
   }, [])
 
+  const updateModelStatus = useCallback((status: ModelStatus) => {
+    modelEventsRef.current.set(status.name, status)
+    modelRevisionRef.current += 1
+    setSnapshot(
+      (current) =>
+        current && {
+          ...current,
+          models: current.models.map((model) =>
+            model.id === status.name
+              ? { ...model, state: status.state, progress: status.progress }
+              : model,
+          ),
+        },
+    )
+    setModelMessage(status.error || '')
+  }, [])
+
+  useEffect(
+    () => window.electronAPI?.vector?.onModelStatusChanged(updateModelStatus),
+    [updateModelStatus],
+  )
+
   useEffect(() => {
     void refresh()
     const timer = window.setInterval(() => void refresh(), refreshIntervalMs)
@@ -306,6 +341,7 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
 
   useEffect(() => {
     const openModelManager = () => {
+      modelManagerRequested.current = true
       const details = modelManagerRef.current
       if (!details) return
       details.open = true
@@ -315,6 +351,13 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
     window.addEventListener('workspace-open-model-manager', openModelManager)
     return () => window.removeEventListener('workspace-open-model-manager', openModelManager)
   }, [])
+
+  useEffect(() => {
+    if (snapshot && modelManagerRequested.current && modelManagerRef.current) {
+      modelManagerRef.current.open = true
+      modelManagerRequested.current = false
+    }
+  }, [snapshot])
 
   if (!snapshot) {
     return (
@@ -329,6 +372,26 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   }
 
   const nextAction = snapshot.nextAction
+  const installRequiredModels = async () => {
+    if (installingModels || modelBusy) return
+    if (
+      !window.confirm(
+        t('Download and verify both image search models? Existing verified files are reused.'),
+      )
+    )
+      return
+    setInstallingModels(true)
+    setModelMessage('')
+    try {
+      await installSearchModels(window.electronAPI.vector, updateModelStatus)
+      setModelMessage(t('Image search models are installed and verified.'))
+      await refresh()
+    } catch (error) {
+      setModelMessage(error instanceof Error ? error.message : t('The operation failed.'))
+    } finally {
+      setInstallingModels(false)
+    }
+  }
   const runManagedModelAction = async (
     model: ProductModelLifecycleItem,
     action: 'download' | 'repair' | 'cancel' | 'verify' | 'remove',
@@ -344,7 +407,7 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
     if (
       action === 'repair' &&
       !window.confirm(
-        t('Delete the damaged copy and download {model} again?', {
+        t('Repair missing or damaged files for {model}? Verified files are kept.', {
           model: MODEL_LABELS[model.id],
         }),
       )
@@ -365,11 +428,13 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
       if (action === 'cancel') result = await vector.cancelDownload()
       else if (action === 'remove') result = await vector.deleteModel(model.id)
       else if (action === 'repair') {
-        result = await vector.deleteModel(model.id)
-        if (result.ok) result = await vector.downloadModel(model.id)
+        result = await vector.downloadModel(model.id)
       } else if (action === 'download') result = await vector.downloadModel(model.id)
       if (!result.ok) setModelMessage(result.error || t('The operation failed.'))
+      updateModelStatus(await vector.getModelStatus(model.id))
       await refresh()
+    } catch (error) {
+      setModelMessage(error instanceof Error ? error.message : t('The operation failed.'))
     } finally {
       setModelBusy(null)
     }
@@ -548,19 +613,25 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
                   <div className="product-readiness__task-title">
                     <strong>{taskLabel}</strong>
                     <span>{t(TASK_STATE_LABELS[task.state])}</span>
-                    <span>{task.progress}%</span>
+                    <span>
+                      {task.indeterminate ? t('Discovering and indexing') : `${task.progress}%`}
+                    </span>
                   </div>
                   <progress
                     aria-label={t('Task progress for {task}', { task: taskLabel })}
                     max={100}
-                    value={task.progress}
+                    value={task.indeterminate ? undefined : task.progress}
                   />
                   <div className="product-readiness__task-meta">
                     <small>
-                      {t('Items {completed}/{total}', {
-                        completed: task.completed,
-                        total: task.total,
-                      })}
+                      {task.indeterminate
+                        ? t('{count} items processed; total is still being discovered', {
+                            count: task.completed,
+                          })
+                        : t('Items {completed}/{total}', {
+                            completed: task.completed,
+                            total: task.total,
+                          })}
                       {task.failed > 0 ? ` · ${t('{count} failed', { count: task.failed })}` : ''}
                     </small>
                     {task.itemsPerSecond === undefined ? null : (
@@ -737,69 +808,84 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
         data-testid="product-model-manager"
       >
         <summary tabIndex={-1}>{t('Manage models')}</summary>
-        <div className="product-readiness__model-grid">
-          {snapshot.models.map((model) => {
-            const busy = modelBusy === model.id
-            const ready = ['downloaded', 'verified', 'loaded', 'ready'].includes(model.state)
-            return (
-              <article key={model.id} data-testid={`product-model-${model.id}`}>
-                <div>
-                  <strong>{MODEL_LABELS[model.id]}</strong>
-                  <span>
-                    {t(MODEL_STATE_LABELS[model.state])}
-                    {model.progress === undefined ? '' : ` · ${model.progress}%`}
-                  </span>
-                </div>
-                {model.management === 'external-runtime' ? (
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      onAction(
-                        model.id === 'qwen3-vl' ? 'install-video-model' : 'install-audio-model',
-                      )
-                    }
-                  >
-                    {t(ready ? 'Open model status' : 'Open model setup')}
-                  </button>
-                ) : model.state === 'downloading' ? (
-                  <button
-                    disabled={busy}
-                    onClick={() => void runManagedModelAction(model, 'cancel')}
-                  >
-                    {t('Cancel download')}
-                  </button>
-                ) : ready ? (
-                  <div className="product-readiness__model-actions">
-                    <button
-                      disabled={busy}
-                      onClick={() => void runManagedModelAction(model, 'verify')}
-                    >
-                      {t('Verify')}
-                    </button>
-                    <button
-                      disabled={busy}
-                      onClick={() => void runManagedModelAction(model, 'remove')}
-                    >
-                      {t('Remove')}
-                    </button>
+        <button
+          data-testid="install-search-models"
+          disabled={installingModels || modelBusy !== null}
+          onClick={() => void installRequiredModels()}
+        >
+          {t(
+            installingModels
+              ? 'Installing image search models...'
+              : 'Install image search models automatically',
+          )}
+        </button>
+        {installingModels && (
+          <button onClick={() => void window.electronAPI.vector.cancelDownload()}>
+            {t('Cancel download')}
+          </button>
+        )}
+        <fieldset disabled={installingModels} style={{ border: 0, padding: 0, margin: 0 }}>
+          <div className="product-readiness__model-grid">
+            {snapshot.models.map((model) => {
+              const busy = modelBusy === model.id
+              const ready = ['downloaded', 'verified', 'loaded', 'ready'].includes(model.state)
+              return (
+                <article key={model.id} data-testid={`product-model-${model.id}`}>
+                  <div>
+                    <strong>{MODEL_LABELS[model.id]}</strong>
+                    <span>
+                      {t(MODEL_STATE_LABELS[model.state])}
+                      {model.progress === undefined ? '' : ` · ${model.progress}%`}
+                    </span>
                   </div>
-                ) : (
-                  <button
-                    disabled={busy || ['loading', 'unloading'].includes(model.state)}
-                    onClick={() =>
-                      void runManagedModelAction(
-                        model,
-                        model.state === 'error' ? 'repair' : 'download',
-                      )
-                    }
-                  >
-                    {t(model.state === 'error' ? 'Repair and download' : 'Download model')}
-                  </button>
-                )}
-              </article>
-            )
-          })}
-        </div>
+                  {model.management === 'external-runtime' ? (
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        onAction(
+                          model.id === 'qwen3-vl' ? 'install-video-model' : 'install-audio-model',
+                        )
+                      }
+                    >
+                      {t(ready ? 'Open model status' : 'Open model setup')}
+                    </button>
+                  ) : model.state === 'downloading' ? (
+                    <button onClick={() => void runManagedModelAction(model, 'cancel')}>
+                      {t('Cancel download')}
+                    </button>
+                  ) : ready ? (
+                    <div className="product-readiness__model-actions">
+                      <button
+                        disabled={busy}
+                        onClick={() => void runManagedModelAction(model, 'verify')}
+                      >
+                        {t('Verify')}
+                      </button>
+                      <button
+                        disabled={busy}
+                        onClick={() => void runManagedModelAction(model, 'remove')}
+                      >
+                        {t('Remove')}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      disabled={busy || ['loading', 'unloading'].includes(model.state)}
+                      onClick={() =>
+                        void runManagedModelAction(
+                          model,
+                          model.state === 'error' ? 'repair' : 'download',
+                        )
+                      }
+                    >
+                      {t(model.state === 'error' ? 'Repair and download' : 'Download model')}
+                    </button>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+        </fieldset>
         {modelMessage && <p className="product-readiness__model-message">{modelMessage}</p>}
         <small>{t('External video and audio models are never downloaded automatically.')}</small>
       </details>
@@ -808,7 +894,19 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
         <button
           className="product-readiness__next"
           data-testid="product-readiness-next-action"
-          onClick={() => onAction(nextAction)}
+          onClick={() => {
+            if (
+              nextAction === 'prepare-image-search' &&
+              snapshot.models.some(
+                (model) =>
+                  model.management === 'managed-download' &&
+                  !['downloaded', 'verified', 'loaded'].includes(model.state),
+              )
+            ) {
+              if (modelManagerRef.current) modelManagerRef.current.open = true
+              void installRequiredModels()
+            } else onAction(nextAction)
+          }}
         >
           {t('Next step')}: {t(ACTION_LABELS[nextAction])}
         </button>

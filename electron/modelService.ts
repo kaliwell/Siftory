@@ -7,7 +7,7 @@
 
 import fs from 'fs'
 import path from 'path'
-import { app } from 'electron'
+import { app, net } from 'electron'
 import type { ModelInfo, ModelRequiredFile, ModelStatus, ModelState } from '../shared/vectorTypes'
 import {
   clearModelFileVerificationCacheUnder,
@@ -44,6 +44,7 @@ let configuredUserDataPath = ''
 let manifests: ModelInfo[] = []
 let manifestLoaded = false
 let currentDownload: DownloadState | null = null
+const downloadErrors = new Map<string, string>()
 let statusListeners: ModelStatusCallback[] = []
 
 // ── Helpers ────────────────────────────────────────────────
@@ -164,7 +165,7 @@ function buildStatus(name: string, overrides?: Partial<ModelStatus>): ModelStatu
     state = 'not-installed'
   } else if (verified) {
     state = 'downloaded' // verified, available but not loaded into runtime
-  } else if (invalidCount > 0) {
+  } else if (invalidCount > 0 || downloadErrors.has(name)) {
     state = 'error' // an existing file failed integrity verification
   }
 
@@ -176,11 +177,13 @@ function buildStatus(name: string, overrides?: Partial<ModelStatus>): ModelStatu
     installedPath: verifiedRoot?.modelPath,
     error: verified
       ? undefined
-      : invalidCount > 0
-        ? 'SHA-256 verification failed'
-        : installed && missingRequiredFiles
-          ? 'Required model files are missing'
-          : undefined,
+      : downloadErrors.has(name)
+        ? downloadErrors.get(name)
+        : invalidCount > 0
+          ? 'SHA-256 verification failed'
+          : installed && missingRequiredFiles
+            ? 'Required model files are missing'
+            : undefined,
     ...overrides,
   }
 }
@@ -271,6 +274,8 @@ async function downloadRequiredModelFile(
     file,
     writableStorageRoot: getModelStorageDir(),
     signal: downloadState.abortController!.signal,
+    // Chromium networking uses the system proxy, unlike Node's default fetch.
+    fetch: net?.fetch ? net.fetch.bind(net) : undefined,
     onProgress: (bytesDownloaded) => {
       downloadState.bytesDownloaded = completedBytes + bytesDownloaded
       if (currentDownload === downloadState) emit(buildStatus(modelName))
@@ -303,6 +308,7 @@ export async function downloadModel(modelName: string): Promise<{ ok: boolean; e
   }
 
   const requiredFiles = getRequiredModelFiles(info)
+  downloadErrors.delete(modelName)
   fs.mkdirSync(path.resolve(getModelStorageDir(), modelName), { recursive: true })
   const abortController = new AbortController()
   const totalBytes = requiredFiles.reduce((sum, file) => sum + file.sizeBytes, 0)
@@ -339,6 +345,7 @@ export async function downloadModel(modelName: string): Promise<{ ok: boolean; e
     }
 
     if (currentDownload === downloadState) currentDownload = null
+    downloadErrors.delete(modelName)
     const installed = buildStatus(modelName)
     emit(installed)
     return installed.state === 'downloaded'
@@ -346,6 +353,7 @@ export async function downloadModel(modelName: string): Promise<{ ok: boolean; e
       : { ok: false, error: installed.error || 'Model installation is incomplete' }
   } catch (err: unknown) {
     const message = errorMessage(err)
+    if (!abortController.signal.aborted) downloadErrors.set(modelName, message)
 
     if (currentDownload === downloadState) {
       downloadState.state = 'error'
@@ -388,6 +396,7 @@ export function deleteModel(modelName: string): { ok: boolean; error?: string } 
       fs.rmSync(modelDirPath, { recursive: true, force: true })
     }
     clearModelFileVerificationCacheUnder(modelDirPath)
+    downloadErrors.delete(modelName)
     emit(buildStatus(modelName))
     return { ok: true }
   } catch (err: unknown) {
@@ -403,6 +412,7 @@ export function initModelService(userDataPath?: string): void {
   manifestLoaded = false
   manifests = []
   resetModelFileVerificationCache()
+  downloadErrors.clear()
   fs.mkdirSync(getModelStorageDir(), { recursive: true })
   loadModelManifest()
 }

@@ -26,6 +26,8 @@
 
 ## 当前基线
 
+当前工作环境测试修复：[2026-10-26 建库进度与模型安装](current/2026-10-26-alpha-workplace-model-progress-fixes.md)。修复枚举期间的虚假 100%、模型下载失败信息丢失及状态刷新，增加经用户点击确认的一键模型准备和测试风险提示。
+
 当前开源与工程修复：[2026-10-24 开源调整与软件工程修复](current/2026-10-24-open-source-engineering-fixes.md)。项目原创源码采用 Apache-2.0；取消商业付费授权方向。搜索过滤、异步投影、维护退出和验证链以此文档及本轮验证结果为准。日常开发入口见 [CONTRIBUTING](../CONTRIBUTING.md)。
 
 当前界面整合：[2026-10-24 用户 UI 累计补丁合并](current/2026-10-24-ui-patch-integration.md)。搜索包含综合、图片和视频页签，来源与建库集中在数据源中，保留原检索能力；最终工作流见[说明](current/2026-10-23-workspace-flow.md)。

@@ -58,10 +58,8 @@ export function useManagedSearchModels() {
   }, [])
 
   useEffect(() => {
-    void refresh()
     const api = window.electronAPI?.vector
-    if (!api?.onModelStatusChanged) return
-    return api.onModelStatusChanged((status: ModelStatus) => {
+    const unsubscribe = api?.onModelStatusChanged?.((status: ModelStatus) => {
       if (!isManagedSearchModelName(status.name)) return
       requestIdRef.current += 1
       setStatuses((current) => ({ ...current, [status.name]: status }))
@@ -69,6 +67,16 @@ export function useManagedSearchModels() {
       setChecking(false)
       setCheckError(null)
     })
+    void refresh()
+    const onFocus = () => void refresh()
+    window.addEventListener('focus', onFocus)
+    const timer = window.setInterval(() => void refresh(), 15000)
+    return () => {
+      unsubscribe?.()
+      window.removeEventListener('focus', onFocus)
+      window.clearInterval(timer)
+      requestIdRef.current += 1
+    }
   }, [refresh])
 
   const readiness = useMemo(

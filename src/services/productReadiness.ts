@@ -147,6 +147,7 @@ export interface ProductTaskInventoryItem {
   kind: ProductTaskKind
   state: ProductTaskState
   progress: number
+  indeterminate?: boolean
   completed: number
   total: number
   failed: number
@@ -691,20 +692,33 @@ export function buildProductTaskInventory(
 
   const image = input.imageSearch
   if (image && (image.state !== 'idle' || image.indexedCount > 0 || image.pendingCount > 0)) {
-    const total = Math.max(0, image.indexedCount + image.pendingCount)
+    const saving = image.state === 'idle' && image.autosaveState === 'saving'
+    const state =
+      image.autosaveState === 'failed'
+        ? 'failed'
+        : saving
+          ? 'running'
+          : normalizeTaskState(image.state)
+    // Enumeration is open-ended until native scanning and persistence finish.
+    // indexed + pending is not a final total while more folders are being discovered.
+    const total = Math.max(0, image.indexedCount + image.pendingCount, image.enumImageCount ?? 0)
+    const progress = taskProgress(image.indexedCount, 0, total)
     tasks.push({
       id: 'image-index:current',
       kind: 'image-index',
-      state: normalizeTaskState(image.state),
-      progress: taskProgress(image.indexedCount, 0, total),
+      state,
+      progress: state === 'completed' ? 100 : Math.min(95, progress),
+      indeterminate: ['queued', 'running', 'paused', 'stopping'].includes(state),
       completed: Math.max(0, image.indexedCount),
       total,
       failed: Math.max(0, image.warningCount ?? 0),
       phase: image.thumbnailPhase || image.state,
       ...(image.currentPath ? { currentItem: image.currentPath } : {}),
-      ...(image.lastError ? { error: image.lastError } : {}),
+      ...(image.lastError || image.autosaveState === 'failed'
+        ? { error: image.lastError || 'Index persistence failed' }
+        : {}),
       ...(image.lastSaveTime ? { updatedAt: image.lastSaveTime } : {}),
-      persisted: true,
+      persisted: image.autosaveState === 'saved' || image.indexMode === 'segment_mmap',
       canStop: ['queued', 'scanning', 'indexing', 'paused'].includes(image.state),
       canPause: ['queued', 'scanning', 'indexing'].includes(image.state),
       canResume: image.state === 'paused',
@@ -1088,7 +1102,29 @@ async function readStatus<T>(
   }
 }
 
-export async function loadProductReadiness(
+const pendingReadiness = new WeakMap<
+  ProductReadinessApi,
+  Map<boolean, Promise<ProductReadinessSnapshot>>
+>()
+
+export function loadProductReadiness(
+  api: ProductReadinessApi,
+  options: LoadProductReadinessOptions = {},
+): Promise<ProductReadinessSnapshot> {
+  let pending = pendingReadiness.get(api)
+  if (!pending) {
+    pending = new Map()
+    pendingReadiness.set(api, pending)
+  }
+  const key = options.includeStorage === true
+  const existing = pending.get(key)
+  if (existing) return existing
+  const request = loadProductReadinessSnapshot(api, options).finally(() => pending.delete(key))
+  pending.set(key, request)
+  return request
+}
+
+async function loadProductReadinessSnapshot(
   api: ProductReadinessApi,
   options: LoadProductReadinessOptions = {},
 ): Promise<ProductReadinessSnapshot> {

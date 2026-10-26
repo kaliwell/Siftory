@@ -48,6 +48,18 @@ const WorkspaceNavigator: React.FC = () => {
   const saveStatus = useSyncExternalStore(subscribeSettingsWriteStatus, getSettingsWriteStatus)
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const [tasksOpen, setTasksOpen] = useState(false)
+  useEffect(() => {
+    const openModels = () => {
+      setTasksOpen(true)
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          window.dispatchEvent(new Event('workspace-open-model-manager')),
+        ),
+      )
+    }
+    window.addEventListener('workspace-open-search-models', openModels)
+    return () => window.removeEventListener('workspace-open-search-models', openModels)
+  }, [])
   const [guideMounted, setGuideMounted] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [stats, setStats] = useState<UnifiedSchedulerStats | null>(null)

@@ -8,7 +8,8 @@ const { _electron: electron } = require('playwright')
 const sharp = require('sharp')
 const { createSmokeSessionMarker, createSmokeSpawnEnvironment } = require('./smoke-test-utils.cjs')
 const repo = path.resolve(__dirname, '..')
-const evidence = path.join(repo, 'artifacts', 'alpha3-install-test')
+const version = require('../package.json').version
+const evidence = path.join(repo, 'artifacts', `installer-${version}`)
 fs.mkdirSync(evidence, { recursive: true })
 const sha = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex')
 const powershell = (script) =>
@@ -90,7 +91,7 @@ async function main() {
       .toFile(f)
     files.push({ file: f, sha256: sha(f) })
   }
-  const installer = path.join(repo, 'release', 'Siftory Alpha Online Setup 1.0.1-alpha.3.exe')
+  const installer = path.join(repo, 'release', `Siftory Alpha Online Setup ${version}.exe`)
   const installerSha = sha(installer)
   const env = createSmokeSpawnEnvironment({
     APPDATA: root,
@@ -130,7 +131,7 @@ async function main() {
     }))
     assert.equal(fs.realpathSync.native(state.profile), fs.realpathSync.native(profile))
     assert.equal(state.packaged, true)
-    assert.equal(state.version, '1.0.1-alpha.3')
+    assert.equal(state.version, version)
     const page = await app.firstWindow({ timeout: 45000 })
     page.on('pageerror', (e) => errors.push(e.message))
     await page.getByTestId('workspace-domain-search').waitFor({ timeout: 45000 })
@@ -201,7 +202,7 @@ async function main() {
     assert.deepEqual(errors, [])
     const report = {
       passed: true,
-      version: '1.0.1-alpha.3',
+      version,
       platform: 'Windows x64',
       installerSha256: installerSha,
       checks: {

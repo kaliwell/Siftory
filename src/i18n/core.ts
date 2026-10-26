@@ -38,6 +38,18 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Alpha testing only. Back up application data and original files. You are responsible for assessing use and file operations; results may be inaccurate.':
+    'Alpha 版本仅用于测试。请先备份应用数据和原始文件；请自行评估使用及文件操作风险，检索结果可能不准确。',
+  'Discovering and indexing': '正在发现文件并建库',
+  '{count} items processed; total is still being discovered': '已处理 {count} 项，文件总量仍在统计',
+  'Install image search models automatically': '自动下载安装搜图模型',
+  'Installing image search models...': '正在安装搜图模型…',
+  'Download and verify both image search models? Existing verified files are reused.':
+    '下载并校验 DINOv2 和 CLIP 两套搜图模型？会访问网络并占用磁盘空间；已有校验通过的文件会复用。',
+  'Image search models are installed and verified.':
+    '搜图模型已安装并通过校验，可以继续准备图片搜索。',
+  'Repair missing or damaged files for {model}? Verified files are kept.':
+    '修复 {model} 缺失或损坏的文件？已有校验通过的文件将保留。',
   'Index statistics have not been analyzed. Existing search data is preserved.':
     '尚未分析索引统计，已有的搜索数据仍然保留。',
   'Automatic maintenance': '自动维护',

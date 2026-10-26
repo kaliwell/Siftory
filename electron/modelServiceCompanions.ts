@@ -39,6 +39,7 @@ export interface DownloadPinnedModelFileOptions {
   writableStorageRoot: string
   signal: AbortSignal
   onProgress?: (bytesDownloaded: number) => void
+  fetch?: (url: string, init: RequestInit) => Promise<Response>
 }
 
 const verificationCache = new Map<string, VerificationCacheEntry>()
@@ -303,7 +304,7 @@ export async function downloadPinnedModelFile(
   fs.mkdirSync(path.dirname(destPath), { recursive: true })
   const preparedPath = createPreparedSiblingPath(destPath)
   try {
-    const response = await fetch(file.url, {
+    const response = await (options.fetch ?? fetch)(file.url, {
       signal: options.signal,
       headers: { 'User-Agent': 'Siftory/1.0.0' },
     })

@@ -1206,6 +1206,17 @@ const ImageSearchPanel: React.FC = () => {
             onDrop={sourcesOnly ? undefined : handleDrop}
           >
             <ImageSearchToastBanner toast={toast} />
+            {!sourcesOnly &&
+              !managedModelsChecking &&
+              (!isManagedModelReady('dinov2_vitb14') ||
+                !isManagedModelReady('clip_vit_base_patch32')) && (
+                <button
+                  data-testid="image-search-install-models"
+                  onClick={() => window.dispatchEvent(new Event('workspace-open-search-models'))}
+                >
+                  {t('Install image search models automatically')}
+                </button>
+              )}
 
             <ConfirmWholeDriveBanner
               paths={confirmWholeDrive}

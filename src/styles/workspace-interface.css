@@ -770,3 +770,11 @@
   background: #2c59ce;
   border-color: #2c59ce;
 }
+.workspace-alpha-notice {
+  margin: 0;
+  padding: 8px 28px;
+  border-bottom: 1px solid var(--border-color, #c7d5ed);
+  color: var(--text-secondary, #5b7092);
+  font-size: 12px;
+  line-height: 1.5;
+}
