@@ -1,28 +1,28 @@
-import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import type { ModelInfo, ModelRequiredFile } from '../shared/vectorTypes'
+import type { ModelInfo, ModelRequiredFile, ModelStatus } from '../shared/vectorTypes'
 import {
   commitPreparedPath,
   createPreparedSiblingPath,
   discardPreparedPath,
   recoverPreparedPathTransactions,
 } from './localFileTransaction'
-import { streamModelBodyToFile } from './modelDownloadStream'
+import {
+  rememberVerifiedFile,
+  streamModelBodyToFile,
+  verifyPinnedModelFileSync,
+  verifyPinnedModelFileAsync,
+} from './modelDownloadStream'
+export {
+  verifyPinnedModelFileSync,
+  verifyPinnedModelFileAsync,
+  resetModelFileVerificationCache,
+  clearModelFileVerificationCacheUnder,
+} from './modelDownloadStream'
 
-const HASH_BUFFER_BYTES = 4 * 1024 * 1024
 const MAX_REQUIRED_MODEL_FILES = 128
 const MAX_PINNED_MODEL_FILE_BYTES = 16 * 1024 * 1024 * 1024
 const SHA256_PATTERN = /^[a-f\d]{64}$/i
-
-interface VerificationCacheEntry {
-  size: number
-  mtimeMs: number
-  ctimeMs: number
-  expectedSize: number
-  expectedSha256: string
-  verified: boolean
-}
 
 export interface ModelRootState {
   storageRoot: string
@@ -40,12 +40,6 @@ export interface DownloadPinnedModelFileOptions {
   signal: AbortSignal
   onProgress?: (bytesDownloaded: number) => void
   fetch?: (url: string, init: RequestInit) => Promise<Response>
-}
-
-const verificationCache = new Map<string, VerificationCacheEntry>()
-
-function verificationSidecarPath(modelPath: string): string {
-  return `${modelPath}.verified.json`
 }
 
 function isPathInside(parent: string, candidate: string): boolean {
@@ -143,153 +137,6 @@ export function getModelFilePath(storageRoot: string, modelName: string, filenam
   const candidate = path.resolve(modelRoot, filename)
   if (!isPathInside(modelRoot, candidate)) throw new Error(`Unsafe model filename: ${filename}`)
   return candidate
-}
-
-function hashFileBoundedSync(filePath: string): string {
-  const hash = crypto.createHash('sha256')
-  const buffer = Buffer.allocUnsafe(HASH_BUFFER_BYTES)
-  const fd = fs.openSync(filePath, 'r')
-  try {
-    for (;;) {
-      const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null)
-      if (bytesRead === 0) break
-      hash.update(buffer.subarray(0, bytesRead))
-    }
-  } finally {
-    fs.closeSync(fd)
-  }
-  return hash.digest('hex')
-}
-
-function cacheEntryMatches(
-  cached: VerificationCacheEntry | undefined,
-  stat: fs.Stats,
-  file: ModelRequiredFile,
-): boolean {
-  return Boolean(
-    cached &&
-    cached.verified &&
-    cached.size === stat.size &&
-    cached.mtimeMs === stat.mtimeMs &&
-    cached.ctimeMs === stat.ctimeMs &&
-    cached.expectedSize === file.sizeBytes &&
-    cached.expectedSha256 === file.sha256,
-  )
-}
-
-function rememberVerifiedFile(
-  modelPath: string,
-  file: ModelRequiredFile,
-  writableStorageRoot: string,
-): void {
-  try {
-    const stat = fs.statSync(modelPath)
-    const entry: VerificationCacheEntry = {
-      size: stat.size,
-      mtimeMs: stat.mtimeMs,
-      ctimeMs: stat.ctimeMs,
-      expectedSize: file.sizeBytes,
-      expectedSha256: file.sha256,
-      verified: true,
-    }
-    verificationCache.set(modelPath, entry)
-    if (!isPathInside(writableStorageRoot, modelPath)) return
-    const sidecarPath = verificationSidecarPath(modelPath)
-    const temporaryPath = `${sidecarPath}.${crypto.randomUUID()}.tmp`
-    try {
-      fs.writeFileSync(temporaryPath, JSON.stringify({ schemaVersion: 2, ...entry }), {
-        encoding: 'utf8',
-        flag: 'wx',
-      })
-      fs.renameSync(temporaryPath, sidecarPath)
-    } finally {
-      fs.rmSync(temporaryPath, { force: true })
-    }
-  } catch {
-    // Verification remains valid for this process even if its advisory sidecar cannot be written.
-  }
-}
-
-/**
- * Verifies a pinned file once per unchanged process-local file identity. A
- * persisted sidecar is never accepted as proof, so every process re-hashes
- * existing files before reporting the model as downloaded.
- */
-export function verifyPinnedModelFileSync(
-  modelPath: string,
-  file: ModelRequiredFile,
-  writableStorageRoot: string,
-): boolean {
-  try {
-    const before = fs.lstatSync(modelPath)
-    if (!before.isFile() || before.isSymbolicLink() || before.size !== file.sizeBytes) return false
-    const cached = verificationCache.get(modelPath)
-    if (cacheEntryMatches(cached, before, file)) return true
-    const verified = hashFileBoundedSync(modelPath) === file.sha256
-    const after = fs.lstatSync(modelPath)
-    const unchanged =
-      after.isFile() &&
-      !after.isSymbolicLink() &&
-      after.size === before.size &&
-      after.mtimeMs === before.mtimeMs &&
-      after.ctimeMs === before.ctimeMs
-    if (!verified || !unchanged) {
-      verificationCache.delete(modelPath)
-      return false
-    }
-    rememberVerifiedFile(modelPath, file, writableStorageRoot)
-    return true
-  } catch {
-    verificationCache.delete(modelPath)
-    return false
-  }
-}
-
-/** Full verification with bounded asynchronous reads, keeping renderer IPC responsive. */
-export async function verifyPinnedModelFileAsync(
-  modelPath: string,
-  file: ModelRequiredFile,
-  writableStorageRoot: string,
-): Promise<boolean> {
-  let handle: fs.promises.FileHandle | undefined
-  try {
-    const before = await fs.promises.lstat(modelPath)
-    if (!before.isFile() || before.isSymbolicLink() || before.size !== file.sizeBytes) return false
-    if (cacheEntryMatches(verificationCache.get(modelPath), before, file)) return true
-    handle = await fs.promises.open(modelPath, 'r')
-    const opened = await handle.stat()
-    if (opened.ino !== before.ino || opened.dev !== before.dev || opened.ctimeMs !== before.ctimeMs)
-      return false
-    const hash = crypto.createHash('sha256')
-    const buffer = Buffer.allocUnsafe(256 * 1024)
-    let total = 0
-    for (;;) {
-      const { bytesRead } = await handle.read(buffer, 0, buffer.length, null)
-      if (!bytesRead) break
-      total += bytesRead
-      if (total > file.sizeBytes) return false
-      hash.update(buffer.subarray(0, bytesRead))
-    }
-    const after = await fs.promises.lstat(modelPath)
-    if (
-      total !== file.sizeBytes ||
-      hash.digest('hex') !== file.sha256 ||
-      !after.isFile() ||
-      after.isSymbolicLink() ||
-      after.ino !== before.ino ||
-      after.dev !== before.dev ||
-      after.size !== before.size ||
-      after.mtimeMs !== before.mtimeMs ||
-      after.ctimeMs !== before.ctimeMs
-    )
-      return false
-    rememberVerifiedFile(modelPath, file, writableStorageRoot)
-    return true
-  } catch {
-    return false
-  } finally {
-    await handle?.close()
-  }
 }
 
 export function inspectModelStorageRoot(
@@ -390,15 +237,52 @@ export async function downloadPinnedModelFile(
   }
 }
 
-export function resetModelFileVerificationCache(): void {
-  verificationCache.clear()
+interface ModelStatusReaderContext {
+  getModelInfo(name: string): ModelInfo | undefined
+  getModelStorageDir(): string
+  getModelReadStorageDirs(): string[]
+  isDownloading(name: string): boolean
+  buildStatus(name: string, roots?: ModelRootState[]): ModelStatus
 }
 
-export function clearModelFileVerificationCacheUnder(directory: string): void {
-  const resolved = path.resolve(directory)
-  for (const modelPath of verificationCache.keys()) {
-    if (modelPath === resolved || modelPath.startsWith(`${resolved}${path.sep}`)) {
-      verificationCache.delete(modelPath)
+/** Shares a complete asynchronous integrity check between simultaneous status consumers. */
+export function createAsyncModelStatusReader(context: ModelStatusReaderContext) {
+  const pending = new Map<string, Promise<ModelStatus>>()
+  async function inspect(name: string): Promise<ModelStatus> {
+    const info = context.getModelInfo(name)
+    if (!info || context.isDownloading(name)) return context.buildStatus(name)
+    const writable = context.getModelStorageDir()
+    recoverModelFileTransactions(info, writable)
+    const roots: ModelRootState[] = []
+    for (const storageRoot of context.getModelReadStorageDirs()) {
+      let installedCount = 0,
+        missingCount = 0,
+        invalidCount = 0
+      for (const file of getRequiredModelFiles(info)) {
+        const target = getModelFilePath(storageRoot, name, file.filename)
+        if (!fs.existsSync(target)) {
+          missingCount++
+          continue
+        }
+        installedCount++
+        if (!(await verifyPinnedModelFileAsync(target, file, writable))) invalidCount++
+      }
+      roots.push({
+        storageRoot,
+        modelPath: getModelFilePath(storageRoot, name, info.filename),
+        installedCount,
+        missingCount,
+        invalidCount,
+        verified: missingCount === 0 && invalidCount === 0,
+      })
     }
+    return context.buildStatus(name, roots)
+  }
+  return (name: string): Promise<ModelStatus> => {
+    const existing = pending.get(name)
+    if (existing) return existing
+    const request = inspect(name).finally(() => pending.delete(name))
+    pending.set(name, request)
+    return request
   }
 }

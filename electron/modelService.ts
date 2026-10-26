@@ -10,6 +10,7 @@ import path from 'path'
 import { app, net } from 'electron'
 import type { ModelInfo, ModelRequiredFile, ModelStatus, ModelState } from '../shared/vectorTypes'
 import {
+  createAsyncModelStatusReader,
   clearModelFileVerificationCacheUnder,
   downloadPinnedModelFile,
   getModelFilePath,
@@ -18,7 +19,6 @@ import {
   recoverModelFileTransactions,
   resetModelFileVerificationCache,
   verifyPinnedModelFileSync,
-  verifyPinnedModelFileAsync,
   type ModelRootState,
 } from './modelServiceCompanions'
 
@@ -28,9 +28,6 @@ export type ModelStatusCallback = (status: ModelStatus) => void
 
 interface DownloadState {
   modelName: string
-  url: string
-  destPath: string
-  expectedSha256: string
   totalBytes: number
   bytesDownloaded: number
   abortController: AbortController | null
@@ -257,47 +254,13 @@ export function getModelStatus(name: string): ModelStatus {
   return buildStatus(name)
 }
 
-const pendingStatusChecks = new Map<string, Promise<ModelStatus>>()
-
-export function getModelStatusAsync(name: string): Promise<ModelStatus> {
-  const pending = pendingStatusChecks.get(name)
-  if (pending) return pending
-  const request = inspectModelStatusAsync(name).finally(() => pendingStatusChecks.delete(name))
-  pendingStatusChecks.set(name, request)
-  return request
-}
-
-async function inspectModelStatusAsync(name: string): Promise<ModelStatus> {
-  ensureModelManifestLoaded()
-  const info = manifests.find((model) => model.name === name)
-  if (!info || currentDownload?.modelName === name) return buildStatus(name)
-  const writable = getModelStorageDir()
-  recoverModelFileTransactions(info, writable)
-  const roots: ModelRootState[] = []
-  for (const storageRoot of getModelReadStorageDirs()) {
-    let installedCount = 0,
-      missingCount = 0,
-      invalidCount = 0
-    for (const file of getRequiredModelFiles(info)) {
-      const target = getModelPathInStorageRoot(storageRoot, name, file.filename)
-      if (!fs.existsSync(target)) {
-        missingCount++
-        continue
-      }
-      installedCount++
-      if (!(await verifyPinnedModelFileAsync(target, file, writable))) invalidCount++
-    }
-    roots.push({
-      storageRoot,
-      modelPath: getModelPathInStorageRoot(storageRoot, name, info.filename),
-      installedCount,
-      missingCount,
-      invalidCount,
-      verified: missingCount === 0 && invalidCount === 0,
-    })
-  }
-  return buildStatus(name, undefined, roots)
-}
+export const getModelStatusAsync = createAsyncModelStatusReader({
+  getModelInfo,
+  getModelStorageDir,
+  getModelReadStorageDirs,
+  isDownloading: (name) => currentDownload?.modelName === name,
+  buildStatus: (name, roots) => buildStatus(name, undefined, roots),
+})
 
 export function onModelStatusChanged(cb: ModelStatusCallback): () => void {
   statusListeners.push(cb)
@@ -314,10 +277,6 @@ async function downloadRequiredModelFile(
   downloadState: DownloadState,
   completedBytes: number,
 ): Promise<void> {
-  const destPath = getModelPath(modelName, file.filename)
-  downloadState.url = file.url
-  downloadState.destPath = destPath
-  downloadState.expectedSha256 = file.sha256
   await downloadPinnedModelFile({
     modelName,
     file,
@@ -372,9 +331,6 @@ export async function downloadModel(modelName: string): Promise<{ ok: boolean; e
 
   const downloadState: DownloadState = {
     modelName,
-    url: info.url,
-    destPath: getModelPath(modelName, info.filename),
-    expectedSha256: info.sha256,
     totalBytes,
     bytesDownloaded: completedBytes,
     abortController,
