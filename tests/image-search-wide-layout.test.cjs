@@ -239,7 +239,7 @@ test('managed model hook refreshes task dependencies without rendering duplicate
   const mediaPanel = source('src/components/MediaSearchPanel.tsx')
 
   assert.match(hook, /Promise\.all\([\s\S]*api\.getModelStatus\(name\)/)
-  assert.match(hook, /api\.onModelStatusChanged/)
+  assert.match(hook, /api(?:\?\.|\.)onModelStatusChanged/)
   assert.match(hook, /isManagedSearchModelName\(status\.name\)/)
   assert.match(imagePanel, /const latestModels = await refreshManagedModels\(\)/)
   assert.match(mediaPanel, /const latestModels = await refreshManagedModels\(\)/)
