@@ -42,7 +42,7 @@
     },
     {
       "packagePath": "node_modules/electron",
-      "version": "42.11.12"
+      "version": "42.11.18"
     }
   ],
   "components": [
@@ -478,10 +478,10 @@
       "licenseScope": "Windows package declares Apache-2.0 AND LGPL-3.0-or-later; retained notices and version metadata do not establish complete corresponding source."
     },
     {
-      "id": "electron-42.11.12",
-      "name": "electron 42.11.12",
-      "revision": "42.11.12",
-      "licenseScope": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.12 distribution; not a complete independent binary SBOM."
+      "id": "electron-42.11.18",
+      "name": "electron 42.11.18",
+      "revision": "42.11.18",
+      "licenseScope": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.18 distribution; not a complete independent binary SBOM."
     }
   ],
   "files": [
@@ -2304,36 +2304,36 @@
       "scopeLimitations": "Windows package declares Apache-2.0 AND LGPL-3.0-or-later; retained notices and version metadata do not establish complete corresponding source. Original installed bytes retained after npm ci. No new legal approval is granted."
     },
     {
-      "path": "electron-42.11.12/LICENSE",
+      "path": "electron-42.11.18/LICENSE",
       "bytes": 1096,
       "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d",
-      "appliesTo": ["electron-42.11.12"],
+      "appliesTo": ["electron-42.11.18"],
       "source": {
         "kind": "installed-npm-original",
-        "officialUrl": "https://registry.npmjs.org/electron/-/electron-42.11.12.tgz",
-        "revision": "42.11.12",
-        "retrievedAt": "2026-10-10T05:46:57.781Z",
-        "registryIntegrity": "sha512-fHlCHh1uqfvWykQUq8eoSoB5q1gej7z/KKd3m7rqEEhHhihm7qz/EvBIkDat7vQoIq3kGTJcrskLbJ6UFkYGyg==",
+        "officialUrl": "https://github.com/electron/electron/releases/download/v42.11.18/electron-v42.11.18-win32-x64.zip",
+        "revision": "42.11.18",
+        "retrievedAt": "2026-10-27T14:06:15.700Z",
+        "registryIntegrity": "sha512-hbzodG06x/l7uq+oeyob5ugv6qZBmJRWC7Uto5QEE99xSHUARz6d+++Rz+79T/ssTYTQkONW4ciTTcJuAbXKIQ==",
         "installedMember": "dist/LICENSE",
         "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d"
       },
-      "scopeLimitations": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.12 distribution; not a complete independent binary SBOM. Original installed bytes retained after npm ci. No new legal approval is granted."
+      "scopeLimitations": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.18 distribution; not a complete independent binary SBOM. Exact installed Windows distribution texts retained after the checksum-verified Electron installer completed. No new legal approval is granted."
     },
     {
-      "path": "electron-42.11.12/LICENSES.chromium.html",
+      "path": "electron-42.11.18/LICENSES.chromium.html",
       "bytes": 20367775,
       "sha256": "5d545ce8065079f38a82472ab93bd62fcdf73cd319f0771ef51c45c7e243f1d4",
-      "appliesTo": ["electron-42.11.12"],
+      "appliesTo": ["electron-42.11.18"],
       "source": {
         "kind": "installed-npm-original",
-        "officialUrl": "https://registry.npmjs.org/electron/-/electron-42.11.12.tgz",
-        "revision": "42.11.12",
-        "retrievedAt": "2026-10-10T05:46:57.835Z",
-        "registryIntegrity": "sha512-fHlCHh1uqfvWykQUq8eoSoB5q1gej7z/KKd3m7rqEEhHhihm7qz/EvBIkDat7vQoIq3kGTJcrskLbJ6UFkYGyg==",
+        "officialUrl": "https://github.com/electron/electron/releases/download/v42.11.18/electron-v42.11.18-win32-x64.zip",
+        "revision": "42.11.18",
+        "retrievedAt": "2026-10-27T14:06:15.793Z",
+        "registryIntegrity": "sha512-hbzodG06x/l7uq+oeyob5ugv6qZBmJRWC7Uto5QEE99xSHUARz6d+++Rz+79T/ssTYTQkONW4ciTTcJuAbXKIQ==",
         "installedMember": "dist/LICENSES.chromium.html",
         "sha256": "5d545ce8065079f38a82472ab93bd62fcdf73cd319f0771ef51c45c7e243f1d4"
       },
-      "scopeLimitations": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.12 distribution; not a complete independent binary SBOM. Original installed bytes retained after npm ci. No new legal approval is granted."
+      "scopeLimitations": "Electron MIT license and bundled Chromium aggregate license texts from the installed 42.11.18 distribution; not a complete independent binary SBOM. Exact installed Windows distribution texts retained after the checksum-verified Electron installer completed. No new legal approval is granted."
     }
   ],
   "unresolved": [
@@ -2392,7 +2392,7 @@
     "microsoftRuntimeReview": "lgpl-distribution-followup-20260925/microsoft-runtime/review.json",
     "publicAlphaUpdate": {
       "sharp": "0.35.5",
-      "electron": "42.11.12",
+      "electron": "42.11.18",
       "basis": "Installed original license texts retained with byte hashes; historical evidence remains archived; approval flags unchanged."
     }
   }

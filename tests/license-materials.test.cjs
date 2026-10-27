@@ -98,7 +98,9 @@ test('supplemental license payload matches exact texts, scope and source lock ve
   )
   assert.ok(
     report.packageBindings.some(
-      (binding) => binding.packagePath === 'node_modules/electron' && binding.version === '42.11.12',
+      (binding) =>
+        binding.packagePath === 'node_modules/electron' &&
+        binding.version === require('../package.json').devDependencies.electron,
     ),
   )
   assert.equal(

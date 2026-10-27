@@ -81,6 +81,9 @@ export interface AppStore {
   // Edit windows
   editPrompts: { tabIdx: number; promptIdx: number }[]
 
+  // Transient page route; excluded from persisted panel settings.
+  workspaceTaskPageOpen: boolean
+
   // Panel visibility
   showClock: boolean
   showFolders: boolean
@@ -791,6 +794,7 @@ export const useStore = create<AppStore>((set, get) => ({
 
   editPrompts: [],
 
+  workspaceTaskPageOpen: false,
   globalVisible: true,
   savedVisibility: {},
 
@@ -833,7 +837,7 @@ export const useStore = create<AppStore>((set, get) => ({
   manifestPath: '',
   recentManifests: [],
   imageSearchScanPaths: [] as string[],
-  imageSearchUiPreferences: { ...DEFAULT_IMAGE_SEARCH_UI_PREFERENCES },
+  imageSearchUiPreferences: { ...DEFAULT_IMAGE_SEARCH_UI_PREFERENCES, workspaceView: 'search' },
   mediaSearchUiPreferences: { ...DEFAULT_MEDIA_SEARCH_UI_PREFERENCES },
 
   configDirty: false,

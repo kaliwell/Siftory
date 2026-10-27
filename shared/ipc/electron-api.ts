@@ -366,6 +366,15 @@ export interface ElectronAPI {
     saveReport: () => Promise<import('./product-health').ProductHealthExportResult>
   }
   imageSearch: {
+    saveSearchQueryCopy: (traceId: string) => Promise<{ ok: boolean }>
+    getSearchDiagnosticStatus: () => Promise<{ sessionId: string; dropped: number; error?: string }>
+    exportSearchDiagnostics: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>
+    clearSearchDiagnostics: () => Promise<{ ok: boolean; error?: string }>
+    reportSearchDiagnostic: (
+      traceId: string,
+      outcome: 'incorrect' | 'accepted' | 'discarded',
+    ) => Promise<{ ok: boolean }>
+
     getStatus: () => Promise<ImageSearchStatus>
     startScan: (args: ImageSearchStartScanArgs) => Promise<ImageSearchStatus>
     stopScan: () => Promise<ImageSearchStatus>

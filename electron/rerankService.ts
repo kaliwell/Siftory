@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 // ── Rerank Service ─────────────────────────────────────────
 // Layer 3 candidate rescoring pipeline.
 // Combines Hash TopK + Vector TopK, then applies colorScore,
@@ -291,6 +292,7 @@ interface DinoQueryWorker {
   child: ChildProcessWithoutNullStreams
   key: string
   ready: boolean
+  provider?: { selected: string; fallback: boolean; reason: string }
   nextId: number
   stdoutDecoder: EmbeddingChildBinaryFrameDecoder
   stderrBuffer: string
@@ -382,7 +384,13 @@ function ensureDinoQueryWorker(modelPath: string, backend: 'cpu' | 'gpu'): DinoQ
     }
     for (const frame of decoded.frames) {
       const message = frame.header
-      if (message.type === 'ready') {
+      if (message.type === 'provider-selected') {
+        worker.provider = {
+          selected: String(message.selectedProvider),
+          fallback: Boolean(message.fallback),
+          reason: String(message.reason ?? ''),
+        }
+      } else if (message.type === 'ready') {
         worker.ready = true
         for (const task of worker.queuedTasks) child.stdin.write(task)
         worker.queuedTasks = []
@@ -505,6 +513,7 @@ function makeProgressEmitter(
 export async function searchLayered(
   req: LayeredSearchRequest,
   onProgress?: LayeredProgressCallback,
+  diagnostic?: ReturnType<typeof import('./searchDiagnostics').beginSearchDiagnostic>,
 ): Promise<LayeredSearchResponse> {
   const searchSequence = ++layeredSearchSequence
   let timedOut = false
@@ -571,6 +580,16 @@ export async function searchLayered(
           req.backend || 'cpu',
           isCancelled,
         )
+        diagnostic?.event('query-vector', {
+          dim: queryVector.length,
+          signature: crypto
+            .createHash('sha256')
+            .update(Buffer.from(new Float64Array(queryVector).buffer))
+            .digest('hex'),
+          provider: dinoQueryWorker?.provider ?? { selected: 'unknown' },
+          model: modelStatus.name,
+          modelState: modelStatus.state,
+        })
         emitProgress({
           phase: 'vector_search',
           scanned: 0,
@@ -626,6 +645,8 @@ export async function searchLayered(
     }
   }
 
+  diagnostic?.results('hash-candidates', hashResults)
+  diagnostic?.results('vector-candidates', vectorResults)
   // ── Stage 3: Merge candidates ────────────────────────────
   const candidateMap = new Map<
     string,
@@ -806,7 +827,7 @@ export async function searchLayered(
       reasons.push('DCT 精排一致')
 
     if (degradationReasons.length > 0 && reasons.length === 0) {
-      reasons.push('模型未安装，仅使用 Hash 搜索')
+      reasons.push(degradationReasons[0])
     }
 
     // Compute final score
@@ -850,6 +871,7 @@ export async function searchLayered(
   scored.sort((a, b) => b.finalScore - a.finalScore)
 
   // Take top K
+  diagnostic?.results('ranked-candidates', scored)
   const topResults = scored.slice(0, rerankTopK)
   emitProgress({
     phase: 'done',

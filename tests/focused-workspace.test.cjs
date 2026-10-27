@@ -12,7 +12,7 @@ test('old multi-panel profiles start with one search view and retire tools', () 
     Object.values(PANEL_IDENTITIES).map(({ visibilityKey }) => [visibilityKey, true]),
   )
   const next = focusedWorkspaceVisibility(old)
-  assert.deepEqual(visible(next), ['showUnifiedSearch'])
+  assert.deepEqual(visible(next), ['showImageSearch'])
   for (const id of RETIRED_PANELS) assert.equal(next[PANEL_IDENTITIES[id].visibilityKey], false)
 })
 test('opening settings replaces the foreground without modifying unrelated saved data', () => {
@@ -28,7 +28,7 @@ test('an obsolete IPC show-all or tool toggle cannot reopen retired views', () =
       { ...previous, [PANEL_IDENTITIES[id].visibilityKey]: true },
       previous,
     )
-    assert.deepEqual(visible(next), ['showUnifiedSearch'])
+    assert.deepEqual(visible(next), ['showImageSearch'])
   }
 })
 test('global hide stays completely hidden; restore keeps the saved content view', () => {
@@ -45,7 +45,7 @@ test('closing the last foreground view returns to search instead of a blank work
   const previous = focusedWorkspaceVisibility({ showSettings: true })
   assert.deepEqual(
     visible(focusedWorkspaceVisibility({ ...previous, showSettings: false }, previous)),
-    ['showUnifiedSearch'],
+    ['showImageSearch'],
   )
 })
 test('normalizing an already focused view is stable', () => {
@@ -59,6 +59,17 @@ test('normalizing an already focused view is stable', () => {
     const state = focusedWorkspaceVisibility({ [key]: true })
     assert.deepEqual(focusedWorkspaceVisibility(state, state), state)
   }
+})
+
+test('retired combined and duplicate pages restore to image search', () => {
+  for (const key of ['showUnifiedSearch', 'showDuplicateFinder']) {
+    assert.deepEqual(visible(focusedWorkspaceVisibility({ [key]: true })), ['showImageSearch'])
+  }
+  const { WORKSPACE_ROUTES, resolveWorkspaceRoute } = loadTsModule(
+    'src/services/workspaceRoutes.ts',
+  )
+  assert.deepEqual(WORKSPACE_ROUTES['all-search'], { panel: 'imageSearch', view: 'search' })
+  assert.equal(resolveWorkspaceRoute('unifiedSearch'), 'image-search')
 })
 
 test('global hide honors a visible locked content view, matching the native visibility controller', () => {

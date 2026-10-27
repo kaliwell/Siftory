@@ -407,13 +407,20 @@ async function run() {
         'unified reference image must find its original',
       )
       const combined = await page.evaluate(
-        (referenceImagePath) => window.electronAPI.unifiedSearch.query({
-          query: 'a blue circle', referenceImagePath, limit: 50,
-        }),
+        (referenceImagePath) =>
+          window.electronAPI.unifiedSearch.query({
+            query: 'a blue circle',
+            referenceImagePath,
+            limit: 50,
+          }),
         reference,
       )
       for (const lane of ['image-fingerprint', 'semantic', 'subject'])
-        assert.equal(combined.lanes.find(item => item.lane === lane)?.status, 'ok', JSON.stringify(combined.lanes))
+        assert.equal(
+          combined.lanes.find((item) => item.lane === lane)?.status,
+          'ok',
+          JSON.stringify(combined.lanes),
+        )
       assert.ok(combined.items.length > 0, 'combined real-model query must retain results')
     }
     {
@@ -422,11 +429,19 @@ async function run() {
       await application.evaluate(({ dialog }, file) => {
         dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [file] })
       }, reference)
-      await page.getByTestId('unified-search-reference').click()
+      await page.getByTestId('workspace-domain-search').click()
+      await page.getByTestId('image-search-query-section').waitFor()
+      assert.equal(await page.getByTestId('workspace-tab-all-search').count(), 0)
+      assert.equal(await page.getByTestId('workspace-domain-duplicate-finder').count(), 0)
+      await page.getByTestId('search-mode-advanced').click()
+      await page
+        .locator('[data-panel="image-search"] select:has(option[value="fast"])')
+        .selectOption('fast')
+      await page.getByTestId('image-search-query-image').click()
       try {
-        await page.getByTestId('unified-search-result').first().waitFor({ timeout: 15000 })
+        await page.getByTestId('image-search-results').waitFor({ timeout: 15000 })
         await page
-          .getByTestId('unified-search-result')
+          .getByTestId('image-search-results')
           .filter({ hasText: 'sample-0.jpg' })
           .waitFor({ timeout: 15000 })
       } catch (error) {

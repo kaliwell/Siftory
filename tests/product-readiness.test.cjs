@@ -522,3 +522,86 @@ test('task retries route to setup when a safe direct restart needs user input', 
     route: 'build-video-frames',
   })
 })
+
+test('active embedding progress does not round 19404/19412 to 100 and scan totals remain indeterminate', () => {
+  const embedding = { state: 'running', completed: 19400, skipped: 0, failed: 4, total: 19412 }
+  const tasks = buildProductTaskInventory({ embeddingProgress: { dinov2_vitb14: embedding } })
+  const task = tasks.find((t) => t.kind === 'image-embedding')
+  assert.equal(task.progress, 99.9)
+  assert.equal(task.completed + task.failed, 19404)
+  assert.equal(task.total - task.completed - task.failed, 8)
+  const running = buildProductTaskInventory({
+    imageSearch: imageSearch({ state: 'scanning' }),
+    embeddingProgress: { dinov2_vitb14: embedding },
+  })
+  assert.equal(running.find((t) => t.kind === 'image-embedding').indeterminate, true)
+  const exhausted = buildProductTaskInventory({
+    embeddingProgress: { dinov2_vitb14: { ...embedding, completed: 19412, failed: 0 } },
+  })
+  assert.equal(exhausted.find((t) => t.kind === 'image-embedding').progress, 99.9)
+  const done = buildProductTaskInventory({
+    embeddingProgress: { dinov2_vitb14: { ...embedding, state: 'done' } },
+  })
+  assert.equal(done.find((t) => t.kind === 'image-embedding').progress, 100)
+})
+
+test('active DINO task takes precedence over completed CLIP history', () => {
+  const tasks = buildProductTaskInventory({
+    embeddingProgress: {
+      clip_vit_base_patch32: {
+        state: 'done',
+        completed: 100,
+        skipped: 0,
+        failed: 0,
+        total: 100,
+        startedAt: 1,
+      },
+      dinov2_vitb14: {
+        state: 'running',
+        completed: 3,
+        skipped: 2,
+        failed: 1,
+        total: 10,
+        startedAt: 2,
+      },
+    },
+  })
+  const current = tasks.find((t) => t.kind === 'image-embedding')
+  assert.equal(current.authorityId, 'dinov2_vitb14')
+  assert.equal(current.succeeded, 3)
+  assert.equal(current.skipped, 2)
+  assert.equal(current.completed, 5)
+  assert.equal(current.progress, 60)
+})
+
+test('a shared active progress object retains its reported model identity', () => {
+  const progress = {
+    modelName: 'dinov2_vitb14',
+    state: 'running',
+    total: 10,
+    completed: 3,
+    skipped: 0,
+    failed: 0,
+  }
+  const task = buildProductTaskInventory({
+    embeddingProgress: { dinov2_vitb14: progress, clip_vit_base_patch32: progress },
+  }).find((t) => t.kind === 'image-embedding')
+  assert.equal(task.authorityId, 'dinov2_vitb14')
+})
+
+test('open streaming input keeps vector progress indeterminate after native scanning has finished', () => {
+  const progress = {
+    modelName: 'dinov2_vitb14',
+    inputSetOpen: true,
+    state: 'running',
+    total: 10,
+    completed: 10,
+    skipped: 0,
+    failed: 0,
+  }
+  const task = buildProductTaskInventory({
+    imageSearch: imageSearch({ state: 'idle' }),
+    embeddingProgress: { dinov2_vitb14: progress },
+  }).find((t) => t.kind === 'image-embedding')
+  assert.equal(task.indeterminate, true)
+})

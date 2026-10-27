@@ -148,6 +148,8 @@ export interface ProductTaskInventoryItem {
   state: ProductTaskState
   progress: number
   indeterminate?: boolean
+  succeeded?: number
+  skipped?: number
   completed: number
   total: number
   failed: number
@@ -657,7 +659,11 @@ function normalizeTaskState(state: string): ProductTaskState {
 }
 
 function taskProgress(completed: number, failed: number, total: number): number {
-  return ratioProgress(Math.max(0, completed) + Math.max(0, failed), Math.max(0, total))
+  if (total <= 0) return 0
+  return Math.max(
+    0,
+    Math.min(100, Math.floor(((Math.max(0, completed) + Math.max(0, failed)) / total) * 1000) / 10),
+  )
 }
 
 export function buildProductTaskInventory(
@@ -675,6 +681,7 @@ export function buildProductTaskInventory(
       kind: 'source-scan',
       state: normalizeTaskState(session.state),
       progress: taskProgress(session.committedCount, 0, total),
+      indeterminate: scan.running,
       completed: Math.max(0, session.committedCount),
       total: Math.max(0, total),
       failed: session.state === 'error' ? 1 : 0,
@@ -755,16 +762,34 @@ export function buildProductTaskInventory(
     })
   }
 
-  const embedding =
-    input.embeddingProgress?.clip_vit_base_patch32 ?? input.embeddingProgress?.dinov2_vitb14
+  const candidates = [
+    input.embeddingProgress?.clip_vit_base_patch32,
+    input.embeddingProgress?.dinov2_vitb14,
+  ]
+    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+    .sort(
+      (a, b) =>
+        Number(['queued', 'running', 'paused', 'stopping'].includes(b.state)) -
+          Number(['queued', 'running', 'paused', 'stopping'].includes(a.state)) ||
+        (b.startedAt ?? 0) - (a.startedAt ?? 0),
+    )
+  const embedding = candidates[0]
   if (embedding && (embedding.state !== 'idle' || embedding.total > 0)) {
     tasks.push({
       id: 'image-embedding:current',
       authorityId:
-        input.embeddingProgress?.clip_vit_base_patch32 === embedding
+        embedding.modelName ??
+        (input.embeddingProgress?.clip_vit_base_patch32 === embedding
           ? 'clip_vit_base_patch32'
-          : 'dinov2_vitb14',
+          : 'dinov2_vitb14'),
       kind: 'image-embedding',
+      indeterminate:
+        ['queued', 'running', 'paused', 'stopping'].includes(embedding.state) &&
+        (embedding.inputSetOpen === true ||
+          input.imageSearch?.autosaveState === 'saving' ||
+          ['queued', 'scanning', 'indexing', 'paused'].includes(input.imageSearch?.state ?? '')),
+      succeeded: Math.max(0, embedding.completed),
+      skipped: Math.max(0, embedding.skipped),
       state: normalizeTaskState(embedding.state),
       progress: taskProgress(
         embedding.completed + embedding.skipped,
@@ -871,12 +896,17 @@ export function buildProductTaskInventory(
     stopped: 5,
     completed: 6,
   }
-  return tasks.sort(
-    (left, right) =>
-      stateOrder[left.state] - stateOrder[right.state] ||
-      (right.updatedAt ?? 0) - (left.updatedAt ?? 0) ||
-      left.id.localeCompare(right.id, 'en'),
-  )
+  return tasks
+    .map((task) => ({
+      ...task,
+      progress: task.state === 'completed' ? 100 : Math.min(99.9, task.progress),
+    }))
+    .sort(
+      (left, right) =>
+        stateOrder[left.state] - stateOrder[right.state] ||
+        (right.updatedAt ?? 0) - (left.updatedAt ?? 0) ||
+        left.id.localeCompare(right.id, 'en'),
+    )
 }
 
 export function buildProductReadiness(input: ProductReadinessInput): ProductReadinessSnapshot {

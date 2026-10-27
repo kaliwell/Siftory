@@ -254,7 +254,7 @@ test('focused workspace keeps primary domains and retires remote terminal tools'
     navigator,
     /workspace-remote-advanced|showRemoteTerminal|workspace-search-advanced-toggle/,
   )
-  assert.match(navigator, /panel: 'unifiedSearch'/)
+  assert.match(navigator, /panel: 'imageSearch'/)
   assert.match(navigator, /panel: 'assetLibrary'/)
   const settings = source('src/components/SettingsPanel.tsx')
   assert.doesNotMatch(settings, /sourceAdvancedToolItems/)
@@ -284,10 +284,10 @@ test('focused workspace keeps primary domains and retires remote terminal tools'
   }
 })
 
-test('unified search is a first-class page with safe result actions', () => {
+test('legacy unified component retains safe actions without a navigation entry', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const panel = source('src/components/UnifiedSearchPanel.tsx')
-  assert.match(navigator, /panel: 'unifiedSearch'/)
+  assert.match(navigator, /panel: 'imageSearch'/)
   assert.match(navigator, /openWorkspacePanel/)
   for (const testId of [
     'unified-search-page',

@@ -1107,7 +1107,7 @@ export function onEmbeddingProgress(cb: EmbeddingProgressCallback): () => void {
 }
 
 export function getEmbeddingProgress(): EmbeddingProgress {
-  return { ...progress }
+  return { ...progress, inputSetOpen: embeddingStreamController.isOpen() }
 }
 
 export function reserveEmbeddingBuild(req: VectorBuildRequest): RuntimeOperationResult {
@@ -1125,6 +1125,7 @@ export function reserveEmbeddingBuild(req: VectorBuildRequest): RuntimeOperation
   }
   stopping = false
   updateProgress({
+    modelName: req.modelName,
     total: req.imageIds?.length ?? 0,
     completed: 0,
     failed: 0,
@@ -1267,6 +1268,7 @@ export async function startEmbeddingBuild(
     ...(videoMemory || {}),
   })
   progress = {
+    modelName: req.modelName,
     total: 0,
     completed: 0,
     failed: 0,

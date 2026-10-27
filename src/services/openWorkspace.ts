@@ -5,6 +5,11 @@ import { requestWorkspaceNavigation } from './workspaceNavigation'
 import { WORKSPACE_ROUTES, type WorkspaceRoute } from './workspaceRoutes'
 
 export function openWorkspacePanel(panel: WorkspacePanel, eventName?: string): void {
+  if (panel === 'unifiedSearch' || panel === 'duplicateFinder') {
+    useStore.getState().setImageSearchUiPreferences({ workspaceView: 'search' })
+    panel = 'imageSearch'
+  }
+  useStore.setState({ workspaceTaskPageOpen: false })
   const current = useStore.getState()
   useStore.setState(
     focusedWorkspaceVisibility(

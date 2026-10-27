@@ -33,7 +33,9 @@ export function focusedWorkspaceVisibility(
   const visible = WORKSPACE_PANELS.filter((id) => current[PANEL_IDENTITIES[id].visibilityKey])
   const newlyOpened =
     previous && visible.find((id) => !previous[PANEL_IDENTITIES[id].visibilityKey])
-  const active = newlyOpened || visible[0] || 'unifiedSearch'
+  const requested = newlyOpened || visible[0] || 'imageSearch'
+  const active =
+    requested === 'unifiedSearch' || requested === 'duplicateFinder' ? 'imageSearch' : requested
   return Object.fromEntries(
     Object.values(PANEL_IDENTITIES).map(({ visibilityKey }) => [
       visibilityKey,

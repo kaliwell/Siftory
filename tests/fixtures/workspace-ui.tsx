@@ -38,12 +38,7 @@ for (const name of [
 ])
   window.addEventListener(name, () => {
     events.push(name)
-    const id =
-      name === 'workspace-open-model-settings'
-        ? 'settings'
-        : name === 'workspace-first-search-focus'
-          ? 'unified-search'
-          : 'image-search'
+    const id = name === 'workspace-open-model-settings' ? 'settings' : 'image-search'
     eventMounts.push({
       name,
       mounted: Boolean(document.querySelector(`[data-panel="${id}"]`)?.getClientRects().length),
@@ -84,6 +79,7 @@ const items = Array.from({ length: 8 }, (_, i) => ({
   indexState: ['full'],
   evidence: [],
 }))
+let embeddingTask: Record<string, unknown> | null = null
 let selectedDisplayScope = { mode: 'primary' }
 const topology = () => ({
   scope: selectedDisplayScope,
@@ -204,6 +200,11 @@ const handlers: Record<string, (...args: any[]) => any> = {
     pendingCount: 0,
     message: 'Ready',
   }),
+  'imageSearch.saveSearchQueryCopy': () => ({ ok: true }),
+  'imageSearch.getSearchDiagnosticStatus': () => ({ sessionId: 'fixture', dropped: 0 }),
+  'imageSearch.exportSearchDiagnostics': () => ({ ok: true }),
+  'imageSearch.clearSearchDiagnostics': () => ({ ok: true }),
+  'imageSearch.reportSearchDiagnostic': () => ({ ok: true }),
   'imageSearch.selectImage': () => 'C:/fixtures/reference.jpg',
   'imageSearch.search': () => ({
     results: [
@@ -216,6 +217,7 @@ const handlers: Record<string, (...args: any[]) => any> = {
     searchMs: 1,
   }),
   'vector.searchLayered': (request: any) => ({
+    diagnosticId: '11111111-1111-4111-a111-111111111111',
     results: [
       {
         imageId: 'original',
@@ -283,7 +285,7 @@ const handlers: Record<string, (...args: any[]) => any> = {
   'mediaSearch.listDrives': () => [],
   'mediaSearch.getFrameEmbeddingStats': () => ({ total: 0, dino: 0, clip: 0 }),
   'imageSearch.pasteClipboardImage': () => ({ ok: true, path: 'C:/fixtures/pasted.jpg' }),
-  'vector.getEmbeddingProgress': () => idle,
+  'vector.getEmbeddingProgress': () => embeddingTask || idle,
   'vector.getVectorIndexStatus': () => ({ built: true, count: 8 }),
   'vector.getModelStatus': (name: string) => ({ name, state: 'not-downloaded' }),
   'vector.listUserModelSlots': () => [],
@@ -424,6 +426,9 @@ const api = (prefix = ''): any => {
   events,
   eventMounts,
   maximumInFlight,
+  setHandler: (name: string, handler: (...args: any[]) => any) => {
+    handlers[name] = handler
+  },
   getSettings: () => structuredClone(persistedSettings),
   failSettings: (value: boolean) => {
     failSettings = value
@@ -436,6 +441,9 @@ const api = (prefix = ''): any => {
   },
   setCatalogAnalyzed: (value: boolean) => {
     catalogAnalyzed = value
+  },
+  setEmbeddingTask: (value: Record<string, unknown> | null) => {
+    embeddingTask = value
   },
   setMediaTask: (value: Record<string, unknown> | null) => {
     mediaTask = value

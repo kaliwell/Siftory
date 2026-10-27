@@ -1,3 +1,4 @@
+import { beginSearchDiagnostic, getSearchDiagnostics } from './searchDiagnostics'
 import { secureIpcMain } from './ipcAuthorization'
 import { BrowserWindow, powerMonitor } from 'electron'
 import { AutomaticMaintenanceService } from './automaticMaintenanceService'
@@ -789,144 +790,177 @@ export function registerVectorIpc(
   })
 
   secureIpcMain.handle('vector:searchLayered', async (event, req: unknown) => {
-    if (isSourceFileSyncRunning()) {
-      return {
-        results: [],
-        mode: 'fast',
-        degraded: true,
-        degradationReasons: [SOURCE_FILE_SYNC_BUSY_MESSAGE],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: 'fast' as const,
-      }
-    }
-    if (isImageSearchFolderDataEditRunning()) {
-      return {
-        results: [],
-        mode: 'fast',
-        degraded: true,
-        degradationReasons: ['A folder index edit is running'],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: 'fast' as const,
-      }
-    }
-    const r = req as Record<string, unknown> | null | undefined
-    if (!r || typeof r.imagePath !== 'string' || !r.imagePath) {
-      return {
-        results: [],
-        mode: 'fast',
-        degraded: true,
-        degradationReasons: ['Invalid request: imagePath required'],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: 'fast' as const,
-      }
-    }
-    const imagePath = safeShellPath(r.imagePath)
-    const mode = normalizeLayeredSearchMode(r.mode)
-    if (!imagePath) {
-      return {
-        results: [],
-        mode: 'fast',
-        degraded: true,
-        degradationReasons: ['Invalid request: invalid image path'],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: 'fast' as const,
-      }
-    }
-    try {
-      if (!fs.statSync(imagePath).isFile()) {
+    const input = (req as { imagePath?: unknown } | null)?.imagePath
+    const diagnostic = beginSearchDiagnostic(typeof input === 'string' ? input : '', {
+      request: req,
+      native: getImageSearchStatus(),
+      sourceEpoch: getSourceFileSyncMutationEpoch(),
+      vector: getVectorIndexStatus(),
+    })
+    const execute = async () => {
+      if (isSourceFileSyncRunning()) {
         return {
           results: [],
           mode: 'fast',
           degraded: true,
-          degradationReasons: ['Invalid request: image path is not a file'],
+          degradationReasons: [SOURCE_FILE_SYNC_BUSY_MESSAGE],
           modelStatus: getModelStatus('dinov2_vitb14'),
           searchMode: 'fast' as const,
         }
       }
-    } catch {
-      return {
-        results: [],
-        mode: 'fast',
-        degraded: true,
-        degradationReasons: ['Invalid request: image path does not exist'],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: 'fast' as const,
+      if (isImageSearchFolderDataEditRunning()) {
+        return {
+          results: [],
+          mode: 'fast',
+          degraded: true,
+          degradationReasons: ['A folder index edit is running'],
+          modelStatus: getModelStatus('dinov2_vitb14'),
+          searchMode: 'fast' as const,
+        }
+      }
+      const r = req as Record<string, unknown> | null | undefined
+      if (!r || typeof r.imagePath !== 'string' || !r.imagePath) {
+        return {
+          results: [],
+          mode: 'fast',
+          degraded: true,
+          degradationReasons: ['Invalid request: imagePath required'],
+          modelStatus: getModelStatus('dinov2_vitb14'),
+          searchMode: 'fast' as const,
+        }
+      }
+      const imagePath = safeShellPath(r.imagePath)
+      const mode = normalizeLayeredSearchMode(r.mode)
+      if (!imagePath) {
+        return {
+          results: [],
+          mode: 'fast',
+          degraded: true,
+          degradationReasons: ['Invalid request: invalid image path'],
+          modelStatus: getModelStatus('dinov2_vitb14'),
+          searchMode: 'fast' as const,
+        }
+      }
+      try {
+        if (!fs.statSync(imagePath).isFile()) {
+          return {
+            results: [],
+            mode: 'fast',
+            degraded: true,
+            degradationReasons: ['Invalid request: image path is not a file'],
+            modelStatus: getModelStatus('dinov2_vitb14'),
+            searchMode: 'fast' as const,
+          }
+        }
+      } catch {
+        return {
+          results: [],
+          mode: 'fast',
+          degraded: true,
+          degradationReasons: ['Invalid request: image path does not exist'],
+          modelStatus: getModelStatus('dinov2_vitb14'),
+          searchMode: 'fast' as const,
+        }
+      }
+      const searchEpoch = getSourceFileSyncMutationEpoch()
+      const releaseSearch = tryAcquireVectorSearchReservation()
+      if (!releaseSearch) {
+        return {
+          results: [],
+          mode,
+          degraded: true,
+          degradationReasons: ['Vector maintenance is running'],
+          modelStatus: getModelStatus('dinov2_vitb14'),
+          searchMode: mode,
+        }
+      }
+      activeVectorSearches += 1
+      try {
+        const searchInputPath = await prepareProjectSearchInput(imagePath)
+        if (!searchInputPath) {
+          return {
+            results: [],
+            mode,
+            degraded: true,
+            degradationReasons: ['Project file has no searchable content preview'],
+            modelStatus: getModelStatus('dinov2_vitb14'),
+            searchMode: mode,
+          }
+        }
+        if (searchInputPath !== imagePath) {
+          const recorder = getSearchDiagnostics()
+          recorder.track(
+            recorder
+              .fingerprint(searchInputPath)
+              .then((input) => diagnostic.event('processed-query-input', input)),
+          )
+        }
+        const savedSettings = loadVectorSettings(userDataPath)
+        const response = await searchLayered(
+          {
+            imagePath: searchInputPath,
+            mode,
+            requestId: typeof r.requestId === 'string' ? r.requestId : undefined,
+            hashThreshold: typeof r.hashThreshold === 'number' ? r.hashThreshold : undefined,
+            hashTopK: typeof r.hashTopK === 'number' ? r.hashTopK : undefined,
+            vectorTopK: typeof r.vectorTopK === 'number' ? r.vectorTopK : undefined,
+            rerankTopK: typeof r.rerankTopK === 'number' ? r.rerankTopK : undefined,
+            timeoutMs: typeof r.timeoutMs === 'number' ? r.timeoutMs : undefined,
+            backend: savedSettings.backend === 'gpu' ? 'gpu' : 'cpu',
+          },
+          (progress) => {
+            diagnostic.phase(progress.phase, { scanned: progress.scanned, total: progress.total })
+            sendToRenderer(getMainWindow, 'vector:onLayeredSearchProgress', progress)
+          },
+          diagnostic,
+        )
+        if (isSourceFileSyncRunning() || searchEpoch !== getSourceFileSyncMutationEpoch()) {
+          return {
+            results: [],
+            mode,
+            degraded: true,
+            degradationReasons: [
+              'Search results were discarded because source synchronization changed the index',
+            ],
+            modelStatus: getModelStatus('dinov2_vitb14'),
+            searchMode: mode,
+          }
+        }
+        return {
+          ...response,
+          results: authorizeFileDragResults(
+            event.sender.id,
+            mapProjectLayeredResults(response.results),
+            (result) => result.path,
+          ),
+        }
+      } catch (err: unknown) {
+        return {
+          results: [],
+          mode,
+          degraded: true,
+          degradationReasons: [errorMessage(err)],
+          modelStatus: getModelStatus('dinov2_vitb14'),
+          searchMode: mode,
+        }
+      } finally {
+        activeVectorSearches = Math.max(0, activeVectorSearches - 1)
+        releaseSearch()
       }
     }
-    const searchEpoch = getSourceFileSyncMutationEpoch()
-    const releaseSearch = tryAcquireVectorSearchReservation()
-    if (!releaseSearch) {
-      return {
-        results: [],
-        mode,
-        degraded: true,
-        degradationReasons: ['Vector maintenance is running'],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: mode,
-      }
-    }
-    activeVectorSearches += 1
     try {
-      const searchInputPath = await prepareProjectSearchInput(imagePath)
-      if (!searchInputPath) {
-        return {
-          results: [],
-          mode,
-          degraded: true,
-          degradationReasons: ['Project file has no searchable content preview'],
-          modelStatus: getModelStatus('dinov2_vitb14'),
-          searchMode: mode,
-        }
-      }
-      const savedSettings = loadVectorSettings(userDataPath)
-      const response = await searchLayered(
-        {
-          imagePath: searchInputPath,
-          mode,
-          requestId: typeof r.requestId === 'string' ? r.requestId : undefined,
-          hashThreshold: typeof r.hashThreshold === 'number' ? r.hashThreshold : undefined,
-          hashTopK: typeof r.hashTopK === 'number' ? r.hashTopK : undefined,
-          vectorTopK: typeof r.vectorTopK === 'number' ? r.vectorTopK : undefined,
-          rerankTopK: typeof r.rerankTopK === 'number' ? r.rerankTopK : undefined,
-          timeoutMs: typeof r.timeoutMs === 'number' ? r.timeoutMs : undefined,
-          backend: savedSettings.backend === 'gpu' ? 'gpu' : 'cpu',
-        },
-        (progress) => {
-          sendToRenderer(getMainWindow, 'vector:onLayeredSearchProgress', progress)
-        },
-      )
-      if (isSourceFileSyncRunning() || searchEpoch !== getSourceFileSyncMutationEpoch()) {
-        return {
-          results: [],
-          mode,
-          degraded: true,
-          degradationReasons: [
-            'Search results were discarded because source synchronization changed the index',
-          ],
-          modelStatus: getModelStatus('dinov2_vitb14'),
-          searchMode: mode,
-        }
-      }
-      return {
-        ...response,
-        results: authorizeFileDragResults(
-          event.sender.id,
-          mapProjectLayeredResults(response.results),
-          (result) => result.path,
-        ),
-      }
-    } catch (err: unknown) {
-      return {
-        results: [],
-        mode,
-        degraded: true,
-        degradationReasons: [errorMessage(err)],
-        modelStatus: getModelStatus('dinov2_vitb14'),
-        searchMode: mode,
-      }
-    } finally {
-      activeVectorSearches = Math.max(0, activeVectorSearches - 1)
-      releaseSearch()
+      const response = await execute()
+      diagnostic.event('query-end', {
+        response: { ...response, results: undefined },
+        nativeAfter: getImageSearchStatus(),
+      })
+      diagnostic.results('delivered-results', response.results)
+      return { ...response, diagnosticId: diagnostic.id }
+    } catch (error) {
+      diagnostic.event('query-error', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
     }
   })
 

@@ -380,8 +380,9 @@ test('folder data edit IPC, preload, bridge, and progress/cancel contracts are w
   for (const handler of ['search', 'clearIndex', 'saveIndex', 'loadIndex', 'loadManifest']) {
     const start = ipc.indexOf(`secureIpcMain.handle('imageSearch:${handler}'`)
     assert.ok(start > -1, `missing ${handler} handler`)
+    const nextHandler = ipc.indexOf('secureIpcMain.handle(', start + 1)
     assert.match(
-      ipc.slice(start, start + 700),
+      ipc.slice(start, nextHandler < 0 ? undefined : nextHandler),
       /isImageSearchFolderDataEditRunning\(\)|imageSearchEditBusyError\(\)/,
       `${handler} must not race a folder edit`,
     )

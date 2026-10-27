@@ -16,6 +16,7 @@ export interface SetupWorkflowSnapshot {
   stepLabel?: string
   stepIndex: number
   totalSteps: number
+  indeterminate?: boolean
   stepPercent: number
   percent: number
   message?: string
@@ -111,6 +112,7 @@ export function setupSnapshotFromImagePreparationProgress(
             : 'running'
   return {
     state,
+    indeterminate: state === 'running' && (!progress.scanComplete || !progress.vectorIndexComplete),
     stepId: step.id,
     stepLabel: step.label,
     stepIndex: state === 'done' ? 4 : step.index,

@@ -760,6 +760,8 @@ export async function searchVectorIndex(
 }
 
 export function getVectorIndexStatus(): {
+  generation: number
+  updatedAt?: number
   built: boolean
   count: number
   modelName?: string
@@ -768,6 +770,8 @@ export function getVectorIndexStatus(): {
 } {
   if (index) {
     return {
+      generation: vectorIndexLifecycleEpoch,
+      updatedAt: currentManifest?.updatedAt,
       built: true,
       count: index.count(),
       modelName: currentManifest?.modelName,
@@ -777,13 +781,15 @@ export function getVectorIndexStatus(): {
   const manifest = loadManifest()
   if (manifest) {
     return {
+      generation: vectorIndexLifecycleEpoch,
+      updatedAt: manifest.updatedAt,
       built: true,
       count: manifest.count,
       modelName: manifest.modelName,
       dim: manifest.dim,
     }
   }
-  return { built: false, count: 0 }
+  return { generation: vectorIndexLifecycleEpoch, built: false, count: 0 }
 }
 
 export function clearVectorIndex(): void {

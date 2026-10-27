@@ -40,6 +40,13 @@ function basis(dim, dimension, value = 1) {
   return vector
 }
 
+function assertVectorIndexStatus(expected) {
+  const { generation, updatedAt, ...status } = vectorIndex.getVectorIndexStatus()
+  assert.deepEqual(status, expected)
+  assert.ok(Number.isInteger(generation) && generation > 0)
+  assert.ok(Number.isFinite(updatedAt) && updatedAt > 0 && updatedAt <= Date.now())
+}
+
 function embeddingRow(modelName, imageId, vector, dim = vector.length) {
   return JSON.stringify({
     modelName,
@@ -147,7 +154,7 @@ test('memory index enforces registry dimensions and latest canonical tombstones'
   )
 
   assert.deepEqual(await vectorIndex.buildVectorIndex(modelName), { ok: true })
-  assert.deepEqual(vectorIndex.getVectorIndexStatus(), {
+  assertVectorIndexStatus({
     built: true,
     count: 2,
     modelName,
@@ -216,7 +223,7 @@ test('streaming fallback applies the same latest-row and strict query rules', as
     const built = await vectorIndex.buildVectorIndex(modelName)
     assert.equal(built.ok, true)
     assert.match(built.warning || '', /Streaming vector search is enabled/)
-    assert.deepEqual(vectorIndex.getVectorIndexStatus(), {
+    assertVectorIndexStatus({
       built: true,
       count: 2,
       modelName,

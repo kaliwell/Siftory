@@ -340,142 +340,163 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
             testId="media-search-query-section"
             summary={`${searchTopK} topK`}
           >
-            <div className="media-search-query-controls">
-              <button
-                data-testid="media-search-query-image"
-                onClick={onChooseQueryImage}
-                disabled={running}
-              >
-                {t('Query')}
-              </button>
-              <button onClick={onPasteClipboardImage} disabled={running}>
-                {t('Paste')}
-              </button>
-              <button onClick={onRefreshQuerySearch} disabled={running}>
-                {t('Refresh')}
-              </button>
-              <input
-                readOnly
-                value={queryImagePath}
-                placeholder={
-                  dragOverQueryImage
-                    ? t('Drop image to search video frames...')
-                    : t('Drop an image, click Query, or Paste clipboard image...')
-                }
-                title={queryImagePath || undefined}
-                onDragOver={(event) => {
-                  event.preventDefault()
-                  event.dataTransfer.dropEffect = running ? 'none' : 'copy'
-                  onSetDragOverQueryImage(true)
-                }}
-                onDragLeave={() => onSetDragOverQueryImage(false)}
-                onDrop={onQueryImageDrop}
-                style={{
-                  flex: '1 1 260px',
-                  minWidth: 180,
-                  borderColor: dragOverQueryImage ? 'rgba(100,180,255,0.85)' : undefined,
-                  background: dragOverQueryImage ? 'rgba(100,180,255,0.12)' : undefined,
-                }}
-              />
-              {queryImagePath && (
-                <button onClick={onClearQueryImage} disabled={running}>
-                  {t('Clear')}
-                </button>
-              )}
-              {experienceMode === 'advanced' && (
-                <>
-                  <select
-                    value={searchModel}
-                    onChange={(event) =>
-                      onSearchModelChange(event.target.value as MediaSearchModel)
-                    }
-                    title={t('Search model')}
+            <div className="media-search-query-controls search-query-form">
+              <div className="search-input-group">
+                <span className="search-group-label">{t('Reference image')}</span>
+                <div className="search-reference-controls">
+                  <button
+                    data-testid="media-search-query-image"
+                    onClick={onChooseQueryImage}
+                    disabled={running}
                   >
-                    <option value="clip_vit_base_patch32">CLIP</option>
-                    <option value="dinov2_vitb14">DINO</option>
-                  </select>
-                  <select
-                    value={searchBackend}
-                    onChange={(event) =>
-                      onSearchBackendChange(event.target.value as MediaSearchBackend)
-                    }
-                    title={t('Backend')}
-                  >
-                    <option value="gpu">{t('GPU')}</option>
-                    <option value="cpu">{t('CPU')}</option>
-                  </select>
-                </>
-              )}
-              <select
-                value={searchTopK}
-                onChange={(event) => onSearchTopKChange(Number(event.target.value))}
-                style={{ width: 56 }}
-                title={t('Maximum search results')}
-              >
-                {[20, 50, 100, 200, 500, 1000].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-              <span style={{ opacity: 0.7 }}>{t('topK')}</span>
-              <input
-                type="text"
-                data-testid="media-search-text-query"
-                value={textQuery}
-                disabled={running}
-                onChange={(event) => onSetTextQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') onRunPrimarySearch()
-                }}
-                placeholder={t('Text query...')}
-                style={{ width: 120 }}
-              />
-              <button
-                data-testid="media-search-run-query"
-                onClick={onRunPrimarySearch}
-                disabled={running || !canSearchFrames}
-              >
-                {t(multimodalEnabled ? 'Multi' : 'Search Frames')}
-              </button>
-              {experienceMode === 'advanced' && (
-                <>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      fontSize: 12,
-                      opacity: 0.7,
-                    }}
-                  >
+                    {t('Query')}
+                  </button>
+                  <button onClick={onPasteClipboardImage} disabled={running}>
+                    {t('Paste')}
+                  </button>
+                  <button onClick={onRefreshQuerySearch} disabled={running}>
+                    {t('Refresh')}
+                  </button>
+                  <div className="search-reference-path">
                     <input
-                      type="checkbox"
-                      checked={multimodalEnabled}
-                      onChange={(event) => onSetMultimodalEnabled(event.target.checked)}
-                    />
-                    {t('Multi')}
-                  </label>
-                  <select
-                    value={viewMode}
-                    onChange={(event) => onSetViewMode(event.target.value as MediaSearchViewMode)}
-                  >
-                    <option value="videos">{t('Videos')}</option>
-                    <option value="frames">{t('Frames')}</option>
-                  </select>
-                  {viewMode === 'frames' && (
-                    <select
-                      value={sortMode}
-                      onChange={(event) =>
-                        onSortModeChange(event.target.value as MediaSearchSortMode)
+                      readOnly
+                      value={queryImagePath}
+                      aria-label={t('Reference image')}
+                      placeholder={
+                        dragOverQueryImage
+                          ? t('Drop image to search video frames...')
+                          : t('Drop an image, click Query, or Paste clipboard image...')
                       }
-                    >
-                      <option value="score">{t('By Score')}</option>
-                      <option value="time">{t('By Time')}</option>
-                    </select>
-                  )}
-                </>
-              )}
+                      title={queryImagePath || undefined}
+                      onDragOver={(event) => {
+                        event.preventDefault()
+                        event.dataTransfer.dropEffect = running ? 'none' : 'copy'
+                        onSetDragOverQueryImage(true)
+                      }}
+                      onDragLeave={() => onSetDragOverQueryImage(false)}
+                      onDrop={onQueryImageDrop}
+                      style={{
+                        borderColor: dragOverQueryImage ? 'rgb(var(--color-accent))' : undefined,
+                      }}
+                    />
+                    {queryImagePath && (
+                      <button onClick={onClearQueryImage} disabled={running}>
+                        {t('Clear')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="search-input-group">
+                <span className="search-group-label">{t('Semantic')}</span>
+                <div className="search-text-controls">
+                  <input
+                    type="text"
+                    data-testid="media-search-text-query"
+                    value={textQuery}
+                    disabled={running}
+                    onChange={(event) => onSetTextQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') onRunPrimarySearch()
+                    }}
+                    aria-label={t('Text query...')}
+                    placeholder={t('Text query...')}
+                  />
+                  <button
+                    data-testid="media-search-run-query"
+                    onClick={onRunPrimarySearch}
+                    disabled={running || !canSearchFrames}
+                  >
+                    {t(multimodalEnabled ? 'Multi' : 'Search Frames')}
+                  </button>
+                </div>
+              </div>
+              <div className="search-options-grid">
+                {experienceMode === 'advanced' && (
+                  <>
+                    <label className="search-field">
+                      <span>{t('Search model')}</span>
+                      <select
+                        value={searchModel}
+                        onChange={(event) =>
+                          onSearchModelChange(event.target.value as MediaSearchModel)
+                        }
+                        title={t('Search model')}
+                      >
+                        <option value="clip_vit_base_patch32">CLIP</option>
+                        <option value="dinov2_vitb14">DINO</option>
+                      </select>
+                    </label>
+                    <label className="search-field">
+                      <span>{t('Backend')}</span>
+                      <select
+                        value={searchBackend}
+                        onChange={(event) =>
+                          onSearchBackendChange(event.target.value as MediaSearchBackend)
+                        }
+                        title={t('Backend')}
+                      >
+                        <option value="gpu">{t('GPU')}</option>
+                        <option value="cpu">{t('CPU')}</option>
+                      </select>
+                    </label>
+                  </>
+                )}
+                <label className="search-field">
+                  <span>{t('Top')}</span>
+                  <select
+                    value={searchTopK}
+                    onChange={(event) => onSearchTopKChange(Number(event.target.value))}
+                    title={t('Maximum search results')}
+                  >
+                    {[20, 50, 100, 200, 500, 1000].map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {experienceMode === 'advanced' && (
+                  <>
+                    <label className="search-field">
+                      <span>
+                        {t('Videos')} / {t('Frames')}
+                      </span>
+                      <select
+                        value={viewMode}
+                        onChange={(event) =>
+                          onSetViewMode(event.target.value as MediaSearchViewMode)
+                        }
+                      >
+                        <option value="videos">{t('Videos')}</option>
+                        <option value="frames">{t('Frames')}</option>
+                      </select>
+                    </label>
+                    {viewMode === 'frames' && (
+                      <label className="search-field">
+                        <span>{t('Sort')}</span>
+                        <select
+                          value={sortMode}
+                          onChange={(event) =>
+                            onSortModeChange(event.target.value as MediaSearchSortMode)
+                          }
+                        >
+                          <option value="score">{t('By Score')}</option>
+                          <option value="time">{t('By Time')}</option>
+                        </select>
+                      </label>
+                    )}
+                    <label className="search-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={multimodalEnabled}
+                        onChange={(event) => onSetMultimodalEnabled(event.target.checked)}
+                      />
+                      {t('Multi')}
+                    </label>
+                  </>
+                )}
+              </div>
             </div>
           </CollapsibleSearchSection>
         )}

@@ -1,6 +1,7 @@
+import { PANEL_IDENTITIES } from '../shared/ipc/app-core'
 import './styles/focused-workspace.css'
-import { focusedWorkspaceVisibility } from './services/focusedWorkspace'
-import React, { Suspense, useEffect, useRef, useState } from 'react'
+import { focusedWorkspaceVisibility, WORKSPACE_PANELS } from './services/focusedWorkspace'
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { normalizeImageSearchScanPaths, useStore } from './stores/useStore'
 import { useFMStore } from './stores/useFMStore'
 import WorkspaceNavigator from './components/WorkspaceNavigator'
@@ -91,6 +92,33 @@ function safeSize(value: unknown): PanelSize | undefined {
 }
 
 const App: React.FC = () => {
+  const tasksOpen = useStore((state) => state.workspaceTaskPageOpen)
+  const setTasksOpen = useCallback<React.Dispatch<React.SetStateAction<boolean>>>((value) => {
+    useStore.setState((state) => ({
+      workspaceTaskPageOpen:
+        typeof value === 'function' ? value(state.workspaceTaskPageOpen) : value,
+    }))
+  }, [])
+  useEffect(() => {
+    if (!tasksOpen) return
+    return useStore.subscribe((state, previous) => {
+      if (!state.globalVisible || !previous.globalVisible) return
+      if (
+        WORKSPACE_PANELS.some((panel) => {
+          const key = PANEL_IDENTITIES[panel].visibilityKey
+          return state[key] && !previous[key]
+        })
+      )
+        setTasksOpen(false)
+    })
+  }, [tasksOpen, setTasksOpen])
+  useEffect(() => {
+    if (!tasksOpen) return
+    const frame = requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>('.workspace-task-page')?.focus({ preventScroll: true }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [tasksOpen])
   const themeIdx = useStore((s) => s.themeIdx)
   const themeId = useStore((s) => s.themeId)
   const themeMode = useStore((s) => s.themeMode)
@@ -124,7 +152,17 @@ const App: React.FC = () => {
           ([key, value]) => state[key as keyof typeof visibility] !== value,
         )
       ) {
-        useStore.setState(visibility)
+        useStore.setState({
+          ...visibility,
+          ...((state.showUnifiedSearch || state.showDuplicateFinder) && visibility.showImageSearch
+            ? {
+                imageSearchUiPreferences: {
+                  ...state.imageSearchUiPreferences,
+                  workspaceView: 'search' as const,
+                },
+              }
+            : {}),
+        })
       }
     }
     reconcile(useStore.getState())
@@ -332,7 +370,20 @@ const App: React.FC = () => {
     let pending = 2
     const done = () => {
       if (--pending === 0) {
-        useStore.setState(focusedWorkspaceVisibility(useStore.getState()))
+        const state = useStore.getState()
+        const visibility = focusedWorkspaceVisibility(state)
+        useStore.setState({
+          ...visibility,
+          ...(visibility.showImageSearch &&
+          (state.showUnifiedSearch || state.showDuplicateFinder || !state.showImageSearch)
+            ? {
+                imageSearchUiPreferences: {
+                  ...state.imageSearchUiPreferences,
+                  workspaceView: 'search' as const,
+                },
+              }
+            : {}),
+        })
         setReady(true)
       }
     }
@@ -364,6 +415,7 @@ const App: React.FC = () => {
           const imageSearchUiPreferences = normalizeImageSearchUiPreferences(
             settings.imageSearchUiPreferences,
           )
+          if (!settings.imageSearchUiPreferences) imageSearchUiPreferences.workspaceView = 'search'
           const mediaSearchUiPreferences = normalizeMediaSearchUiPreferences(
             settings.mediaSearchUiPreferences,
           )
@@ -698,6 +750,7 @@ const App: React.FC = () => {
       data-testid="app-root"
       data-ready={ready ? 'true' : 'false'}
       data-presentation="desktop"
+      data-workspace-view={tasksOpen ? 'tasks' : 'panel'}
     >
       {legacyOverlay && (
         <Suspense fallback={null}>
@@ -706,19 +759,22 @@ const App: React.FC = () => {
       )}
       {ready && globalVisible && (
         <ErrorBoundary name="Workspace">
-          <WorkspaceNavigator />
+          <WorkspaceNavigator tasksOpen={tasksOpen} setTasksOpen={setTasksOpen} />
         </ErrorBoundary>
       )}
       {ready && showSettings && (
-        <ErrorBoundary name="Settings">
-          <Suspense fallback={null}>
-            <SettingsPanel />
-          </Suspense>
-        </ErrorBoundary>
+        <div style={{ display: tasksOpen ? 'none' : 'contents' }}>
+          <ErrorBoundary name="Settings">
+            <Suspense fallback={null}>
+              <SettingsPanel />
+            </Suspense>
+          </ErrorBoundary>
+        </div>
       )}
       {ready &&
         lazyPanels.map(
           ({ id, boundaryName, visibilityKey, Component, preserveWhenHidden = false }) => {
+            if (id === 'unifiedSearch' || id === 'duplicateFinder') return null
             const panelVisible = {
               showImageSearch,
               showUnifiedSearch,
@@ -733,7 +789,7 @@ const App: React.FC = () => {
               return null
             }
             return (
-              <div key={id} style={{ display: panelVisible ? 'contents' : 'none' }}>
+              <div key={id} style={{ display: panelVisible && !tasksOpen ? 'contents' : 'none' }}>
                 <ErrorBoundary name={boundaryName}>
                   <Suspense fallback={null}>
                     <Component />

@@ -431,11 +431,6 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
           </div>
           <span className="workspace-local-badge">{t('Local processing')}</span>
         </header>
-        <p className="workspace-alpha-notice" role="note">
-          {t(
-            'Alpha testing only. Back up application data and original files. You are responsible for assessing use and file operations; results may be inaccurate.',
-          )}
-        </p>
         <WorkspaceSectionTabs panel={panelId as WorkspacePanel} />
         <div className="panel-body">{children}</div>
       </section>

@@ -117,7 +117,8 @@ test('desktop workspace owns its viewport and leaves native window geometry to E
   assert.doesNotMatch(app, /scheduleSettledShapeSync|setOverlayShape\(|useMouseTransparency\(/)
   assert.match(app, /window-visibility-state/)
   assert.match(navigator, /<FirstRunGuide/)
-  assert.match(navigator, /workspace-first-run-guide/)
+  assert.match(navigator, /<WorkspaceTasksPage/)
+  assert.match(source('src/components/WorkspaceTasksPage.tsx'), /workspace-first-run-guide/)
 })
 
 test('startup restores the workspace navigator with the saved panel snapshot', () => {

@@ -16,7 +16,7 @@ test('workspace Tasks menu mounts one preparation center backed by main-process 
   const workspace = source('src/components/WorkspaceNavigator.tsx')
   const center = source('src/components/ProductReadinessCenter.tsx')
 
-  assert.match(workspace, /<ProductReadinessCenter onAction=\{onReadinessAction\} \/>/)
+  assert.match(workspace, /<ProductReadinessCenter\s+onAction=\{onReadinessAction\}\s+pageLayout/)
   assert.match(center, /loadProductReadiness\(api, \{ includeStorage \}\)/)
   assert.match(center, /refreshIntervalMs = 5000/)
   assert.match(center, /refreshInFlightRef/)

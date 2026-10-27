@@ -45,9 +45,9 @@ test('simple and advanced search modes expose the same primary journeys', () => 
   }
 })
 
-test('unified search is the sole default search surface and migration preserves custom layouts', () => {
-  assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showUnifiedSearch, true)
-  assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showImageSearch, false)
+test('image search is the sole default search surface and migration preserves custom layouts', () => {
+  assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showUnifiedSearch, false)
+  assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showImageSearch, true)
   assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showMediaSearch, false)
   assert.equal(PRODUCT_PRIMARY_WORKSPACE_VISIBILITY.showAssetLibrary, false)
 

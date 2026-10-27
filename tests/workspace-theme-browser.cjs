@@ -33,7 +33,7 @@ async function main() {
       `http://127.0.0.1:${server.httpServer.address().port}/tests/fixtures/workspace-ui.html`,
     )
     await page.locator('[data-ready="true"]').waitFor()
-    await page.getByTestId('unified-search-query').waitFor()
+    await page.getByTestId('image-search-query-section').waitFor()
     await page.getByTestId('workspace-domain-settings').click()
     await page.mouse.move(800, 900)
     await page.addStyleTag({
@@ -71,8 +71,8 @@ async function main() {
               expectedAccent: color(p.accent),
               selection: actual('.workspace-sidebar button[aria-current="page"]').backgroundColor,
               expectedSelection: color(p.selection),
-              primary: actual('.workspace-button-primary').backgroundColor,
-              primaryText: actual('.workspace-button-primary').color,
+              primary: actual('[data-testid="image-search-query-image"]').backgroundColor,
+              primaryText: actual('[data-testid="image-search-query-image"]').color,
               expectedPrimaryText: `rgb(${themeCssVariables(id, mode)['--color-on-accent']})`,
               selectedText: actual('.workspace-sidebar button[aria-current="page"]').color,
             }

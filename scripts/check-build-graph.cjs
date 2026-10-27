@@ -145,7 +145,9 @@ const entries = [
   // 2026-10-24: automaticMaintenanceService and automaticMaintenanceBackups add
   // two bounded, dependency-free boundaries for idle scheduling and guarded
   // recovery-file expiry. Renderer/worker edges and byte budgets are unchanged.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 312 },
+  // 2026-10-27: isolated search diagnostic store, Electron adapter, and IPC constants
+  // add three dependency-free nodes. Existing hot-module and byte caps stay fixed.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 315 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports

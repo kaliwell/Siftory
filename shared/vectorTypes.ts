@@ -115,6 +115,8 @@ export interface EmbeddingJob {
 }
 
 export interface EmbeddingProgress {
+  modelName?: string
+  inputSetOpen?: boolean
   total: number
   completed: number
   failed: number
@@ -315,6 +317,7 @@ export interface SemanticSearchResponse {
 }
 
 export interface LayeredSearchResponse {
+  diagnosticId?: string
   results: LayeredSearchResult[]
   mode: SearchMode
   degraded: boolean

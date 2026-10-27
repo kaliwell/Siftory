@@ -119,7 +119,7 @@ function mediaPlayerHitContext(
 
 const UnifiedSearchPanel: React.FC = () => {
   const { t } = useTranslation()
-  const isVisible = useStore((state) => state.showUnifiedSearch)
+  const isVisible = useStore((state) => state.showUnifiedSearch && !state.workspaceTaskPageOpen)
   const position = useStore((state) => state.unifiedSearchPos)
   const size = useStore((state) => state.unifiedSearchSize)
   const setPosition = useStore((state) => state.setUnifiedSearchPos)

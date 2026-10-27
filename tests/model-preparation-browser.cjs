@@ -114,7 +114,9 @@ async function main() {
       .getByTestId('product-model-clip_vit_base_patch32')
       .getByRole('button', { name: /Verify|校验|验证/ })
       .waitFor()
-    assert.ok(await page.locator('.workspace-alpha-notice:visible').count() > 0)
+    assert.equal(await page.locator('.workspace-alpha-notice').count(), 0)
+    await page.locator('.workspace-alpha-disclosure > summary').click()
+    await page.locator('.workspace-alpha-disclosure__content').waitFor()
     fs.mkdirSync(path.join(root, 'artifacts/alpha-model-ui'), { recursive: true })
     await page.screenshot({
       path: path.join(root, 'artifacts/alpha-model-ui/models-installed.png'),

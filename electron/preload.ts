@@ -243,6 +243,14 @@ const api: ElectronAPI = {
   },
   // ImageSearch APIs
   imageSearch: {
+    saveSearchQueryCopy: (traceId) =>
+      ipcRenderer.invoke('imageSearch:saveSearchQueryCopy', traceId),
+    getSearchDiagnosticStatus: () => ipcRenderer.invoke('imageSearch:getSearchDiagnosticStatus'),
+    exportSearchDiagnostics: () => ipcRenderer.invoke('imageSearch:exportSearchDiagnostics'),
+    clearSearchDiagnostics: () => ipcRenderer.invoke('imageSearch:clearSearchDiagnostics'),
+    reportSearchDiagnostic: (traceId, outcome) =>
+      ipcRenderer.invoke('imageSearch:reportSearchDiagnostic', traceId, outcome),
+
     getStatus: () => ipcRenderer.invoke('imageSearch:getStatus'),
     startScan: (args) => ipcRenderer.invoke('imageSearch:startScan', args),
     stopScan: () => ipcRenderer.invoke('imageSearch:stopScan'),

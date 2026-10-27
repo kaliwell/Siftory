@@ -15,6 +15,11 @@ test('Electron is pinned exactly and the lockfile matches the declared version',
   assert.equal(locked, declared)
 })
 
+test('the installed Electron distribution matches the audited pinned runtime', () => {
+  const installed = fs.readFileSync(path.join(root, 'node_modules/electron/dist/version'), 'utf8')
+  assert.equal(installed.trim().replace(/^v/, ''), packageJson.devDependencies.electron)
+})
+
 test('clean npm installs explicitly provision the Electron binary', () => {
   assert.equal(packageJson.scripts.postinstall, 'node scripts/install-electron.cjs')
   assert.equal(packageJson.build.electronDist, 'node_modules/electron/dist')

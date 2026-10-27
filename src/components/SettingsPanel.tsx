@@ -686,16 +686,12 @@ const SettingsPanel: React.FC = () => {
   }
   const showSettings = useStore((s) => s.showSettings)
   const showImageSearch = useStore((s) => s.showImageSearch)
-  const showUnifiedSearch = useStore((s) => s.showUnifiedSearch)
   const showAppStorage = useStore((s) => s.showAppStorage)
-  const showDuplicateFinder = useStore((s) => s.showDuplicateFinder)
   const showMediaSearch = useStore((s) => s.showMediaSearch)
   const showAssetLibrary = useStore((s) => s.showAssetLibrary)
   const toggleShowSettings = useStore((s) => s.toggleShowSettings)
   const toggleShowImageSearch = useStore((s) => s.toggleShowImageSearch)
-  const toggleShowUnifiedSearch = useStore((s) => s.toggleShowUnifiedSearch)
   const toggleShowAppStorage = useStore((s) => s.toggleShowAppStorage)
-  const toggleShowDuplicateFinder = useStore((s) => s.toggleShowDuplicateFinder)
   const toggleShowMediaSearch = useStore((s) => s.toggleShowMediaSearch)
   const toggleShowAssetLibrary = useStore((s) => s.toggleShowAssetLibrary)
   const handleMove = useLinkedMove('settings', settingsPos, setSettingsPos, linkedMove)
@@ -901,13 +897,6 @@ const SettingsPanel: React.FC = () => {
 
   const searchPanelVisibilityItems: PanelVisibilityItem[] = [
     {
-      key: 'unifiedSearch',
-      label: 'Unified search',
-      show: showUnifiedSearch,
-      toggle: toggleShowUnifiedSearch,
-      read: () => useStore.getState().showUnifiedSearch,
-    },
-    {
       key: 'imageSearch',
       label: 'Image Search',
       show: showImageSearch,
@@ -945,13 +934,6 @@ const SettingsPanel: React.FC = () => {
       show: showAppStorage,
       toggle: toggleShowAppStorage,
       read: () => useStore.getState().showAppStorage,
-    },
-    {
-      key: 'duplicateFinder',
-      label: 'Duplicate Finder',
-      show: showDuplicateFinder,
-      toggle: toggleShowDuplicateFinder,
-      read: () => useStore.getState().showDuplicateFinder,
     },
   ]
 

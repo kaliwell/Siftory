@@ -12,7 +12,11 @@ async function run() {
     root,
     plugins: [react()],
     optimizeDeps: { entries: ['tests/fixtures/workspace-ui.html'] },
-    server: { host: '127.0.0.1', port: 0 },
+    server: {
+      host: '127.0.0.1',
+      port: 0,
+      watch: { ignored: ['**/release/**', '**/native/build*/**', '**/artifacts/**'] },
+    },
     logLevel: 'error',
   })
   const evidence =
@@ -73,7 +77,7 @@ async function run() {
       `http://127.0.0.1:${server.httpServer.address().port}/tests/fixtures/workspace-ui.html`,
     )
     await page.locator('[data-ready="true"]').waitFor()
-    await page.getByTestId('unified-search-query').waitFor()
+    await page.getByTestId('image-search-query-section').waitFor()
     await page.evaluate(() => document.fonts.ready)
     await page.waitForTimeout(200)
     await page.screenshot({ path: path.join(evidence, 'empty-dark.png') })
@@ -84,14 +88,14 @@ async function run() {
     for (const width of [2560, 1920, 1440, 1000, 760]) {
       await page.setViewportSize({ width, height: 900 })
       await page.waitForTimeout(150)
-      const controls = await page.locator('.unified-search-control-pane').boundingBox()
-      const content = await page.locator('.unified-search-content').boundingBox()
-      if (width >= 1200) {
+      const controls = await page.locator('.image-search-control-pane').boundingBox()
+      const content = await page.locator('.image-search-results-pane').boundingBox()
+      if (width >= 1440) {
         assert.ok(controls.x + controls.width <= content.x)
         assert.ok(Math.abs(controls.y - content.y) < 2)
       } else assert.ok(controls.y + controls.height <= content.y + 1)
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
-      await page.screenshot({ path: path.join(evidence, `unified-split-${width}.png`) })
+      await page.screenshot({ path: path.join(evidence, `image-split-${width}.png`) })
     }
     await page.setViewportSize({ width: 1320, height: 850 })
     fs.writeFileSync(
@@ -103,9 +107,9 @@ async function run() {
               '.focused-workspace',
               '.workspace-sidebar',
               '.workspace-sidebar button',
-              '.unified-search-control-pane',
-              '.unified-search-content',
-              '.unified-search-shell',
+              '.image-search-control-pane',
+              '.image-search-results-pane',
+              '.image-search-shell',
             ].map((selector) => {
               const element = document.querySelector(selector)
               const css = getComputedStyle(element)
@@ -131,36 +135,17 @@ async function run() {
         2,
       ),
     )
-    assert.equal(await page.getByTestId('unified-search-media-filter').isVisible(), false)
-    assert.equal(await page.getByTestId('unified-search-export-options').count(), 0)
-    await page.getByTestId('unified-search-filter-options').locator('summary').click()
-    assert.equal(await page.getByTestId('unified-search-media-filter').isVisible(), true)
-    await page.getByTestId('unified-search-filter-options').locator('summary').click()
-    await page.keyboard.press('Control+k')
-    assert.equal(
-      await page
-        .getByTestId('unified-search-query')
-        .evaluate((element) => document.activeElement === element),
-      true,
-    )
-    await page.getByTestId('unified-search-query').fill('素材')
-    await page.getByTestId('unified-search-result').first().waitFor()
-    await page.screenshot({ path: path.join(evidence, 'results-light.png') })
-    await page.locator('.unified-search-tile__preview').first().click()
-    await page.locator('.unified-search-detail').waitFor()
-    await page.screenshot({ path: path.join(evidence, 'details-light.png') })
+    assert.equal(await page.getByTestId('workspace-tab-all-search').count(), 0)
+    assert.equal(await page.getByTestId('workspace-domain-duplicate-finder').count(), 0)
     const geometry = []
     for (const width of [1320, 1000, 760]) {
       await page.setViewportSize({ width, height: 850 })
       const bounds = await page.getByTestId('app-root').boundingBox()
       assert.ok(Math.abs(bounds.width - width) < 2 && bounds.x === 0 && bounds.y === 0)
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
-      const detail = await page.locator('.unified-search-detail').boundingBox()
-      assert.ok(detail.x >= 0 && detail.x + detail.width <= width + 1)
-      geometry.push({ width, bounds, detail })
-      await page.screenshot({ path: path.join(evidence, `details-${width}.png`) })
+      geometry.push({ width, bounds })
+      await page.screenshot({ path: path.join(evidence, `search-${width}.png`) })
     }
-    await page.locator('.unified-search-detail__close').click()
     await page.setViewportSize({ width: 1320, height: 850 })
     for (const domain of ['library', 'sources', 'settings']) {
       await go(domain)
@@ -289,6 +274,29 @@ async function run() {
         () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
       )
     }
+    const diagnostics = originalSearch.locator('.search-diagnostics-controls')
+    await diagnostics.locator('summary').click()
+    await diagnostics.getByRole('button', { name: '结果不对，标记本次查询', exact: true }).click()
+    await diagnostics.getByRole('button', { name: '导出搜索诊断', exact: true }).click()
+    await diagnostics.getByRole('button', { name: '清空搜索诊断', exact: true }).click()
+    await page.waitForFunction(() =>
+      window.__workspaceTest.calls.some(
+        (c) => c.method === 'imageSearch.reportSearchDiagnostic' && c.args[1] === 'incorrect',
+      ),
+    )
+    assert.ok(
+      await page.evaluate(() =>
+        window.__workspaceTest.calls.some(
+          (c) => c.method === 'imageSearch.exportSearchDiagnostics',
+        ),
+      ),
+    )
+    await page.screenshot({ path: path.join(evidence, 'search-diagnostics.png') })
+    await diagnostics.locator('summary').click()
+    const headerBounds = await originalSearch.locator(':scope > .panel-header').boundingBox()
+    assert.ok(headerBounds.height <= 56, 'compact page heading')
+    const ready = originalSearch.locator('.workspace-preparation-link[data-ready="true"]')
+    assert.ok((await ready.boundingBox()).height <= 42, 'ready status is no longer a tall card')
     await page.screenshot({ path: path.join(evidence, 'image-search-advanced.png') })
     await page.setViewportSize({ width: 760, height: 850 })
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
@@ -335,13 +343,7 @@ async function run() {
     assert.equal(await page.getByTestId('workspace-domain-video-indexing').count(), 0)
     assert.equal(await originalSearch.getByTestId('image-search-library-section').count(), 0)
     assert.equal(await originalSearch.getByTestId('image-search-sources-section').count(), 0)
-    for (const domain of [
-      'video-search',
-      'video-indexing',
-      'duplicate-finder',
-      'maintenance',
-      'settings',
-    ]) {
+    for (const domain of ['video-search', 'video-indexing', 'maintenance', 'settings']) {
       await go(domain)
       await page.locator('.panel:visible').waitFor()
       await page.waitForTimeout(250)
@@ -381,7 +383,6 @@ async function run() {
         'image-search',
         'video-search',
         'video-indexing',
-        'duplicate-finder',
         'maintenance',
       ]) {
         await go(domain)
@@ -407,16 +408,128 @@ async function run() {
       await page.waitForTimeout(150)
       await page.screenshot({ path: path.join(evidence, domain + '-dark.png') })
     }
+    await go('image-search')
+    await page.getByTestId('image-search-query-image').click()
+    await page.waitForFunction(
+      () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
+    )
+    await page.route('**/src/components/WorkspaceTasksPage.tsx*', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 650))
+      await route.continue()
+    })
+    await page.getByTestId('image-search-install-models').click()
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="product-model-manager"]')?.open === true,
+    )
+    await page.getByTestId('product-model-manager').locator('summary').click()
+    await go('image-search')
     await page.getByTestId('workspace-domain-tasks').click()
     await page.waitForTimeout(150)
-    const taskHeading = await page.locator('.workspace-task-drawer > header strong').boundingBox()
-    assert.ok(taskHeading.height < 36, 'task drawer title must stay on one line')
-    assert.doesNotMatch(await page.locator('.workspace-task-drawer').innerText(), /NaN|undefined/)
+    const taskHeading = await page.locator('.workspace-task-page > header h1').boundingBox()
+    assert.ok(taskHeading.height < 36, 'task page title must stay on one line')
+    assert.doesNotMatch(await page.locator('.workspace-task-page').innerText(), /NaN|undefined/)
+    const clipboardBefore = await page.evaluate(
+      () =>
+        window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.pasteClipboardImage')
+          .length,
+    )
+    await page.keyboard.press('Control+v')
+    await page.waitForTimeout(100)
+    assert.equal(
+      await page.evaluate(
+        () =>
+          window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.pasteClipboardImage')
+            .length,
+      ),
+      clipboardBefore,
+      'hidden image page must not handle clipboard shortcuts',
+    )
+    assert.equal(
+      await page.evaluate(() => window.__workspaceTest.getSettings().workspaceTaskPageOpen),
+      undefined,
+      'task route is not persisted as a legacy panel flag',
+    )
+
     await page.screenshot({ path: path.join(evidence, 'tasks-dark.png') })
+    await page.evaluate(() =>
+      window.__workspaceTest.setEmbeddingTask({
+        state: 'running',
+        completed: 19400,
+        skipped: 0,
+        failed: 4,
+        total: 19412,
+        modelName: 'dinov2_vitb14',
+        pending: 8,
+        running: 0,
+      }),
+    )
+    const progressTask = page.getByTestId('product-task-image-embedding')
+    await progressTask.waitFor()
+    await progressTask.getByText('99.9%', { exact: true }).waitFor()
+    assert.match(await progressTask.innerText(), /剩余 8/)
+    assert.ok(
+      await progressTask
+        .locator('.product-readiness__task-meta small')
+        .first()
+        .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 12),
+    )
+    await page.evaluate(() => window.__workspaceTest.store.getState().toggleGlobalVisibility())
+    assert.equal(await page.locator('.workspace-task-page:visible').count(), 0)
+    await page.evaluate(() => window.__workspaceTest.store.getState().toggleGlobalVisibility())
+    await page.locator('.workspace-task-page:visible').waitFor()
+
+    await page.screenshot({ path: path.join(evidence, 'tasks-progress-99.9.png') })
+    const taskPage = page.locator('.workspace-task-page')
+    assert.equal(
+      await page.locator('.panel:visible').count(),
+      0,
+      'task page replaces the current workspace view',
+    )
+    assert.equal(
+      await page.locator('.workspace-task-drawer:not(.workspace-guide-drawer)').count(),
+      0,
+      'no task drawer remains',
+    )
+    assert.equal(
+      await taskPage.evaluate((el) => el.closest('nav') === null),
+      true,
+      'task page is outside navigation',
+    )
+    assert.equal(
+      await page.getByTestId('workspace-domain-tasks').getAttribute('aria-current'),
+      'page',
+    )
+    assert.equal(await page.locator('.workspace-sidebar [aria-current="page"]').count(), 1)
+    const taskGeometry = []
+    for (const width of [1920, 1320, 946, 760]) {
+      await page.setViewportSize({ width, height: 900 })
+      const bounds = await taskPage.boundingBox()
+      const nav = await page.locator('.workspace-sidebar').boundingBox()
+      assert.ok(bounds.x >= nav.x + nav.width - 1)
+      assert.ok(
+        Math.abs(bounds.width - (width - bounds.x)) < 2,
+        'task page fills the workspace width',
+      )
+      assert.equal(await taskPage.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), true)
+      taskGeometry.push({ width, page: bounds })
+      await page.screenshot({ path: path.join(evidence, `task-page-dark-${width}.png`) })
+    }
+    fs.writeFileSync(
+      path.join(evidence, 'task-page-geometry.json'),
+      JSON.stringify(taskGeometry, null, 2),
+    )
+    await page.evaluate(() => window.__workspaceTest.store.getState().setThemeMode('light'))
+    await page.setViewportSize({ width: 1320, height: 900 })
+    await page.screenshot({ path: path.join(evidence, 'task-page-light.png') })
+    await page.evaluate(() => window.__workspaceTest.store.getState().setThemeMode('dark'))
+
+    await page.evaluate(() => window.__workspaceTest.setEmbeddingTask(null))
+    await progressTask.waitFor({ state: 'hidden' })
+
     assert.equal(await page.getByTestId('product-task-image-index').count(), 0)
-    await page.getByTestId('task-history-toggle').click()
+    await page.getByTestId('task-view-completed').click()
     assert.equal(await page.getByTestId('product-task-image-index').isVisible(), true)
-    await page.getByTestId('task-history-toggle').click()
+    await page.getByTestId('task-view-current').click()
     await page.evaluate(() =>
       window.__workspaceTest.setMediaTask({
         taskId: 'fixture-video-task',
@@ -435,19 +548,23 @@ async function run() {
     await page.getByTestId('product-readiness-refresh').click()
     await page.getByTestId('product-task-video-index').waitFor()
     assert.equal(await page.getByTestId('product-task-image-index').count(), 0)
-    await page.getByTestId('task-history-toggle').click()
+    await page.getByTestId('task-view-all').click()
     assert.equal(
       await page.locator('.product-readiness__task').first().getAttribute('data-testid'),
       'product-task-video-index',
     )
     await page.locator('.workspace-preparation-details > summary').click()
+    await page.getByTestId('task-view-issues').click()
+    assert.equal(await page.locator('.product-readiness__task').count(), 1)
     await page.screenshot({ path: path.join(evidence, 'tasks-attention.png') })
     await page.evaluate(() => window.__workspaceTest.setMediaTask(null))
 
-    await page
-      .getByTestId('workspace-task-summary')
-      .getByRole('button', { name: '关闭', exact: true })
-      .click()
+    await go('image-search')
+    assert.equal(
+      await page.locator('.panel:visible input[readonly]').first().inputValue(),
+      'C:/fixtures/reference.jpg',
+      'returning from Tasks retains image query',
+    )
     await go('video-search')
     assert.equal(await page.getByTestId('media-search-sources-section').count(), 0)
     const videoQuery = page.getByTestId('media-search-query-section').locator('input').last()
@@ -499,21 +616,84 @@ async function run() {
       window.__workspaceTest.calls.some((call) => call.method === 'imageSearch.queryData'),
     )
     await page.screenshot({ path: path.join(evidence, 'maintenance-advanced.png') })
+    // Source controls stay reachable while both source libraries scroll.
+    for (const width of [1320, 946, 760]) {
+      await page.setViewportSize({ width, height: 850 })
+      for (const domain of ['sources', 'video-indexing']) {
+        await go(domain)
+        const prefix = domain === 'sources' ? 'image-search' : 'media-search'
+        await page.getByTestId(prefix + '-sections-expand-all').click()
+        const shell = domain === 'sources' ? '.image-search-workspace' : '.media-search-workspace'
+        await page.waitForFunction(
+          (selector) =>
+            [...document.querySelectorAll(selector)].some(
+              (el) => el.getClientRects().length && el.scrollHeight > el.clientHeight,
+            ),
+          shell,
+        )
+        await page.locator(shell + ':visible').evaluate((el) => {
+          el.scrollTop = 220
+        })
+        await page.waitForTimeout(100)
+        const pinned = await page.getByTestId(prefix + '-sections-toolbar').evaluate((el) => {
+          const scroller = el
+            .closest('[data-sources-only]')
+            .querySelector('.image-search-workspace, .media-search-workspace')
+          return {
+            top: el.getBoundingClientRect().top,
+            viewportTop: scroller.getBoundingClientRect().top,
+            scroll: scroller.scrollTop,
+          }
+        })
+        assert.ok(pinned.scroll > 0, domain + ': source list must actually scroll')
+        assert.ok(Math.abs(pinned.top - pinned.viewportTop) < 12, domain + ': toolbar stays pinned')
+        await page.getByTestId(prefix + '-sections-collapse-all').click()
+        assert.equal(await page.getByTestId(prefix + '-sections-toolbar').isVisible(), true)
+        await page.getByTestId(prefix + '-sections-expand-all').click()
+        await page.screenshot({ path: path.join(evidence, `pinned-${domain}-${width}.png`) })
+      }
+      // The notice uses the footer even with the navigation collapsed.
+      if (
+        width === 760 &&
+        (await page.locator('.workspace-sidebar').getAttribute('data-collapsed')) !== 'true'
+      )
+        await page.getByTestId('workspace-sidebar-toggle').click()
+      const summary = page.locator('.workspace-alpha-disclosure > summary')
+      assert.equal(await page.locator('.panel .workspace-alpha-notice').count(), 0)
+      await summary.click()
+      const popup = page.locator('.workspace-alpha-disclosure__content')
+      await popup.waitFor()
+      const bounds = await popup.boundingBox()
+      assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width)
+      assert.ok(
+        await popup.evaluate((el) =>
+          el.contains(
+            document.elementFromPoint(
+              el.getBoundingClientRect().x + 20,
+              el.getBoundingClientRect().y + 20,
+            ),
+          ),
+        ),
+      )
+      await page.screenshot({ path: path.join(evidence, `alpha-footer-${width}.png`) })
+      await summary.press('Escape')
+      await popup.waitFor({ state: 'hidden' })
+    }
     assert.deepEqual(errors, [])
     const report = {
       passed: true,
       syntheticBridge: true,
       darkAndLight: true,
-      collapsedFilters: true,
-      keyboardSearch: true,
       originalImageSearchRestored: true,
       originalSearchModesWired: true,
       imageWorkspaceSelectionPersisted: true,
       overlayApisUnused: true,
-      unifiedNavigation: true,
+      imageAndVideoNavigation: true,
       videoRoutePersisted: true,
       queryRetainedBetweenViews: true,
       sidebarCollapsible: true,
+      sourceToolbarPinned: true,
+      alphaNoticeInFooter: true,
       geometry,
       settingsGeometry,
       errors,

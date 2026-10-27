@@ -10,7 +10,8 @@ export const WORKSPACE_ROUTES: Record<
   WorkspaceRoute,
   { panel: WorkspacePanel; view?: 'search' | 'sources' }
 > = {
-  'all-search': { panel: 'unifiedSearch' },
+  // Compatibility for old callers; combined search is retired.
+  'all-search': { panel: 'imageSearch', view: 'search' },
   'image-search': { panel: 'imageSearch', view: 'search' },
   'video-search': { panel: 'mediaSearch', view: 'search' },
   'image-sources': { panel: 'imageSearch', view: 'sources' },
@@ -22,7 +23,7 @@ export function resolveWorkspaceRoute(
   imageView?: string,
   videoView?: string,
 ): WorkspaceRoute | undefined {
-  if (panel === 'unifiedSearch') return 'all-search'
+  if (panel === 'unifiedSearch') return 'image-search'
   if (panel === 'imageSearch') return imageView === 'search' ? 'image-search' : 'image-sources'
   // Saved video indexing layouts continue to open library preparation.
   if (panel === 'mediaSearch') return videoView === 'search' ? 'video-search' : 'video-sources'

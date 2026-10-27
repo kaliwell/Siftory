@@ -7,7 +7,6 @@ import type { WorkspacePanel } from '../services/focusedWorkspace'
 import WorkspaceIcon from './WorkspaceIcon'
 
 const SEARCH_TABS: Array<{ route: WorkspaceRoute; label: string; icon: string }> = [
-  { route: 'all-search', label: 'Combined search', icon: 'search' },
   { route: 'image-search', label: 'Images', icon: 'image' },
   { route: 'video-search', label: 'Video', icon: 'video' },
 ]

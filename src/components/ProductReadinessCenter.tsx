@@ -28,6 +28,8 @@ import type { ModelStatus } from '../../shared/vectorTypes'
 interface ProductReadinessCenterProps {
   onAction: (action: ProductReadinessAction) => void
   refreshIntervalMs?: number
+  pageLayout?: boolean
+  onActiveTaskCountChange?: (count: number) => void
 }
 
 const STATE_LABELS: Record<ProductReadinessState, string> = {
@@ -262,6 +264,8 @@ function formatEta(etaMs: number): string {
 const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   onAction,
   refreshIntervalMs = 5000,
+  pageLayout = false,
+  onActiveTaskCountChange,
 }) => {
   const { t } = useTranslation()
   const [snapshot, setSnapshot] = useState<ProductReadinessSnapshot | null>(null)
@@ -273,6 +277,7 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   const modelRevisionRef = useRef(0)
   const [taskBusy, setTaskBusy] = useState<string | null>(null)
   const [taskMessage, setTaskMessage] = useState('')
+  const [taskView, setTaskView] = useState<'current' | 'all' | 'issues' | 'completed'>('current')
   const [showCompleted, setShowCompleted] = useState(false)
   const [healthReport, setHealthReport] = useState<ProductHealthReport | null>(null)
   const [healthBusy, setHealthBusy] = useState(false)
@@ -358,6 +363,13 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
       modelManagerRequested.current = false
     }
   }, [snapshot])
+
+  useEffect(() => {
+    if (snapshot)
+      onActiveTaskCountChange?.(
+        snapshot.tasks.filter((task) => ACTIVE_TASK_STATES.has(task.state)).length,
+      )
+  }, [snapshot, onActiveTaskCountChange])
 
   if (!snapshot) {
     return (
@@ -544,17 +556,49 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
   const orderedTasks = [...snapshot.tasks].sort(
     (a, b) => taskPriority(a.state) - taskPriority(b.state),
   )
-  const visibleTasks = orderedTasks.filter((task) => showCompleted || task.state !== 'completed')
+  const visibleTasks = orderedTasks.filter((task) =>
+    pageLayout
+      ? taskView === 'all' ||
+        (taskView === 'completed'
+          ? task.state === 'completed'
+          : taskView === 'issues'
+            ? ['failed', 'stopped'].includes(task.state)
+            : task.state !== 'completed')
+      : showCompleted || task.state !== 'completed',
+  )
   const completedCount = snapshot.tasks.filter((task) => task.state === 'completed').length
   const activeTaskCount = snapshot.tasks.filter((task) => ACTIVE_TASK_STATES.has(task.state)).length
 
   return (
     <section
       className="product-readiness"
+      data-layout={pageLayout ? 'page' : 'compact'}
       data-testid="product-readiness-center"
       aria-label={t('Preparation center')}
       aria-busy={refreshing}
     >
+      {pageLayout && (
+        <div className="task-page-metrics">
+          <div>
+            <span>{t('Active tasks')}</span>
+            <strong>{activeTaskCount}</strong>
+          </div>
+          <div>
+            <span>{t('Queued tasks')}</span>
+            <strong>{snapshot.tasks.filter((task) => task.state === 'queued').length}</strong>
+          </div>
+          <div>
+            <span>{t('Needs attention')}</span>
+            <strong>
+              {snapshot.tasks.filter((task) => ['failed', 'stopped'].includes(task.state)).length}
+            </strong>
+          </div>
+          <div>
+            <span>{t('Completed tasks')}</span>
+            <strong>{completedCount}</strong>
+          </div>
+        </div>
+      )}
       <section className="product-readiness__tasks" data-testid="product-task-center">
         <div className="product-readiness__task-header">
           <strong>{t('Task center')}</strong>
@@ -566,6 +610,36 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
           </span>
         </div>
 
+        {pageLayout && (
+          <div className="task-page-toolbar">
+            <div role="group" aria-label={t('Task views')}>
+              {(['current', 'all', 'issues', 'completed'] as const).map((view) => (
+                <button
+                  key={view}
+                  data-testid={`task-view-${view}`}
+                  aria-pressed={taskView === view}
+                  onClick={() => setTaskView(view)}
+                >
+                  {t(
+                    {
+                      current: 'Current tasks',
+                      all: 'All tasks',
+                      issues: 'Needs attention',
+                      completed: 'Completed tasks',
+                    }[view],
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              data-testid="task-page-refresh"
+              disabled={refreshing}
+              onClick={() => void refresh()}
+            >
+              {t('Refresh status')}
+            </button>
+          </div>
+        )}
         <details className="product-task-storage-panel">
           <summary>{t('Task storage')}</summary>
           <div className="product-readiness__storage" data-testid="product-task-storage">
@@ -599,12 +673,21 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
           </div>
         </details>
         {visibleTasks.length === 0 ? (
-          <p className="product-readiness__task-empty">{t('No tasks need attention')}</p>
+          <p className="product-readiness__task-empty">
+            {t(pageLayout ? 'No tasks in this view' : 'No tasks need attention')}
+          </p>
         ) : (
           <div className="product-readiness__task-list">
             {visibleTasks.map((task) => {
               const busy = taskBusy === task.id
-              const taskLabel = t(TASK_KIND_LABELS[task.kind])
+              const taskLabel =
+                task.kind === 'image-embedding'
+                  ? t(
+                      task.authorityId === 'clip_vit_base_patch32'
+                        ? 'CLIP text search vectors'
+                        : 'DINO image vectors',
+                    )
+                  : t(TASK_KIND_LABELS[task.kind])
               const controls: ProductTaskControlAction[] = []
               if (task.canPause) controls.push('pause')
               if (task.canResume && !task.canRetry) controls.push('resume')
@@ -618,7 +701,13 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
                 >
                   <div className="product-readiness__task-title">
                     <strong>{taskLabel}</strong>
-                    <span>{t(TASK_STATE_LABELS[task.state])}</span>
+                    <span>
+                      {t(
+                        task.state === 'completed' && task.failed > 0
+                          ? 'Finished with failures'
+                          : TASK_STATE_LABELS[task.state],
+                      )}
+                    </span>
                     <span>
                       {task.indeterminate
                         ? t('Discovering and indexing')
@@ -642,6 +731,15 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
                             completed: task.completed,
                             total: task.total,
                           })}
+                      {task.succeeded === undefined
+                        ? null
+                        : ` · ${t('Succeeded {count}', { count: task.succeeded })}`}
+                      {task.skipped === undefined
+                        ? null
+                        : ` · ${t('Skipped {count}', { count: task.skipped })}`}
+                      {task.succeeded === undefined || task.indeterminate
+                        ? null
+                        : ` · ${t('Remaining {count}', { count: Math.max(0, task.total - task.completed - task.failed) })}`}
                       {task.failed > 0 ? ` · ${t('{count} failed', { count: task.failed })}` : ''}
                     </small>
                     {task.itemsPerSecond === undefined ? null : (
@@ -649,14 +747,14 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
                         {t('Speed {speed}', { speed: `${task.itemsPerSecond.toFixed(1)}/s` })}
                       </small>
                     )}
-                    {task.etaMs === undefined ? null : (
-                      <small>{t('ETA {eta}', { eta: formatEta(task.etaMs) })}</small>
+                    {task.indeterminate || task.etaMs === undefined ? null : (
+                      <small>{t('Current stage ETA {eta}', { eta: formatEta(task.etaMs) })}</small>
                     )}
                     <small>
                       {t(task.persisted ? 'Restores after restart' : 'This-session task')}
                     </small>
                   </div>
-                  {task.currentItem && !/^[a-f0-9]{24,}$/i.test(task.currentItem) && (
+                  {task.currentItem && !/^(?:[a-f0-9]{24,}|Queued .*)$/i.test(task.currentItem) && (
                     <small className="product-readiness__task-current" title={task.currentItem}>
                       {t('Current item: {item}', { item: task.currentItem })}
                     </small>
@@ -682,7 +780,7 @@ const ProductReadinessCenter: React.FC<ProductReadinessCenterProps> = ({
             })}
           </div>
         )}
-        {completedCount > 0 && (
+        {!pageLayout && completedCount > 0 && (
           <button
             data-testid="task-history-toggle"
             aria-expanded={showCompleted}

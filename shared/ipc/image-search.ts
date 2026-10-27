@@ -1,3 +1,4 @@
+import { SEARCH_DIAGNOSTIC_IPC } from './search-diagnostics'
 // Image search, thumbnail, vector maintenance, and storage IPC contracts.
 
 export type ImageSearchState =
@@ -202,6 +203,7 @@ export interface ImageSearchSearchArgs {
 }
 
 export interface ImageSearchSearchResponse {
+  diagnosticId?: string
   results: ImageSearchResult[]
   status: ImageSearchStatus
   queryHash?: string
@@ -587,6 +589,7 @@ export const VECTOR_IPC = {
   GET_EMBEDDING_PROGRESS: 'vector:getEmbeddingProgress',
   BUILD_VECTOR_INDEX: 'vector:buildVectorIndex',
   GET_VECTOR_INDEX_STATUS: 'vector:getVectorIndexStatus',
+  ...SEARCH_DIAGNOSTIC_IPC,
   SEARCH_LAYERED: 'vector:searchLayered',
   STOP_LAYERED_SEARCH: 'vector:stopLayeredSearch',
   SEARCH_SEMANTIC: 'vector:searchSemantic',

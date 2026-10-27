@@ -1,3 +1,8 @@
+import {
+  beginSearchDiagnostic,
+  getSearchDiagnostics,
+  saveSearchQueryCopy,
+} from './searchDiagnostics'
 import { secureIpcMain } from './ipcAuthorization'
 import { app, clipboard, dialog, shell } from 'electron'
 import fs from 'fs'
@@ -216,6 +221,62 @@ export function registerImageSearchIpc(
     stopImageLibraryPreparation(typeof taskId === 'string' ? taskId : undefined),
   )
 
+  secureIpcMain.handle('imageSearch:getSearchDiagnosticStatus', async () => {
+    const store = getSearchDiagnostics()
+    return { sessionId: store.sessionId, dropped: store.dropped, error: store.error }
+  })
+  secureIpcMain.handle(
+    'imageSearch:reportSearchDiagnostic',
+    (_event, traceId: unknown, outcome: unknown) => {
+      if (
+        typeof traceId !== 'string' ||
+        !/^[a-f0-9-]{36}$/.test(traceId) ||
+        !['incorrect', 'accepted', 'discarded'].includes(String(outcome))
+      )
+        return { ok: false }
+      getSearchDiagnostics().append(traceId, 'presentation', { outcome })
+      return { ok: true }
+    },
+  )
+  secureIpcMain.handle('imageSearch:saveSearchQueryCopy', async (_event, traceId: unknown) => ({
+    ok:
+      typeof traceId === 'string' &&
+      /^[a-f0-9-]{36}$/.test(traceId) &&
+      (await saveSearchQueryCopy(traceId)),
+  }))
+  secureIpcMain.handle('imageSearch:clearSearchDiagnostics', async () => {
+    try {
+      await getSearchDiagnostics().clear()
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Diagnostic operation failed' }
+    }
+  })
+  secureIpcMain.handle('imageSearch:exportSearchDiagnostics', async () => {
+    const window = getMainWindow()
+    if (!window || window.isDestroyed()) return { ok: false }
+    const selected = await dialog.showSaveDialog(window, {
+      defaultPath: `Siftory-search-diagnostics-${Date.now()}.json`,
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+    if (selected.canceled || !selected.filePath) return { ok: false, cancelled: true }
+    try {
+      const store = getSearchDiagnostics()
+      const copies = await store.exportQueryCopies()
+      const snapshot = {
+        ...(await store.snapshot()),
+        containsImageBytes: copies.length > 0,
+        queryCopies: copies,
+      }
+      await fs.promises.writeFile(selected.filePath, JSON.stringify(snapshot, null, 2), {
+        mode: 0o600,
+      })
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Diagnostic operation failed' }
+    }
+  })
+
   secureIpcMain.handle('imageSearch:startScan', async (_event, args: ImageSearchStartScanArgs) => {
     const busy = imageSearchEditBusyError()
     if (busy) return { ok: false, error: busy }
@@ -234,54 +295,76 @@ export function registerImageSearchIpc(
   secureIpcMain.handle('imageSearch:isScanPaused', async () => isImageSearchScanPaused())
 
   secureIpcMain.handle('imageSearch:search', async (event, args: ImageSearchSearchArgs) => {
-    if (isSourceFileSyncRunning() || isSourceDerivedDataCleanupRunning()) {
-      return {
-        results: [],
-        status: {
-          ...getImageSearchStatus(),
-          message: 'Source index maintenance is running',
-        },
-      }
-    }
-    if (isImageSearchFolderDataEditRunning()) {
-      return {
-        results: [],
-        status: {
-          ...getImageSearchStatus(),
-          message: 'A folder index edit is running',
-        },
-      }
-    }
-    const releaseSearch = tryAcquireVectorSearchReservation()
-    if (!releaseSearch) {
-      return {
-        results: [],
-        status: { ...getImageSearchStatus(), message: 'Vector maintenance is running' },
-      }
-    }
-    const sourceSyncEpoch = getSourceFileSyncMutationEpoch()
-    try {
-      const response = await searchImagesAsync(args)
-      if (isSourceFileSyncRunning() || sourceSyncEpoch !== getSourceFileSyncMutationEpoch()) {
+    const input = (args as { imagePath?: unknown } | null)?.imagePath
+    const diagnostic = beginSearchDiagnostic(typeof input === 'string' ? input : '', {
+      request: args,
+      native: getImageSearchStatus(),
+      sourceEpoch: getSourceFileSyncMutationEpoch(),
+    })
+    const execute = async () => {
+      if (isSourceFileSyncRunning() || isSourceDerivedDataCleanupRunning()) {
         return {
           results: [],
           status: {
             ...getImageSearchStatus(),
-            message:
-              'Search results were discarded because source synchronization changed the index',
+            message: 'Source index maintenance is running',
           },
         }
       }
-      return {
-        ...response,
-        results: authorizeFileDragResults(
-          event.sender.id,
-          response.results,
-          (result) => result.path,
-        ),
+      if (isImageSearchFolderDataEditRunning()) {
+        return {
+          results: [],
+          status: {
+            ...getImageSearchStatus(),
+            message: 'A folder index edit is running',
+          },
+        }
       }
-    } finally {
-      releaseSearch()
+      const releaseSearch = tryAcquireVectorSearchReservation()
+      if (!releaseSearch) {
+        return {
+          results: [],
+          status: { ...getImageSearchStatus(), message: 'Vector maintenance is running' },
+        }
+      }
+      const sourceSyncEpoch = getSourceFileSyncMutationEpoch()
+      try {
+        const response = await searchImagesAsync(args)
+        if (isSourceFileSyncRunning() || sourceSyncEpoch !== getSourceFileSyncMutationEpoch()) {
+          return {
+            results: [],
+            status: {
+              ...getImageSearchStatus(),
+              message:
+                'Search results were discarded because source synchronization changed the index',
+            },
+          }
+        }
+        return {
+          ...response,
+          results: authorizeFileDragResults(
+            event.sender.id,
+            response.results,
+            (result) => result.path,
+          ),
+        }
+      } finally {
+        releaseSearch()
+      }
+    }
+    try {
+      const response = await execute()
+      diagnostic.event('query-end', {
+        response: { ...response, results: undefined },
+        nativeAfter: getImageSearchStatus(),
+      })
+      diagnostic.results('delivered-results', response.results)
+      return { ...response, diagnosticId: diagnostic.id }
+    } catch (error) {
+      diagnostic.event('query-error', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
     }
   })
 

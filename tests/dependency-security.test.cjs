@@ -18,20 +18,28 @@ function versionAtLeast(actual, minimum) {
   return true
 }
 
+test('CI audits include development-classified shipped runtime and build dependencies', () => {
+  for (const script of ['ci:verify', 'ci:verify:source']) {
+    assert.match(packageJson.scripts[script], /npm audit --audit-level=high/)
+    assert.doesNotMatch(packageJson.scripts[script], /audit --omit=dev/)
+  }
+})
+
 test('production and build dependency remediations stay locked above advisory floors', () => {
   const expectedFloors = {
     sharp: '0.35.5',
-    electron: '42.11.12',
+    electron: '42.11.18',
     'http-cache-semantics': '4.3.0',
     'source-map-js': '1.2.2',
     'adm-zip': '0.6.1',
     protobufjs: '7.6.5',
     tar: '7.5.21',
-    'fast-uri': '3.1.8',
+    'fast-uri': '3.1.9',
     'js-yaml': '4.3.2',
     nanoid: '3.3.17',
     postcss: '8.5.18',
-    undici: '7.29.1',
+    undici: '7.30.1',
+    zod: '4.6.6',
   }
 
   assert.equal(packageJson.overrides.sharp, '0.35.5')
@@ -46,9 +54,9 @@ test('production and build dependency remediations stay locked above advisory fl
 
 test('nested build HTTP clients and XML parser remain above advisory floors', () => {
   const minimumByMajor = new Map([
-    [6, '6.28.1'],
-    [7, '7.29.1'],
-    [8, '8.10.2'],
+    [6, '6.29.1'],
+    [7, '7.30.1'],
+    [8, '8.12.2'],
   ])
   const clients = Object.entries(packageLock.packages).filter(([key]) =>
     key.endsWith('node_modules/undici'),

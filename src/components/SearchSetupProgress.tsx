@@ -51,7 +51,9 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
         {displayedWorkflow.stepIndex > 0 && displayedWorkflow.totalSteps > 0
           ? `${displayedWorkflow.stepIndex}/${displayedWorkflow.totalSteps} `
           : ''}
-        {displayedWorkflow.percent}%
+        {displayedWorkflow.indeterminate
+          ? t(displayedWorkflow.stepLabel || 'Preparing...')
+          : `${displayedWorkflow.percent}%`}
       </span>
       <div
         style={{
@@ -64,7 +66,10 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
       >
         <div
           style={{
-            width: `${displayedWorkflow.percent}%`,
+            width: displayedWorkflow.indeterminate ? '35%' : `${displayedWorkflow.percent}%`,
+            animation: displayedWorkflow.indeterminate
+              ? 'search-progress-pulse 1.4s ease-in-out infinite alternate'
+              : undefined,
             height: '100%',
             background: tone,
             transition: 'width 120ms linear',

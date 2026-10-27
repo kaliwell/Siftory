@@ -1,4 +1,5 @@
 import WorkspacePreparationLink from './WorkspacePreparationLink'
+import SearchDiagnosticsControls from './SearchDiagnosticsControls'
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../stores/useStore'
 import DraggablePanel from './DraggablePanel'
@@ -143,6 +144,10 @@ const ImageSearchPanel: React.FC = () => {
   const [threshold, setThreshold] = useState(0.85)
   const [topK, setTopK] = useState(50)
   const [sortBy, setSortBy] = useState<ImageSearchSortMode>('score')
+  const [diagnosticId, setDiagnosticId] = useState<string>()
+  const [searchWarning, setSearchWarning] = useState('')
+  const queryGenerationRef = useRef(0)
+  const searchBusyRef = useRef(false)
   const [searchMode, setSearchMode] = useState<SearchMode>('fast')
   const [lastQueryKind, setLastQueryKind] = useState<'image' | 'semantic' | null>(null)
   const [scanMode, setScanMode] = useState<'addNew' | 'update' | 'updateAll'>('addNew')
@@ -172,6 +177,24 @@ const ImageSearchPanel: React.FC = () => {
     }
     window.addEventListener('workspace-sources-focus', expandSources)
     return () => window.removeEventListener('workspace-sources-focus', expandSources)
+  }, [setImageSearchUiPreferences])
+  useEffect(() => {
+    let frame = 0
+    const focusSearch = () => {
+      setImageSearchUiPreferences({ workspaceView: 'search' })
+      frame = requestAnimationFrame(() =>
+        document
+          .querySelector<HTMLInputElement>(
+            '[data-panel="image-search"] .image-search-semantic-controls input',
+          )
+          ?.focus(),
+      )
+    }
+    window.addEventListener('workspace-first-search-focus', focusSearch)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('workspace-first-search-focus', focusSearch)
+    }
   }, [setImageSearchUiPreferences])
   const [setupWorkflow, setSetupWorkflow] = useState(IDLE_SETUP_WORKFLOW)
   const setupTaskIdRef = useRef<string | null>(null)
@@ -555,6 +578,12 @@ const ImageSearchPanel: React.FC = () => {
 
   const runImageQuery = useCallback(
     async (imagePath: string) => {
+      if (searchBusyRef.current || setupRunning) return
+      searchBusyRef.current = true
+      const queryGeneration = ++queryGenerationRef.current
+      semanticRequestIdRef.current = null
+      setSearchWarning('')
+      setDiagnosticId(undefined)
       const effectiveSearchMode = experienceMode === 'simple' ? 'standard' : searchMode
       setTestImagePath(imagePath)
       setLastQueryKind('image')
@@ -590,7 +619,22 @@ const ImageSearchPanel: React.FC = () => {
             topK,
             searchMode: 'fast',
           })
-          if (res && layeredRequestIdRef.current === requestId) {
+          if (res?.diagnosticId && queryGenerationRef.current !== queryGeneration)
+            void window.electronAPI?.imageSearch.reportSearchDiagnostic?.(
+              res.diagnosticId,
+              'discarded',
+            )
+          if (
+            res &&
+            queryGenerationRef.current === queryGeneration &&
+            layeredRequestIdRef.current === requestId
+          ) {
+            setDiagnosticId(res.diagnosticId)
+            if (res.diagnosticId)
+              void window.electronAPI?.imageSearch.reportSearchDiagnostic?.(
+                res.diagnosticId,
+                'accepted',
+              )
             announceFirstSearchCompleted('image')
             setLayeredProgress({
               requestId,
@@ -641,7 +685,23 @@ const ImageSearchPanel: React.FC = () => {
           // keep the previous results and stay quiet instead of erroring.
           const cancelled =
             !!res?.degraded && res.degradationReasons.some((r) => /cancelled/i.test(r))
-          if (res && layeredRequestIdRef.current === requestId && !cancelled) {
+          if (res?.diagnosticId && queryGenerationRef.current !== queryGeneration)
+            void window.electronAPI?.imageSearch.reportSearchDiagnostic?.(
+              res.diagnosticId,
+              'discarded',
+            )
+          if (
+            res &&
+            queryGenerationRef.current === queryGeneration &&
+            layeredRequestIdRef.current === requestId &&
+            !cancelled
+          ) {
+            setDiagnosticId(res.diagnosticId)
+            if (res.diagnosticId)
+              void window.electronAPI?.imageSearch.reportSearchDiagnostic?.(
+                res.diagnosticId,
+                'accepted',
+              )
             announceFirstSearchCompleted('image')
             setLayeredResults(res.results)
             setQueryHash(res.queryHash ?? null)
@@ -656,18 +716,29 @@ const ImageSearchPanel: React.FC = () => {
             })
             // Show degradation notice
             if (res.degraded && res.degradationReasons.length > 0) {
+              setSearchWarning(
+                t('Degraded: {reason}', { reason: res.degradationReasons.join('; ') }),
+              )
               showToast(t('Degraded: {reason}', { reason: res.degradationReasons[0] }), 'err')
             }
           }
         }
+      } catch (error) {
+        if (queryGenerationRef.current === queryGeneration)
+          setSearchWarning(
+            t('Search failed: {reason}', {
+              reason: error instanceof Error ? error.message : String(error),
+            }),
+          )
       } finally {
         if (layeredRequestIdRef.current === requestId) {
           layeredRequestIdRef.current = null
+          searchBusyRef.current = false
           setSearching(false)
         }
       }
     },
-    [experienceMode, hammingThreshold, topK, searchMode, showToast, t],
+    [experienceMode, hammingThreshold, topK, searchMode, setupRunning, showToast, t],
   )
 
   const handleQueryImage = useCallback(async () => {
@@ -697,6 +768,7 @@ const ImageSearchPanel: React.FC = () => {
   }, [])
 
   const handleSemanticSearch = useCallback(async () => {
+    if (searchBusyRef.current || setupRunning) return
     const text = semanticQuery.trim()
     if (!text) {
       showToast(t('Enter semantic text first'), 'err')
@@ -707,29 +779,41 @@ const ImageSearchPanel: React.FC = () => {
       showToast(t('Semantic search API not available'), 'err')
       return
     }
-    const latestModels = await refreshManagedModels()
-    if (!isManagedSearchModelReady(latestModels?.clip_vit_base_patch32)) {
-      showToast(t('The selected model is not ready.'), 'err')
-      return
-    }
-    setSearching(true)
-    setLastQueryKind('semantic')
-    setResults([])
-    setLayeredResults([])
-    setQueryHash(null)
-    setLayeredProgress(null)
-    const requestId = `semantic-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    semanticRequestIdRef.current = requestId
-    setSemanticProgress({
-      requestId,
-      phase: 'preparing',
-      scanned: 0,
-      percent: 0,
-      message: 'Preparing semantic search...',
-    })
+    let queryGeneration = queryGenerationRef.current
+    let requestId: string | null = null
+    searchBusyRef.current = true
     try {
+      const latestModels = await refreshManagedModels()
+      if (queryGenerationRef.current !== queryGeneration) return
+      if (!isManagedSearchModelReady(latestModels?.clip_vit_base_patch32)) {
+        showToast(t('The selected model is not ready.'), 'err')
+        return
+      }
+      queryGeneration = ++queryGenerationRef.current
+      setDiagnosticId(undefined)
+      layeredRequestIdRef.current = null
+      setSearchWarning('')
+      setSearching(true)
+      setLastQueryKind('semantic')
+      setResults([])
+      setLayeredResults([])
+      setQueryHash(null)
+      setLayeredProgress(null)
+      requestId = `semantic-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      semanticRequestIdRef.current = requestId
+      setSemanticProgress({
+        requestId,
+        phase: 'preparing',
+        scanned: 0,
+        percent: 0,
+        message: 'Preparing semantic search...',
+      })
       const res = await api.searchSemantic({ text, topK, requestId })
-      if (res) {
+      if (
+        res &&
+        queryGenerationRef.current === queryGeneration &&
+        semanticRequestIdRef.current === requestId
+      ) {
         announceFirstSearchCompleted('image')
         setLayeredResults(res.results || [])
         setSearchMetrics({
@@ -745,19 +829,31 @@ const ImageSearchPanel: React.FC = () => {
           searchMode: 'semantic',
         })
         if (res.degraded && res.degradationReasons?.[0]) {
+          setSearchWarning(res.degradationReasons.join('; '))
           showToast(res.degradationReasons[0], 'err')
         }
       }
+    } catch (error) {
+      if (queryGenerationRef.current === queryGeneration)
+        setSearchWarning(
+          t('Search failed: {reason}', {
+            reason: error instanceof Error ? error.message : String(error),
+          }),
+        )
     } finally {
-      setSemanticProgress((prev) =>
-        prev?.requestId === requestId
-          ? { ...prev, phase: 'done', percent: 100, message: 'Semantic search complete' }
-          : prev,
-      )
-      semanticRequestIdRef.current = null
-      setSearching(false)
+      if (queryGenerationRef.current === queryGeneration) {
+        searchBusyRef.current = false
+        if (requestId)
+          setSemanticProgress((prev) =>
+            prev?.requestId === requestId
+              ? { ...prev, phase: 'done', percent: 100, message: 'Semantic search complete' }
+              : prev,
+          )
+        semanticRequestIdRef.current = null
+        setSearching(false)
+      }
     }
-  }, [refreshManagedModels, semanticQuery, showToast, t, topK])
+  }, [refreshManagedModels, semanticQuery, setupRunning, showToast, t, topK])
 
   const handleRefreshSearch = useCallback(async () => {
     if (searching) return
@@ -788,7 +884,7 @@ const ImageSearchPanel: React.FC = () => {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (sourcesOnly) return
-      if (!useStore.getState().showImageSearch) return
+      if (!useStore.getState().showImageSearch || useStore.getState().workspaceTaskPageOpen) return
       if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'v') return
       const target = event.target as HTMLElement | null
       const tag = target?.tagName?.toLowerCase()
@@ -921,13 +1017,16 @@ const ImageSearchPanel: React.FC = () => {
 
   const runSubjectSearch = useCallback(
     async (path: string, subject?: SubjectBBox, segmentationSessionId?: string) => {
-      if (subjectSearching || searching) return
+      if (searchBusyRef.current || setupRunning) return
+      searchBusyRef.current = true
+      const queryGeneration = ++queryGenerationRef.current
       setSubjectSearching(true)
       setSearching(true)
       setLastQueryKind('image')
       setTestImagePath(path)
       try {
         const resp = await subjectSearchBridge.search(path, topK, subject, segmentationSessionId)
+        if (queryGenerationRef.current !== queryGeneration) return
         if (resp.ok && resp.results.length > 0) {
           const mapped: ImageSearchResult[] = resp.results.map((r) => ({
             id: r.imageId,
@@ -956,21 +1055,33 @@ const ImageSearchPanel: React.FC = () => {
           }
         }
       } catch (err) {
+        if (queryGenerationRef.current !== queryGeneration) return
         setResults([])
         setLayeredResults([])
         showToast(err instanceof Error ? err.message : t('Subject search failed'), 'err')
       } finally {
-        setSubjectSearching(false)
-        setSearching(false)
+        if (queryGenerationRef.current === queryGeneration) {
+          searchBusyRef.current = false
+          setSubjectSearching(false)
+          setSearching(false)
+        }
       }
     },
-    [subjectSearching, searching, showToast, t, topK],
+    [setupRunning, showToast, t, topK],
   )
 
   // Stop the in-flight layered search (image or subject). The main process
   // bumps the search sequence; the running pipeline cancels at its next
   // checkpoint and resolves as a graceful "cancelled" response.
   const handleStopSearch = useCallback(() => {
+    queryGenerationRef.current++
+    searchBusyRef.current = false
+    layeredRequestIdRef.current = null
+    semanticRequestIdRef.current = null
+    setSearching(false)
+    setSubjectSearching(false)
+    setLayeredProgress(null)
+    setSemanticProgress(null)
     void window.electronAPI?.vector?.stopLayeredSearch?.().catch(() => {})
   }, [])
 
@@ -1206,6 +1317,12 @@ const ImageSearchPanel: React.FC = () => {
             onDrop={sourcesOnly ? undefined : handleDrop}
           >
             <ImageSearchToastBanner toast={toast} />
+            {!sourcesOnly && <SearchDiagnosticsControls traceId={diagnosticId} />}
+            {searchWarning && (
+              <div className="search-degradation-notice" role="status">
+                {searchWarning}
+              </div>
+            )}
             {!sourcesOnly &&
               !managedModelsChecking &&
               (!isManagedModelReady('dinov2_vitb14') ||
@@ -1291,7 +1408,21 @@ const ImageSearchPanel: React.FC = () => {
               sortBy={sortBy}
               setSortBy={setSortBy}
               searchMode={searchMode}
-              setSearchMode={setSearchMode}
+              setSearchMode={(mode) => {
+                queryGenerationRef.current++
+                searchBusyRef.current = false
+                setSubjectSearching(false)
+                layeredRequestIdRef.current = null
+                semanticRequestIdRef.current = null
+                setSearching(false)
+                setResults([])
+                setLayeredResults([])
+                setLayeredProgress(null)
+                setSearchMetrics(null)
+                setSearchWarning('')
+                setDiagnosticId(undefined)
+                setSearchMode(mode)
+              }}
               semanticModelReady={
                 !managedModelsChecking &&
                 !managedModelsCheckError &&

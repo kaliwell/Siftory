@@ -186,13 +186,17 @@ test('guide UI persists immediately, exposes recovery routing, and records real 
     /Promise\.all\(\[window\.electronAPI\.loadSettings\(\), loadProductReadiness/,
   )
   assert.match(guide, /workspace-open-first-run-guide/)
-  assert.match(navigator, /data-testid="workspace-first-run-guide"/)
+  assert.match(navigator, /<WorkspaceTasksPage/)
+  assert.match(
+    source('src/components/WorkspaceTasksPage.tsx'),
+    /data-testid="workspace-first-run-guide"/,
+  )
   assert.match(navigator, /workspace-open-model-settings/)
   assert.match(navigator, /workspace-prepare-library-focus/)
   assert.match(navigator, /workspace-first-search-focus/)
   assert.match(guide, /source: 'Open source center'/)
   assert.match(guide, /search: 'Open main search'/)
-  assert.match(navigator, /navigate\('unifiedSearch'/)
+  assert.match(navigator, /navigate\('imageSearch', 'workspace-first-search-focus', 'search'/)
   assert.match(readiness, /modelManagerRef/)
   assert.match(unified, /announceFirstSearchCompleted\('unified'\)/)
   assert.match(image, /announceFirstSearchCompleted\('image'\)/)

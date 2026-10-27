@@ -158,6 +158,7 @@ test('release gate uses the fixed documented order and retains win-unpacked duri
       'clean-install',
       'git-preflight',
       'verify',
+      'workspace-regression',
       'runtime-resources',
       'license-compliance',
       'production-audit',
@@ -173,6 +174,14 @@ test('release gate uses the fixed documented order and retains win-unpacked duri
     ],
   )
   const build = steps.find((step) => step.id === 'package')
+  assert.ok(
+    steps
+      .find((step) => step.id === 'workspace-regression')
+      .commands.some((command) => command.args.includes('test:focused-workspace:native')),
+  )
+  const auditArgs = steps.find((step) => step.id === 'production-audit').command.args
+  assert.ok(auditArgs.includes('--audit-level=high'))
+  assert.equal(auditArgs.includes('--omit=dev'), false)
   assert.equal(build.command.env.FLOATING_CLOCK_KEEP_UNPACKED, '1')
   assert.ok(
     steps
@@ -209,6 +218,7 @@ test('release gate stops at the first failure and never creates a success record
         'clean-install',
         'git-preflight',
         'verify',
+        'workspace-regression',
         'runtime-resources',
         'license-compliance',
         'production-audit',

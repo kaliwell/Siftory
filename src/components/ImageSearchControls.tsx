@@ -338,141 +338,129 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
           testId="image-search-query-section"
           summary={searching ? t('Searching...') : t('Ready')}
         >
-          <div
-            className="image-search-query-controls"
-            style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}
-          >
-            <button
-              data-testid="image-search-query-image"
-              onClick={onQueryImage}
-              disabled={searching || workflowRunning}
-              style={{ fontSize: 13, padding: '3px 12px' }}
-            >
-              {t('Query')}
-            </button>
-            <button
-              onClick={onPasteClipboardImage}
-              disabled={searching || workflowRunning}
-              style={{ fontSize: 13, padding: '3px 10px' }}
-            >
-              {t('Paste')}
-            </button>
-            <button
-              onClick={onRefreshSearch}
-              disabled={searching || workflowRunning}
-              style={{ fontSize: 13, padding: '3px 10px' }}
-            >
-              {t('Refresh')}
-            </button>
-            <input
-              readOnly
-              value={testImagePath || ''}
-              placeholder={
-                dragOver
-                  ? t('Drop image to search...')
-                  : t('Drop an image, click Query, or Paste clipboard image...')
-              }
-              style={{ flex: '1 1 220px', minWidth: 0, fontSize: 13, padding: '4px 8px' }}
-              title={testImagePath || undefined}
-            />
-            {testImagePath && (
+          <div className="search-input-group">
+            <span className="search-group-label">{t('Reference image')}</span>
+            <div className="image-search-query-controls search-reference-controls">
               <button
-                onClick={onClearQueryImage}
+                data-testid="image-search-query-image"
+                onClick={onQueryImage}
                 disabled={searching || workflowRunning}
-                style={{ fontSize: 12, padding: '3px 8px' }}
               >
-                {t('Clear')}
+                {t('Query')}
               </button>
-            )}
+              <button onClick={onPasteClipboardImage} disabled={searching || workflowRunning}>
+                {t('Paste')}
+              </button>
+              <button onClick={onRefreshSearch} disabled={searching || workflowRunning}>
+                {t('Refresh')}
+              </button>
+              <div className="search-reference-path">
+                <input
+                  readOnly
+                  value={testImagePath || ''}
+                  aria-label={t('Reference image')}
+                  placeholder={
+                    dragOver
+                      ? t('Drop image to search...')
+                      : t('Drop an image, click Query, or Paste clipboard image...')
+                  }
+                  title={testImagePath || undefined}
+                />
+                {testImagePath && (
+                  <button onClick={onClearQueryImage} disabled={searching || workflowRunning}>
+                    {t('Clear')}
+                  </button>
+                )}
+              </div>
+            </div>
             <input
+              className="search-filename-filter"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label={t('Filter by name (optional)...')}
               placeholder={t('Filter by name (optional)...')}
-              style={{ flex: '1 1 160px', minWidth: 0, fontSize: 13, padding: '4px 8px' }}
             />
           </div>
-
-          <div
-            className="image-search-semantic-controls"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
-          >
-            <button
-              data-testid="image-search-semantic-query"
-              onClick={onSemanticSearch}
-              disabled={searching || workflowRunning || !semanticModelReady}
-              title={!semanticModelReady ? t('The selected model is not ready.') : undefined}
-              style={{ fontSize: 13, padding: '3px 10px' }}
-            >
-              {t('Semantic')}
-            </button>
-            <input
-              value={semanticQuery}
-              onChange={(e) => setSemanticQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') onSemanticSearch()
-              }}
-              placeholder={t('Semantic text: red screenshot, phone, avatar...')}
-              style={{ flex: '1 1 240px', minWidth: 0, fontSize: 13, padding: '4px 8px' }}
-            />
-          </div>
-
-          {experienceMode === 'advanced' && (
-            <div
-              className="image-search-parameter-controls"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                flexWrap: 'wrap',
-                fontSize: 12,
-              }}
-            >
-              <span style={{ opacity: 0.6 }}>{t('Threshold')}:</span>
+          <div className="search-input-group">
+            <span className="search-group-label">{t('Semantic')}</span>
+            <div className="image-search-semantic-controls search-text-controls">
               <input
-                type="range"
-                min={0.5}
-                max={1}
-                step={0.01}
-                value={threshold}
-                onChange={(e) => setThreshold(Number(e.target.value))}
-                style={{ width: 80 }}
+                value={semanticQuery}
+                disabled={searching || workflowRunning}
+                onChange={(e) => setSemanticQuery(e.target.value)}
+                aria-label={t('Semantic')}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === 'Enter' &&
+                    !e.nativeEvent.isComposing &&
+                    !searching &&
+                    !workflowRunning &&
+                    semanticModelReady
+                  )
+                    onSemanticSearch()
+                }}
+                placeholder={t('Semantic text: red screenshot, phone, avatar...')}
               />
-              <span>{Math.round(threshold * 100)}%</span>
-              <span style={{ opacity: 0.6 }}>{t('Top')}:</span>
-              <select
-                value={topK}
-                onChange={(e) => setTopK(Number(e.target.value))}
-                style={{ fontSize: 12 }}
+              <button
+                data-testid="image-search-semantic-query"
+                onClick={onSemanticSearch}
+                disabled={searching || workflowRunning || !semanticModelReady}
+                title={!semanticModelReady ? t('The selected model is not ready.') : undefined}
               >
-                {IMAGE_SEARCH_TOPK_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-              <span style={{ opacity: 0.6 }}>{t('Sort')}:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as ImageSearchSortMode)}
-                style={{ fontSize: 12 }}
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {t(option.label)}
-                  </option>
-                ))}
-              </select>
-              <span style={{ opacity: 0.6 }}>{t('Search')}:</span>
-              <select
-                value={searchMode}
-                onChange={(e) => setSearchMode(e.target.value as SearchMode)}
-                style={{ fontSize: 12 }}
-              >
-                <option value="fast">{t('Fast')}</option>
-                <option value="standard">{t('Standard')}</option>
-                <option value="precise">{t('Precise')}</option>
-              </select>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
+                {t('Semantic')}
+              </button>
+            </div>
+          </div>
+          {experienceMode === 'advanced' && (
+            <div className="image-search-parameter-controls search-options-grid">
+              <label className="search-field search-field--wide">
+                <span>
+                  {t('Threshold')} <output>{Math.round(threshold * 100)}%</output>
+                </span>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={1}
+                  step={0.01}
+                  value={threshold}
+                  onChange={(e) => setThreshold(Number(e.target.value))}
+                />
+              </label>
+              <label className="search-field">
+                <span>{t('Search')}</span>
+                <select
+                  value={searchMode}
+                  onChange={(e) => setSearchMode(e.target.value as SearchMode)}
+                >
+                  <option value="fast">{t('Fast')}</option>
+                  <option value="standard">{t('Standard')}</option>
+                  <option value="precise">{t('Precise')}</option>
+                </select>
+              </label>
+              <label className="search-field">
+                <span>{t('Top')}</span>
+                <select value={topK} onChange={(e) => setTopK(Number(e.target.value))}>
+                  {IMAGE_SEARCH_TOPK_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="search-field">
+                <span>{t('Sort')}</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as ImageSearchSortMode)}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(option.label)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="search-checkbox">
                 <input
                   type="checkbox"
                   checked={showExtendedScores}

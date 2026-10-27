@@ -193,6 +193,15 @@ function createReleaseSteps(context) {
       commands: [npmCommand(['run', 'verify']), npmCommand(['run', 'coverage:critical'])],
     },
     {
+      id: 'workspace-regression',
+      label: 'Check image search request ownership and the current native desktop workflow',
+      commands: [
+        npmCommand(['run', 'test:search-request-lifecycle:browser']),
+        npmCommand(['run', 'build:native:electron']),
+        npmCommand(['run', 'test:focused-workspace:native']),
+      ],
+    },
+    {
       id: 'runtime-resources',
       label: `Verify ${profile} bundled runtime resources before packaging`,
       command: npmCommand(['run', 'resources:verify', '--', `--profile=${profile}`]),
@@ -204,8 +213,8 @@ function createReleaseSteps(context) {
     },
     {
       id: 'production-audit',
-      label: 'Block unapproved production dependency vulnerabilities',
-      command: npmCommand(['audit', '--omit=dev']),
+      label: 'Block shipped runtime, production and build dependency vulnerabilities',
+      command: npmCommand(['audit', '--audit-level=high']),
     },
     {
       id: 'neko-accuracy-gate',

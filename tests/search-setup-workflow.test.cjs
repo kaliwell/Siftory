@@ -32,6 +32,7 @@ test('main-process image preparation maps into the four-step setup display', () 
   })
   assert.deepEqual(running, {
     state: 'running',
+    indeterminate: true,
     stepId: 'clip-embeddings',
     stepLabel: 'Build CLIP embeddings',
     stepIndex: 3,
