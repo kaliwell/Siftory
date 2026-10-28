@@ -177,6 +177,11 @@ test('release gate uses the fixed documented order and retains win-unpacked duri
   assert.ok(
     steps
       .find((step) => step.id === 'workspace-regression')
+      .commands.some((command) => command.args.includes('test:desktop:browser')),
+  )
+  assert.ok(
+    steps
+      .find((step) => step.id === 'workspace-regression')
       .commands.some((command) => command.args.includes('test:focused-workspace:native')),
   )
   const auditArgs = steps.find((step) => step.id === 'production-audit').command.args

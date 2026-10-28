@@ -57,7 +57,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
   const categoryById = new Map(categories.map((category) => [category.id, category]))
   const tagById = new Map(tags.map((tag) => [tag.id, tag]))
   const previewHeight = Math.round(thumbnailWidth * 0.75)
-  const rowHeight = previewHeight + (scoresByAssetId ? 150 : 126)
+  const rowHeight = previewHeight + (scoresByAssetId ? 154 : 140)
   const gap = 12
   const {
     columns,
@@ -202,9 +202,9 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                 >
                   {fileName(item.asset.path)}
                 </div>
-                {(item.asset.favorite || item.asset.rating) && (
-                  <div style={{ fontSize: 9, color: 'rgb(255,190,70)' }}>
-                    {item.asset.favorite ? '♥ ' : ''}
+                {Boolean(item.asset.favorite || item.asset.rating) && (
+                  <div style={{ fontSize: 12, color: 'rgb(255,190,70)' }}>
+                    {item.asset.favorite ? '★ ' : ''}
                     {item.asset.rating ? `${'★'.repeat(item.asset.rating)}` : ''}
                   </div>
                 )}
@@ -215,7 +215,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                       justifyContent: 'space-between',
                       gap: 4,
                       minHeight: 12,
-                      fontSize: 8,
+                      fontSize: 11,
                       color:
                         sampleScore.reviewState === 'positive'
                           ? 'rgb(85,220,160)'
@@ -241,7 +241,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                       style={{
                         borderLeft: `3px solid ${category.color}`,
                         padding: '1px 4px',
-                        fontSize: 8,
+                        fontSize: 11,
                         background: 'rgba(var(--date),0.08)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -254,7 +254,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                   {tagLabels.slice(0, 2).map((tag) => (
                     <span
                       key={`tag-${tag.id}`}
-                      style={{ color: tag.color, fontSize: 8, padding: '1px 2px' }}
+                      style={{ color: tag.color, fontSize: 11, padding: '1px 2px' }}
                     >
                       #{tag.name}
                     </span>
@@ -272,19 +272,22 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                     gap: 4,
                   }}
                 >
-                  <button onClick={() => onOpen(item.asset.id)} style={{ fontSize: 9, padding: 3 }}>
+                  <button
+                    onClick={() => onOpen(item.asset.id)}
+                    style={{ fontSize: 12, padding: 3 }}
+                  >
                     {t('Open')}
                   </button>
                   <button
                     onClick={() => onReveal(item.asset.id)}
-                    style={{ fontSize: 9, padding: 3 }}
+                    style={{ fontSize: 12, padding: 3 }}
                   >
                     {t('Folder')}
                   </button>
                   {onSimilar && (
                     <button
                       onClick={() => onSimilar(item.asset.id)}
-                      style={{ fontSize: 9, padding: 3 }}
+                      style={{ fontSize: 12, padding: 3 }}
                       title={t('Use this image as the next similarity query')}
                     >
                       {t('Similar')}
@@ -294,7 +297,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                     <button
                       data-testid="asset-repair-moved"
                       onClick={() => onRepairMoved(item.asset.id)}
-                      style={{ fontSize: 9, padding: 3 }}
+                      style={{ fontSize: 12, padding: 3 }}
                       title={t('Locate the moved original and repair its stable identity')}
                     >
                       {t('Repair')}

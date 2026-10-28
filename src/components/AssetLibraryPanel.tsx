@@ -17,6 +17,8 @@ import { DEFAULT_ASSET_LIBRARY_H, DEFAULT_ASSET_LIBRARY_W } from '../types'
 import DraggablePanel from './DraggablePanel'
 import AssetLibraryBackupView from './assetLibrary/AssetLibraryBackupView'
 import AssetLibraryAssetsView from './assetLibrary/AssetLibraryAssetsView'
+import AssetLibraryCollectionsView from './assetLibrary/AssetLibraryCollectionsView'
+import { openWorkspaceRoute } from '../services/openWorkspace'
 import AssetLibraryCategoryDetailView from './assetLibrary/AssetLibraryCategoryDetailView'
 import AssetLibraryCategorySidebar from './assetLibrary/AssetLibraryCategorySidebar'
 import AssetLibraryClusterControls from './assetLibrary/AssetLibraryClusterControls'
@@ -57,6 +59,7 @@ const AssetLibraryPanel: React.FC = () => {
   const handleMove = useLinkedMove('assetLibrary', assetLibraryPos, setAssetLibraryPos, linkedMove)
 
   const [view, setView] = useState<ViewMode>('library')
+  const [collectionsOpen, setCollectionsOpen] = useState(false)
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('assets')
   const [reviewMode, setReviewMode] = useState<ReviewMode>('suggestions')
   const [stats, setStats] = useState<AssetLibraryStats>(EMPTY_STATS)
@@ -201,7 +204,7 @@ const AssetLibraryPanel: React.FC = () => {
     applySmartAlbum,
     reset: resetAssets,
   } = useAssetLibraryAssets({
-    active: view === 'library' && libraryMode === 'assets',
+    active: !collectionsOpen && view === 'library' && libraryMode === 'assets',
     selectedIds,
     setSelectedIds,
     setError,
@@ -467,7 +470,7 @@ const AssetLibraryPanel: React.FC = () => {
     categories,
     selectedIds,
     batchCategoryId,
-    active: view === 'library' && libraryMode === 'categories',
+    active: !collectionsOpen && view === 'library' && libraryMode === 'categories',
     setError,
     runMutation,
     runTask,
@@ -669,6 +672,13 @@ const AssetLibraryPanel: React.FC = () => {
 
   const renderAssets = () => (
     <AssetLibraryAssetsView
+      collectingFromIndex={activeTask}
+      onCollectFromIndex={() =>
+        void runTask(() =>
+          window.electronAPI.assetLibrary.syncFromImageIndex(manifestPath || undefined),
+        )
+      }
+      onOpenSources={() => openWorkspaceRoute('image-sources')}
       query={query}
       categoryFilter={categoryFilter}
       tagFilter={tagFilter}
@@ -976,22 +986,7 @@ const AssetLibraryPanel: React.FC = () => {
     />
   )
 
-  const renderLibrary = () => (
-    <AssetLibraryModeTabs
-      value={libraryMode}
-      tabs={[
-        ['assets', t('Assets')],
-        ['categories', t('Categories & Tags')],
-      ]}
-      onChange={(id: LibraryMode) => {
-        setLibraryMode(id)
-        setSelectedIds(new Set())
-        setError('')
-      }}
-    >
-      {libraryMode === 'assets' ? renderAssets() : renderCategories()}
-    </AssetLibraryModeTabs>
-  )
+  const renderLibrary = () => (libraryMode === 'assets' ? renderAssets() : renderCategories())
 
   const renderReview = () => (
     <AssetLibraryModeTabs
@@ -1244,6 +1239,19 @@ const AssetLibraryPanel: React.FC = () => {
         }}
       >
         <AssetLibraryHeader
+          collectionsOpen={collectionsOpen}
+          categoriesOpen={view === 'library' && libraryMode === 'categories'}
+          onCollections={() => {
+            setCollectionsOpen(true)
+            setSelectedIds(new Set())
+            if (backupOpen) toggleBackups()
+          }}
+          onCategories={() => {
+            setCollectionsOpen(false)
+            selectTab('library')
+            setLibraryMode('categories')
+            if (backupOpen) toggleBackups()
+          }}
           activeTask={activeTask}
           backupOpen={backupOpen}
           backupCount={backups.length}
@@ -1284,7 +1292,12 @@ const AssetLibraryPanel: React.FC = () => {
             })
           }
           onStop={() => void window.electronAPI.assetLibrary.stopTask(task?.taskId)}
-          onViewChange={selectTab}
+          onViewChange={(next) => {
+            setCollectionsOpen(false)
+            setLibraryMode('assets')
+            selectTab(next)
+            if (backupOpen) toggleBackups()
+          }}
         />
         {backupOpen && (
           <AssetLibraryBackupView
@@ -1309,9 +1322,18 @@ const AssetLibraryPanel: React.FC = () => {
             onRestore={(backupId) => void restoreBackup(backupId)}
           />
         )}
-        {!backupOpen && view === 'library' && renderLibrary()}
-        {!backupOpen && view === 'review' && renderReview()}
-        {!backupOpen && view === 'clusters' && renderClusters()}
+        {!backupOpen && collectionsOpen && (
+          <AssetLibraryCollectionsView
+            onBrowseAssets={() => {
+              setCollectionsOpen(false)
+              setLibraryMode('assets')
+              selectTab('library')
+            }}
+          />
+        )}
+        {!backupOpen && !collectionsOpen && view === 'library' && renderLibrary()}
+        {!backupOpen && !collectionsOpen && view === 'review' && renderReview()}
+        {!backupOpen && !collectionsOpen && view === 'clusters' && renderClusters()}
       </div>
     </DraggablePanel>
   )

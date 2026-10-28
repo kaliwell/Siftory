@@ -39,6 +39,10 @@ jobs:
       - run: npm run resources:verify -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"
       - run: npm run licenses:gate -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"
       - run: npm run ci:verify
+      - run: npx playwright install chromium
+      - run: npm run test:desktop:browser
+      - run: npm run build:native:electron
+      - run: npm run test:focused-workspace:native
       - shell: powershell
         run: npm run "build:$env:FLOATING_CLOCK_PACKAGE_PROFILE"
       - run: npm run smoke:packaged:resources -- "--profile=$env:FLOATING_CLOCK_PACKAGE_PROFILE"

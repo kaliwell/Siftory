@@ -20,6 +20,10 @@ interface Props {
   feedbackStatus: AssetFeedbackModelStatus
   task: AssetLibraryTaskProgress | null
   error: string
+  collectionsOpen: boolean
+  categoriesOpen: boolean
+  onCollections: () => void
+  onCategories: () => void
   onSync: () => void
   onRefresh: () => void
   onToggleBackups: () => void
@@ -39,6 +43,10 @@ export default function AssetLibraryHeader({
   feedbackStatus,
   task,
   error,
+  collectionsOpen,
+  categoriesOpen,
+  onCollections,
+  onCategories,
   onSync,
   onRefresh,
   onToggleBackups,
@@ -49,10 +57,49 @@ export default function AssetLibraryHeader({
   onViewChange,
 }: Props) {
   const { t } = useTranslation()
+  const chooseView = (next: AssetLibraryViewMode) => {
+    onViewChange(next)
+  }
   return (
     <>
-      <details className="workspace-disclosure" data-testid="asset-library-tools">
-        <summary>{t('Library tools')}</summary>
+      <div className="asset-library-topbar">
+        <nav className="asset-library-primary-tabs" aria-label={t('Library views')}>
+          <button
+            data-testid="asset-mode-assets"
+            aria-current={
+              !collectionsOpen && view === 'library' && !categoriesOpen && !backupOpen
+                ? 'page'
+                : undefined
+            }
+            onClick={() => onViewChange('library')}
+          >
+            {t('All assets')}
+          </button>
+          <button
+            data-testid="asset-library-collections"
+            aria-current={collectionsOpen && !backupOpen ? 'page' : undefined}
+            onClick={onCollections}
+          >
+            {t('Collections')}
+          </button>
+        </nav>
+        <div className="asset-library-topbar-actions" hidden={collectionsOpen}>
+          <button
+            data-testid="asset-library-sync"
+            className="workspace-button-primary"
+            disabled={activeTask}
+            onClick={onSync}
+          >
+            {t('Collect from image index')}
+          </button>
+          <button onClick={onRefresh}>{t('Refresh')}</button>
+        </div>
+      </div>
+      <details
+        className="workspace-disclosure asset-library-tools"
+        data-testid="asset-library-tools"
+      >
+        <summary>{t('Organize and maintain')}</summary>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             disabled={activeTask}
@@ -157,37 +204,52 @@ export default function AssetLibraryHeader({
             ({t('{count} targets', { count: feedbackStatus.targetCount })})
           </span>
         </div>
-      </details>
-
-      <div
-        style={{
-          display: 'flex',
-          gap: 3,
-          borderBottom: '1px solid rgba(var(--date),0.18)',
-          paddingBottom: 4,
-        }}
-      >
-        {(
-          [
-            ['library', 'Library'],
-            ['review', 'Review'],
-            ['clusters', `${t('Clusters')} (${formatNumber(stats.clusterCount)})`],
-          ] as Array<[AssetLibraryViewMode, string]>
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            data-testid={`asset-view-${id}`}
-            onClick={() => onViewChange(id)}
+        <div className="asset-library-advanced-views">
+          <button data-testid="asset-mode-categories" onClick={onCategories}>
+            {t('Categories & Tags')}
+          </button>
+          <div
             style={{
-              ...buttonStyle,
-              background: view === id ? 'rgba(70,210,155,0.16)' : undefined,
+              display: 'flex',
+              gap: 3,
+              borderBottom: '1px solid rgba(var(--date),0.18)',
+              paddingBottom: 4,
             }}
           >
-            {t(label)}
-          </button>
-        ))}
-      </div>
+            {(
+              [
+                ['library', 'Library'],
+                ['review', 'Review'],
+                ['clusters', `${t('Clusters')} (${formatNumber(stats.clusterCount)})`],
+              ] as Array<[AssetLibraryViewMode, string]>
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                data-testid={`asset-view-${id}`}
+                onClick={() => chooseView(id)}
+                style={{
+                  ...buttonStyle,
+                  background: view === id ? 'rgba(70,210,155,0.16)' : undefined,
+                }}
+              >
+                {t(label)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </details>
 
+      {activeTask && (
+        <div className="asset-library-task-notice" role="status">
+          <span>{t('Library task is running')}</span>
+          <button onClick={onStop}>{t('Stop')}</button>
+        </div>
+      )}
+      {stats.storageState !== 'ready' && (
+        <div role="alert" className="asset-library-storage-warning">
+          {t('Asset metadata storage requires repair')}
+        </div>
+      )}
       {task && task.state !== 'idle' && (
         <div
           style={{

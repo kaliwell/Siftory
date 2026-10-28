@@ -181,8 +181,8 @@ async function run() {
           if (width >= 1200) {
             const controls = await page.locator('.asset-library-browser-controls').boundingBox()
             const gallery = await page.locator('.asset-library-gallery').boundingBox()
-            assert.ok(controls.x + controls.width <= gallery.x)
-            assert.ok(Math.abs(controls.y - gallery.y) < 2)
+            assert.ok(controls.y + controls.height <= gallery.y)
+            assert.ok(Math.abs(controls.x - gallery.x) < 2)
           }
           const actions = await card.locator('.asset-library-card-actions').boundingBox()
           assert.ok(actions.y + actions.height <= bounds.y + bounds.height)
@@ -193,6 +193,7 @@ async function run() {
         await size.fill('320')
         await page.waitForTimeout(200)
         assert.ok((await page.locator('.asset-library-card').first().boundingBox()).width >= 319)
+        await page.getByTestId('asset-select').first().check()
         await page.getByTestId('asset-library-batch-actions').locator('summary').click()
         assert.ok((await page.locator('.asset-library-gallery').boundingBox()).height > 120)
         await page.getByTestId('asset-library-batch-actions').locator('summary').click()

@@ -194,9 +194,9 @@ function createReleaseSteps(context) {
     },
     {
       id: 'workspace-regression',
-      label: 'Check image search request ownership and the current native desktop workflow',
+      label: 'Check desktop browser regressions and the current native desktop workflow',
       commands: [
-        npmCommand(['run', 'test:search-request-lifecycle:browser']),
+        npmCommand(['run', 'test:desktop:browser']),
         npmCommand(['run', 'build:native:electron']),
         npmCommand(['run', 'test:focused-workspace:native']),
       ],
