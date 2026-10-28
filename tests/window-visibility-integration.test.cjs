@@ -6,18 +6,14 @@ const test = require('node:test')
 const root = path.join(__dirname, '..')
 const source = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
 
-test('global shortcut contract keeps R primary, Q compatible, and P for panel snap', () => {
+test('global shortcut contract uses configurable Q and removes the R registration', () => {
   const main = source('electron/appCoreIpc.ts')
   const settings = source('src/components/SettingsPanel.tsx')
-  const manual = source('docs/reference/user-manual.md')
-
-  assert.match(main, /toggle-primary'[\s\S]*CommandOrControl\+Shift\+Alt\+R/)
-  assert.match(main, /toggle-legacy'[\s\S]*CommandOrControl\+Shift\+Alt\+Q/)
-  assert.match(main, /snap-panels'[\s\S]*CommandOrControl\+Shift\+Alt\+P/)
-  assert.match(main, /lastGlobalToggleAt = now[\s\S]*if \(repeated\) \{[\s\S]*hotkey-repeat/)
-  assert.match(settings, /Ctrl\+Shift\+Alt\+R — \{t\('Toggle visibility'\)\}/)
+  assert.match(main, /toggle-primary'.*CommandOrControl\+Shift\+Alt\+Q/)
+  assert.doesNotMatch(main, /accelerator: 'CommandOrControl\+Shift\+Alt\+R'/)
+  assert.match(main, /snap-panels'.*CommandOrControl\+Shift\+Alt\+P/)
+  assert.match(settings, /GlobalHotkeyEditor status=/)
   assert.match(settings, /hotkeyConflicts\.map/)
-  assert.match(manual, /`Ctrl\+Shift\+Alt\+R` \| 隐藏或恢复工作区（主快捷键）/)
 })
 
 test('standard windows hide and reveal natively while diagnostic overlays retain their handshake', () => {

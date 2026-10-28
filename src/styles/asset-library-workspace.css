@@ -1,4 +1,4 @@
-/* The library is a gallery first; controls occupy rows, never a second sidebar. */
+/* Library views share a control sidebar and an independent results surface. */
 .focused-workspace .asset-library-shell {
   gap: 12px !important;
   font-size: 13px !important;
@@ -351,4 +351,206 @@
 
 .asset-library-topbar-actions[hidden] {
   display: none;
+}
+
+.focused-workspace .asset-library-shell {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 20px !important;
+  overflow: hidden;
+}
+.asset-library-sidebar {
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  background: rgb(var(--color-surface));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-gutter: stable;
+}
+.asset-library-content {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  background: rgb(var(--color-surface));
+}
+.asset-library-view-controls,
+.asset-library-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.asset-library-sidebar > .asset-library-view-controls {
+  order: 1;
+}
+.asset-library-sidebar > .asset-library-tools {
+  order: 2;
+}
+.asset-library-sidebar .asset-library-search-controls {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+}
+.asset-library-sidebar .asset-library-search-controls > select:first-child,
+.asset-library-sidebar .asset-library-search-controls > [data-testid='asset-search-run'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.asset-library-sidebar .asset-library-topbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.asset-library-sidebar .asset-library-primary-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.asset-library-sidebar .asset-library-topbar-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin: 0;
+}
+.asset-library-sidebar .asset-library-topbar-actions[hidden] {
+  display: none;
+}
+.asset-library-sidebar .asset-library-tools[open] {
+  max-height: none;
+  overflow: visible;
+  padding: 12px;
+}
+.asset-library-sidebar .asset-library-tools > div:first-of-type {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px !important;
+}
+.asset-library-sidebar .asset-library-tools > div:first-of-type > span {
+  grid-column: 1 / -1;
+  line-height: 1.7;
+}
+.asset-library-sidebar .asset-library-advanced-views,
+.asset-library-sidebar .asset-library-advanced-views > div {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 8px !important;
+}
+.asset-library-sidebar .asset-library-browser-controls {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  flex: none;
+  gap: 16px;
+}
+.asset-library-sidebar .asset-library-query-bar,
+.asset-library-sidebar .asset-library-results-bar,
+.asset-library-sidebar .asset-library-results-options,
+.asset-library-sidebar .asset-library-filter-fields,
+.asset-library-sidebar .asset-library-selection-bar,
+.asset-library-sidebar .asset-library-collection-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin: 0;
+}
+/* Row-layout flex-basis values mean height in the vertical sidebar. Reset them,
+   including expanded disclosures, so saved filter state cannot stretch columns. */
+.focused-workspace
+  .asset-library-sidebar
+  :is(
+    .asset-library-query-bar,
+    .asset-library-results-bar,
+    .asset-library-results-options,
+    .asset-library-filter-fields,
+    .asset-library-selection-bar,
+    .asset-library-collection-toolbar
+  ) {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+.focused-workspace
+  .asset-library-sidebar
+  :is(
+    .asset-library-query-bar,
+    .asset-library-results-bar,
+    .asset-library-results-options,
+    .asset-library-filter-fields,
+    .asset-library-selection-bar,
+    .asset-library-collection-toolbar
+  )
+  > * {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.focused-workspace .asset-library-sidebar .asset-library-more-filters[open],
+.focused-workspace .asset-library-sidebar .asset-library-results-options > details[open] {
+  flex: 0 0 auto;
+  width: 100%;
+}
+.asset-library-sidebar [data-testid='asset-smart-album-bar'] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px !important;
+}
+.asset-library-sidebar [data-testid='asset-smart-album-bar'] > :is(input, select) {
+  width: 100%;
+  min-width: 0 !important;
+}
+.asset-library-sidebar > * {
+  flex-shrink: 0;
+}
+.asset-library-sidebar .asset-library-query-bar > input,
+.asset-library-sidebar .asset-library-query-bar > select,
+.asset-library-sidebar .asset-library-selection-bar > select {
+  flex: none;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+.asset-library-sidebar .asset-library-thumbnail-size {
+  margin: 0;
+  justify-content: space-between;
+}
+.asset-library-sidebar .asset-library-control-group > div {
+  min-width: 0;
+}
+.asset-library-sidebar .asset-library-control-group select {
+  max-width: 100%;
+}
+.asset-library-sidebar .asset-library-control-group button,
+.asset-library-sidebar .asset-library-control-group input:not([type='checkbox']),
+.asset-library-sidebar .asset-library-control-group select {
+  min-height: 36px;
+  font-size: 13px;
+}
+.asset-library-sidebar .asset-library-control-group > div:not(.asset-library-browser-controls) {
+  gap: 10px !important;
+}
+.asset-library-content .asset-library-empty {
+  border: 0;
+}
+@media (max-width: 1099px) {
+  .focused-workspace .asset-library-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(180px, 38%) minmax(0, 1fr);
+    gap: 12px !important;
+  }
+  .asset-library-sidebar,
+  .asset-library-content {
+    padding: 12px;
+  }
 }

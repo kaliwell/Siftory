@@ -181,8 +181,8 @@ async function run() {
           if (width >= 1200) {
             const controls = await page.locator('.asset-library-browser-controls').boundingBox()
             const gallery = await page.locator('.asset-library-gallery').boundingBox()
-            assert.ok(controls.y + controls.height <= gallery.y)
-            assert.ok(Math.abs(controls.x - gallery.x) < 2)
+            assert.ok(controls.x + controls.width <= gallery.x)
+            assert.ok(gallery.height > 300)
           }
           const actions = await card.locator('.asset-library-card-actions').boundingBox()
           assert.ok(actions.y + actions.height <= bounds.y + bounds.height)
@@ -365,6 +365,46 @@ async function run() {
           .getByTestId('video-semantic-runtime-state')
           .filter({ hasText: '未安装' })
           .waitFor()
+      }
+      if (category === 'system') {
+        await page.evaluate(() => {
+          window.__workspaceTest.setHandler('registerHotkey', (accelerator) => ({
+            active: true,
+            entries: [
+              {
+                id: 'toggle-primary',
+                accelerator: accelerator.endsWith('F8')
+                  ? 'CommandOrControl+Shift+Alt+Q'
+                  : accelerator,
+                status: 'registered',
+              },
+            ],
+            ...(accelerator.endsWith('F8') ? { error: 'Shortcut conflicts' } : {}),
+          }))
+        })
+        const editor = page.locator('.settings-hotkey-editor')
+        await editor.getByTestId('visibility-hotkey').press('Control+Alt+F8')
+        await editor.getByTestId('save-visibility-hotkey').click()
+        await editor.getByRole('status').filter({ hasText: '快捷键冲突' }).waitFor()
+        await editor.getByTestId('visibility-hotkey').press('Control+Alt+F9')
+        await editor.getByTestId('save-visibility-hotkey').click()
+        await editor.getByRole('status').filter({ hasText: '快捷键已保存' }).waitFor()
+        assert.equal(await editor.getByTestId('visibility-hotkey').inputValue(), 'Ctrl+Alt+F9')
+        await editor.getByTestId('visibility-hotkey').focus()
+        await editor.getByTestId('visibility-hotkey').dispatchEvent('keydown', {
+          key: 'Tab',
+          code: 'Tab',
+          ctrlKey: true,
+          bubbles: true,
+        })
+        assert.equal(await editor.getByTestId('visibility-hotkey').inputValue(), 'Ctrl+Tab')
+        await editor.getByTestId('visibility-hotkey').press('Tab')
+        await page.waitForFunction(() => {
+          const calls = window.__workspaceTest.calls.filter(
+            (call) => call.method === 'setHotkeyRecording',
+          )
+          return calls.at(-1)?.args[0] === false
+        })
       }
       await page.waitForTimeout(150)
       await page.screenshot({ path: path.join(evidence, 'settings-' + category + '.png') })
@@ -618,13 +658,36 @@ async function run() {
     )
     await page.screenshot({ path: path.join(evidence, 'maintenance-advanced.png') })
     // Source controls stay reachable while both source libraries scroll.
-    for (const width of [1320, 946, 760]) {
+    for (const width of [1920, 1320, 946, 760]) {
       await page.setViewportSize({ width, height: 850 })
       for (const domain of ['sources', 'video-indexing']) {
         await go(domain)
         const prefix = domain === 'sources' ? 'image-search' : 'media-search'
+        const headerBorders = await page
+          .locator(`[data-sources-only='true'] button.search-control-section__header:visible`)
+          .evaluateAll((headers) =>
+            headers.map((header) => {
+              const style = getComputedStyle(header)
+              return [style.borderLeftWidth, style.borderRightWidth, style.borderTopWidth]
+            }),
+          )
+        assert.ok(headerBorders.length > 0)
+        assert.ok(
+          headerBorders.every((borders) => borders.every((width) => width === '0px')),
+          domain + ': card headers do not draw a second rectangular border',
+        )
         await page.getByTestId(prefix + '-sections-expand-all').click()
         const shell = domain === 'sources' ? '.image-search-workspace' : '.media-search-workspace'
+        const centered = await page.locator(shell + ':visible').evaluate((el) => {
+          const bounds = el.getBoundingClientRect()
+          const parent = el.parentElement.getBoundingClientRect()
+          return {
+            width: bounds.width,
+            centerDelta: (bounds.left + bounds.right - parent.left - parent.right) / 2,
+          }
+        })
+        assert.ok(centered.width <= 1121, domain + ': matches the settings content width')
+        assert.ok(Math.abs(centered.centerDelta) < 2, domain + ': centered within the workspace')
         await page.waitForFunction(
           (selector) =>
             [...document.querySelectorAll(selector)].some(
@@ -679,6 +742,105 @@ async function run() {
       await page.screenshot({ path: path.join(evidence, `alpha-footer-${width}.png`) })
       await summary.press('Escape')
       await popup.waitFor({ state: 'hidden' })
+    }
+    for (const viewport of [
+      { width: 946, height: 905 },
+      { width: 946, height: 1326 },
+      { width: 760, height: 1180 },
+      { width: 540, height: 960 },
+    ]) {
+      await page.setViewportSize(viewport)
+      for (const domain of [
+        'image-search',
+        'video-search',
+        'library',
+        'sources',
+        'video-indexing',
+        'settings',
+      ]) {
+        await go(domain)
+        assert.ok(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+          domain + ': no portrait overflow',
+        )
+        if (domain.endsWith('-search')) {
+          if (domain === 'image-search') {
+            const pane = page.locator('.image-search-control-pane:visible')
+            const diagnostics = pane.locator('.search-diagnostics-controls')
+            await diagnostics.evaluate((el) => {
+              el.open = true
+            })
+            const action = diagnostics.locator('button').nth(2)
+            await action.scrollIntoViewIfNeeded()
+            const reachable = await action.evaluate((el) => {
+              const rect = el.getBoundingClientRect()
+              const hit = document.elementFromPoint(
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2,
+              )
+              return hit === el || el.contains(hit)
+            })
+            assert.ok(reachable, 'diagnostic actions remain reachable after scrolling')
+            assert.ok(
+              await pane.evaluate((el) => el.scrollTop > 0),
+              'query controls actually scroll',
+            )
+            await diagnostics.evaluate((el) => {
+              el.open = false
+            })
+            await pane.evaluate((el) => {
+              el.scrollTop = 0
+            })
+          }
+          if (domain === 'video-search') {
+            await page.locator('.panel:visible').getByTestId('search-mode-simple').click()
+            if (viewport.width > 620) {
+              const form = page.locator('.media-search-query-controls:visible')
+              const semantic = await form.locator('.search-text-controls').boundingBox()
+              const options = await form.locator('.search-options-grid').boundingBox()
+              assert.ok(
+                Math.abs(semantic.x - options.x) < 2,
+                'video result count aligns with semantic input',
+              )
+              assert.ok(
+                options.y >= semantic.y + semantic.height,
+                'video result count sits below semantic input',
+              )
+            }
+          }
+          const prefix = domain === 'image-search' ? 'image-search' : 'media-search'
+          const control = await page.locator(`.${prefix}-control-pane:visible`).boundingBox()
+          const result = await page.locator(`.${prefix}-results-pane:visible`).boundingBox()
+          assert.ok(control.height < viewport.height * 0.34, domain + ': compact portrait controls')
+          assert.ok(
+            result.height > viewport.height * 0.45,
+            domain + ': results retain most of the height',
+          )
+        }
+        await page.screenshot({
+          path: path.join(evidence, `portrait-${domain}-${viewport.width}.png`),
+        })
+      }
+    }
+    for (const width of [1099, 1100, 1101, 1137, 1199, 1200, 1201]) {
+      await page.setViewportSize({ width, height: 900 })
+      for (const domain of ['image-search', 'video-search']) {
+        await go(domain)
+        const prefix = domain === 'image-search' ? 'image-search' : 'media-search'
+        const controls = await page.locator(`.${prefix}-control-pane:visible`).boundingBox()
+        const results = await page.locator(`.${prefix}-results-pane:visible`).boundingBox()
+        if (width < 1200) {
+          assert.ok(
+            Math.abs(controls.width - results.width) < 3,
+            `${domain} ${width}: stacked controls fill the width`,
+          )
+          assert.ok(controls.y + controls.height <= results.y + 1)
+        } else {
+          assert.ok(controls.x + controls.width <= results.x, `${domain} ${width}: side by side`)
+        }
+      }
+      if (width === 1137)
+        await page.screenshot({ path: path.join(evidence, 'search-breakpoint-1137.png') })
     }
     assert.deepEqual(errors, [])
     const report = {

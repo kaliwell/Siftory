@@ -1,3 +1,4 @@
+import AssetLibraryControls from './AssetLibraryControls'
 import React from 'react'
 import type { AssetLibrarySuggestionItem } from '../../../shared/ipc-contract'
 import AssetLibrarySuggestionGrid from '../AssetLibrarySuggestionGrid'
@@ -64,46 +65,48 @@ const AssetLibrarySuggestionsView: React.FC<AssetLibrarySuggestionsViewProps> = 
   const { t } = useTranslation()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div
-        style={{
-          display: 'flex',
-          gap: 5,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          padding: '4px 0',
-        }}
-      >
-        {STATUS_TABS.map(([id, label]) => (
-          <button
-            key={id}
-            aria-pressed={status === id}
-            onClick={() => onStatusChange(id)}
-            style={{
-              ...assetLibraryButtonStyle,
-              borderColor: status === id ? 'rgb(85,220,160)' : 'rgba(var(--date),0.28)',
-              color: status === id ? 'rgb(85,220,160)' : undefined,
-              background: status === id ? 'rgba(85,220,160,0.1)' : undefined,
-            }}
-          >
-            {t(label)}
-          </button>
-        ))}
-        <select
-          value={source}
-          onChange={(event) => onSourceChange(event.target.value as AssetSuggestionSource)}
-          style={assetLibraryInputStyle}
+      <AssetLibraryControls>
+        <div
+          style={{
+            display: 'flex',
+            gap: 5,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            padding: '4px 0',
+          }}
         >
-          <option value="all">{t('All sources')}</option>
-          <option value="reference_image">{t('Reference image')}</option>
-          <option value="text_label">{t('Text label')}</option>
-        </select>
-        <button onClick={onRefresh} style={assetLibraryButtonStyle}>
-          {t('Refresh')}
-        </button>
-        <span style={{ fontSize: 9, opacity: 0.6 }}>
-          {formatAssetLibraryNumber(total)} {t('results')}
-        </span>
-      </div>
+          {STATUS_TABS.map(([id, label]) => (
+            <button
+              key={id}
+              aria-pressed={status === id}
+              onClick={() => onStatusChange(id)}
+              style={{
+                ...assetLibraryButtonStyle,
+                borderColor: status === id ? 'rgb(85,220,160)' : 'rgba(var(--date),0.28)',
+                color: status === id ? 'rgb(85,220,160)' : undefined,
+                background: status === id ? 'rgba(85,220,160,0.1)' : undefined,
+              }}
+            >
+              {t(label)}
+            </button>
+          ))}
+          <select
+            value={source}
+            onChange={(event) => onSourceChange(event.target.value as AssetSuggestionSource)}
+            style={assetLibraryInputStyle}
+          >
+            <option value="all">{t('All sources')}</option>
+            <option value="reference_image">{t('Reference image')}</option>
+            <option value="text_label">{t('Text label')}</option>
+          </select>
+          <button onClick={onRefresh} style={assetLibraryButtonStyle}>
+            {t('Refresh')}
+          </button>
+          <span style={{ fontSize: 9, opacity: 0.6 }}>
+            {formatAssetLibraryNumber(total)} {t('results')}
+          </span>
+        </div>
+      </AssetLibraryControls>
       <AssetLibrarySuggestionGrid
         items={items}
         resetToken={`${status}:${source}:${offset}`}

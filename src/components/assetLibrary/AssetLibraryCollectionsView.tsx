@@ -1,3 +1,4 @@
+import AssetLibraryControls from './AssetLibraryControls'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AssetCollectionItem } from '../../../shared/ipc-contract'
 import { useAssetCollections } from '../../hooks/useAssetCollections'
@@ -123,102 +124,104 @@ export default function AssetLibraryCollectionsView({
   }
   return (
     <section className="asset-library-collections" data-testid="asset-library-collections-view">
-      <div className="asset-library-collection-toolbar">
-        <select
-          data-testid="collection-browse-select"
-          aria-label={t('Choose collection')}
-          disabled={busy}
-          value={collectionId}
-          onChange={(event) => changeCollection(Number(event.target.value))}
-        >
-          <option value={0}>{t('Choose collection')}</option>
-          {collections.map((collection) => (
-            <option key={collection.id} value={collection.id}>
-              {collection.name}
-            </option>
-          ))}
-        </select>
-        <button
-          data-testid="collection-create"
-          onClick={() => setCreating((value) => !value)}
-          disabled={busy}
-        >
-          {t('New collection')}
-        </button>
-        <button onClick={() => void load()} disabled={busy || loading}>
-          {t('Refresh')}
-        </button>
-        <button onClick={onBrowseAssets} disabled={busy}>
-          {t('Browse assets to collect')}
-        </button>
-      </div>
-      {creating && (
-        <AssetCollectionCreateForm
-          onCancel={() => setCreating(false)}
-          onCreated={async (collection) => {
-            await refreshCollections()
-            changeCollection(collection.id)
-            setCreating(false)
-          }}
-        />
-      )}
-      <div className="asset-library-query-bar">
-        <input
-          data-testid="collection-filter-query"
-          aria-label={t('Find in collection')}
-          placeholder={t('Find in collection')}
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value)
-            setPage(0)
-            setSelected(new Set())
-          }}
-        />
-        <select
-          aria-label={t('Media type')}
-          value={kind}
-          onChange={(event) => {
-            setKind(event.target.value)
-            setPage(0)
-            setSelected(new Set())
-          }}
-        >
-          <option value="all">{t('All media types')}</option>
-          <option value="image">{t('Images')}</option>
-          <option value="video">{t('Videos and frames')}</option>
-        </select>
-        <span>{t('{count} items', { count: filtered.length })}</span>
-      </div>
-      {(error || collectionsError) && (
-        <div role="alert" className="asset-library-error">
-          {error || t(collectionsError)}
-          <button
-            onClick={() =>
-              void refreshCollections()
-                .then(load)
-                .catch(() => {})
-            }
-          >
-            {t('Retry')}
-          </button>
-        </div>
-      )}
-      {selected.size > 0 && (
-        <div className="asset-library-selection-bar">
-          <strong>{t('{count} selected', { count: selected.size })}</strong>
-          <button
-            data-testid="collection-remove-selected"
+      <AssetLibraryControls>
+        <div className="asset-library-collection-toolbar">
+          <select
+            data-testid="collection-browse-select"
+            aria-label={t('Choose collection')}
             disabled={busy}
-            onClick={() => void removeSelected()}
+            value={collectionId}
+            onChange={(event) => changeCollection(Number(event.target.value))}
           >
-            {t('Remove from collection')}
+            <option value={0}>{t('Choose collection')}</option>
+            {collections.map((collection) => (
+              <option key={collection.id} value={collection.id}>
+                {collection.name}
+              </option>
+            ))}
+          </select>
+          <button
+            data-testid="collection-create"
+            onClick={() => setCreating((value) => !value)}
+            disabled={busy}
+          >
+            {t('New collection')}
           </button>
-          <span>{t('Original files are kept.')}</span>
-          <button disabled={busy} onClick={() => setSelected(new Set())}>
-            {t('Clear selection')}
+          <button onClick={() => void load()} disabled={busy || loading}>
+            {t('Refresh')}
+          </button>
+          <button onClick={onBrowseAssets} disabled={busy}>
+            {t('Browse assets to collect')}
           </button>
         </div>
-      )}
+        {creating && (
+          <AssetCollectionCreateForm
+            onCancel={() => setCreating(false)}
+            onCreated={async (collection) => {
+              await refreshCollections()
+              changeCollection(collection.id)
+              setCreating(false)
+            }}
+          />
+        )}
+        <div className="asset-library-query-bar">
+          <input
+            data-testid="collection-filter-query"
+            aria-label={t('Find in collection')}
+            placeholder={t('Find in collection')}
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setPage(0)
+              setSelected(new Set())
+            }}
+          />
+          <select
+            aria-label={t('Media type')}
+            value={kind}
+            onChange={(event) => {
+              setKind(event.target.value)
+              setPage(0)
+              setSelected(new Set())
+            }}
+          >
+            <option value="all">{t('All media types')}</option>
+            <option value="image">{t('Images')}</option>
+            <option value="video">{t('Videos and frames')}</option>
+          </select>
+          <span>{t('{count} items', { count: filtered.length })}</span>
+        </div>
+        {(error || collectionsError) && (
+          <div role="alert" className="asset-library-error">
+            {error || t(collectionsError)}
+            <button
+              onClick={() =>
+                void refreshCollections()
+                  .then(load)
+                  .catch(() => {})
+              }
+            >
+              {t('Retry')}
+            </button>
+          </div>
+        )}
+        {selected.size > 0 && (
+          <div className="asset-library-selection-bar">
+            <strong>{t('{count} selected', { count: selected.size })}</strong>
+            <button
+              data-testid="collection-remove-selected"
+              disabled={busy}
+              onClick={() => void removeSelected()}
+            >
+              {t('Remove from collection')}
+            </button>
+            <span>{t('Original files are kept.')}</span>
+            <button disabled={busy} onClick={() => setSelected(new Set())}>
+              {t('Clear selection')}
+            </button>
+          </div>
+        )}
+      </AssetLibraryControls>
       {loading || !visible.length ? (
         <div className="asset-library-empty">
           <strong>

@@ -184,16 +184,15 @@ Siftory（寻藏）是一个面向 Windows 的本地优先 AI 媒体搜索与素
 
 ### 4.5 全局快捷键
 
-| 快捷键             | 功能                           |
-| ------------------ | ------------------------------ |
-| `Ctrl+Shift+Alt+R` | 隐藏或恢复工作区（主快捷键）   |
-| `Ctrl+Shift+Alt+Q` | 隐藏或恢复工作区（兼容快捷键） |
-| `Ctrl+Shift+Alt+P` | 将面板吸附回屏幕工作区         |
-| `Ctrl+Shift+Alt+S` | 显示全部面板                   |
-| `Shift+Alt+Q`      | 横向排列                       |
-| `Shift+Alt+W`      | 网格排列                       |
-| `Shift+Alt+E`      | 纵向排列                       |
-| `Shift+Escape`     | 退出应用                       |
+| 快捷键             | 功能                                           |
+| ------------------ | ---------------------------------------------- |
+| `Ctrl+Shift+Alt+Q` | 隐藏或恢复工作区（默认组合，可在设置中自定义） |
+| `Ctrl+Shift+Alt+P` | 将面板吸附回屏幕工作区                         |
+| `Ctrl+Shift+Alt+S` | 显示全部面板                                   |
+| `Shift+Alt+Q`      | 横向排列                                       |
+| `Shift+Alt+W`      | 网格排列                                       |
+| `Shift+Alt+E`      | 纵向排列                                       |
+| `Shift+Escape`     | 退出应用                                       |
 
 快捷键可在 `Settings > System` 注册或注销。如果快捷键被其他软件占用，界面会显示注册失败提示。
 
@@ -1025,7 +1024,7 @@ npm.cmd run models:video:verify
 
 ### 20.1 面板看不到
 
-1. 按 `Ctrl+Shift+Alt+R` 尝试恢复全局可见状态；旧版用户也可暂用兼容键 `Ctrl+Shift+Alt+Q`。
+1. 按 `Ctrl+Shift+Alt+Q` 尝试恢复全局可见状态；如已自定义组合，请使用保存的快捷键。
 2. 按 `Ctrl+Shift+Alt+P` 把面板吸附回工作区。
 3. 打开 `Settings > Layout` 检查对应面板是否启用。
 4. 按 `Ctrl+Shift+Alt+S` 显示全部面板。

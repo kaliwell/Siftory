@@ -4,9 +4,43 @@ const path = require('node:path')
 const test = require('node:test')
 
 const { loadTsModule } = require('./guard-utils.cjs')
-const { buildSourceHealthItems } = loadTsModule('src/services/sourceHealth.ts')
+const { buildSourceHealthItems, groupSourceHealthItems } = loadTsModule(
+  'src/services/sourceHealth.ts',
+)
 
 const ROOT = path.resolve(__dirname, '..')
+
+test('drive groups preserve source identities, offline state and source order', () => {
+  const items = [
+    { id: 'd', type: 'local-ntfs', displayLocator: 'd:/materials' },
+    { id: 'c', type: 'local-ntfs', displayLocator: 'C:\\fixtures' },
+    { id: 'unc', type: 'mounted-network', displayLocator: '\\\\server\\share' },
+    { id: 'remote', type: 'sftp', displayLocator: 'C:/remote-path' },
+    {
+      id: 'extended',
+      type: 'removable',
+      displayLocator: '\\\\?\\D:\\archive',
+      availability: 'offline',
+    },
+    { id: 'other', type: 'nas-agent', displayLocator: '/mnt/media' },
+  ]
+  const groups = groupSourceHealthItems(items)
+  assert.deepEqual(
+    groups.map((group) => group.key),
+    ['C:', 'D:', 'Other', 'SFTP', 'UNC'],
+  )
+  assert.deepEqual(
+    groups[1].sources.map((item) => item.id),
+    ['extended', 'd'],
+  )
+  assert.equal(groups[1].sources[0], items[4])
+  assert.equal(groups[1].sources[0].availability, 'offline')
+  assert.deepEqual(
+    items.map((item) => item.id),
+    ['d', 'c', 'unc', 'remote', 'extended', 'other'],
+  )
+  assert.deepEqual(groupSourceHealthItems([]), [])
+})
 
 function source(overrides = {}) {
   return {
@@ -24,6 +58,22 @@ function source(overrides = {}) {
     ...overrides,
   }
 }
+
+test('directories sort parent-first with natural numeric folder names', () => {
+  const items = buildSourceHealthItems(
+    [
+      source({ id: '10', rootLocator: 'D:/materials/10' }),
+      source({ id: 'child', rootLocator: 'd:\\materials\\2\\child' }),
+      source({ id: 'root', rootLocator: 'D:/materials' }),
+      source({ id: '2', rootLocator: 'D:/materials/2' }),
+    ],
+    {},
+  )
+  assert.deepEqual(
+    groupSourceHealthItems(items)[0].sources.map((item) => item.id),
+    ['root', '2', 'child', '10'],
+  )
+})
 
 test('source health preserves last success and exposes a non-mutating probe action', () => {
   const [item] = buildSourceHealthItems([source()], {})

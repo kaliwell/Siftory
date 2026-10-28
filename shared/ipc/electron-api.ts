@@ -225,8 +225,10 @@ export interface ElectronAPI {
     onError: (cb: (message: string) => void) => () => void
   }
   setTransparency: (opacity: number) => Promise<void>
+  setHotkeyRecording: (active: boolean) => Promise<boolean>
+  onHotkeyRecorded: (callback: (accelerator: string) => void) => () => void
   getHotkeyStatus: () => Promise<GlobalHotkeyStatus>
-  registerHotkey: () => Promise<GlobalHotkeyStatus>
+  registerHotkey: (accelerator?: string) => Promise<GlobalHotkeyStatus>
   unregisterHotkey: () => Promise<void>
   loadSettings: () => Promise<AppSettingsData | null>
   saveSettings: (settings: Partial<AppSettingsData>) => Promise<void>

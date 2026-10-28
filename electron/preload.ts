@@ -58,8 +58,15 @@ const api: ElectronAPI = {
     },
   },
   setTransparency: (opacity) => ipcRenderer.invoke('set-transparency', opacity),
+  setHotkeyRecording: (active: boolean) => ipcRenderer.invoke('set-hotkey-recording', active),
+  onHotkeyRecorded: (callback: (accelerator: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, accelerator: string) =>
+      callback(accelerator)
+    ipcRenderer.on('hotkey-recorded', handler)
+    return () => ipcRenderer.removeListener('hotkey-recorded', handler)
+  },
   getHotkeyStatus: () => ipcRenderer.invoke('get-hotkey-status'),
-  registerHotkey: () => ipcRenderer.invoke('register-hotkey'),
+  registerHotkey: (accelerator?: string) => ipcRenderer.invoke('register-hotkey', accelerator),
   unregisterHotkey: () => ipcRenderer.invoke('unregister-hotkey'),
   loadSettings: () => ipcRenderer.invoke('load-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),

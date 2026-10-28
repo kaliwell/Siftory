@@ -15,6 +15,9 @@ import { useStore } from '../stores/useStore'
 import { useLinkedMove } from '../hooks/useLinkedMove'
 import { DEFAULT_ASSET_LIBRARY_H, DEFAULT_ASSET_LIBRARY_W } from '../types'
 import DraggablePanel from './DraggablePanel'
+import AssetLibraryControls, {
+  AssetLibraryControlsTarget,
+} from './assetLibrary/AssetLibraryControls'
 import AssetLibraryBackupView from './assetLibrary/AssetLibraryBackupView'
 import AssetLibraryAssetsView from './assetLibrary/AssetLibraryAssetsView'
 import AssetLibraryCollectionsView from './assetLibrary/AssetLibraryCollectionsView'
@@ -59,6 +62,7 @@ const AssetLibraryPanel: React.FC = () => {
   const handleMove = useLinkedMove('assetLibrary', assetLibraryPos, setAssetLibraryPos, linkedMove)
 
   const [view, setView] = useState<ViewMode>('library')
+  const [controlsTarget, setControlsTarget] = useState<HTMLDivElement | null>(null)
   const [collectionsOpen, setCollectionsOpen] = useState(false)
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('assets')
   const [reviewMode, setReviewMode] = useState<ReviewMode>('suggestions')
@@ -1012,107 +1016,111 @@ const AssetLibraryPanel: React.FC = () => {
 
   const renderClusters = () => (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <AssetLibraryClusterControls
-        rows={rows}
-        activeTask={activeTask}
-        totalAssets={stats.totalAssets}
-        clusterTotal={clusters.length}
-        clusteredAssetCount={clusteredAssetCount}
-        selectedClusterCount={selectedClusterIds.size}
-        categoryId={clusterCategoryId}
-        categoryTopK={clusterCategoryTopK}
-        categoryMinScore={clusterCategoryMinScore}
-        categoryIncludeReviewed={clusterCategoryIncludeReviewed}
-        autoCount={clusterAutoCount}
-        count={clusterCount}
-        minSize={clusterMinSize}
-        minSimilarity={clusterMinSimilarity}
-        semanticRefine={clusterSemanticRefine}
-        semanticSimilarity={clusterSemanticSimilarity}
-        semanticMaxSplits={clusterSemanticMaxSplits}
-        typeFilter={clusterTypeFilter}
-        scopePaths={clusterScopePaths}
-        onCategoryIdChange={setClusterCategoryId}
-        onCategoryTopKChange={setClusterCategoryTopK}
-        onCategoryMinScoreChange={setClusterCategoryMinScore}
-        onCategoryIncludeReviewedChange={setClusterCategoryIncludeReviewed}
-        onAutoCountChange={setClusterAutoCount}
-        onCountChange={setClusterCount}
-        onMinSizeChange={setClusterMinSize}
-        onMinSimilarityChange={setClusterMinSimilarity}
-        onSemanticRefineChange={setClusterSemanticRefine}
-        onSemanticSimilarityChange={setClusterSemanticSimilarity}
-        onSemanticMaxSplitsChange={setClusterSemanticMaxSplits}
-        onTypeFilterChange={setClusterTypeFilter}
-        onBuildCategoryGroup={() =>
-          void runTask(() =>
-            window.electronAPI.assetLibrary.buildCategoryCluster({
-              categoryId: clusterCategoryId,
-              topK: clusterCategoryTopK,
-              minScore: clusterCategoryMinScore,
-              includeReviewed: clusterCategoryIncludeReviewed,
-              ...(clusterScopePaths.length > 0 ? { scopePaths: clusterScopePaths } : {}),
-            }),
-          )
-        }
-        onBuildClusters={() =>
-          void runTask(() =>
-            window.electronAPI.assetLibrary.buildClusters({
-              maxClusters: clusterCount,
-              autoClusters: clusterAutoCount,
-              minClusterSize: clusterMinSize,
-              minSimilarity: clusterMinSimilarity,
-              semanticRefine: clusterSemanticRefine,
-              semanticSimilarity: clusterSemanticSimilarity,
-              semanticMaxSplits: clusterSemanticMaxSplits,
-              ...(clusterScopePaths.length > 0 ? { scopePaths: clusterScopePaths } : {}),
-            }),
-          )
-        }
-        onRefreshLabels={() =>
-          void runTask(() => window.electronAPI.assetLibrary.refreshClusterLabels())
-        }
-        onBuildPeopleGroups={() =>
-          void runTask(() =>
-            window.electronAPI.assetLibrary.buildPeopleClusters({
-              minClusterSize: 2,
-              ...(clusterScopePaths.length > 0 ? { scopePaths: clusterScopePaths } : {}),
-            }),
-          )
-        }
-        onBuildDuplicates={() =>
-          void runTask(() => window.electronAPI.assetLibrary.buildDuplicateGroups())
-        }
-        onBuildNearDuplicates={() =>
-          void runTask(() => window.electronAPI.assetLibrary.buildNearDuplicateGroups())
-        }
-        onMergeSelected={() =>
-          void runMutation(async () => {
-            const result = await window.electronAPI.assetLibrary.mergeClusters([
-              ...selectedClusterIds,
-            ])
-            if (!result.ok) throw new Error(result.error)
-            setSelectedClusterIds(new Set())
-            await loadClusters()
-          }, true)
-        }
-        onRefresh={() => void loadClusters()}
-        onSelectPaths={() =>
-          void (async () => {
-            try {
-              const result = await window.electronAPI.assetLibrary.selectClusterPaths()
-              if (result.canceled || result.paths.length === 0) return
-              setClusterScopePaths((current) => [...new Set([...current, ...result.paths])])
-            } catch (selectError) {
-              setError(errorMessage(selectError))
-            }
-          })()
-        }
-        onClearPaths={() => setClusterScopePaths([])}
-        onRemovePath={(scopePath) =>
-          setClusterScopePaths((current) => current.filter((candidate) => candidate !== scopePath))
-        }
-      />
+      <AssetLibraryControls>
+        <AssetLibraryClusterControls
+          rows={rows}
+          activeTask={activeTask}
+          totalAssets={stats.totalAssets}
+          clusterTotal={clusters.length}
+          clusteredAssetCount={clusteredAssetCount}
+          selectedClusterCount={selectedClusterIds.size}
+          categoryId={clusterCategoryId}
+          categoryTopK={clusterCategoryTopK}
+          categoryMinScore={clusterCategoryMinScore}
+          categoryIncludeReviewed={clusterCategoryIncludeReviewed}
+          autoCount={clusterAutoCount}
+          count={clusterCount}
+          minSize={clusterMinSize}
+          minSimilarity={clusterMinSimilarity}
+          semanticRefine={clusterSemanticRefine}
+          semanticSimilarity={clusterSemanticSimilarity}
+          semanticMaxSplits={clusterSemanticMaxSplits}
+          typeFilter={clusterTypeFilter}
+          scopePaths={clusterScopePaths}
+          onCategoryIdChange={setClusterCategoryId}
+          onCategoryTopKChange={setClusterCategoryTopK}
+          onCategoryMinScoreChange={setClusterCategoryMinScore}
+          onCategoryIncludeReviewedChange={setClusterCategoryIncludeReviewed}
+          onAutoCountChange={setClusterAutoCount}
+          onCountChange={setClusterCount}
+          onMinSizeChange={setClusterMinSize}
+          onMinSimilarityChange={setClusterMinSimilarity}
+          onSemanticRefineChange={setClusterSemanticRefine}
+          onSemanticSimilarityChange={setClusterSemanticSimilarity}
+          onSemanticMaxSplitsChange={setClusterSemanticMaxSplits}
+          onTypeFilterChange={setClusterTypeFilter}
+          onBuildCategoryGroup={() =>
+            void runTask(() =>
+              window.electronAPI.assetLibrary.buildCategoryCluster({
+                categoryId: clusterCategoryId,
+                topK: clusterCategoryTopK,
+                minScore: clusterCategoryMinScore,
+                includeReviewed: clusterCategoryIncludeReviewed,
+                ...(clusterScopePaths.length > 0 ? { scopePaths: clusterScopePaths } : {}),
+              }),
+            )
+          }
+          onBuildClusters={() =>
+            void runTask(() =>
+              window.electronAPI.assetLibrary.buildClusters({
+                maxClusters: clusterCount,
+                autoClusters: clusterAutoCount,
+                minClusterSize: clusterMinSize,
+                minSimilarity: clusterMinSimilarity,
+                semanticRefine: clusterSemanticRefine,
+                semanticSimilarity: clusterSemanticSimilarity,
+                semanticMaxSplits: clusterSemanticMaxSplits,
+                ...(clusterScopePaths.length > 0 ? { scopePaths: clusterScopePaths } : {}),
+              }),
+            )
+          }
+          onRefreshLabels={() =>
+            void runTask(() => window.electronAPI.assetLibrary.refreshClusterLabels())
+          }
+          onBuildPeopleGroups={() =>
+            void runTask(() =>
+              window.electronAPI.assetLibrary.buildPeopleClusters({
+                minClusterSize: 2,
+                ...(clusterScopePaths.length > 0 ? { scopePaths: clusterScopePaths } : {}),
+              }),
+            )
+          }
+          onBuildDuplicates={() =>
+            void runTask(() => window.electronAPI.assetLibrary.buildDuplicateGroups())
+          }
+          onBuildNearDuplicates={() =>
+            void runTask(() => window.electronAPI.assetLibrary.buildNearDuplicateGroups())
+          }
+          onMergeSelected={() =>
+            void runMutation(async () => {
+              const result = await window.electronAPI.assetLibrary.mergeClusters([
+                ...selectedClusterIds,
+              ])
+              if (!result.ok) throw new Error(result.error)
+              setSelectedClusterIds(new Set())
+              await loadClusters()
+            }, true)
+          }
+          onRefresh={() => void loadClusters()}
+          onSelectPaths={() =>
+            void (async () => {
+              try {
+                const result = await window.electronAPI.assetLibrary.selectClusterPaths()
+                if (result.canceled || result.paths.length === 0) return
+                setClusterScopePaths((current) => [...new Set([...current, ...result.paths])])
+              } catch (selectError) {
+                setError(errorMessage(selectError))
+              }
+            })()
+          }
+          onClearPaths={() => setClusterScopePaths([])}
+          onRemovePath={(scopePath) =>
+            setClusterScopePaths((current) =>
+              current.filter((candidate) => candidate !== scopePath),
+            )
+          }
+        />
+      </AssetLibraryControls>
       <AssetLibraryClusterGrid
         clusters={clusters}
         filteredClusters={filteredClusters}
@@ -1238,102 +1246,111 @@ const AssetLibraryPanel: React.FC = () => {
           fontSize: 10,
         }}
       >
-        <AssetLibraryHeader
-          collectionsOpen={collectionsOpen}
-          categoriesOpen={view === 'library' && libraryMode === 'categories'}
-          onCollections={() => {
-            setCollectionsOpen(true)
-            setSelectedIds(new Set())
-            if (backupOpen) toggleBackups()
-          }}
-          onCategories={() => {
-            setCollectionsOpen(false)
-            selectTab('library')
-            setLibraryMode('categories')
-            if (backupOpen) toggleBackups()
-          }}
-          activeTask={activeTask}
-          backupOpen={backupOpen}
-          backupCount={backups.length}
-          view={view}
-          stats={stats}
-          feedbackStatus={feedbackStatus}
-          task={task}
-          error={error}
-          onSync={() =>
-            void runTask(() =>
-              window.electronAPI.assetLibrary.syncFromImageIndex(manifestPath || undefined),
-            )
-          }
-          onRefresh={() => {
-            void refreshBase()
-            if (view === 'library' && libraryMode === 'assets') void loadAssets()
-            if (view === 'review' && reviewMode === 'sampleSearch') void loadSampleSearchResults()
-            if (view === 'review' && reviewMode === 'similar') void loadSimilarSearchResults()
-            if (view === 'review' && reviewMode === 'suggestions') void loadSuggestions()
-            if (view === 'clusters') void loadClusters()
-          }}
-          onToggleBackups={toggleBackups}
-          onExportReport={() =>
-            void runMutation(async () => {
-              const result = await window.electronAPI.assetLibrary.exportLibraryReport()
-              if (result.canceled) return { ok: true }
-              if (!result.ok) throw new Error(result.error)
-              return result
-            }, true)
-          }
-          onRebuildLearning={() =>
-            void runTask(() => window.electronAPI.assetLibrary.rebuildFeedbackModel())
-          }
-          onLearningEnabledChange={(enabled) =>
-            void runMutation(async () => {
-              const nextStatus = await window.electronAPI.assetLibrary.setFeedbackEnabled(enabled)
-              setFeedbackStatus(nextStatus)
-            })
-          }
-          onStop={() => void window.electronAPI.assetLibrary.stopTask(task?.taskId)}
-          onViewChange={(next) => {
-            setCollectionsOpen(false)
-            setLibraryMode('assets')
-            selectTab(next)
-            if (backupOpen) toggleBackups()
-          }}
-        />
-        {backupOpen && (
-          <AssetLibraryBackupView
-            activeTask={activeTask}
-            backups={backups}
-            busy={backupBusy}
-            message={backupMessage}
-            passphrase={backupPassphrase}
-            passphraseConfirmation={backupPassphraseConfirmation}
-            restoreArmedId={backupRestoreArmed}
-            deleteArmedId={backupDeleteArmed}
-            verification={backupVerification}
-            onCreate={() => void createBackup()}
-            onRefresh={() => void loadBackups()}
-            onOpenFolder={() => void window.electronAPI.assetLibrary.openBackupFolder()}
-            onPassphraseChange={setBackupPassphrase}
-            onPassphraseConfirmationChange={setBackupPassphraseConfirmation}
-            onImport={() => void importBackup()}
-            onVerify={(backupId) => void verifyBackup(backupId)}
-            onExport={(backupId) => void exportBackup(backupId)}
-            onDelete={(backupId) => void deleteBackup(backupId)}
-            onRestore={(backupId) => void restoreBackup(backupId)}
-          />
-        )}
-        {!backupOpen && collectionsOpen && (
-          <AssetLibraryCollectionsView
-            onBrowseAssets={() => {
-              setCollectionsOpen(false)
-              setLibraryMode('assets')
-              selectTab('library')
-            }}
-          />
-        )}
-        {!backupOpen && !collectionsOpen && view === 'library' && renderLibrary()}
-        {!backupOpen && !collectionsOpen && view === 'review' && renderReview()}
-        {!backupOpen && !collectionsOpen && view === 'clusters' && renderClusters()}
+        <AssetLibraryControlsTarget.Provider value={controlsTarget}>
+          <aside className="asset-library-sidebar" data-testid="asset-library-sidebar">
+            <AssetLibraryHeader
+              collectionsOpen={collectionsOpen}
+              categoriesOpen={view === 'library' && libraryMode === 'categories'}
+              onCollections={() => {
+                setCollectionsOpen(true)
+                setSelectedIds(new Set())
+                if (backupOpen) toggleBackups()
+              }}
+              onCategories={() => {
+                setCollectionsOpen(false)
+                selectTab('library')
+                setLibraryMode('categories')
+                if (backupOpen) toggleBackups()
+              }}
+              activeTask={activeTask}
+              backupOpen={backupOpen}
+              backupCount={backups.length}
+              view={view}
+              stats={stats}
+              feedbackStatus={feedbackStatus}
+              task={task}
+              error={error}
+              onSync={() =>
+                void runTask(() =>
+                  window.electronAPI.assetLibrary.syncFromImageIndex(manifestPath || undefined),
+                )
+              }
+              onRefresh={() => {
+                void refreshBase()
+                if (view === 'library' && libraryMode === 'assets') void loadAssets()
+                if (view === 'review' && reviewMode === 'sampleSearch')
+                  void loadSampleSearchResults()
+                if (view === 'review' && reviewMode === 'similar') void loadSimilarSearchResults()
+                if (view === 'review' && reviewMode === 'suggestions') void loadSuggestions()
+                if (view === 'clusters') void loadClusters()
+              }}
+              onToggleBackups={toggleBackups}
+              onExportReport={() =>
+                void runMutation(async () => {
+                  const result = await window.electronAPI.assetLibrary.exportLibraryReport()
+                  if (result.canceled) return { ok: true }
+                  if (!result.ok) throw new Error(result.error)
+                  return result
+                }, true)
+              }
+              onRebuildLearning={() =>
+                void runTask(() => window.electronAPI.assetLibrary.rebuildFeedbackModel())
+              }
+              onLearningEnabledChange={(enabled) =>
+                void runMutation(async () => {
+                  const nextStatus =
+                    await window.electronAPI.assetLibrary.setFeedbackEnabled(enabled)
+                  setFeedbackStatus(nextStatus)
+                })
+              }
+              onStop={() => void window.electronAPI.assetLibrary.stopTask(task?.taskId)}
+              onViewChange={(next) => {
+                setCollectionsOpen(false)
+                setLibraryMode('assets')
+                selectTab(next)
+                if (backupOpen) toggleBackups()
+              }}
+            />
+            <div ref={setControlsTarget} className="asset-library-view-controls" />
+          </aside>
+          <main className="asset-library-content" data-testid="asset-library-content">
+            {backupOpen && (
+              <AssetLibraryBackupView
+                activeTask={activeTask}
+                backups={backups}
+                busy={backupBusy}
+                message={backupMessage}
+                passphrase={backupPassphrase}
+                passphraseConfirmation={backupPassphraseConfirmation}
+                restoreArmedId={backupRestoreArmed}
+                deleteArmedId={backupDeleteArmed}
+                verification={backupVerification}
+                onCreate={() => void createBackup()}
+                onRefresh={() => void loadBackups()}
+                onOpenFolder={() => void window.electronAPI.assetLibrary.openBackupFolder()}
+                onPassphraseChange={setBackupPassphrase}
+                onPassphraseConfirmationChange={setBackupPassphraseConfirmation}
+                onImport={() => void importBackup()}
+                onVerify={(backupId) => void verifyBackup(backupId)}
+                onExport={(backupId) => void exportBackup(backupId)}
+                onDelete={(backupId) => void deleteBackup(backupId)}
+                onRestore={(backupId) => void restoreBackup(backupId)}
+              />
+            )}
+            {!backupOpen && collectionsOpen && (
+              <AssetLibraryCollectionsView
+                onBrowseAssets={() => {
+                  setCollectionsOpen(false)
+                  setLibraryMode('assets')
+                  selectTab('library')
+                }}
+              />
+            )}
+            {!backupOpen && !collectionsOpen && view === 'library' && renderLibrary()}
+            {!backupOpen && !collectionsOpen && view === 'review' && renderReview()}
+            {!backupOpen && !collectionsOpen && view === 'clusters' && renderClusters()}
+          </main>
+        </AssetLibraryControlsTarget.Provider>
       </div>
     </DraggablePanel>
   )

@@ -8,6 +8,47 @@ import type {
 } from '../../shared/ipc-contract'
 
 export type SourceHealthPrimaryAction = 'probe' | 'reconnect'
+const directoryOrder = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+const directoryParts = (path: string) =>
+  path
+    .replace(/^\\\\\?\\/, '')
+    .replace(/\\/g, '/')
+    .split('/')
+function compareSourceDirectories(a: SourceHealthItem, b: SourceHealthItem) {
+  const left = directoryParts(a.displayLocator)
+  const right = directoryParts(b.displayLocator)
+  for (let i = 0; i < Math.min(left.length, right.length); i++) {
+    const order = directoryOrder.compare(left[i], right[i])
+    if (order) return order
+  }
+  return left.length - right.length || directoryOrder.compare(a.id, b.id)
+}
+
+export function groupSourceHealthItems(items: readonly SourceHealthItem[]) {
+  const groups = new Map<string, SourceHealthItem[]>()
+  for (const item of items) {
+    const locator = item.displayLocator.replace(/^\\\\\?\\/, '')
+    const drive = /^([a-z]):[\\/]/i.exec(locator)
+    const key =
+      item.type === 'sftp'
+        ? 'SFTP'
+        : drive
+          ? `${drive[1].toUpperCase()}:`
+          : /^(?:\\\\|\/\/|UNC\\)/i.test(locator)
+            ? 'UNC'
+            : 'Other'
+    const group = groups.get(key) ?? []
+    group.push(item)
+    groups.set(key, group)
+  }
+  return [...groups]
+    .sort(([a], [b]) => {
+      const driveA = /^[A-Z]:$/.test(a)
+      const driveB = /^[A-Z]:$/.test(b)
+      return driveA !== driveB ? (driveA ? -1 : 1) : a.localeCompare(b)
+    })
+    .map(([key, sources]) => ({ key, sources: sources.sort(compareSourceDirectories) }))
+}
 
 export interface SourceHealthItem {
   id: string

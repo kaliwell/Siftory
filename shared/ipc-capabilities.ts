@@ -24,6 +24,7 @@ const CORE_CHANNELS = new Set([
   'set-ignore-mouse',
   'set-overlay-shape',
   'get-hotkey-status',
+  'set-hotkey-recording',
   'register-hotkey',
   'unregister-hotkey',
   'load-settings',

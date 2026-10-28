@@ -1,3 +1,4 @@
+import { validateVisibilityHotkey } from '../shared/globalHotkey'
 import { secureIpcMain } from './ipcAuthorization'
 import { app, clipboard, dialog, globalShortcut, shell, type BrowserWindow } from 'electron'
 import path from 'path'
@@ -91,8 +92,7 @@ export async function flushWindowVisibilityDiagnostics(): Promise<void> {
 }
 
 const hotkeyEntries: GlobalHotkeyEntry[] = [
-  { id: 'toggle-primary', accelerator: 'CommandOrControl+Shift+Alt+R', status: 'disabled' },
-  { id: 'toggle-legacy', accelerator: 'CommandOrControl+Shift+Alt+Q', status: 'disabled' },
+  { id: 'toggle-primary', accelerator: 'CommandOrControl+Shift+Alt+Q', status: 'disabled' },
   { id: 'snap-panels', accelerator: 'CommandOrControl+Shift+Alt+P', status: 'disabled' },
   { id: 'show-all', accelerator: 'CommandOrControl+Shift+Alt+S', status: 'disabled' },
   { id: 'arrange-row', accelerator: 'Shift+Alt+Q', status: 'disabled' },
@@ -101,11 +101,13 @@ const hotkeyEntries: GlobalHotkeyEntry[] = [
   { id: 'quit', accelerator: 'Shift+Escape', status: 'disabled' },
 ]
 
+let hotkeyConfigurationError: string | undefined
 function hotkeyStatus(): GlobalHotkeyStatus {
   const entries = hotkeyEntries.map((entry) => ({ ...entry }))
   return {
     active: entries.some((entry) => entry.id === 'toggle-primary' && entry.status === 'registered'),
     entries,
+    ...(hotkeyConfigurationError ? { error: hotkeyConfigurationError } : {}),
   }
 }
 
@@ -399,12 +401,30 @@ function getConfigPath(userDataPath: string): string {
   return path.join(userDataPath, 'clock_config.json')
 }
 
-export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyStatus {
-  const failures: string[] = []
-  const { getMainWindow, getWorkArea } = options
+let hotkeyConfigLoaded = false
+let hotkeyRecordingUntil = 0
+const reservedHotkeys = () =>
+  hotkeyEntries.filter((entry) => entry.id !== 'toggle-primary').map((entry) => entry.accelerator)
+function guardedHotkey(options: AppCoreIpcOptions, accelerator: string, action: () => void) {
+  return () => {
+    const window = options.getMainWindow()
+    if (
+      hotkeyRecordingUntil > Date.now() &&
+      window &&
+      !window.isDestroyed() &&
+      window.isFocused()
+    ) {
+      window.webContents.send('hotkey-recorded', accelerator)
+      return
+    }
+    hotkeyRecordingUntil = 0
+    action()
+  }
+}
+function createVisibilityHotkey(options: AppCoreIpcOptions) {
   let lastGlobalToggleAt = 0
 
-  const toggleWindow = () => {
+  return () => {
     const now = Date.now()
     const repeated = now - lastGlobalToggleAt < 350
     lastGlobalToggleAt = now
@@ -414,6 +434,23 @@ export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyS
     }
     setGlobalWindowVisibility(options, !visibilityMachine.wantsVisible(), 'hotkey')
   }
+}
+
+export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyStatus {
+  if (!hotkeyConfigLoaded) {
+    hotkeyConfigLoaded = true
+    const saved = readJSON(path.join(options.userDataPath, 'global_hotkeys.json')) as {
+      visibility?: unknown
+    } | null
+    if (saved?.visibility !== undefined) {
+      const result = validateVisibilityHotkey(saved.visibility, reservedHotkeys())
+      if (result.accelerator) hotkeyEntries[0].accelerator = result.accelerator
+      else hotkeyConfigurationError = 'Saved shortcut was reset because it is invalid or conflicts.'
+    }
+  }
+  const failures: string[] = []
+  const { getMainWindow, getWorkArea } = options
+  const toggleWindow = createVisibilityHotkey(options)
   const callbacks: Record<GlobalHotkeyId, () => void> = {
     'toggle-primary': toggleWindow,
     'toggle-legacy': toggleWindow,
@@ -441,12 +478,20 @@ export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyS
 
   for (const entry of hotkeyEntries) {
     if (globalShortcut.isRegistered(entry.accelerator)) {
-      entry.status = 'registered'
-      recordVisibility('hotkey-registered', { hotkey: entry.id })
+      if (entry.status !== 'registered') {
+        entry.status = 'conflicted'
+        failures.push(`${entry.accelerator} (${entry.id})`)
+      }
+      recordVisibility(entry.status === 'registered' ? 'hotkey-registered' : 'hotkey-conflicted', {
+        hotkey: entry.id,
+      })
       continue
     }
     try {
-      const registered = globalShortcut.register(entry.accelerator, callbacks[entry.id])
+      const registered = globalShortcut.register(
+        entry.accelerator,
+        guardedHotkey(options, entry.accelerator, callbacks[entry.id]),
+      )
       entry.status = registered ? 'registered' : 'conflicted'
       recordVisibility(registered ? 'hotkey-registered' : 'hotkey-conflicted', { hotkey: entry.id })
     } catch {
@@ -675,8 +720,50 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
     return hotkeyStatus()
   })
 
-  secureIpcMain.handle('register-hotkey', () => {
-    return registerGlobalHotkeys(options)
+  secureIpcMain.handle('set-hotkey-recording', (event, active: unknown) => {
+    const window = options.getMainWindow()
+    if (
+      typeof active !== 'boolean' ||
+      !window ||
+      window.isDestroyed() ||
+      event.sender.id !== window.webContents.id
+    )
+      return false
+    hotkeyRecordingUntil = active && window.isFocused() ? Date.now() + 30000 : 0
+    return hotkeyRecordingUntil > 0
+  })
+
+  secureIpcMain.handle('register-hotkey', (_event, rawAccelerator?: unknown) => {
+    if (rawAccelerator === undefined) return registerGlobalHotkeys(options)
+    const validation = validateVisibilityHotkey(rawAccelerator, reservedHotkeys())
+    if (!validation.accelerator) return { ...hotkeyStatus(), error: validation.error }
+    const next = validation.accelerator
+    const primary = hotkeyEntries[0]
+    const previous = primary.accelerator
+    const alreadyActive = next === previous && primary.status === 'registered'
+    if (!alreadyActive) {
+      try {
+        if (
+          globalShortcut.isRegistered(next) ||
+          !globalShortcut.register(
+            next,
+            guardedHotkey(options, next, createVisibilityHotkey(options)),
+          )
+        )
+          return { ...hotkeyStatus(), error: 'Shortcut conflicts' }
+      } catch {
+        return { ...hotkeyStatus(), error: 'Invalid shortcut' }
+      }
+    }
+    if (!writeJSON(path.join(options.userDataPath, 'global_hotkeys.json'), { visibility: next })) {
+      if (!alreadyActive) globalShortcut.unregister(next)
+      return { ...hotkeyStatus(), error: 'Could not save shortcut' }
+    }
+    if (next !== previous && primary.status === 'registered') globalShortcut.unregister(previous)
+    primary.accelerator = next
+    primary.status = 'registered'
+    hotkeyConfigurationError = undefined
+    return hotkeyStatus()
   })
 
   secureIpcMain.handle('unregister-hotkey', () => {

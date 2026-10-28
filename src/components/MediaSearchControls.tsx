@@ -340,7 +340,10 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
             testId="media-search-query-section"
             summary={`${searchTopK} topK`}
           >
-            <div className="media-search-query-controls search-query-form">
+            <div
+              className="media-search-query-controls search-query-form"
+              data-experience-mode={experienceMode}
+            >
               <div className="search-input-group">
                 <span className="search-group-label">{t('Reference image')}</span>
                 <div className="search-reference-controls">

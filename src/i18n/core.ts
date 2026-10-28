@@ -1698,6 +1698,17 @@ const zhCN: Record<string, string> = {
   'Search controls': '搜索控制区',
   'Section display controls': '板块显示控制',
   'Panel sections': '面板板块',
+  'Invalid shortcut': '快捷键无效，请同时按住修饰键和主键',
+  'Could not start shortcut recording': '无法开始快捷键录入，请重新点击输入框',
+  'Saved shortcut was reset because it is invalid or conflicts.':
+    '已保存的快捷键无效或冲突，已恢复默认组合',
+  'Could not save shortcut': '快捷键保存失败，原组合保持不变',
+  'Shortcut saved': '快捷键已保存',
+  'Save shortcut': '保存快捷键',
+  'Reset shortcut': '恢复默认组合',
+  'Focus this field and press a key combination. Save checks for conflicts.':
+    '点击输入框后按下组合键，保存时检测是否被占用。',
+  'Data sources': '数据源',
   'Data sources and collections': '数据源与素材集',
   'Register storage locations, organize collections, and check connectivity.':
     '登记存储位置、整理素材集并检查连接状态。',

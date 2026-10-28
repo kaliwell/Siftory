@@ -139,6 +139,8 @@ const handlers: Record<string, (...args: any[]) => any> = {
   setOverlayShape: () => ({ x: 0, y: 0 }),
   getWindowAlwaysOnTop: () => false,
   setWindowAlwaysOnTop: (value: boolean) => value,
+  setHotkeyRecording: () => true,
+  onHotkeyRecorded: () => () => {},
   getHotkeyStatus: () => ({ active: false, entries: [] }),
   getAiControlSettings: () => ({
     enabled: false,

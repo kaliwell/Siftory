@@ -59,6 +59,7 @@ function fixture() {
   const mod = { exports: {} }
   const localRequire = (id) => {
     if (id === 'electron') return electron
+    if (id === '../shared/globalHotkey') return loadTsModule('shared/globalHotkey.ts')
     if (id === './ipcAuthorization')
       return { secureIpcMain: { handle: (key, handler) => handlers.set(key, handler) } }
     if (id === './windowVisibilityDiagnostics')

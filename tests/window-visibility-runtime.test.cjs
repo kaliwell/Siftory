@@ -14,6 +14,7 @@ function fixture(t, shortcutOverrides = {}) {
   const callbacks = new Map()
   const window = {
     isDestroyed: () => false,
+    isFocused: () => true,
     isVisible: () => true,
     getOpacity: () => 1,
     getContentBounds: () => ({ x: 0, y: 0, width: 800, height: 600 }),
@@ -21,12 +22,13 @@ function fixture(t, shortcutOverrides = {}) {
     setShape: (rects) => calls.push(['shape', rects]),
     setIgnoreMouseEvents: (ignore) => calls.push(['mouse', ignore]),
     webContents: {
+      id: 1,
       setBackgroundThrottling: () => {},
       send: (channel, data) => calls.push([channel, data]),
     },
   }
   const electron = {
-    app: { quit: () => {} },
+    app: { quit: () => calls.push(['quit']) },
     globalShortcut: {
       isRegistered: (key) => callbacks.has(key),
       register: (key, callback) => {
@@ -50,6 +52,7 @@ function fixture(t, shortcutOverrides = {}) {
   mod.paths = Module._nodeModulePaths(path.dirname(filename))
   mod.require = (id) => {
     if (id === 'electron') return electron
+    if (id === '../shared/globalHotkey') return loadTsModule('shared/globalHotkey.ts')
     if (id === './ipcAuthorization')
       return { secureIpcMain: { handle: (key, fn) => handlers.set(key, fn) } }
     if (id.startsWith('./')) return loadTsModule(`electron/${id.slice(2)}.ts`)
@@ -70,13 +73,99 @@ function fixture(t, shortcutOverrides = {}) {
     await core.flushWindowVisibilityDiagnostics()
     fs.rmSync(dir, { recursive: true, force: true })
   })
-  const invoke = (key, ...args) => handlers.get(key)({}, ...args)
+  const invoke = (key, ...args) => handlers.get(key)({ sender: { id: 1 } }, ...args)
   const snapshot = async () => {
     await core.flushWindowVisibilityDiagnostics()
     return JSON.parse(fs.readFileSync(path.join(dir, 'diagnostics/window-visibility.json'), 'utf8'))
   }
   return { core, options, calls, callbacks, invoke, snapshot, window }
 }
+
+test('custom visibility shortcut preserves the old binding on internal and external conflicts', (t) => {
+  const { core, options, callbacks, invoke } = fixture(t)
+  core.registerGlobalHotkeys(options)
+  const original = 'CommandOrControl+Shift+Alt+Q'
+  assert.ok(callbacks.has(original))
+  assert.equal(callbacks.has('CommandOrControl+Shift+Alt+R'), false)
+  assert.equal(invoke('register-hotkey', 'Shift+Escape').error, 'Shortcut conflicts')
+  callbacks.set('CommandOrControl+F8', () => {})
+  assert.equal(invoke('register-hotkey', 'Ctrl+F8').error, 'Shortcut conflicts')
+  assert.ok(callbacks.has(original))
+  const changed = invoke('register-hotkey', 'Alt+Ctrl+F9')
+  assert.equal(changed.error, undefined)
+  assert.ok(callbacks.has('CommandOrControl+Alt+F9'))
+  assert.equal(callbacks.has(original), false)
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(options.userDataPath, 'global_hotkeys.json'), 'utf8'))
+      .visibility,
+    'CommandOrControl+Alt+F9',
+  )
+})
+
+test('failed persistence rolls back the candidate and startup restores a saved shortcut', (t) => {
+  const { core, options, callbacks, invoke } = fixture(t)
+  fs.writeFileSync(
+    path.join(options.userDataPath, 'global_hotkeys.json'),
+    JSON.stringify({ visibility: 'Ctrl+F10' }),
+  )
+  core.registerGlobalHotkeys(options)
+  assert.ok(callbacks.has('CommandOrControl+F10'))
+  fs.unlinkSync(path.join(options.userDataPath, 'global_hotkeys.json'))
+  fs.mkdirSync(path.join(options.userDataPath, 'global_hotkeys.json'))
+  assert.equal(invoke('register-hotkey', 'Ctrl+F11').error, 'Could not save shortcut')
+  assert.ok(callbacks.has('CommandOrControl+F10'))
+  assert.equal(callbacks.has('CommandOrControl+F11'), false)
+})
+
+test('startup rejects saved reserved keys without stealing the quit callback', (t) => {
+  const { core, options, callbacks, calls } = fixture(t)
+  fs.writeFileSync(
+    path.join(options.userDataPath, 'global_hotkeys.json'),
+    JSON.stringify({ visibility: 'Shift+Escape' }),
+  )
+  const status = core.registerGlobalHotkeys(options)
+  assert.ok(status.error)
+  assert.equal(status.entries[0].accelerator, 'CommandOrControl+Shift+Alt+Q')
+  callbacks.get('Shift+Escape')()
+  assert.ok(calls.some(([event]) => event === 'quit'))
+  assert.equal(
+    calls.some(([event]) => event === 'opacity'),
+    false,
+  )
+})
+
+test('recording suppresses native visibility and quit actions without releasing their registrations', (t) => {
+  const { core, options, callbacks, calls, invoke, window } = fixture(t)
+  core.registerGlobalHotkeys(options)
+  assert.equal(invoke('set-hotkey-recording', true), true)
+  callbacks.get('CommandOrControl+Shift+Alt+Q')()
+  callbacks.get('Shift+Escape')()
+  assert.deepEqual(
+    calls.filter(([event]) => event === 'hotkey-recorded').map(([, key]) => key),
+    ['CommandOrControl+Shift+Alt+Q', 'Shift+Escape'],
+  )
+  assert.equal(
+    calls.some(([event]) => event === 'quit' || event === 'opacity'),
+    false,
+  )
+  assert.equal(invoke('set-hotkey-recording', false), false)
+  callbacks.get('Shift+Escape')()
+  assert.ok(calls.some(([event]) => event === 'quit'))
+  assert.equal(invoke('set-hotkey-recording', true), true)
+  window.isFocused = () => false
+  callbacks.get('Shift+Escape')()
+  assert.equal(calls.filter(([event]) => event === 'quit').length, 2)
+})
+
+test('recording lease expires if renderer cleanup never arrives', (t) => {
+  const { core, options, callbacks, calls, invoke } = fixture(t)
+  core.registerGlobalHotkeys(options)
+  invoke('set-hotkey-recording', true)
+  const future = Date.now() + 31000
+  t.mock.method(Date, 'now', () => future)
+  callbacks.get('Shift+Escape')()
+  assert.ok(calls.some(([event]) => event === 'quit'))
+})
 
 test('standard windows hide and reveal natively without clipping or click-through', async (t) => {
   const { core, options, calls, invoke, window } = fixture(t)
@@ -125,7 +214,7 @@ test('shortcut conflicts and registration exceptions remain per-key and recover 
   let failing = true
   const { core, options, snapshot } = fixture(t, {
     register: (key) => {
-      if (failing && key.endsWith('+R')) return false
+      if (failing && key === 'Shift+Alt+W') return false
       if (failing && key.endsWith('+Q')) throw new Error('private path must not enter diagnostics')
       return true
     },

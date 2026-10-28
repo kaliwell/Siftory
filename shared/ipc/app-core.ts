@@ -200,6 +200,7 @@ export interface GlobalHotkeyEntry {
 }
 
 export interface GlobalHotkeyStatus {
+  error?: string
   active: boolean
   entries: GlobalHotkeyEntry[]
 }

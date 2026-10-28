@@ -19,7 +19,7 @@ import { useTranslation } from '../i18n/useTranslation'
 import SubjectPickerModal, { type SubjectPickerData } from './SubjectPickerModal'
 import { mediaSearchBridge } from '../services/mediaSearchBridge'
 import { notifyAssetCollectionsChanged } from '../hooks/useAssetCollections'
-import { buildSourceHealthItems } from '../services/sourceHealth'
+import { buildSourceHealthItems, groupSourceHealthItems } from '../services/sourceHealth'
 import {
   videoHitEvidenceLabelKeys,
   videoHitLabelKey,
@@ -836,137 +836,163 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
         {sources.length === 0 ? (
           <div style={{ fontSize: 13, opacity: 0.6 }}>{t('No sources yet')}</div>
         ) : (
-          sourceHealthItems.map((source) => {
-            const status = statuses[source.id]
-            const session = status?.session ?? null
-            const running = status?.running === true
-            return (
-              <div
-                key={source.id}
-                className="source-health-card"
-                style={{
-                  border: '1px solid rgba(var(--date), 0.25)',
-                  borderRadius: 4,
-                  padding: '4px 6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                }}
-              >
-                <div
-                  data-testid={`source-health-${source.id}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
-                >
-                  <span style={{ fontWeight: 600 }}>{source.displayName}</span>
-                  <span style={{ opacity: 0.7 }}>
-                    {t(availabilityKey[source.availability] || 'Unknown')}
-                  </span>
-                  <span style={{ opacity: 0.6 }}>
-                    {t(sourceTypeKey[source.type] || 'Unknown')} ·{' '}
-                    {t(scanCapabilityKey[source.scanCapability] || 'Unknown')}
-                  </span>
-                  <span style={{ opacity: 0.7 }}>
-                    {t('{count} files', { count: source.fileCount })} ·{' '}
-                    {formatBytes(source.totalBytes)}
-                  </span>
-                  <span style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-                    {running ? (
-                      <button
-                        onClick={() =>
-                          void window.electronAPI.discoveryCatalog.cancelScan(source.id)
-                        }
-                        style={{ fontSize: 13, padding: '1px 6px' }}
-                      >
-                        {t('Cancel')}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => void handleStartScan(source.id)}
-                        style={{ fontSize: 13, padding: '1px 6px' }}
-                      >
-                        {t('Scan')}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => void handleProbeSource(source.id)}
-                      disabled={running || probePending === source.id}
-                      style={{ fontSize: 13, padding: '1px 6px' }}
+          groupSourceHealthItems(sourceHealthItems).map((group) => (
+            <details
+              key={group.key}
+              className="source-drive-group"
+              data-testid={`source-drive-${group.key}`}
+              open={sourceHealthItems.length <= 12}
+            >
+              <summary>
+                <strong>{t(group.key)}</strong>
+                <span>
+                  {t('Data sources')} {group.sources.length}
+                </span>
+              </summary>
+              <div className="source-drive-group__items">
+                {group.sources.map((source) => {
+                  const status = statuses[source.id]
+                  const session = status?.session ?? null
+                  const running = status?.running === true
+                  return (
+                    <div
+                      key={source.id}
+                      className="source-health-card"
+                      style={{
+                        border: '1px solid rgba(var(--date), 0.25)',
+                        borderRadius: 4,
+                        padding: '4px 6px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                      }}
                     >
-                      {t(source.primaryAction === 'reconnect' ? 'Reconnect' : 'Check connection')}
-                    </button>
-                    <button
-                      onClick={() => void handleRemoveSource(source.id)}
-                      disabled={running}
-                      style={{ fontSize: 13, padding: '1px 6px' }}
-                    >
-                      {t('Remove')}
-                    </button>
-                    {source.canRepairRoot && (
-                      <button
-                        onClick={() => void handleRepairSource(source.id)}
-                        disabled={running}
-                        style={{ fontSize: 13, padding: '1px 6px' }}
+                      <div
+                        data-testid={`source-health-${source.id}`}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
                       >
-                        {t('Repair path')}
-                      </button>
-                    )}
-                  </span>
-                </div>
-                <div style={{ fontSize: 13, opacity: 0.7, wordBreak: 'break-all' }}>
-                  {source.displayLocator}
-                </div>
-                <div
-                  data-testid={`source-health-times-${source.id}`}
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 8,
-                    fontSize: 12,
-                    opacity: 0.66,
-                  }}
-                >
-                  <span>
-                    {t('Last successful scan')}:{' '}
-                    {formatTimestamp(source.lastSuccessfulScanAt) || t('Never')}
-                  </span>
-                  <span>
-                    {t('Last attempt')}: {formatTimestamp(source.lastAttemptAt) || t('Never')}
-                  </span>
-                  {source.incrementalWatch ? (
-                    <span data-testid={`source-incremental-watch-${source.id}`}>
-                      {t('Live updates')}:{' '}
-                      {t(incrementalWatchStateKey[source.incrementalWatch.state])}
-                      {source.incrementalWatch.pendingCount > 0
-                        ? ` · ${t('{count} changes pending', {
-                            count: source.incrementalWatch.pendingCount,
-                          })}`
-                        : ''}
-                      {source.incrementalWatch.lastAppliedAt
-                        ? ` · ${t('Last incremental update')}: ${formatTimestamp(source.incrementalWatch.lastAppliedAt)}`
-                        : ''}
-                    </span>
-                  ) : null}
-                </div>
-                {source.detail && (
-                  <div
-                    data-testid={`source-health-detail-${source.id}`}
-                    style={{ fontSize: 12, color: '#e0a260', wordBreak: 'break-word' }}
-                  >
-                    {t('Connection detail: {detail}', { detail: source.detail })}
-                  </div>
-                )}
-                {session && (
-                  <div style={{ fontSize: 13, opacity: 0.8 }}>
-                    {t(sessionStateKey[session.state] || 'Unknown')} ·{' '}
-                    {t('{count} files', { count: session.committedCount })}
-                    {session.backend !== 'unknown' &&
-                      ` · ${session.backend === 'usn' ? 'USN' : t('Directory enumeration')}`}
-                    {session.fallbackReason && ` · ${t('Fallback')}: ${session.fallbackReason}`}
-                  </div>
-                )}
+                        <span style={{ fontWeight: 600 }}>{source.displayName}</span>
+                        <span style={{ opacity: 0.7 }}>
+                          {t(availabilityKey[source.availability] || 'Unknown')}
+                        </span>
+                        <span style={{ opacity: 0.6 }}>
+                          {t(sourceTypeKey[source.type] || 'Unknown')} ·{' '}
+                          {t(scanCapabilityKey[source.scanCapability] || 'Unknown')}
+                        </span>
+                        <span style={{ opacity: 0.7 }}>
+                          {t('{count} files', { count: source.fileCount })} ·{' '}
+                          {formatBytes(source.totalBytes)}
+                        </span>
+                        <span style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+                          {running ? (
+                            <button
+                              onClick={() =>
+                                void window.electronAPI.discoveryCatalog.cancelScan(source.id)
+                              }
+                              style={{ fontSize: 13, padding: '1px 6px' }}
+                            >
+                              {t('Cancel')}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => void handleStartScan(source.id)}
+                              style={{ fontSize: 13, padding: '1px 6px' }}
+                            >
+                              {t('Scan')}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => void handleProbeSource(source.id)}
+                            disabled={running || probePending === source.id}
+                            style={{ fontSize: 13, padding: '1px 6px' }}
+                          >
+                            {t(
+                              source.primaryAction === 'reconnect'
+                                ? 'Reconnect'
+                                : 'Check connection',
+                            )}
+                          </button>
+                          <button
+                            onClick={() => void handleRemoveSource(source.id)}
+                            disabled={running}
+                            style={{ fontSize: 13, padding: '1px 6px' }}
+                          >
+                            {t('Remove')}
+                          </button>
+                          {source.canRepairRoot && (
+                            <button
+                              onClick={() => void handleRepairSource(source.id)}
+                              disabled={running}
+                              style={{ fontSize: 13, padding: '1px 6px' }}
+                            >
+                              {t('Repair path')}
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                      <div className="source-health-path" title={source.displayLocator}>
+                        {source.displayLocator}
+                      </div>
+                      <details className="source-health-metadata">
+                        <summary>{t('Details')}</summary>
+                        <div
+                          data-testid={`source-health-times-${source.id}`}
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 8,
+                            fontSize: 12,
+                            opacity: 0.66,
+                          }}
+                        >
+                          <span>
+                            {t('Last successful scan')}:{' '}
+                            {formatTimestamp(source.lastSuccessfulScanAt) || t('Never')}
+                          </span>
+                          <span>
+                            {t('Last attempt')}:{' '}
+                            {formatTimestamp(source.lastAttemptAt) || t('Never')}
+                          </span>
+                          {source.incrementalWatch ? (
+                            <span data-testid={`source-incremental-watch-${source.id}`}>
+                              {t('Live updates')}:{' '}
+                              {t(incrementalWatchStateKey[source.incrementalWatch.state])}
+                              {source.incrementalWatch.pendingCount > 0
+                                ? ` · ${t('{count} changes pending', {
+                                    count: source.incrementalWatch.pendingCount,
+                                  })}`
+                                : ''}
+                              {source.incrementalWatch.lastAppliedAt
+                                ? ` · ${t('Last incremental update')}: ${formatTimestamp(source.incrementalWatch.lastAppliedAt)}`
+                                : ''}
+                            </span>
+                          ) : null}
+                        </div>
+                      </details>
+                      {source.detail && (
+                        <div
+                          data-testid={`source-health-detail-${source.id}`}
+                          style={{ fontSize: 12, color: '#e0a260', wordBreak: 'break-word' }}
+                        >
+                          {t('Connection detail: {detail}', { detail: source.detail })}
+                        </div>
+                      )}
+                      {session && (
+                        <div style={{ fontSize: 13, opacity: 0.8 }}>
+                          {t(sessionStateKey[session.state] || 'Unknown')} ·{' '}
+                          {t('{count} files', { count: session.committedCount })}
+                          {session.backend !== 'unknown' &&
+                            ` · ${session.backend === 'usn' ? 'USN' : t('Directory enumeration')}`}
+                          {session.fallbackReason &&
+                            ` · ${t('Fallback')}: ${session.fallbackReason}`}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })
+            </details>
+          ))
         )}
 
         {enableEmbeddedSearch && (

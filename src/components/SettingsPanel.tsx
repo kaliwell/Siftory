@@ -1,3 +1,4 @@
+import GlobalHotkeyEditor from './GlobalHotkeyEditor'
 import React, { useState, useEffect, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import SourceDerivedDataCleanup from './SourceDerivedDataCleanup'
@@ -1558,11 +1559,8 @@ const SettingsPanel: React.FC = () => {
             expanded={expandedSections.system}
             onToggle={() => toggleSection('system')}
           >
+            <GlobalHotkeyEditor status={hotkeyStatus} onStatusChange={setHotkeyStatus} />
             <div className="settings-shortcut-list">
-              Ctrl+Shift+Alt+R — {t('Toggle visibility')}
-              <br />
-              Ctrl+Shift+Alt+Q — {t('Toggle visibility')} ({t('Legacy')})
-              <br />
               {legacyLayout && (
                 <>
                   {t('Ctrl+Shift+Alt+P —')} {t('Snap panels')}

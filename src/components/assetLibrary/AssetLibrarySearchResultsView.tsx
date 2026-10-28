@@ -1,3 +1,4 @@
+import AssetLibraryControls from './AssetLibraryControls'
 import React from 'react'
 import type {
   AssetCategory,
@@ -90,83 +91,88 @@ const AssetLibrarySearchResultsView: React.FC<AssetLibrarySearchResultsViewProps
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div
-        style={{
-          display: 'flex',
-          gap: 4,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          padding: '4px 0',
-        }}
-      >
-        <select
-          data-testid="asset-search-category"
-          value={categoryId}
-          onChange={(event) => onCategoryChange(Number(event.target.value))}
-          style={{ ...assetLibraryInputStyle, minWidth: 170 }}
-          title={
-            mode === 'samples' ? undefined : t('Category used when adding selected similar results')
-          }
+      <AssetLibraryControls>
+        <div
+          className="asset-library-search-controls"
+          style={{
+            display: 'flex',
+            gap: 4,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            padding: '4px 0',
+          }}
         >
-          <option value={0}>
-            {t(mode === 'samples' ? 'Choose sample category' : 'Choose target category')}
-          </option>
-          {rows.map(({ category, depth }) => (
-            <option key={category.id} value={category.id}>
-              {'  '.repeat(depth)}
-              {category.name}
+          <select
+            data-testid="asset-search-category"
+            value={categoryId}
+            onChange={(event) => onCategoryChange(Number(event.target.value))}
+            style={{ ...assetLibraryInputStyle, minWidth: 170 }}
+            title={
+              mode === 'samples'
+                ? undefined
+                : t('Category used when adding selected similar results')
+            }
+          >
+            <option value={0}>
+              {t(mode === 'samples' ? 'Choose sample category' : 'Choose target category')}
             </option>
-          ))}
-        </select>
-        <select
-          value={topK}
-          onChange={(event) => onTopKChange(Number(event.target.value))}
-          style={assetLibraryInputStyle}
-          title={mode === 'samples' ? t('Maximum number of category sample matches') : undefined}
-        >
-          {[50, 100, 200, 500].map((value) => (
-            <option key={value} value={value}>
-              {t('Top')} {value}
-            </option>
-          ))}
-        </select>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9 }}>
-          <input
-            type="checkbox"
-            checked={includeReviewed}
-            onChange={(event) => onIncludeReviewedChange(event.target.checked)}
-          />
-          {t('Include reviewed')}
-        </label>
-        <button
-          data-testid="asset-search-run"
-          disabled={activeTask || (mode === 'samples' ? !categoryId : !result)}
-          onClick={onSearch}
-          style={assetLibraryButtonStyle}
-        >
-          {t(mode === 'samples' ? 'Search category samples' : 'Search again')}
-        </button>
-        <button disabled={!result} onClick={onClear} style={assetLibraryButtonStyle}>
-          {t('Clear results')}
-        </button>
-        <span style={{ fontSize: 9, opacity: 0.65 }}>
-          {selectedIds.size} {t('selected')}
-        </span>
-        <button
-          disabled={!categoryId || selectedIds.size === 0 || activeTask}
-          onClick={onRelevant}
-          style={assetLibraryButtonStyle}
-        >
-          {t('Relevant')}
-        </button>
-        <button
-          disabled={!categoryId || selectedIds.size === 0 || activeTask}
-          onClick={onNotRelevant}
-          style={{ ...assetLibraryButtonStyle, color: 'rgb(255,105,105)' }}
-        >
-          {t('Not relevant')}
-        </button>
-      </div>
+            {rows.map(({ category, depth }) => (
+              <option key={category.id} value={category.id}>
+                {'  '.repeat(depth)}
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={topK}
+            onChange={(event) => onTopKChange(Number(event.target.value))}
+            style={assetLibraryInputStyle}
+            title={mode === 'samples' ? t('Maximum number of category sample matches') : undefined}
+          >
+            {[50, 100, 200, 500].map((value) => (
+              <option key={value} value={value}>
+                {t('Top')} {value}
+              </option>
+            ))}
+          </select>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9 }}>
+            <input
+              type="checkbox"
+              checked={includeReviewed}
+              onChange={(event) => onIncludeReviewedChange(event.target.checked)}
+            />
+            {t('Include reviewed')}
+          </label>
+          <button
+            data-testid="asset-search-run"
+            disabled={activeTask || (mode === 'samples' ? !categoryId : !result)}
+            onClick={onSearch}
+            style={assetLibraryButtonStyle}
+          >
+            {t(mode === 'samples' ? 'Search category samples' : 'Search again')}
+          </button>
+          <button disabled={!result} onClick={onClear} style={assetLibraryButtonStyle}>
+            {t('Clear results')}
+          </button>
+          <span style={{ fontSize: 9, opacity: 0.65 }}>
+            {selectedIds.size} {t('selected')}
+          </span>
+          <button
+            disabled={!categoryId || selectedIds.size === 0 || activeTask}
+            onClick={onRelevant}
+            style={assetLibraryButtonStyle}
+          >
+            {t('Relevant')}
+          </button>
+          <button
+            disabled={!categoryId || selectedIds.size === 0 || activeTask}
+            onClick={onNotRelevant}
+            style={{ ...assetLibraryButtonStyle, color: 'rgb(255,105,105)' }}
+          >
+            {t('Not relevant')}
+          </button>
+        </div>
+      </AssetLibraryControls>
       {sampleResult && (
         <div
           style={{
