@@ -4,6 +4,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
 import path from 'path'
 import fs from 'fs'
 import os from 'os'
+import { getConfiguredStorageRoot } from './storagePathResolver'
 import type {
   EmbeddingProgress,
   EmbeddingJob,
@@ -235,6 +236,8 @@ function nowIso(): string {
 }
 
 function getVectorDbDir(): string {
+  const root = getConfiguredStorageRoot()
+  if (root) return path.join(root, 'vector-db')
   return process.env.APPDATA && fs.existsSync(process.env.APPDATA)
     ? path.join(process.env.APPDATA, 'floating-clock-electron', 'vector-db')
     : path.join(process.cwd(), 'vector-db')
@@ -305,11 +308,7 @@ function updateProgress(patch: Partial<EmbeddingProgress>): void {
 
 function getFailureLogPath(): string {
   if (!failureLogPath) {
-    const userData =
-      process.env.APPDATA && fs.existsSync(process.env.APPDATA)
-        ? path.join(process.env.APPDATA, 'floating-clock-electron')
-        : process.cwd()
-    failureLogPath = path.join(userData, 'vector-db', 'embedding_failures.jsonl')
+    failureLogPath = path.join(getVectorDbDir(), 'embedding_failures.jsonl')
   }
   return failureLogPath
 }

@@ -5,8 +5,12 @@ import path from 'node:path'
 let activeRoot = ''
 let previousRoots: string[] = []
 
+export function getConfiguredStorageRoot(): string | undefined {
+  return activeRoot || undefined
+}
+
 export function configureStoragePathResolver(root: string, aliases: string[]): void {
-  activeRoot = path.resolve(root)
+  activeRoot = root ? path.resolve(root) : ''
   previousRoots = aliases.map((alias) => path.resolve(alias)).sort((a, b) => b.length - a.length)
 }
 
