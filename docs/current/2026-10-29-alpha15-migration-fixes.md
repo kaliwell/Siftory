@@ -47,8 +47,10 @@
 
 ## 安装器
 
-- 文件：`release/Siftory Alpha Online Setup 1.0.1-alpha.15.exe`，176193571 字节，约 168 MiB。
-- SHA256：`66a22ebfe55dd3d8e9697b594ec32d76d6b533525f0f9389bd65d5813537d680`。
+发布门禁另外补齐默认测试链对迁移回归的登记，并重新生成与原生清单版本一致的第三方组件表。清单随安装器同步更新，未改变运行代码或依赖版本。
+
+- 文件：`release/Siftory Alpha Online Setup 1.0.1-alpha.15.exe`，176193577 字节，约 168 MiB。
+- SHA256：`1a49acf095f5ad5ce52640b0dcca8dbbe868aae21f45e1448e2d8c8acc2cd0af`。
 - `npm run build:online` 完成，类型、受检构建、原生重编译、资源与运行包检查通过。
 - 35 项必需资源检查通过，NSIS 归档 369 项检查通过。
 - 实际打包程序在独立标记配置启动，版本 Alpha 15、任务页往返、页脚、诊断和退出检查通过，renderer 错误为 0；没有对真实库执行覆盖安装或迁移。
