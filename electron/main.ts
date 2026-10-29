@@ -150,9 +150,19 @@ if (startupSecurity.smokeUserDataPath) {
     storageLocationStartupError = error
   }
 }
-// Chromium session caches must follow the selected library as well. Keep this
-// explicit before ready instead of relying on Electron's cached default path.
-app.setPath('sessionData', app.getPath('userData'))
+// The cold migration window must not create Chromium files inside the source
+// while its inventory and fingerprints are being verified. A fresh process
+// binds the library's regular session path after either success or cancellation.
+const coldMigrationPending =
+  !startupSecurity.smokeUserDataPath &&
+  !storageLocationStartupError &&
+  Boolean(storageLocations.read()?.pending)
+app.setPath(
+  'sessionData',
+  coldMigrationPending
+    ? fs.mkdtempSync(path.join(app.getPath('temp'), 'siftory-migration-ui-'))
+    : app.getPath('userData'),
+)
 
 if (process.platform === 'win32' && normalizeWindowsPathEnvironment(process.env)) {
   console.warn('[Siftory] normalized duplicate PATH environment variables')

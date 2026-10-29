@@ -6,6 +6,7 @@ import { secureIpcMain } from './ipcAuthorization'
 import { StorageLocationService, localStorageDirectory } from './storageLocationService'
 import { migrateStorageDirectory } from './storageDirectoryMigration'
 import { hardenDataDirectoryPermissions } from './dataDirectorySecurity'
+import { createStorageMigrationWindow } from './storageMigrationWindow'
 
 function externalMediaDirectory(): boolean {
   return Boolean(
@@ -14,8 +15,8 @@ function externalMediaDirectory(): boolean {
   )
 }
 
-/** All business stores are closed at this point; only this native dialog runs.
- * Successful migration relaunches again so Electron binds all paths before ready.
+/** All business stores are closed at this point; only the isolated migration UI runs.
+ * Relaunch after either result so Electron binds the regular session before ready.
  */
 export async function prepareStorageLocationStartup(
   service: StorageLocationService,
@@ -52,26 +53,13 @@ export async function prepareStorageLocationStartup(
   service.initialize()
   if (!service.read()?.pending) return true
   const controller = new AbortController()
-  const closeDialog = new AbortController()
-  let finished = false
-  const prompt = dialog
-    .showMessageBox({
-      type: 'info',
-      title: 'Siftory',
-      message: '正在复制并校验应用数据 / Copying and verifying application data',
-      detail:
-        '请保持磁盘连接。旧数据会保留，校验成功后才切换位置。\nKeep both disks connected. The old data is retained until the new copy is verified.',
-      buttons: ['取消迁移 / Cancel migration'],
-      cancelId: 0,
-      signal: closeDialog.signal,
-    })
-    .then(() => {
-      if (!finished) controller.abort()
-    })
+  let progressWindow: Awaited<ReturnType<typeof createStorageMigrationWindow>> | undefined
   let result
   try {
+    progressWindow = await createStorageMigrationWindow(() => controller.abort())
     result = await migrateStorageDirectory(service, {
       signal: controller.signal,
+      onProgress: (value) => progressWindow?.update(value),
       protectDirectory: async (directory) => {
         const protection = await hardenDataDirectoryPermissions(directory, {
           enabled: app.isPackaged,
@@ -80,10 +68,28 @@ export async function prepareStorageLocationStartup(
           throw new Error('Cannot protect the destination data directory')
       },
     })
+  } catch (error) {
+    const current = service.read()
+    if (!current?.pending) throw error
+    // Window initialization failed before the migrator could clear its pending
+    // task. Preserve the original root and recover on the next normal startup.
+    service.save({
+      ...current,
+      pending: undefined,
+      lastMigration: { state: 'failed', at: Date.now() },
+    })
+    result = {
+      migrated: false,
+      failed: true,
+      reason: error instanceof Error ? error.message.slice(0, 500) : 'Migration window unavailable',
+    }
   } finally {
-    finished = true
-    closeDialog.abort()
-    await prompt
+    try {
+      progressWindow?.close()
+    } catch {
+      // Window teardown cannot change a completed data transaction. Relaunch
+      // below also disposes any remaining presentation resources.
+    }
   }
   if (result.migrated) {
     app.relaunch()
@@ -99,7 +105,11 @@ export async function prepareStorageLocationStartup(
       (result.reason ?? ''),
     buttons: ['继续 / Continue'],
   })
-  return true
+  // The migration UI used a temporary Chromium session root. Rebind the original
+  // library's normal session in a fresh process instead of reusing that session.
+  app.relaunch()
+  app.quit()
+  return false
 }
 
 export function registerStorageLocationIpc(

@@ -8,6 +8,11 @@ const readline = require('node:readline')
 const { spawn } = require('node:child_process')
 
 const { loadTsModule } = require('../tests/guard-utils.cjs')
+const {
+  defaultMaintenanceRoot,
+  validateMaintenanceRoot,
+  bindMaintenanceStorageRoot,
+} = require('./maintenance-storage-context.cjs')
 
 const REPAIR_SCHEMA_VERSION = 1
 const CLIP_CHANNEL_FAILURE = /unsupported number of channels:\s*4/i
@@ -21,9 +26,7 @@ function option(argv, name, fallback) {
 }
 
 function parseArgs(argv) {
-  const userDataPath = path.resolve(
-    option(argv, 'user-data', path.join(process.env.APPDATA || '', 'floating-clock-electron')),
-  )
+  const userDataPath = path.resolve(option(argv, 'user-data', '') || defaultMaintenanceRoot())
   return {
     execute: argv.includes('--execute'),
     confirm: option(argv, 'confirm', ''),
@@ -46,12 +49,7 @@ function parseArgs(argv) {
 }
 
 function validateOptions(options) {
-  if (path.basename(options.userDataPath).toLowerCase() !== 'floating-clock-electron') {
-    throw new Error('The user-data directory must end in floating-clock-electron')
-  }
-  if (!fs.existsSync(options.userDataPath) || !fs.statSync(options.userDataPath).isDirectory()) {
-    throw new Error(`User-data directory does not exist: ${options.userDataPath}`)
-  }
+  options.userDataPath = validateMaintenanceRoot(options.userDataPath)
   if (!['cpu', 'gpu'].includes(options.backend)) throw new Error('Use --backend=cpu or gpu')
   if (options.execute && !options.confirm) {
     throw new Error('Execution requires --confirm=<preview token>')
@@ -558,6 +556,7 @@ async function main(argv = process.argv.slice(2)) {
   assertRepairablePreview(preview)
   verifyPreviewInputs(preview)
   const releaseLock = acquireLock(options.userDataPath)
+  let restoreStorageRoot = () => {}
   const state = {
     schemaVersion: REPAIR_SCHEMA_VERSION,
     execute: true,
@@ -567,16 +566,15 @@ async function main(argv = process.argv.slice(2)) {
     models: {},
   }
   writeState(options.stateFile, state)
-  const originalAppData = process.env.APPDATA
   const originalResourcesPath = process.resourcesPath
   const originalLoad = Module._load
-  process.env.APPDATA = path.dirname(options.userDataPath)
   process.resourcesPath = options.childrenDir
   Module._load = function patchedLoad(request, parent, isMain) {
     if (request === 'electron') return createElectronMock(options)
     return originalLoad.call(this, request, parent, isMain)
   }
   try {
+    restoreStorageRoot = bindMaintenanceStorageRoot(options.userDataPath)
     const modelService = loadTsModule('electron/modelService.ts')
     const vectorDb = loadTsModule('electron/vectorDatabaseService.ts')
     const embedding = loadTsModule('electron/embeddingService.ts')
@@ -625,8 +623,7 @@ async function main(argv = process.argv.slice(2)) {
     throw error
   } finally {
     Module._load = originalLoad
-    if (originalAppData === undefined) delete process.env.APPDATA
-    else process.env.APPDATA = originalAppData
+    restoreStorageRoot()
     process.resourcesPath = originalResourcesPath
     releaseLock()
   }

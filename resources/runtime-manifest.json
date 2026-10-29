@@ -868,9 +868,9 @@
       "purpose": "Native image scanning, hashing, indexing, and thumbnail generation",
       "upstream": {
         "name": "Siftory fast_scanner",
-        "version": "1.0.1-alpha.3",
+        "version": "1.0.1-alpha.12",
         "sourceUrl": "native/",
-        "releasedAt": "2026-10-24"
+        "releasedAt": "2026-10-29"
       },
       "license": {
         "spdx": "Apache-2.0 AND MIT",
@@ -889,8 +889,8 @@
           "role": "electron-native-addon",
           "fetchPolicy": "local-build",
           "sourceUrl": "native/",
-          "sha256": "b45d63594702240ea66aa72e8725283d2af096128a4447c3218b42661c6193ea",
-          "sizeBytes": 1287168,
+          "sha256": "e066bf2d672e8e850577fc9665548b27e60cdbf2a2726bb40c3debaeb9a02195",
+          "sizeBytes": 1290240,
           "targetPath": "native/build-electron/Release/fast_scanner.node"
         }
       ]

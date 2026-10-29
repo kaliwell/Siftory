@@ -37,6 +37,16 @@ interface Entry {
   dev: number
 }
 
+function assertDirectoryIdentity(directory: string, expected: fs.Stats): void {
+  const current = fs.lstatSync(directory)
+  if (
+    localStorageDirectory(directory) !== directory ||
+    current.ino !== expected.ino ||
+    current.dev !== expected.dev
+  )
+    throw new Error('Storage directory identity changed')
+}
+
 async function* inventory(
   root: string,
   signal?: AbortSignal,
@@ -67,11 +77,12 @@ async function* inventory(
   }
 }
 
-async function snapshot(root: string, signal?: AbortSignal) {
+async function snapshot(root: string, signal?: AbortSignal, onEntry?: (entry: Entry) => void) {
   const hash = createHash('sha256')
   let totalBytes = 0,
     totalFiles = 0
   for await (const entry of inventory(root, signal)) {
+    onEntry?.(entry)
     hash.update(JSON.stringify(entry) + '\n')
     if (!entry.directory && entry.relative !== LIBRARY_MARKER) {
       totalBytes += entry.size
@@ -81,20 +92,31 @@ async function snapshot(root: string, signal?: AbortSignal) {
   return { fingerprint: hash.digest('hex'), totalBytes, totalFiles }
 }
 
-async function hashFile(filename: string, signal?: AbortSignal): Promise<string> {
+async function hashFile(
+  filename: string,
+  signal?: AbortSignal,
+  onRead?: (bytes: number) => void,
+): Promise<string> {
   const hash = createHash('sha256')
   for await (const chunk of fs.createReadStream(filename)) {
     signal?.throwIfAborted()
     hash.update(chunk)
+    onRead?.(chunk.length)
   }
   return hash.digest('hex')
 }
 
 export interface MigrationProgress {
+  phase: 'scanning' | 'copying' | 'checking-source' | 'verifying' | 'committing' | 'completed'
+  currentFile: string
+  scannedFiles: number
   copiedBytes: number
   totalBytes: number
   copiedFiles: number
   totalFiles: number
+  /** Bytes read across both source and destination during the final comparison. */
+  verifiedBytes: number
+  verifiedFiles: number
 }
 export interface MigrationResult {
   migrated: boolean
@@ -115,8 +137,43 @@ export async function migrateStorageDirectory(
   if (!state?.pending) return { migrated: false, failed: false }
   const pending = state.pending
   let partial: string | undefined
+  const progress: MigrationProgress = {
+    phase: 'scanning',
+    currentFile: '',
+    scannedFiles: 0,
+    copiedBytes: 0,
+    totalBytes: 0,
+    copiedFiles: 0,
+    totalFiles: 0,
+    verifiedBytes: 0,
+    verifiedFiles: 0,
+  }
+  const notify = () => {
+    try {
+      options.onProgress?.({ ...progress })
+    } catch {
+      // Presentation is not part of the copy transaction. A broken observer
+      // must neither escape a stream callback nor roll back a committed root.
+    }
+  }
+  const scan = (root: string, initial = false) => {
+    progress.scannedFiles = 0
+    return snapshot(root, options.signal, (entry) => {
+      progress.currentFile = entry.relative
+      if (!entry.directory && entry.relative !== LIBRARY_MARKER) {
+        progress.scannedFiles++
+        if (initial) {
+          progress.totalFiles = progress.scannedFiles
+          progress.totalBytes += entry.size
+        }
+      }
+      notify()
+    })
+  }
   try {
+    notify()
     const source = service.resolveRoot()
+    const sourceIdentity = fs.lstatSync(source)
     const parent = localStorageDirectory(path.dirname(pending.destination))
     const destination = path.join(parent, path.basename(pending.destination))
     if (destination !== pending.destination) throw new Error('Destination directory changed')
@@ -132,7 +189,7 @@ export async function migrateStorageDirectory(
       )
         throw new Error('Data directories overlap')
     }
-    const before = await snapshot(source, options.signal)
+    const before = await scan(source, true)
     const totalBytes = before.totalBytes
     const disk = await fs.promises.statfs(parent)
     if (disk.bavail * disk.bsize < totalBytes + Math.max(64 * 1024 * 1024, totalBytes * 0.05))
@@ -140,17 +197,16 @@ export async function migrateStorageDirectory(
     // Exclusive ownership: an interrupted attempt is retained, never overwritten.
     partial = destination
     await fs.promises.mkdir(partial, { mode: 0o700 })
+    const destinationIdentity = fs.lstatSync(partial)
     await options.protectDirectory?.(partial)
-    const progress = {
-      copiedBytes: 0,
-      totalBytes,
-      copiedFiles: 0,
-      totalFiles: before.totalFiles,
-    }
+    progress.phase = 'copying'
+    progress.currentFile = ''
+    notify()
     for await (const entry of inventory(source, options.signal)) {
       options.signal?.throwIfAborted()
       // The marker is published last so interrupted copies cannot be reconnected.
       if (entry.relative === LIBRARY_MARKER) continue
+      progress.currentFile = entry.relative
       if (localStorageDirectory(parent) !== parent || localStorageDirectory(source) !== source)
         throw new Error('Storage directory changed')
       const target = path.join(partial, entry.relative)
@@ -174,35 +230,38 @@ export async function migrateStorageDirectory(
         transform(chunk, _encoding, callback) {
           hash.update(chunk)
           progress.copiedBytes += chunk.length
-          options.onProgress?.({ ...progress })
+          notify()
           callback(null, chunk)
         },
       })
       await pipeline(
         fs.createReadStream(from),
         meter,
-        fs.createWriteStream(target, { flags: 'wx', mode: 0o600 }),
+        // Flush using the original writable descriptor before it closes. Opening
+        // a copied DLL for writing again can fail under transient Windows locks.
+        fs.createWriteStream(target, { flags: 'wx', mode: 0o600, flush: true }),
         { signal: options.signal },
       )
       const copiedHash = hash.digest('hex')
-      if ((await hashFile(target, options.signal)) !== copiedHash)
+      if ((await hashFile(target, options.signal, () => notify())) !== copiedHash)
         throw new Error('Data verification failed')
-      const output = await fs.promises.open(target, 'r+')
-      try {
-        await output.sync()
-      } finally {
-        await output.close()
-      }
       await fs.promises.utimes(target, current.atimeMs / 1000, current.mtimeMs / 1000)
       progress.copiedFiles++
-      options.onProgress?.({ ...progress })
+      notify()
     }
-    if (before.fingerprint !== (await snapshot(source, options.signal)).fingerprint)
+    progress.phase = 'checking-source'
+    notify()
+    if (before.fingerprint !== (await scan(source)).fingerprint)
       throw new Error('Source changed during migration')
+    progress.phase = 'verifying'
+    progress.currentFile = ''
+    notify()
     // Pair two ordered streams; memory stays bounded even for large thumbnail trees.
     const copied = inventory(partial, options.signal)
+    const verifiedDestination = createHash('sha256')
     for await (const entry of inventory(source, options.signal)) {
       if (entry.relative === LIBRARY_MARKER) continue
+      progress.currentFile = entry.relative
       const next = await copied.next()
       if (
         next.done ||
@@ -211,21 +270,40 @@ export async function migrateStorageDirectory(
         next.value.size !== entry.size
       )
         throw new Error('Destination changed during migration')
-      if (
-        !entry.directory &&
-        (await hashFile(path.join(partial, entry.relative), options.signal)) !==
-          (await hashFile(path.join(source, entry.relative), options.signal))
-      )
-        throw new Error('Final data verification failed')
+      // Remember exactly the destination entries whose contents are checked.
+      // Include inode, timestamps and size so later equal-size rewrites,
+      // replacement directories and missing/extra files invalidate the commit.
+      verifiedDestination.update(JSON.stringify(next.value) + '\n')
+      if (!entry.directory) {
+        const onRead = (bytes: number) => {
+          progress.verifiedBytes += bytes
+          notify()
+        }
+        if (
+          (await hashFile(path.join(partial, entry.relative), options.signal, onRead)) !==
+          (await hashFile(path.join(source, entry.relative), options.signal, onRead))
+        )
+          throw new Error('Final data verification failed')
+        progress.verifiedFiles++
+        notify()
+      }
     }
     if (!(await copied.next()).done) throw new Error('Unexpected destination files')
-    if (before.fingerprint !== (await snapshot(source, options.signal)).fingerprint)
+    progress.phase = 'committing'
+    notify()
+    if (before.fingerprint !== (await scan(source)).fingerprint)
       throw new Error('Source changed during final verification')
+    assertDirectoryIdentity(source, sourceIdentity)
+    assertDirectoryIdentity(destination, destinationIdentity)
+    if (verifiedDestination.digest('hex') !== (await scan(destination)).fingerprint)
+      throw new Error('Destination changed after final verification')
     if (readLibraryId(source) !== state.libraryId) throw new Error('Library verification failed')
     options.signal?.throwIfAborted()
     if (localStorageDirectory(parent) !== parent) throw new Error('Destination directory changed')
     const previousRoots = [...new Set([source, ...readStoragePathAliases(source)])]
     if (previousRoots.length > 64) throw new Error('Too many historical data locations')
+    assertDirectoryIdentity(source, sourceIdentity)
+    assertDirectoryIdentity(destination, destinationIdentity)
     // Only the location descriptor changes. All payload bytes and vector IDs stay intact.
     writeStorageJson(path.join(destination, LIBRARY_MARKER), {
       version: 1,
@@ -234,6 +312,7 @@ export async function migrateStorageDirectory(
     })
     if (readLibraryId(destination) !== state.libraryId)
       throw new Error('Library verification failed')
+    assertDirectoryIdentity(destination, destinationIdentity)
     // This atomic pointer switch is the commit. Old data is still complete.
     service.save({
       ...state,
@@ -242,7 +321,6 @@ export async function migrateStorageDirectory(
       pending: undefined,
       lastMigration: { state: 'completed', at: Date.now() },
     })
-    return { migrated: true, failed: false }
   } catch (error) {
     service.save({
       ...state,
@@ -256,4 +334,9 @@ export async function migrateStorageDirectory(
       reason: error instanceof Error ? error.message.slice(0, 500) : 'Data migration failed',
     }
   }
+  // Once the pointer is committed, completion reporting cannot enter rollback.
+  progress.phase = 'completed'
+  progress.currentFile = ''
+  notify()
+  return { migrated: true, failed: false }
 }

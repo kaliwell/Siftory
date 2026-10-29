@@ -152,7 +152,10 @@ const entries = [
   // Data relocation adds five bounded nodes: the shared location contract,
   // filesystem service, cold-copy verifier, path resolver and Electron adapter. No packages
   // or network listeners are added; hot-module and byte caps stay fixed.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 321 },
+  // Alpha 14/15: the startup-only migration window and its pure presentation
+  // module add exactly two nodes. They isolate sandboxed UI from filesystem
+  // verification, add no packages, and leave worker/renderer and byte caps intact.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 323 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports

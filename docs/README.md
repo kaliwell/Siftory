@@ -29,6 +29,16 @@
 
 ## 当前基线
 
+最新迁移修复：[2026-10-29 Alpha 15](current/2026-10-29-alpha15-migration-fixes.md)。修复 A01–A05，补充提交前目标复查、进度异常隔离、窗口初始化恢复、维护 CLI 活动根解析和架构规则说明。
+
+修复前审计：[2026-10-29 Alpha 14 迁移审计](audits/2026-10-29-alpha14-migration-audit.md)。保留五项缺口的复现证据；当前状态以 Alpha 15 修复记录为准。
+
+最新迁移界面：[2026-10-29 Alpha 14 迁移进度](current/2026-10-29-migration-progress.md)。扫描、复制和最终校验均显示进度；仅在指针提交成功后显示 100%，保留原库与取消能力。
+
+此前 DLL 修复：[2026-10-29 Alpha 13](current/2026-10-29-alpha13-migration-dll-fix.md)。输出流在关闭前刷盘，避免校验后重复写打开 DLL；此修复继续保留。
+
+最新安装包：[2026-10-29 Alpha 15](current/2026-10-29-alpha15-migration-fixes.md)。包含进度窗口与五项审计修复；本地归档、资源及隔离启动检查通过，按维护者要求提交源码与上传新版，远端结果以 GitHub Release 为准。
+
 当前素材库界面：[简约浏览与收藏流程](current/2026-10-28-library-simple-browsing.md)。日常浏览采用全宽网格，筛选与显示设置按需展开；专业整理工具继续保留。
 
 当前维护修复：[Alpha 11 备份清理与诊断](current/2026-10-28-backup-cleanup-fix.md)。修复用户目录路径别名导致的清理拒绝，保留存储目录链接保护，并补充脱敏诊断和回归。

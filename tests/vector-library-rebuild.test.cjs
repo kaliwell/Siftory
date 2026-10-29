@@ -3,6 +3,8 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const test = require('node:test')
+const { loadTsModule } = require('./guard-utils.cjs')
+const { StorageLocationService } = loadTsModule('electron/storageLocationService.ts')
 
 const {
   isWholeDrive,
@@ -16,13 +18,15 @@ const {
   rebuildStateFile,
 } = require('../scripts/watch-vector-rebuild.cjs')
 
-test('vector rebuild requires an explicit whole-drive acknowledgement', () => {
+test('vector rebuild requires an explicit whole-drive acknowledgement', (t) => {
   assert.equal(isWholeDrive('D:\\'), true)
   assert.equal(isWholeDrive('D:\\Images'), false)
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vector-rebuild-options-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const userDataPath = path.join(root, 'floating-clock-electron')
   const childrenDir = path.join(root, 'children')
   fs.mkdirSync(userDataPath)
+  new StorageLocationService(root, userDataPath).initialize()
   fs.mkdirSync(childrenDir)
   for (const child of [
     'embeddingPreparationChild.js',
@@ -37,7 +41,7 @@ test('vector rebuild requires an explicit whole-drive acknowledgement', () => {
 })
 
 test('vector rebuild defaults to preview and adaptive batch', () => {
-  const options = parseArgs(['--scan-path=D:\\Images'])
+  const options = parseArgs([`--user-data=${os.tmpdir()}`, '--scan-path=D:\\Images'])
   assert.equal(options.execute, false)
   assert.equal(options.batchSize, 0)
   assert.equal(options.backend, 'gpu')
@@ -47,7 +51,12 @@ test('vector rebuild defaults to preview and adaptive batch', () => {
 })
 
 test('vector rebuild clamps explicit failure budgets', () => {
-  const options = parseArgs(['--scan-path=D:\\Images', '--max-failures=50', '--max-failure-rate=2'])
+  const options = parseArgs([
+    `--user-data=${os.tmpdir()}`,
+    '--scan-path=D:\\Images',
+    '--max-failures=50',
+    '--max-failure-rate=2',
+  ])
   assert.equal(options.maxFailures, 50)
   assert.equal(options.maxFailureRate, 1)
 })

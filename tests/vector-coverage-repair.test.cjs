@@ -40,8 +40,12 @@ function row(imageId, vector, dim = vector.length) {
   }
 }
 
-test('coverage repair is preview-only unless an exact confirmation token is supplied', () => {
-  const parsed = parseArgs([])
+test('coverage repair is preview-only unless an exact confirmation token is supplied', (t) => {
+  const root = fixtureRoot(t)
+  const library = path.join(root, 'library')
+  const { StorageLocationService } = loadTsModule('electron/storageLocationService.ts')
+  new StorageLocationService(root, library).initialize()
+  const parsed = parseArgs([`--user-data=${library}`])
   assert.equal(parsed.execute, false)
   assert.equal(parsed.backend, 'gpu')
   assert.throws(

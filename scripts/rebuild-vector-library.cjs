@@ -3,6 +3,11 @@ const Module = require('node:module')
 const path = require('node:path')
 
 const { loadTsModule } = require('../tests/guard-utils.cjs')
+const {
+  defaultMaintenanceRoot,
+  validateMaintenanceRoot,
+  bindMaintenanceStorageRoot,
+} = require('./maintenance-storage-context.cjs')
 
 const MODEL_CONFIGS = [
   { modelName: 'dinov2_vitb14', dim: 768 },
@@ -18,9 +23,7 @@ function isWholeDrive(candidate) {
 }
 
 function parseArgs(argv) {
-  const userDataPath = path.resolve(
-    option(argv, 'user-data', path.join(process.env.APPDATA || '', 'floating-clock-electron')),
-  )
+  const userDataPath = path.resolve(option(argv, 'user-data', '') || defaultMaintenanceRoot())
   const scanPaths = argv
     .filter((value) => value.startsWith('--scan-path='))
     .map((value) => path.resolve(value.slice('--scan-path='.length)))
@@ -49,9 +52,7 @@ function parseArgs(argv) {
 }
 
 function validateOptions(options) {
-  if (path.basename(options.userDataPath).toLowerCase() !== 'floating-clock-electron') {
-    throw new Error('The user-data directory must end in floating-clock-electron')
-  }
+  options.userDataPath = validateMaintenanceRoot(options.userDataPath)
   if (!['cpu', 'gpu'].includes(options.backend)) throw new Error('Use --backend=cpu or gpu')
   if (options.scanPaths.length === 0) throw new Error('Pass at least one --scan-path=<directory>')
   for (const scanPath of options.scanPaths) {
@@ -210,10 +211,9 @@ async function main(argv = process.argv.slice(2)) {
     return
   }
 
-  const originalAppData = process.env.APPDATA
+  const restoreStorageRoot = bindMaintenanceStorageRoot(options.userDataPath)
   const originalResourcesPath = process.resourcesPath
   const originalLoad = Module._load
-  process.env.APPDATA = path.dirname(options.userDataPath)
   process.resourcesPath = options.childrenDir
   Module._load = function patchedLoad(request, parent, isMain) {
     if (request === 'electron') return createElectronMock(options)
@@ -251,8 +251,7 @@ async function main(argv = process.argv.slice(2)) {
     throw error
   } finally {
     Module._load = originalLoad
-    if (originalAppData === undefined) delete process.env.APPDATA
-    else process.env.APPDATA = originalAppData
+    restoreStorageRoot()
     process.resourcesPath = originalResourcesPath
   }
 }

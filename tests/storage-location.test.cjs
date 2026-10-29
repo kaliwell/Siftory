@@ -9,6 +9,7 @@ const { StorageLocationService, LIBRARY_MARKER } = loadTsModule(
   'electron/storageLocationService.ts',
 )
 const { migrateStorageDirectory } = loadTsModule('electron/storageDirectoryMigration.ts')
+const { migrationProgressFraction } = loadTsModule('electron/storageMigrationProgress.ts')
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(fs.realpathSync.native(os.tmpdir()), 'siftory-relocation-'))
@@ -82,7 +83,71 @@ test('cold migration preserves SQLite relations, JSONL, binary vectors, models a
   assert.equal(copied.prepare('PRAGMA quick_check').get().quick_check, 'ok')
   copied.close()
   assert.ok(progress.some((value) => value.copiedBytes > 0))
+  assert.deepEqual(
+    [...new Set(progress.map((p) => p.phase))],
+    ['scanning', 'copying', 'checking-source', 'verifying', 'committing', 'completed'],
+  )
+  const fractions = progress.map(migrationProgressFraction).filter((n) => n !== null)
+  assert.ok(fractions.every((n, i) => i === 0 || n >= fractions[i - 1]))
+  assert.ok(
+    progress
+      .filter((p) => p.phase !== 'completed')
+      .every((p) => migrationProgressFraction(p) !== 1),
+  )
+  const completed = progress.at(-1)
+  assert.equal(completed.verifiedFiles, completed.totalFiles)
+  assert.equal(completed.verifiedBytes, completed.totalBytes * 2)
+  assert.equal(migrationProgressFraction(completed), 1)
   assert.equal(new StorageLocationService(f.appData, f.original).resolveRoot(), f.destination)
+})
+
+test('migration flushes the original write descriptor without reopening copied DLLs', async (t) => {
+  const f = fixture(t)
+  f.write(
+    'runtimes/sensevoice/venv/Lib/site-packages/sklearn/.libs/msvcp140.dll',
+    Buffer.from([77, 90, 0, 1, 255]),
+  )
+  f.service.schedule(f.destination)
+  const originalOpen = fs.promises.open
+  let writableReopens = 0
+  t.mock.method(fs.promises, 'open', async (filename, flags, ...args) => {
+    if (String(filename).endsWith('msvcp140.dll') && flags === 'r+') {
+      writableReopens++
+      throw Object.assign(new Error('copied DLL cannot be reopened for writing'), { code: 'EPERM' })
+    }
+    return originalOpen.call(fs.promises, filename, flags, ...args)
+  })
+  assert.equal((await migrateStorageDirectory(f.service)).migrated, true)
+  assert.equal(writableReopens, 0)
+  assert.deepEqual(
+    fs.readFileSync(
+      path.join(
+        f.original,
+        'runtimes/sensevoice/venv/Lib/site-packages/sklearn/.libs/msvcp140.dll',
+      ),
+    ),
+    fs.readFileSync(
+      path.join(
+        f.destination,
+        'runtimes/sensevoice/venv/Lib/site-packages/sklearn/.libs/msvcp140.dll',
+      ),
+    ),
+  )
+})
+
+test('a destination flush failure keeps the original library active and leaves no valid destination marker', async (t) => {
+  const f = fixture(t)
+  f.service.schedule(f.destination)
+  let syncs = 0
+  t.mock.method(fs, 'fsync', (_fd, callback) => {
+    syncs++
+    callback(Object.assign(new Error('simulated flush failure'), { code: 'EIO' }))
+  })
+  const result = await migrateStorageDirectory(f.service)
+  assert.ok(syncs > 0)
+  assert.equal(result.failed, true)
+  assert.equal(f.service.resolveRoot(), f.original)
+  assert.equal(fs.existsSync(path.join(f.destination, LIBRARY_MARKER)), false)
 })
 
 test('nested roots and existing destinations are rejected without modifying the old data', (t) => {
@@ -114,8 +179,8 @@ test('source mutation during copy prevents pointer publication', async (t) => {
   f.service.schedule(f.destination)
   let changed = false
   const result = await migrateStorageDirectory(f.service, {
-    onProgress: () => {
-      if (!changed) {
+    onProgress: (progress) => {
+      if (!changed && progress.phase === 'copying') {
         changed = true
         f.write('new-file', 'concurrent writer')
       }
@@ -123,6 +188,51 @@ test('source mutation during copy prevents pointer publication', async (t) => {
   })
   assert.equal(result.failed, true)
   assert.equal(f.service.resolveRoot(), f.original)
+})
+
+test('large files report progress inside final verification and cancellation never commits', async (t) => {
+  const f = fixture(t)
+  f.write('large-model.onnx', Buffer.alloc(1024 * 1024, 42))
+  f.service.schedule(f.destination)
+  const controller = new AbortController()
+  let duringFile
+  const result = await migrateStorageDirectory(f.service, {
+    signal: controller.signal,
+    onProgress: (p) => {
+      if (p.phase === 'verifying' && p.currentFile === 'large-model.onnx' && p.verifiedBytes > 0) {
+        duringFile = p
+        controller.abort()
+      }
+    },
+  })
+  assert.ok(duringFile)
+  assert.ok(duringFile.verifiedFiles < duringFile.totalFiles)
+  assert.ok(migrationProgressFraction(duringFile) < 1)
+  assert.equal(result.failed, true)
+  assert.equal(f.service.resolveRoot(), f.original)
+  assert.equal(fs.existsSync(path.join(f.destination, LIBRARY_MARKER)), false)
+})
+
+test('empty libraries complete without invalid percentages and do not finish before commit', async (t) => {
+  const f = fixture(t)
+  for (const name of fs.readdirSync(f.original)) {
+    if (name !== LIBRARY_MARKER)
+      fs.rmSync(path.join(f.original, name), { recursive: true, force: true })
+  }
+  f.write('empty', '')
+  f.service.schedule(f.destination)
+  const values = []
+  const result = await migrateStorageDirectory(f.service, { onProgress: (p) => values.push(p) })
+  assert.equal(result.migrated, true)
+  assert.ok(
+    values.every(
+      (p) => migrationProgressFraction(p) === null || Number.isFinite(migrationProgressFraction(p)),
+    ),
+  )
+  assert.equal(values.at(-1).totalBytes, 0)
+  assert.equal(values.at(-1).copiedFiles, 1)
+  assert.equal(values.at(-1).verifiedFiles, 1)
+  assert.equal(migrationProgressFraction(values.at(-1)), 1)
 })
 
 test('destination corruption after an individual file was checked fails final verification', async (t) => {
@@ -156,6 +266,76 @@ test('insufficient space fails before copying and does not switch locations', as
   assert.equal(f.service.resolveRoot(), f.original)
   assert.equal(fs.existsSync(f.destination), false)
 })
+
+for (const mutation of ['rewrite', 'missing', 'extra', 'replace-root']) {
+  test(`commit refuses a destination changed after final hashing: ${mutation}`, async (t) => {
+    const f = fixture(t)
+    f.service.schedule(f.destination)
+    let changed = false
+    const result = await migrateStorageDirectory(f.service, {
+      onProgress: (p) => {
+        if (changed || p.phase !== 'committing') return
+        changed = true
+        const target = path.join(f.destination, 'floating_clock_settings.json')
+        if (mutation === 'rewrite') {
+          const stat = fs.statSync(target)
+          const bytes = fs.readFileSync(target)
+          bytes[0] ^= 1
+          fs.writeFileSync(target, bytes)
+          // Even an equal-size write with restored mtime must be detected.
+          fs.utimesSync(target, stat.atime, stat.mtime)
+        } else if (mutation === 'missing') {
+          fs.renameSync(target, path.join(f.root, 'retained-removed-file'))
+        } else if (mutation === 'extra') {
+          fs.writeFileSync(path.join(f.destination, 'unexpected-file'), 'unexpected')
+        } else {
+          fs.renameSync(f.destination, f.destination + '-retained')
+          fs.mkdirSync(f.destination)
+        }
+      },
+    })
+    assert.equal(changed, true)
+    assert.equal(result.failed, true)
+    assert.equal(f.service.resolveRoot(), f.original)
+    assert.equal(fs.existsSync(path.join(f.destination, LIBRARY_MARKER)), false)
+    assert.equal(
+      fs
+        .readFileSync(path.join(f.original, 'floating_clock_settings.json'), 'utf8')
+        .startsWith('{'),
+      true,
+    )
+  })
+}
+
+for (const phase of ['copying', 'completed']) {
+  test(`progress exceptions during ${phase} cannot alter the data transaction`, async (t) => {
+    const f = fixture(t)
+    f.service.schedule(f.destination)
+    const writes = []
+    const save = f.service.save.bind(f.service)
+    f.service.save = (state) => {
+      writes.push(state.root)
+      save(state)
+    }
+    let exceptions = 0
+    let completedRoot
+    const result = await migrateStorageDirectory(f.service, {
+      onProgress: (p) => {
+        if (p.phase === phase) {
+          exceptions++
+          if (phase === 'completed') completedRoot = f.service.resolveRoot()
+          throw new Error('simulated presentation failure')
+        }
+      },
+    })
+    assert.ok(exceptions > 0)
+    assert.equal(result.migrated, true)
+    assert.equal(f.service.resolveRoot(), f.destination)
+    assert.deepEqual(writes, [f.destination])
+    assert.equal(f.service.read().lastMigration.state, 'completed')
+    if (phase === 'completed') assert.equal(completedRoot, f.destination)
+  })
+}
 
 test('links in the data tree fail closed without traversing the linked directory', async (t) => {
   const f = fixture(t)
