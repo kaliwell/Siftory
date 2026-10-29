@@ -76,7 +76,7 @@ async function run() {
     await page.goto(
       `http://127.0.0.1:${server.httpServer.address().port}/tests/fixtures/workspace-ui.html`,
     )
-    await page.locator('[data-ready="true"]').waitFor()
+    await page.locator('[data-testid="app-root"][data-ready="true"]').waitFor()
     await page.getByTestId('image-search-query-section').waitFor()
     await page.evaluate(() => document.fonts.ready)
     await page.waitForTimeout(200)
@@ -173,9 +173,17 @@ async function run() {
           await page.setViewportSize({ width, height: 900 })
           const card = page.locator('.asset-library-card').first()
           await card.waitFor()
-          await page.waitForTimeout(150)
+          await page.waitForFunction(() => {
+            const width = document
+              .querySelector('.asset-library-card')
+              ?.getBoundingClientRect().width
+            return width >= 239 && width < 500
+          })
           const bounds = await card.boundingBox()
-          assert.ok(bounds.width >= 239 && bounds.width < 500, `gallery card width at ${width}`)
+          assert.ok(
+            bounds.width >= 239 && bounds.width < 500,
+            `gallery card width at ${width}: ${bounds.width}`,
+          )
           const preview = await card.locator('.asset-library-card-preview').boundingBox()
           assert.ok(preview.height >= 179)
           if (width >= 1200) {
@@ -320,7 +328,7 @@ async function run() {
         window.__workspaceTest.getSettings().imageSearchUiPreferences?.workspaceView === 'search',
     )
     await page.reload()
-    await page.locator('[data-ready="true"]').waitFor()
+    await page.locator('[data-testid="app-root"][data-ready="true"]').waitFor()
     assert.equal(
       await page.evaluate(
         () => window.__workspaceTest.store.getState().imageSearchUiPreferences.workspaceView,
@@ -383,14 +391,22 @@ async function run() {
           }))
         })
         const editor = page.locator('.settings-hotkey-editor')
+        const focusRecorder = async () => {
+          await editor.getByTestId('visibility-hotkey').focus()
+          await editor
+            .locator('[data-testid="visibility-hotkey"][data-recording-ready="true"]')
+            .waitFor()
+        }
+        await focusRecorder()
         await editor.getByTestId('visibility-hotkey').press('Control+Alt+F8')
         await editor.getByTestId('save-visibility-hotkey').click()
         await editor.getByRole('status').filter({ hasText: '快捷键冲突' }).waitFor()
+        await focusRecorder()
         await editor.getByTestId('visibility-hotkey').press('Control+Alt+F9')
         await editor.getByTestId('save-visibility-hotkey').click()
         await editor.getByRole('status').filter({ hasText: '快捷键已保存' }).waitFor()
         assert.equal(await editor.getByTestId('visibility-hotkey').inputValue(), 'Ctrl+Alt+F9')
-        await editor.getByTestId('visibility-hotkey').focus()
+        await focusRecorder()
         await editor.getByTestId('visibility-hotkey').dispatchEvent('keydown', {
           key: 'Tab',
           code: 'Tab',
@@ -620,7 +636,7 @@ async function run() {
         window.__workspaceTest.getSettings().mediaSearchUiPreferences?.workspaceView === 'search',
     )
     await page.reload()
-    await page.locator('[data-ready="true"]').waitFor()
+    await page.locator('[data-testid="app-root"][data-ready="true"]').waitFor()
     assert.equal(
       await page.evaluate(
         () => window.__workspaceTest.store.getState().mediaSearchUiPreferences.workspaceView,

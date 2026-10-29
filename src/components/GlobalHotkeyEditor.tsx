@@ -95,6 +95,7 @@ export default function GlobalHotkeyEditor({
           void window.electronAPI.setHotkeyRecording?.(false).catch(() => {})
         }}
         data-testid="visibility-hotkey"
+        data-recording-ready={recordingReady}
         readOnly
         disabled={busy}
         value={draft.replace('CommandOrControl', 'Ctrl').replace('Super', 'Win')}

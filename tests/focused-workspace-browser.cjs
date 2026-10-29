@@ -52,7 +52,7 @@ async function run() {
       await route.continue()
     })
     await page.goto(`http://127.0.0.1:${address.port}/tests/fixtures/workspace-ui.html`)
-    await page.locator('[data-ready="true"]').waitFor()
+    await page.locator('[data-testid="app-root"][data-ready="true"]').waitFor()
     await page.waitForFunction(() => {
       const saved = window.__workspaceTest.getSettings()
       return (
