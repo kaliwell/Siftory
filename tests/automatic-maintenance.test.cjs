@@ -377,10 +377,14 @@ test('cleanup reports invalid metadata and denied writes without exposing filena
   fs.writeFileSync(malformed + '.json', '{')
   fs.writeFileSync(empty + '.json', 'null')
   const unlink = fs.promises.unlink
-  const deniedPath = fs.realpathSync(denied)
+  let deniedCalls = 0
   t.mock.method(fs.promises, 'unlink', async (file) => {
-    if (path.relative(file, deniedPath) === '')
+    // Each fixture has unique basenames; do not depend on Windows drive aliases
+    // or the different names returned by synchronous/asynchronous realpath.
+    if (path.basename(file) === path.basename(denied)) {
+      deniedCalls++
       throw Object.assign(new Error(`private path: ${denied}`), { code: 'EPERM' })
+    }
     return unlink(file)
   })
   const reports = []
@@ -391,6 +395,7 @@ test('cleanup reports invalid metadata and denied writes without exposing filena
     (r) => reports.push(r),
   )
   assert.ok(freed > 0)
+  assert.equal(deniedCalls, 1)
   assert.equal(fs.existsSync(good), false)
   for (const file of [denied, malformed, empty]) assert.equal(fs.existsSync(file), true)
   assert.equal(reports.length, 1)
@@ -408,10 +413,12 @@ test('cleanup accounts for removed backup bytes even if metadata removal fails',
   const file = expiredPair(path.join(f.dir, 'vector-db', 'embeddings'), now)
   const bytes = fs.statSync(file).size
   const unlink = fs.promises.unlink
-  const metadataPath = fs.realpathSync(file + '.json')
+  let deniedCalls = 0
   t.mock.method(fs.promises, 'unlink', async (target) => {
-    if (path.relative(target, metadataPath) === '')
+    if (path.basename(target) === path.basename(file + '.json')) {
+      deniedCalls++
       throw Object.assign(new Error('blocked'), { code: 'EACCES' })
+    }
     return unlink(target)
   })
   const reports = []
@@ -425,6 +432,7 @@ test('cleanup accounts for removed backup bytes even if metadata removal fails',
     bytes,
   )
   assert.equal(fs.existsSync(file), false)
+  assert.equal(deniedCalls, 1)
   assert.equal(fs.existsSync(file + '.json'), true)
   assert.equal(reports[0].deletedBackups, 1)
   assert.deepEqual(reports[0].ioErrors, { EACCES: 1 })
