@@ -26,7 +26,10 @@ jobs:
       - run: npm install --global npm@11.19.1
       - run: npm ci
       - run: npm run build:native
-      - run: node --test tests/native-incremental-index.test.cjs tests/native-search-correctness.test.cjs tests/native-scan.test.cjs
+      - run: node --test tests/native-incremental-index.test.cjs tests/native-search-correctness.test.cjs
+      # Keep this hosted job focused on index storage/search. USN privileges and
+      # thumbnail pressure workloads belong to their dedicated hardware checks.
+      - run: node --test --test-name-pattern="manifest|mmap|path|index|resurrect|purge" tests/native-scan.test.cjs
   source-quality:
     runs-on: windows-latest
     timeout-minutes: 45
@@ -40,6 +43,7 @@ jobs:
       - run: npm ci
       - run: npm run ci:verify:source
       - run: npm run test:core-behavior
+      - run: node --test --test-name-pattern="project updates honor|project search indexes|manifest cache identity|project preview proxy" tests/project-preview.test.cjs
       - run: npm run benchmark:core-search
       - run: npx playwright install chromium
       - run: npm run test:desktop:browser

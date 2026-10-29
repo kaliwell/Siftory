@@ -35,6 +35,7 @@ export interface ImageSearchStatus {
   segmentPath?: string
   autosaveState?: string
   lastSaveTime?: number
+  physicalRecordCount?: number
   pathIndexMapSize?: number
   overlayCount?: number
   replacedCount?: number

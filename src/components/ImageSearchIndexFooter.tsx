@@ -58,6 +58,11 @@ const ImageSearchIndexFooter: React.FC<ImageSearchIndexFooterProps> = ({
         <span>
           {t('Records')}: {status.indexedCount}
         </span>
+        {status.physicalRecordCount != null && status.physicalRecordCount > status.indexedCount && (
+          <span>
+            {t('Stored records including history')}: {status.physicalRecordCount}
+          </span>
+        )}
         {status.pathIndexMapSize != null && <span>pmap: {status.pathIndexMapSize}</span>}
         {status.overlayCount != null && status.overlayCount > 0 && (
           <span style={{ color: 'rgb(100,255,150)' }}>ovl: {status.overlayCount}</span>

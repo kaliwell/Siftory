@@ -1,9 +1,9 @@
-import { resolveStoredDataPath } from './storagePathResolver'
+import { resolveStoredDataPath, storedDataPathCandidates } from './storagePathResolver'
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
 import { classifyProjectFile, type ProjectSourceExt } from '../shared/projectFileTypes'
-import type { ImageHashResult, ImageSearchResult } from '../shared/ipc-contract'
+import type { ImageHashResult, ImageSearchResult, ImageSearchStatus } from '../shared/ipc-contract'
 import type { LayeredSearchResult } from '../shared/vectorTypes'
 import type { NativeSearchHit } from './imageSearchNativeTypes'
 import type { ProjectPreviewManifestEntry } from './projectPreviewManifest'
@@ -84,6 +84,7 @@ export interface ProjectSearchMetadata {
 }
 
 export interface ProjectIndexAdapter {
+  hasIndexPath?(filePath: string): boolean
   hashImageAsync(filePath: string): Promise<ImageHashResult>
   upsertIndexRecord(
     filePath: string,
@@ -99,6 +100,7 @@ export interface ProjectIndexAdapter {
 }
 
 export interface ProjectIndexProgress {
+  skipped?: number
   phase: 'enumerating' | 'rendering' | 'complete'
   currentPath?: string
   discovered: number
@@ -112,6 +114,26 @@ export interface ProjectIndexProgress {
 export interface ProjectIndexResult extends Omit<ProjectIndexProgress, 'phase' | 'currentPath'> {
   cancelled: boolean
   truncated: boolean
+}
+
+export function projectIndexStatusPatch(
+  progress: ProjectIndexProgress,
+): Partial<ImageSearchStatus> {
+  return {
+    state: progress.phase === 'complete' ? 'idle' : 'indexing',
+    currentPath: progress.currentPath,
+    message:
+      progress.phase === 'enumerating'
+        ? `Finding project files... ${progress.discovered}`
+        : progress.phase === 'rendering'
+          ? `Indexing project previews... ${progress.completed}/${progress.discovered}`
+          : `Project previews indexed: ${progress.indexed}; unchanged: ${progress.skipped ?? 0}`,
+    projectDiscovered: progress.discovered,
+    projectIndexed: progress.indexed,
+    projectUnavailable: progress.unavailable,
+    projectFailed: progress.failed,
+    projectRemoved: progress.removed,
+  }
 }
 
 let configuredUserDataPath = ''
@@ -484,10 +506,15 @@ async function enumerateProjectSources(
 ): Promise<{ sources: string[]; truncated: boolean }> {
   const stack = [...roots]
   const sources: string[] = []
+  const visitedDirectories = new Set<string>()
+  const visitedSources = new Set<string>()
   let scannedDirectories = 0
   let truncated = false
   while (stack.length > 0 && !isCancelled()) {
     const directory = stack.pop()!
+    const directoryKey = normalizedKey(directory)
+    if (visitedDirectories.has(directoryKey)) continue
+    visitedDirectories.add(directoryKey)
     if (previewRoot && isWithin(previewRoot, directory)) continue
     let entries: fs.Dirent[]
     try {
@@ -520,6 +547,9 @@ async function enumerateProjectSources(
       if (!entry.isFile()) continue
       const classification = classifyProjectFile(candidate)
       if (!classification || !PROJECT_INDEX_EXTENSIONS.has(classification.sourceExt)) continue
+      const sourceKey = normalizedKey(candidate)
+      if (visitedSources.has(sourceKey)) continue
+      visitedSources.add(sourceKey)
       sources.push(candidate)
       if (sources.length >= MAX_PROJECT_SOURCES_PER_SCAN) {
         truncated = true
@@ -535,10 +565,33 @@ export async function indexProjectPreviews(
   roots: readonly string[],
   adapter: ProjectIndexAdapter,
   options: {
+    scanMode?: 'addNew' | 'update' | 'updateAll'
     isCancelled?: () => boolean
     onProgress?: (progress: ProjectIndexProgress) => void
   } = {},
 ): Promise<ProjectIndexResult> {
+  // A migrated library can still have immutable segments with old cache paths.
+  // Reuse those entries and remove all aliases when a preview actually changes.
+  const nativeAdapter = adapter
+  if (nativeAdapter.hasIndexPath) {
+    adapter = {
+      ...nativeAdapter,
+      hasIndexPath: (filePath) =>
+        storedDataPathCandidates(filePath).some((candidate) =>
+          nativeAdapter.hasIndexPath!(candidate),
+        ),
+      deleteIndexPath: (filePath) => {
+        let result: { ok: boolean; error?: string } = { ok: true }
+        for (const candidate of storedDataPathCandidates(filePath)) {
+          if (nativeAdapter.hasIndexPath!(candidate)) {
+            const removed = nativeAdapter.deleteIndexPath(candidate)
+            if (!removed.ok) result = removed
+          }
+        }
+        return result
+      },
+    }
+  }
   const isCancelled = options.isCancelled ?? (() => false)
   const resolvedRoots = roots.map((root) => path.resolve(root))
   const service = getProjectPreviewService(configuredUserDataPath)
@@ -551,6 +604,7 @@ export async function indexProjectPreviews(
     discovered: sources.length,
     completed: 0,
     indexed: 0,
+    skipped: 0,
     unavailable: 0,
     failed: 0,
     removed: 0,
@@ -565,7 +619,22 @@ export async function indexProjectPreviews(
     })
     const previous = await service.manifest.get(sourcePath)
     try {
+      const knownPreview =
+        previous?.status === 'ready' &&
+        previous.previewPath &&
+        adapter.hasIndexPath?.(previous.previewPath) &&
+        fs.existsSync(previous.previewPath)
+      if (options.scanMode === 'addNew' && knownPreview) {
+        state.skipped += 1
+        state.completed += 1
+        continue
+      }
       const current = await service.getOrCreate(sourcePath)
+      if (options.scanMode !== 'updateAll' && knownPreview && current === previous) {
+        state.skipped += 1
+        state.completed += 1
+        continue
+      }
       if (previous?.previewPath && previous.previewPath !== current.previewPath) {
         adapter.deleteIndexPath(previous.previewPath)
         adapter.removeSourceVectorData(sourcePath)

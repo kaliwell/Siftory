@@ -38,6 +38,7 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Stored records including history': '存储记录（含历史版本）',
   'Application data location': '应用数据位置',
   'Move indexes, vectors, library metadata and generated caches together. Original media stays in place.':
     '统一迁移索引、向量、素材库元数据和生成缓存，原始素材位置保持不变。',

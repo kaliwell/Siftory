@@ -343,6 +343,7 @@ export interface NativeAddon {
     segmentPath: string
     manifestPath?: string
     version: number
+    physicalRecordCount?: number
     pathIndexMapSize?: number
     overlayCount?: number
     replacedCount?: number

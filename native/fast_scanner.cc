@@ -910,7 +910,7 @@ struct GDHeader{char magic[4];uint32_t version;uint64_t subkeyCount,segmentCount
 struct GDFooter{char magic[4];uint64_t entryCount;uint32_t version,reserved;};
 
 // ===== Path index map for incremental scan =====
-struct PathIndexEntry{int64_t fileSize=0,modifiedTime=0;bool fromSegment=false;};
+struct PathIndexEntry{int64_t fileSize=0,modifiedTime=0;bool fromSegment=false;const SegmentView* owner=nullptr;uint64_t ownerRow=0;};
 struct PathKey{uint64_t first,second;bool operator==(const PathKey& other)const{return first==other.first&&second==other.second;}};
 struct PathKeyHash{size_t operator()(const PathKey& key)const{return(size_t)(key.first^(key.second+0x9e3779b97f4a7c15ULL+(key.first<<6)+(key.first>>2)));}};
 struct UsnVolState{std::wstring volPath;uint64_t volSerial,journalId;int64_t lastUsn,lastScanTime;};
@@ -1188,9 +1188,15 @@ static PathKey make_path_key(const std::string& path){
   return{first,second};
 }
 static std::string normalize_path(const std::string& p){
+  // Win32 extended-length prefixes are alternate spellings of the same path.
+  // Normalize before taking the filesystem absolute path so UNC and drive paths
+  // share a key across directory enumeration, saved segments and UI selection.
+  std::string input=p;std::replace(input.begin(),input.end(),'/','\\');
+  if(input.size()>=8&&_strnicmp(input.c_str(),"\\\\?\\UNC\\",8)==0)input="\\\\"+input.substr(8);
+  else if(input.size()>=7&&input.compare(0,4,"\\\\?\\")==0&&input[5]==':'&&input[6]=='\\')input=input.substr(4);
   std::error_code ec;
-  std::string r=wide_to_utf8(fs::absolute(path_from_utf8(p),ec).wstring());
-  if(ec)r=p;
+  auto absolute=fs::absolute(path_from_utf8(input),ec);
+  std::string r=ec?input:wide_to_utf8(absolute.lexically_normal().wstring());
   std::replace(r.begin(),r.end(),'/','\\');
   for(auto& c:r)c=(char)tolower((unsigned char)c);
   while(!r.empty()&&r.back()=='\\')r.pop_back();
@@ -1204,19 +1210,20 @@ static bool is_path_hidden(IndexRuntime& index,const std::string& normalizedPath
   std::shared_lock<std::shared_mutex> lk(index.mutex);
   return index.deletedPaths.count(normalizedPath)||index.replacedPaths.count(normalizedPath);
 }
-static bool is_segment_path_hidden(IndexRuntime& index,const std::string& normalizedPath,int segmentId){
+static bool is_segment_path_hidden(IndexRuntime& index,const std::string& normalizedPath,int segmentId,uint64_t rowIndex){
   std::shared_lock<std::shared_mutex> lk(index.mutex);
   if(index.deletedPaths.count(normalizedPath))return true;
-  if(!index.replacedPaths.count(normalizedPath))return false;
-  // Append manifests list newest segments first. A replaced path is visible only
-  // from its newest segment; older copies remain physically present until compacted.
-  for(int si=0;si<segmentId&&si<(int)index.segments.size();si++){
-    auto& seg=index.segments[(size_t)si];if(!seg||!seg->view)continue;
-    for(uint64_t i=0;i<seg->recordCount;i++){
-      if(normalize_path(std::string(seg->pathBytes+seg->pathOffsets[i]))==normalizedPath)return true;
-    }
+  auto current=index.pathIndexMap.find(make_path_key(normalizedPath));
+  if(current!=index.pathIndexMap.end()&&current->second.fromSegment&&current->second.owner){
+    return current->second.owner!=index.segments[(size_t)segmentId].get()||current->second.ownerRow!=rowIndex;
   }
+  // Live overlay mutations are persisted before the application admits a query.
+  // A missing ownership entry is left searchable instead of hiding unknown data.
   return false;
+}
+static bool segment_candidate_visible(IndexRuntime& index,int segmentId,uint64_t rowIndex){
+  auto& segment=index.segments[(size_t)segmentId];
+  return !is_segment_path_hidden(index,normalize_path(std::string(segment->pathBytes+segment->pathOffsets[rowIndex])),segmentId,rowIndex);
 }
 static bool atomic_replace_file(const std::string& source,const std::string& target){
   std::wstring ws=fs::path(source).wstring(),wt=fs::path(target).wstring();
@@ -1682,7 +1689,7 @@ static void scan_worker(ScanRuntime& runtime,IndexRuntime& index,std::string roo
       se_log_verbose("HASH_OK "+se_path(fp)+" diff="+hex64(hv)+" dct="+hex64(dctv));
       if(decodeOnly){index.indexedCount.fetch_add(1);se_log_verbose("DECODE_ONLY_OK "+se_path(fp));return;}
       int64_t mtimeMs=0;try{struct _stat64 st;std::wstring wfp=utf8_to_wide(fp);if(_wstat64(wfp.c_str(),&st)==0)mtimeMs=st.st_mtime*1000LL;}catch(...){}
-      std::string dk=fp+"|"+std::to_string(mtimeMs)+"|"+std::to_string(fsz);
+      std::string dk=np+"|"+std::to_string(mtimeMs)+"|"+std::to_string(fsz);
       {std::unique_lock<std::shared_mutex> lk(index.mutex);if(index.dedupSet.count(dk)){se_log_verbose("SCAN_DEDUP "+se_path(fp));return;}index.dedupSet.insert(dk);}
       const auto tCommit0=detailedMetrics?std::chrono::high_resolution_clock::now():std::chrono::high_resolution_clock::time_point{};
       se_log_verbose("PUSH_BEGIN "+se_path(fp));
@@ -1999,7 +2006,7 @@ static void search_all_gd(IndexRuntime& index,uint64_t qh,int threshold,size_t t
     const auto& b=seg->prefix16Buckets[qPfx];if(b.empty())continue;
     m.scanned+=b.size();m.bucketSize+=b.size();
     for(uint32_t idx:b){
-      int d=hamming64(qh,seg->diffHash[idx]);if(d<=threshold){m.candidates++;
+      int d=hamming64(qh,seg->diffHash[idx]);if(d<=threshold&&segment_candidate_visible(index,(int)si,idx)){m.candidates++;
         if(heap.size()<topK)heap.push({idx,d,0,(int)si});else if(d<heap.top().dist){heap.pop();heap.push({idx,d,0,(int)si});}}}
   }
   // Assemble hits
@@ -2013,7 +2020,7 @@ static SearchHit make_hit(IndexRuntime& index,const RawCandidate& c,bool useComb
   auto& seg=index.segments[c.segId];
   SearchHit h;h.id=(int64_t)c.idx;h.segmentId=c.segId;
   std::string sp=std::string(seg->pathBytes+seg->pathOffsets[c.idx]);
-  std::string np=normalize_path(sp);if(is_segment_path_hidden(index,np,c.segId))return h;
+  std::string np=normalize_path(sp);if(is_segment_path_hidden(index,np,c.segId,c.idx))return h;
   h.path=sp;h.distance=c.dist;h.dctDistance=c.dctDist;
   h.score=useCombinedScore?combined_score(c.dist,c.dctDist):((64.0-c.dist)/64.0);
   auto* meta=(const IdxMetaFwd*)seg->metadata;
@@ -2037,7 +2044,7 @@ static void search_all_prefix16(IndexRuntime& index,uint64_t qh,int threshold,si
     auto& seg=index.segments[si];if(!seg->view)continue;
     const auto& b=seg->prefix16Buckets[qPfx];if(b.empty())continue;
     m.searchedSegments++;m.scanned+=b.size();m.bucketSize+=b.size();
-    for(uint32_t idx:b){int d=hamming64(qh,seg->diffHash[idx]);if(d<=threshold){m.candidates++;
+    for(uint32_t idx:b){int d=hamming64(qh,seg->diffHash[idx]);if(d<=threshold&&segment_candidate_visible(index,(int)si,idx)){m.candidates++;
       if(heap.size()<topK)heap.push({idx,d,0,(int)si});else if(d<heap.top().dist){heap.pop();heap.push({idx,d,0,(int)si});}}}
   }
   std::vector<RawCandidate> fin;fin.reserve(heap.size());while(!heap.empty()){fin.push_back(heap.top());heap.pop();}
@@ -2054,7 +2061,7 @@ static void search_all_prefix12(IndexRuntime& index,uint64_t qh,int threshold,si
     auto& seg=index.segments[si];if(!seg->view)continue;
     const auto& b=seg->prefix12Buckets[qPfx];if(b.empty())continue;
     m.searchedSegments++;m.scanned+=b.size();m.bucketSize+=b.size();
-    for(uint32_t idx:b){int d=hamming64(qh,seg->diffHash[idx]);if(d<=threshold){m.candidates++;
+    for(uint32_t idx:b){int d=hamming64(qh,seg->diffHash[idx]);if(d<=threshold&&segment_candidate_visible(index,(int)si,idx)){m.candidates++;
       if(heap.size()<topK)heap.push({idx,d,0,(int)si});else if(d<heap.top().dist){heap.pop();heap.push({idx,d,0,(int)si});}}}
   }
   std::vector<RawCandidate> fin;fin.reserve(heap.size());while(!heap.empty()){fin.push_back(heap.top());heap.pop();}
@@ -2069,7 +2076,7 @@ static void search_all_linear(IndexRuntime& index,uint64_t qh,int threshold,size
   for(size_t si=0;si<index.segments.size();si++){
     auto& seg=index.segments[si];if(!seg->view)continue;m.searchedSegments++;
     for(uint64_t i=0;i<seg->recordCount;i++){int d=hamming64(qh,seg->diffHash[i]);m.scanned++;
-      if(d<=threshold){m.candidates++;if(heap.size()<topK)heap.push({i,d,0,(int)si});else if(d<heap.top().dist){heap.pop();heap.push({i,d,0,(int)si});}}}
+      if(d<=threshold&&segment_candidate_visible(index,(int)si,i)){m.candidates++;if(heap.size()<topK)heap.push({i,d,0,(int)si});else if(d<heap.top().dist){heap.pop();heap.push({i,d,0,(int)si});}}}
   }
   std::vector<RawCandidate> fin;fin.reserve(heap.size());while(!heap.empty()){fin.push_back(heap.top());heap.pop();}
   std::sort(fin.begin(),fin.end(),[](auto& a,auto& b){return a.dist<b.dist;});out.reserve(fin.size());
@@ -2578,8 +2585,7 @@ static napi_value GetIndexStats(napi_env env,napi_callback_info){
   auto& index=*get_addon_context(env).index;
   napi_value r;napi_create_object(env,&r);int64_t fl=0,tb=0;int64_t c=0;std::string lp;
   {std::shared_lock<std::shared_mutex> lk(index.mutex);
-    if(index.mode=="segment_mmap"){for(auto& seg:index.segments)c+=seg->recordCount;}
-    else{c=(int64_t)index.records.size();}
+    c=(int64_t)index.pathIndexMap.size();
     fl=index.failedCount;tb=index.totalBytes;if(!index.records.empty())lp=index.records.back().path;}
   set_int64(env,r,"indexedCount",c);set_int64(env,r,"failedCount",fl);set_int64(env,r,"totalBytes",tb);set_string(env,r,"lastIndexedPath",lp.c_str());return r;
 }
@@ -2600,22 +2606,23 @@ static napi_value ClearIndex(napi_env env,napi_callback_info){
 static uint64_t parse_hex64(const std::string& s){uint64_t v=0;for(char c:s){v<<=4;if(c>='0'&&c<='9')v|=c-'0';else if(c>='a'&&c<='f')v|=c-'a'+10;else if(c>='A'&&c<='F')v|=c-'A'+10;}return v;}
 
 static bool find_effective_record_locked(IndexRuntime& index,const std::string& normalizedPath,ImageRecord& out,bool& fromSegment){
+  if(index.deletedPaths.count(normalizedPath))return false;
+  auto current=index.pathIndexMap.find(make_path_key(normalizedPath));
+  if(current==index.pathIndexMap.end())return false;
+  const auto& entry=current->second;
+  if(entry.fromSegment&&entry.owner&&entry.owner->view&&entry.ownerRow<entry.owner->recordCount){
+    const auto* segment=entry.owner;const auto row=entry.ownerRow;
+    const std::string storedPath(segment->pathBytes+segment->pathOffsets[row]);
+    if(normalize_path(storedPath)!=normalizedPath)return false;
+    auto* metadata=(const IdxMetaFwd*)segment->metadata;
+    out.id=index.nextId.fetch_add(1);out.path=storedPath;
+    out.width=metadata[row].width;out.height=metadata[row].height;out.channels=0;
+    out.fileSize=metadata[row].fileSize;out.modifiedTime=metadata[row].modifiedTime;
+    out.diffHash64=segment->diffHash[row];out.dctHash64=segment->dctHash?segment->dctHash[row]:0;
+    fromSegment=true;return true;
+  }
   for(auto it=index.records.rbegin();it!=index.records.rend();++it){
     if(normalize_path(it->path)==normalizedPath){out=*it;fromSegment=false;return true;}
-  }
-  if(index.deletedPaths.count(normalizedPath)||index.replacedPaths.count(normalizedPath))return false;
-  for(auto& seg:index.segments){
-    if(!seg||!seg->view)continue;
-    auto* meta=(const IdxMetaFwd*)seg->metadata;
-    for(uint64_t i=0;i<seg->recordCount;i++){
-      std::string recordPath(seg->pathBytes+seg->pathOffsets[i]);
-      if(normalize_path(recordPath)!=normalizedPath)continue;
-      out.id=index.nextId.fetch_add(1);out.path=recordPath;
-      out.width=meta[i].width;out.height=meta[i].height;out.channels=0;
-      out.fileSize=meta[i].fileSize;out.modifiedTime=meta[i].modifiedTime;
-      out.diffHash64=seg->diffHash[i];out.dctHash64=seg->dctHash?seg->dctHash[i]:0;
-      fromSegment=true;return true;
-    }
   }
   return false;
 }
@@ -3439,6 +3446,10 @@ static napi_value UpsertIndexRecord(napi_env env,napi_callback_info info){
     std::unique_lock<std::shared_mutex> lk(index.mutex);
     ImageRecord existing;bool fromSegment=false;
     bool found=find_effective_record_locked(index,np,existing,fromSegment);
+    // Repeating the same upsert must not append another physical version.
+    if(found&&existing.width==rec.width&&existing.height==rec.height&&existing.fileSize==rec.fileSize&&
+       existing.modifiedTime==rec.modifiedTime&&existing.diffHash64==rec.diffHash64&&existing.dctHash64==rec.dctHash64){
+      set_bool(env,result,"ok",true);set_string(env,result,"path",existing.path.c_str());return result;}
     index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& item){return normalize_path(item.path)==np;}),index.records.end());
     if(found&&(fromSegment||index.replacedPaths.count(np)))index.replacedPaths.insert(np);
     index.deletedPaths.erase(np);rec.id=index.nextId.fetch_add(1);index.records.push_back(rec);
@@ -4011,8 +4022,8 @@ static std::shared_ptr<SegmentView> mmap_segment(IndexRuntime& index,const std::
   {const char* pbBase=view+pb;const uint64_t* poBase=(const uint64_t*)(view+po);auto* metaBase=(const IdxMetaFwd*)(view+mo);
    for(uint64_t i=0;i<n;i++){
      std::string sp(pbBase+poBase[i]);std::string np=normalize_path(sp);
-     PathIndexEntry pe;pe.fileSize=metaBase[i].fileSize;pe.modifiedTime=metaBase[i].modifiedTime;pe.fromSegment=true;
-     index.pathIndexMap[make_path_key(np)]=pe;
+     PathIndexEntry pe;pe.fileSize=metaBase[i].fileSize;pe.modifiedTime=metaBase[i].modifiedTime;pe.fromSegment=true;pe.owner=seg.get();pe.ownerRow=i;
+     index.pathIndexMap.emplace(make_path_key(np),pe);
    }}
   return seg;
 }
@@ -4068,7 +4079,7 @@ static bool load_overlay(IndexRuntime& index,const std::string& rootDir,std::str
     pos+=12; // skip "replaced":[
     while(pos<js.size()){
       if(js[pos]=='"'){pos++;size_t end=js.find('"',pos);if(end==std::string::npos)break;
-        index.replacedPaths.insert(json_unescape(js.substr(pos,end-pos)));pos=end+1;}
+        index.replacedPaths.insert(normalize_path(json_unescape(js.substr(pos,end-pos))));pos=end+1;}
       else if(js[pos]==']')break;
       else pos++;
     }
@@ -4079,7 +4090,7 @@ static bool load_overlay(IndexRuntime& index,const std::string& rootDir,std::str
     pos+=11; // skip "deleted":[
     while(pos<js.size()){
       if(js[pos]=='"'){pos++;size_t end=js.find('"',pos);if(end==std::string::npos)break;
-        index.deletedPaths.insert(json_unescape(js.substr(pos,end-pos)));pos=end+1;}
+        index.deletedPaths.insert(normalize_path(json_unescape(js.substr(pos,end-pos))));pos=end+1;}
       else if(js[pos]==']')break;
       else pos++;
     }
@@ -4331,9 +4342,16 @@ static napi_value SaveIndexToManifest(napi_env env,napi_callback_info info){
     // Reload GD
     load_global_directory(index,rootDir);
   }
+  set_int64(env,r,"recordCount",(int64_t)index.pathIndexMap.size());
   return r;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"saveManifest error");}
 }
+
+static std::shared_ptr<SegmentView> load_segment_worker(const std::string& segPath,
+    std::vector<std::pair<PathKey,PathIndexEntry>>& outPathEntries,
+    const std::shared_ptr<AsyncCancellationToken>& cancellation,
+    const std::string* excludedPrefix,std::unordered_set<std::string>* outExcludedPaths,
+    ManifestPathBoundary* boundary);
 
 static napi_value LoadManifest(napi_env env,napi_callback_info info){
   try{size_t argc=1;napi_value argv[1];napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);
@@ -4368,23 +4386,21 @@ static napi_value LoadManifest(napi_env env,napi_callback_info info){
     segFiles.push_back(std::move(segPath));
   }
 
-  // Load all segments using mmap_segment helper
+  // Use the same validated reader as async load and publish an independent map.
+  // Existing rows must not retain ownership pointers into retired mappings.
   std::vector<std::shared_ptr<SegmentView>> newSegments;
+  std::unordered_map<PathKey,PathIndexEntry,PathKeyHash> newPathMap;
   int64_t totalRecords=0;
   for(auto& segPath:segFiles){
-    auto seg=mmap_segment(index,segPath,&boundary);
-    if(!seg){
-      for(auto& s:newSegments){s->view=nullptr;s->fileHandle=INVALID_HANDLE_VALUE;s->mappingHandle=NULL;}
-      set_bool(env,r,"ok",false);set_string(env,r,"error",("Cannot load: "+segPath).c_str());return r;
-    }
-    totalRecords+=seg->recordCount;
-    newSegments.push_back(std::move(seg));
+    std::vector<std::pair<PathKey,PathIndexEntry>> entries;
+    auto seg=load_segment_worker(segPath,entries,{},nullptr,nullptr,&boundary);
+    if(!seg){set_bool(env,r,"ok",false);set_string(env,r,"error",("Cannot load: "+segPath).c_str());return r;}
+    for(auto& entry:entries)newPathMap.insert(std::move(entry));
+    totalRecords+=seg->recordCount;newSegments.push_back(std::move(seg));
   }
-
-  // All loaded — atomic swap under unique_lock
   {std::unique_lock<std::shared_mutex> lk(index.mutex);
-   index.segments=std::move(newSegments);
-   index.records.clear();index.dedupSet.clear();
+   unmap_gd(index);index.segments=std::move(newSegments);index.pathIndexMap=std::move(newPathMap);
+   index.records.clear();index.dedupSet.clear();index.replacedPaths.clear();index.deletedPaths.clear();
    index.indexedCount=totalRecords;index.failedCount.store(0);index.totalBytes.store(0);
    index.mode="segment_mmap";index.type="prefix16";index.manifestPath=rootDir;}
   // Load USN state for this manifest
@@ -4394,7 +4410,7 @@ static napi_value LoadManifest(napi_env env,napi_callback_info info){
   if(!load_overlay(index,rootDir,&pathError)){set_bool(env,r,"ok",false);set_string(env,r,"error",pathError.c_str());return r;}
   // P2: load Global Directory if available
   load_global_directory(index,rootDir);
-  set_bool(env,r,"ok",true);set_int64(env,r,"recordCount",totalRecords);set_int32(env,r,"segmentCount",(int32_t)index.segments.size());return r;
+  set_bool(env,r,"ok",true);set_int64(env,r,"recordCount",(int64_t)index.pathIndexMap.size());set_int32(env,r,"segmentCount",(int32_t)index.segments.size());return r;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"loadManifest error");}
 }
 
@@ -4439,14 +4455,16 @@ static napi_value LoadIndexFromSegment(napi_env env,napi_callback_info info){
   std::string busyOperation;auto writeLease=try_acquire_index_writer(context.index,"load-segment",busyOperation);
   if(!writeLease){auto error=index_writer_busy_error(busyOperation);return native_error(env,error.c_str());}
   std::string fp=get_string(env,argv[0]);napi_value r;napi_create_object(env,&r);
-  unmap_index(index);
-  auto seg=mmap_segment(index,fp);
+  std::vector<std::pair<PathKey,PathIndexEntry>> entries;
+  auto seg=load_segment_worker(fp,entries,{},nullptr,nullptr,nullptr);
   if(!seg){set_bool(env,r,"ok",false);set_string(env,r,"error","Cannot load segment");return r;}
-  int64_t n=seg->recordCount;
-  index.segments.push_back(std::move(seg));
-  index.mode="segment_mmap";index.type="prefix16";index.manifestPath.clear();
-  {std::unique_lock<std::shared_mutex> lk(index.mutex);index.records.clear();index.dedupSet.clear();index.indexedCount=n;index.failedCount.store(0);index.totalBytes.store(0);}
-  set_bool(env,r,"ok",true);set_int64(env,r,"recordCount",n);return r;
+  const int64_t n=seg->recordCount;
+  {std::unique_lock<std::shared_mutex> lk(index.mutex);
+   unmap_index(index);index.pathIndexMap.clear();
+   for(auto& entry:entries)index.pathIndexMap.insert(std::move(entry));
+   index.segments.push_back(std::move(seg));index.mode="segment_mmap";index.type="prefix16";index.manifestPath.clear();
+   index.records.clear();index.dedupSet.clear();index.replacedPaths.clear();index.deletedPaths.clear();index.indexedCount=n;index.failedCount.store(0);index.totalBytes.store(0);}
+  set_bool(env,r,"ok",true);set_int64(env,r,"recordCount",(int64_t)index.pathIndexMap.size());return r;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"load error");}
 }
 
@@ -4572,12 +4590,14 @@ static napi_value GetIndexMode(napi_env env,napi_callback_info){
   set_int32(env,r,"version",maxVersion);set_int32(env,r,"segmentCount",(int32_t)index.segments.size());set_int32(env,r,"schemaVersion",2);
   int64_t totalRec=0;for(auto& seg:index.segments)totalRec+=seg->recordCount;
   if(index.mode=="memory")totalRec=(int64_t)index.records.size();
-  set_int64(env,r,"recordCount",totalRec);
+  const int64_t physicalCount=totalRec+(index.mode=="memory"?0:(int64_t)index.records.size());
+  set_int64(env,r,"physicalRecordCount",physicalCount);
+  set_int64(env,r,"recordCount",(int64_t)index.pathIndexMap.size());
   set_int64(env,r,"pathIndexMapSize",(int64_t)index.pathIndexMap.size());
   set_int64(env,r,"overlayCount",index.mode!="memory"?(int64_t)index.records.size():(int64_t)0);
   set_int64(env,r,"replacedCount",(int64_t)index.replacedPaths.size());
   set_int64(env,r,"deletedCount",(int64_t)index.deletedPaths.size());
-  bool healthy=totalRec>0 && (int64_t)index.pathIndexMap.size()>=totalRec*95/100;
+  bool healthy=std::all_of(index.pathIndexMap.begin(),index.pathIndexMap.end(),[](const auto& entry){return !entry.second.fromSegment||entry.second.owner!=nullptr;});
   napi_value hv;napi_get_boolean(env,healthy,&hv);napi_set_named_property(env,r,"pathMapHealthy",hv);
   return r;
 }
@@ -4641,7 +4661,7 @@ static std::shared_ptr<SegmentView> load_segment_worker(const std::string& segPa
      if(excludedPrefix&&outExcludedPaths&&path_matches_prefix(np,*excludedPrefix)){
        outExcludedPaths->insert(std::move(np));continue;
      }
-     PathIndexEntry pe;pe.fileSize=metaBase[i].fileSize;pe.modifiedTime=metaBase[i].modifiedTime;pe.fromSegment=true;
+     PathIndexEntry pe;pe.fileSize=metaBase[i].fileSize;pe.modifiedTime=metaBase[i].modifiedTime;pe.fromSegment=true;pe.owner=seg.get();pe.ownerRow=i;
      outPathEntries.emplace_back(make_path_key(np),pe);
    }}
   return seg;
@@ -4733,7 +4753,7 @@ static void LoadManifestAsyncComplete(napi_env env,napi_status status,void* data
     load_overlay(index,d->rootDir);
     load_global_directory(index,d->rootDir);
     napi_value result;napi_create_object(env,&result);
-    set_bool(env,result,"ok",true);set_int64(env,result,"recordCount",d->recordCount);
+    set_bool(env,result,"ok",true);set_int64(env,result,"recordCount",(int64_t)index.pathIndexMap.size());
     set_int32(env,result,"segmentCount",d->segmentCount);
     set_int64(env,result,"removedCount",d->excludedCount);
     napi_resolve_deferred(env,d->deferred,result);
@@ -4955,7 +4975,7 @@ static void SaveManifestAsyncComplete(napi_env env,napi_status status,void* data
     save_global_directory(index,d->rootDir);
     load_global_directory(index,d->rootDir);
     napi_value result;napi_create_object(env,&result);
-    set_bool(env,result,"ok",true);set_int64(env,result,"recordCount",d->recordCount);
+    set_bool(env,result,"ok",true);set_int64(env,result,"recordCount",(int64_t)index.pathIndexMap.size());
     set_int64(env,result,"overlayRecords",d->overlayRecords);
     napi_resolve_deferred(env,d->deferred,result);
   }

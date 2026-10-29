@@ -20,6 +20,7 @@ import { removeImageData } from './vectorDatabaseService'
 import type { NativeScopeState } from './semanticSearchScope'
 import {
   indexProjectPreviews,
+  projectIndexStatusPatch,
   initProjectSearchIndex,
   mapNativeProjectSearchHits,
   mergeProjectSearchHashFallback,
@@ -197,7 +198,11 @@ let autosavePromise: Promise<void> | null = null
 let lastSaveTime = 0
 let editPersistRetryPending = false
 let scanGeneration = 0
-let pendingProjectScan: { generation: number; paths: string[] } | null = null
+let pendingProjectScan: {
+  generation: number
+  paths: string[]
+  scanMode: 'addNew' | 'update' | 'updateAll'
+} | null = null
 let activeImageSearchQueries = 0
 let activeImageIndexMutations = 0
 
@@ -326,7 +331,7 @@ function emit(): void {
         }
     const segPath = status.segmentPath || m.segmentPath
     const effectiveIdx =
-      m.mode === 'segment_mmap' && m.recordCount > 0 ? m.recordCount : status.indexedCount
+      nativeAddon && Number.isFinite(m.recordCount) ? m.recordCount : status.indexedCount
     const snapshot = {
       ...status,
       indexMode: m.mode,
@@ -334,6 +339,7 @@ function emit(): void {
       segmentPath: segPath || undefined,
       autosaveState,
       lastSaveTime,
+      physicalRecordCount: m.physicalRecordCount,
       pathIndexMapSize: m.pathIndexMapSize,
       overlayCount: m.overlayCount,
       replacedCount: m.replacedCount,
@@ -449,7 +455,8 @@ function autosaveDirtyIndex(): void {
   emit()
 }
 
-async function finishProjectScan(generation: number, roots: string[]): Promise<void> {
+async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): Promise<void> {
+  const { generation, paths: roots, scanMode } = scan
   if (!nativeAddon || generation !== scanGeneration) return
   status = {
     ...status,
@@ -462,30 +469,20 @@ async function finishProjectScan(generation: number, roots: string[]): Promise<v
   const result = await indexProjectPreviews(
     roots,
     {
+      hasIndexPath: (filePath) => addon.hasIndexPath(filePath),
       hashImageAsync: (filePath) => addon.hashImageAsync(filePath),
       upsertIndexRecord: (...args) => addon.upsertIndexRecord(...args),
       deleteIndexPath: (filePath) => addon.deleteIndexPath(filePath),
       removeSourceVectorData: (sourcePath) => removeImageData(sourcePath),
     },
     {
+      scanMode,
       isCancelled: () => generation !== scanGeneration,
       onProgress: (projectProgress) => {
         if (generation !== scanGeneration) return
         status = {
           ...status,
-          state: projectProgress.phase === 'complete' ? 'idle' : 'indexing',
-          currentPath: projectProgress.currentPath,
-          message:
-            projectProgress.phase === 'enumerating'
-              ? `Finding project files... ${projectProgress.discovered}`
-              : projectProgress.phase === 'rendering'
-                ? `Indexing project previews... ${projectProgress.completed}/${projectProgress.discovered}`
-                : `Project previews indexed: ${projectProgress.indexed}`,
-          projectDiscovered: projectProgress.discovered,
-          projectIndexed: projectProgress.indexed,
-          projectUnavailable: projectProgress.unavailable,
-          projectFailed: projectProgress.failed,
-          projectRemoved: projectProgress.removed,
+          ...projectIndexStatusPatch(projectProgress),
         }
         emit()
       },
@@ -626,7 +623,7 @@ function startPollingScan(): void {
         const projectScan = pendingProjectScan
         pendingProjectScan = null
         if (projectScan) {
-          void finishProjectScan(projectScan.generation, projectScan.paths).catch((error) => {
+          void finishProjectScan(projectScan).catch((error) => {
             if (projectScan.generation !== scanGeneration) return
             status = {
               ...status,
@@ -945,7 +942,7 @@ export function startImageSearchScan(
   }
 
   scanGeneration += 1
-  pendingProjectScan = { generation: scanGeneration, paths }
+  pendingProjectScan = { generation: scanGeneration, paths, scanMode }
   autosaveState = 'idle'
   status = {
     ...status,

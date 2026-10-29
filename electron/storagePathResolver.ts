@@ -42,3 +42,13 @@ export function resolveDataPathInRoots(
 export function resolveStoredDataPath(storedPath: string): string {
   return activeRoot ? resolveDataPathInRoots(activeRoot, previousRoots, storedPath) : storedPath
 }
+
+/** Native segments keep immutable historical preview paths until compaction. */
+export function storedDataPathCandidates(storedPath: string): string[] {
+  const current = resolveStoredDataPath(storedPath)
+  if (!activeRoot) return [current]
+  const relative = path.relative(activeRoot, current)
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
+    return [current]
+  return [...new Set([current, ...previousRoots.map((root) => path.join(root, relative))])]
+}

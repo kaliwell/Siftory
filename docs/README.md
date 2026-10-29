@@ -1,5 +1,6 @@
 # Siftory（寻藏）文档中心
 
+- [共享目录增量索引与历史记录去重](current/2026-10-29-network-index-idempotence.md)
 - [应用数据目录迁移与后续局域网边界](current/2026-10-29-data-directory-migration.md)
 
 > 状态：当前入口  

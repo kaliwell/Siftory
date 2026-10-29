@@ -453,6 +453,85 @@ test('project search indexes preview proxies but exposes and removes source iden
   assert.equal(getProjectSearchMetadata(previewPath), null)
 })
 
+test('project updates honor Add New and reuse unchanged indexed previews across overlapping roots', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-project-incremental-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const sourceRoot = path.join(root, 'library'),
+    nested = path.join(sourceRoot, 'nested')
+  fs.mkdirSync(nested, { recursive: true })
+  const source = path.join(nested, 'design.psd')
+  fs.writeFileSync(source, makePsdWithPreview(await imageBuffer('jpeg')))
+  await initProjectSearchIndex(path.join(root, 'user-data'))
+  const records = new Map(),
+    hashes = [],
+    writes = [],
+    removedVectors = []
+  const adapter = {
+    hasIndexPath: (filePath) => records.has(filePath),
+    hashImageAsync: async (filePath) => {
+      hashes.push(filePath)
+      return {
+        ok: true,
+        width: 640,
+        height: 480,
+        diffHash64: '1'.repeat(16),
+        dctHash64: '2'.repeat(16),
+      }
+    },
+    upsertIndexRecord: (filePath, ...metadata) => {
+      records.set(filePath, metadata)
+      writes.push(filePath)
+      return { ok: true }
+    },
+    deleteIndexPath: (filePath) => {
+      records.delete(filePath)
+      return { ok: true }
+    },
+    removeSourceVectorData: (filePath) => removedVectors.push(filePath),
+  }
+  const roots = [sourceRoot, nested, sourceRoot]
+  const first = await indexProjectPreviews(roots, adapter, { scanMode: 'addNew' })
+  assert.equal(first.discovered, 1, 'overlapping roots enumerate one logical source')
+  assert.equal(first.indexed, 1)
+  const second = await indexProjectPreviews(roots, adapter, { scanMode: 'addNew' })
+  assert.equal(second.skipped, 1)
+  assert.equal(second.indexed, 0)
+  assert.equal(hashes.length, 1)
+  assert.equal(writes.length, 1)
+  assert.equal(records.size, 1)
+  // A migrated app can retain immutable native rows with the former cache root.
+  const paths = loadTsModule('electron/storagePathResolver.ts')
+  const currentRoot = path.join(root, 'user-data'),
+    oldRoot = path.join(root, 'former-data')
+  paths.configureStoragePathResolver(currentRoot, [oldRoot])
+  t.after(() => paths.configureStoragePathResolver('', []))
+  const previewPath = writes[0]
+  const oldPreviewPath = path.join(oldRoot, path.relative(currentRoot, previewPath))
+  records.clear()
+  records.set(oldPreviewPath, [])
+  assert.equal((await indexProjectPreviews(roots, adapter, { scanMode: 'addNew' })).skipped, 1)
+  assert.equal(writes.length, 1, 'historical native cache paths are reused after data migration')
+  const changedTime = Date.now() / 1000 + 30
+  fs.utimesSync(source, changedTime, changedTime)
+  assert.equal((await indexProjectPreviews(roots, adapter, { scanMode: 'addNew' })).skipped, 1)
+  assert.equal(writes.length, 1, 'Add New does not replace already-indexed modified files')
+  const updated = await indexProjectPreviews(roots, adapter, { scanMode: 'update' })
+  assert.equal(updated.indexed, 1)
+  assert.equal(records.size, 1)
+  assert.equal(records.has(oldPreviewPath), false, 'a changed preview retires its old native alias')
+  assert.equal(removedVectors.length, 1, 'only a changed preview invalidates prior source vectors')
+  assert.equal((await indexProjectPreviews(roots, adapter, { scanMode: 'update' })).skipped, 1)
+  assert.equal(writes.length, 2, 'unchanged update does not rewrite the native index')
+  records.clear()
+  const repaired = await indexProjectPreviews(roots, adapter, { scanMode: 'addNew' })
+  assert.equal(
+    repaired.indexed,
+    1,
+    'a missing native entry is repaired even when the preview is cached',
+  )
+  assert.equal(records.size, 1)
+})
+
 test('project preview proxy detection rejects cross-drive paths on Windows', async (t) => {
   if (process.platform !== 'win32') {
     t.skip('cross-drive path.relative semantics are Windows-specific')
