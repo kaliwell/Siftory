@@ -150,6 +150,9 @@ if (startupSecurity.smokeUserDataPath) {
     storageLocationStartupError = error
   }
 }
+// Chromium session caches must follow the selected library as well. Keep this
+// explicit before ready instead of relying on Electron's cached default path.
+app.setPath('sessionData', app.getPath('userData'))
 
 if (process.platform === 'win32' && normalizeWindowsPathEnvironment(process.env)) {
   console.warn('[Siftory] normalized duplicate PATH environment variables')
