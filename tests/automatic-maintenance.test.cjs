@@ -377,8 +377,9 @@ test('cleanup reports invalid metadata and denied writes without exposing filena
   fs.writeFileSync(malformed + '.json', '{')
   fs.writeFileSync(empty + '.json', 'null')
   const unlink = fs.promises.unlink
+  const deniedPath = fs.realpathSync(denied)
   t.mock.method(fs.promises, 'unlink', async (file) => {
-    if (file === denied)
+    if (path.relative(file, deniedPath) === '')
       throw Object.assign(new Error(`private path: ${denied}`), { code: 'EPERM' })
     return unlink(file)
   })
@@ -407,8 +408,10 @@ test('cleanup accounts for removed backup bytes even if metadata removal fails',
   const file = expiredPair(path.join(f.dir, 'vector-db', 'embeddings'), now)
   const bytes = fs.statSync(file).size
   const unlink = fs.promises.unlink
+  const metadataPath = fs.realpathSync(file + '.json')
   t.mock.method(fs.promises, 'unlink', async (target) => {
-    if (target === file + '.json') throw Object.assign(new Error('blocked'), { code: 'EACCES' })
+    if (path.relative(target, metadataPath) === '')
+      throw Object.assign(new Error('blocked'), { code: 'EACCES' })
     return unlink(target)
   })
   const reports = []
