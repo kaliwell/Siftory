@@ -620,14 +620,6 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                     ))}
                   </select>
                   <button
-                    data-testid="asset-favorite-selected-more"
-                    disabled={archivedOnly || selectedIds.size === 0}
-                    onClick={() => onSetSelectedFavorite(true)}
-                    style={assetLibraryButtonStyle}
-                  >
-                    {t('Favorite selected')}
-                  </button>
-                  <button
                     disabled={archivedOnly || selectedIds.size === 0}
                     onClick={() => onSetSelectedFavorite(false)}
                     style={assetLibraryButtonStyle}

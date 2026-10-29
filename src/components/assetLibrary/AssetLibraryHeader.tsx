@@ -103,17 +103,6 @@ export default function AssetLibraryHeader({
           <summary>{t('Organize and maintain')}</summary>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
             <button
-              disabled={activeTask}
-              onClick={onSync}
-              style={buttonStyle}
-              title={t('Import assets from the current Image Search manifest')}
-            >
-              {t('Sync Image Index')}
-            </button>
-            <button onClick={onRefresh} style={buttonStyle}>
-              {t('Refresh')}
-            </button>
-            <button
               data-testid="asset-backups-toggle"
               onClick={onToggleBackups}
               style={{
@@ -157,9 +146,6 @@ export default function AssetLibraryHeader({
               />
               {t('Learning')}
             </label>
-            <button disabled={!activeTask} onClick={onStop} style={buttonStyle}>
-              {t('Stop')}
-            </button>
             <span style={{ fontSize: 9, opacity: 0.65 }}>
               {t('Assets')} {formatNumber(stats.totalAssets)} / {t('Classified')}{' '}
               {formatNumber(stats.classifiedAssets)} / {t('Unclassified')}{' '}
