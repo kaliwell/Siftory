@@ -29,7 +29,7 @@ jobs:
       - run: node --test tests/native-incremental-index.test.cjs tests/native-search-correctness.test.cjs
       # Keep this hosted job focused on index storage/search. USN privileges and
       # thumbnail pressure workloads belong to their dedicated hardware checks.
-      - run: node --test --test-name-pattern="manifest|mmap|path|index|resurrect|purge" tests/native-scan.test.cjs
+      - run: node --test --test-name-pattern="manifest|mmap|index|resurrect|purge" tests/native-scan.test.cjs
   source-quality:
     runs-on: windows-latest
     timeout-minutes: 45

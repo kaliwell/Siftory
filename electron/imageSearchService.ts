@@ -708,8 +708,7 @@ async function tryAutoLoadDefault(): Promise<void> {
             await imageSearchDataService.captureLoadedIndexIdentity(defaultSavePath, identityBefore)
             const recovery = await reconcileImageSearchSourceVectorInvalidations()
             const m = addon.getIndexMode()
-            const rawIndexCount =
-              m.mode === 'segment_mmap' && m.recordCount > 0 ? m.recordCount : r.recordCount || 0
+            const idxCnt = Math.max(0, Number(m.recordCount ?? r.recordCount) || 0)
             const removedGeneratedRecords = Math.max(0, Number(r.removedCount) || 0)
             if (removedGeneratedRecords > 0) {
               console.warn(
@@ -717,7 +716,6 @@ async function tryAutoLoadDefault(): Promise<void> {
                 removedGeneratedRecords,
               )
             }
-            const idxCnt = Math.max(0, rawIndexCount - removedGeneratedRecords)
             status = {
               ...status,
               segmentPath: defaultSavePath,
