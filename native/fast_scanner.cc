@@ -4351,7 +4351,7 @@ static std::shared_ptr<SegmentView> load_segment_worker(const std::string& segPa
     std::vector<std::pair<PathKey,PathIndexEntry>>& outPathEntries,
     const std::shared_ptr<AsyncCancellationToken>& cancellation,
     const std::string* excludedPrefix,std::unordered_set<std::string>* outExcludedPaths,
-    ManifestPathBoundary* boundary);
+    const ManifestPathBoundary* boundary);
 
 static napi_value LoadManifest(napi_env env,napi_callback_info info){
   try{size_t argc=1;napi_value argv[1];napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);

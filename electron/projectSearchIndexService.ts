@@ -565,7 +565,7 @@ export async function indexProjectPreviews(
   roots: readonly string[],
   adapter: ProjectIndexAdapter,
   options: {
-    scanMode?: 'addNew' | 'update' | 'updateAll'
+    scanMode?: 'addNew' | 'update' | 'updateAll' | 'full'
     isCancelled?: () => boolean
     onProgress?: (progress: ProjectIndexProgress) => void
   } = {},

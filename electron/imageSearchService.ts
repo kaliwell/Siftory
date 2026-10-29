@@ -201,7 +201,7 @@ let scanGeneration = 0
 let pendingProjectScan: {
   generation: number
   paths: string[]
-  scanMode: 'addNew' | 'update' | 'updateAll'
+  scanMode: ReturnType<typeof normalizeScanMode>
 } | null = null
 let activeImageSearchQueries = 0
 let activeImageIndexMutations = 0
