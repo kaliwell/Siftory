@@ -4988,6 +4988,7 @@ static void unmap_index_internal(IndexRuntime& index){
   // SegmentView owns the Win32 view, mapping handle, and file handle. Clearing
   // the shared_ptrs must run its destructor; nulling those fields first leaks
   // every handle and permanently prevents old .idx files from being removed.
+  index.pathIndexMap.clear(); // ownership and overlay metadata must be rebuilt with the new views
   index.segments.clear();
   unmap_gd(index);
 }

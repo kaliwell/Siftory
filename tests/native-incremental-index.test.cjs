@@ -82,7 +82,8 @@ function writeV2Segment(filename, records) {
   ]
   values.forEach((value, index) => header.writeBigUInt64LE(BigInt(value), 8 + index * 8))
   footer.write('END\0')
-  footer.writeBigUInt64LE(checksum, 8)
+  footer.writeBigUInt64LE(BigInt(records.length), 4)
+  footer.writeUInt32LE(2, 12)
   fs.writeFileSync(filename, Buffer.concat([header, body, footer]))
 }
 
