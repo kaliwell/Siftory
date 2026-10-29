@@ -560,39 +560,54 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                 {t('Select page')}
               </button>
 
-              <select
-                data-testid="asset-library-collection-select"
-                aria-label={t('Choose collection')}
-                value={collectionId}
-                disabled={collecting}
-                onChange={(event) => setCollectionId(Number(event.target.value))}
-              >
-                <option value={0}>{t('Choose collection')}</option>
-                {collections.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.name}
-                  </option>
-                ))}
-              </select>
+              {collections.length > 0 && (
+                <select
+                  data-testid="asset-library-collection-select"
+                  aria-label={t('Choose collection')}
+                  value={collectionId}
+                  disabled={collecting}
+                  onChange={(event) => setCollectionId(Number(event.target.value))}
+                >
+                  <option value={0}>{t('Choose collection')}</option>
+                  {collections.map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button
                 className="workspace-button-primary"
                 data-testid="asset-library-collect-selected"
-                disabled={!collectionId || collecting}
-                onClick={() => void collectSelected()}
+                disabled={
+                  collecting ||
+                  Boolean(collectionsError) ||
+                  (collections.length > 0 && !collectionId)
+                }
+                onClick={() =>
+                  collections.length === 0 ? setCreatingCollection(true) : void collectSelected()
+                }
               >
-                {t(collecting ? 'Collecting...' : 'Add to collection')}
+                {t(
+                  collecting
+                    ? 'Collecting...'
+                    : collections.length === 0
+                      ? 'New collection'
+                      : 'Add to collection',
+                )}
               </button>
               <details className="workspace-disclosure" data-testid="asset-library-batch-actions">
                 <summary>{t('More actions')}</summary>
                 <div className="asset-library-batch-fields">
-                  {' '}
-                  <button
-                    data-testid="asset-library-create-collection"
-                    disabled={collecting}
-                    onClick={() => setCreatingCollection((value) => !value)}
-                  >
-                    {t('New collection')}
-                  </button>
+                  {collections.length > 0 && (
+                    <button
+                      data-testid="asset-library-create-collection"
+                      disabled={collecting}
+                      onClick={() => setCreatingCollection((value) => !value)}
+                    >
+                      {t('New collection')}
+                    </button>
+                  )}
                   <button
                     data-testid="asset-favorite-selected"
                     disabled={archivedOnly}

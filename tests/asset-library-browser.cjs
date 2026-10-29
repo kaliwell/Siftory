@@ -339,6 +339,25 @@ async function run() {
     await page.getByTestId('asset-mode-assets').click()
     await page.getByTestId('asset-library-tools').locator('summary').click()
     await page.evaluate(() => {
+      window.__libraryFixture.collections.splice(0)
+      window.dispatchEvent(new Event('asset-collections-changed'))
+    })
+    await page.getByTestId('asset-select').first().check()
+    const firstCollection = page.getByTestId('asset-library-collect-selected')
+    await firstCollection.filter({ hasText: '新建收藏夹' }).waitFor()
+    assert.equal(await page.getByTestId('asset-library-collection-select').count(), 0)
+    await firstCollection.click()
+    await page.getByTestId('collection-name').fill('首次收藏')
+    await shell.locator('form').getByRole('button', { name: '创建', exact: true }).click()
+    await firstCollection.filter({ hasText: '加入收藏夹' }).waitFor()
+    await firstCollection.click()
+    await page
+      .getByTestId('asset-library-collection-status')
+      .getByText(/已将 1 项/)
+      .waitFor()
+    await capture('library-first-collection')
+    await page.getByRole('button', { name: '清除选择', exact: true }).click()
+    await page.evaluate(() => {
       window.__libraryFixture.assets.splice(0)
     })
     await page
@@ -363,6 +382,7 @@ async function run() {
       themes: 2,
       widths: [1920, 1320, 946, 760],
       simpleBrowsing: true,
+      firstCollectionShortcut: true,
       reviewSidebarControls: true,
       collectionCreate: true,
       collectionWriteRetry: true,
