@@ -145,6 +145,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
               <div
                 key={item.asset.id}
                 className="asset-library-card"
+                data-selected={selected}
                 style={{
                   height: rowHeight,
                   minWidth: 0,

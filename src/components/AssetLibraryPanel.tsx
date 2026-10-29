@@ -1212,6 +1212,9 @@ const AssetLibraryPanel: React.FC = () => {
     </div>
   )
 
+  const simpleView =
+    !backupOpen && (collectionsOpen || (view === 'library' && libraryMode === 'assets'))
+
   return (
     <DraggablePanel
       panelId="assetLibrary"
@@ -1237,6 +1240,7 @@ const AssetLibraryPanel: React.FC = () => {
     >
       <div
         className="asset-library-shell"
+        data-layout={simpleView ? 'simple' : 'tools'}
         style={{
           height: '100%',
           minHeight: 0,
@@ -1246,7 +1250,9 @@ const AssetLibraryPanel: React.FC = () => {
           fontSize: 10,
         }}
       >
-        <AssetLibraryControlsTarget.Provider value={controlsTarget}>
+        <AssetLibraryControlsTarget.Provider
+          value={simpleView ? null : (controlsTarget ?? undefined)}
+        >
           <aside className="asset-library-sidebar" data-testid="asset-library-sidebar">
             <AssetLibraryHeader
               collectionsOpen={collectionsOpen}

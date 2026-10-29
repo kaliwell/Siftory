@@ -141,6 +141,7 @@ export default function AssetLibraryCollectionsView({
             ))}
           </select>
           <button
+            className="workspace-button-primary"
             data-testid="collection-create"
             onClick={() => setCreating((value) => !value)}
             disabled={busy}
@@ -149,9 +150,6 @@ export default function AssetLibraryCollectionsView({
           </button>
           <button onClick={() => void load()} disabled={busy || loading}>
             {t('Refresh')}
-          </button>
-          <button onClick={onBrowseAssets} disabled={busy}>
-            {t('Browse assets to collect')}
           </button>
         </div>
         {creating && (
@@ -176,20 +174,34 @@ export default function AssetLibraryCollectionsView({
               setSelected(new Set())
             }}
           />
-          <select
-            aria-label={t('Media type')}
-            value={kind}
-            onChange={(event) => {
-              setKind(event.target.value)
-              setPage(0)
-              setSelected(new Set())
-            }}
-          >
-            <option value="all">{t('All media types')}</option>
-            <option value="image">{t('Images')}</option>
-            <option value="video">{t('Videos and frames')}</option>
-          </select>
-          <span>{t('{count} items', { count: filtered.length })}</span>
+          <details className="workspace-disclosure">
+            <summary>{t('Library filters')}</summary>
+            <select
+              aria-label={t('Media type')}
+              value={kind}
+              onChange={(event) => {
+                setKind(event.target.value)
+                setPage(0)
+                setSelected(new Set())
+              }}
+            >
+              <option value="all">{t('All media types')}</option>
+              <option value="image">{t('Images')}</option>
+              <option value="video">{t('Videos and frames')}</option>
+            </select>
+          </details>
+          {(query || kind !== 'all') && (
+            <button
+              onClick={() => {
+                setQuery('')
+                setKind('all')
+                setPage(0)
+                setSelected(new Set())
+              }}
+            >
+              {t('Clear filters')}
+            </button>
+          )}
         </div>
         {(error || collectionsError) && (
           <div role="alert" className="asset-library-error">
@@ -243,6 +255,9 @@ export default function AssetLibraryCollectionsView({
                   : 'Try another keyword or clear the filters.',
               )}
             </p>
+          )}
+          {!loading && (!collectionId || items.length === 0) && (
+            <button onClick={onBrowseAssets}>{t('Browse assets to collect')}</button>
           )}
         </div>
       ) : (

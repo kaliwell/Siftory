@@ -186,6 +186,9 @@ async function run() {
     assert.equal(await page.getByTestId('asset-library-selection-bar').count(), 0)
     assert.equal(await page.getByTestId('asset-view-review').isVisible(), false)
     assert.equal(await page.getByTestId('asset-filter-source').isVisible(), false)
+    assert.equal(await page.getByTestId('asset-filter-category').isVisible(), false)
+    assert.equal(await page.getByTestId('asset-thumbnail-size').isVisible(), false)
+    assert.equal(await page.locator('.asset-library-shell').getAttribute('data-layout'), 'simple')
     for (const mode of ['dark', 'light']) {
       await page.evaluate(
         (value) => window.__workspaceTest.store.getState().setThemeMode(value),
@@ -198,18 +201,9 @@ async function run() {
         const gallery = await page.locator('.asset-library-gallery').boundingBox()
         const sidebar = await page.getByTestId('asset-library-sidebar').boundingBox()
         const content = await page.getByTestId('asset-library-content').boundingBox()
-        if (width >= 1100) {
-          assert.ok(sidebar.x + sidebar.width <= content.x, 'controls stay beside results')
-          assert.ok(
-            controls.x >= sidebar.x && controls.x + controls.width <= sidebar.x + sidebar.width + 1,
-          )
-          assert.ok(Math.abs(sidebar.y - content.y) < 2, 'columns align at the top')
-        } else {
-          assert.ok(
-            sidebar.y + sidebar.height <= content.y + 1,
-            'compact layout stacks without overlap',
-          )
-        }
+        assert.ok(sidebar.y + sidebar.height <= content.y + 1, 'compact header stays above content')
+        assert.ok(controls.y + controls.height <= gallery.y + 1, 'search stays above the gallery')
+        assert.ok(controls.width > content.width - 24, 'browsing uses the full content width')
         assert.ok(gallery.height > 300, 'gallery retains useful space')
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
         const cards = await page.locator('.asset-library-card').all()
@@ -225,6 +219,7 @@ async function run() {
     await page.getByTestId('asset-filter-query').fill('产品设计')
     await page.waitForFunction(() => document.querySelectorAll('.asset-library-card').length === 6)
     await page.getByTestId('asset-clear-filters').click()
+    await page.getByTestId('asset-library-filters').locator(':scope > summary').click()
     await page.getByTestId('asset-filter-category').selectOption('2')
     await page.waitForFunction(() =>
       window.__workspaceTest.calls.some(
@@ -235,32 +230,21 @@ async function run() {
     await page.waitForFunction(() => document.querySelectorAll('.asset-library-card').length === 2)
     await page.getByTestId('asset-clear-filters').click()
     await page.waitForFunction(() => document.querySelectorAll('.asset-library-card').length >= 4)
-    await page.getByTestId('asset-library-filters').locator('summary').click()
     await page.getByTestId('asset-library-albums').locator('summary').click()
     for (const height of [900, 1400]) {
       await page.setViewportSize({ width: 1920, height })
-      await capture(`library-expanded-sidebar-${height}`)
-      const layout = await page.getByTestId('asset-library-sidebar').evaluate((sidebar) => {
-        const controls = sidebar.querySelector('.asset-library-browser-controls')
-        const query = sidebar.querySelector('.asset-library-query-bar')
-        const results = sidebar.querySelector('.asset-library-results-bar')
-        const albums = sidebar.querySelector('[data-testid="asset-smart-album-bar"]')
+      await capture(`library-expanded-filters-${height}`)
+      const layout = await page.locator('.asset-library-browser-controls').evaluate((controls) => {
+        const albums = controls.querySelector('[data-testid="asset-smart-album-bar"]')
         return {
-          overflow: sidebar.scrollWidth - sidebar.clientWidth,
-          queryBottom: query.getBoundingClientRect().bottom,
-          resultsTop: results.getBoundingClientRect().top,
-          controlsHeight: controls.getBoundingClientRect().height,
+          overflow: controls.scrollWidth - controls.clientWidth,
           albumsInside:
-            albums.getBoundingClientRect().right <= sidebar.getBoundingClientRect().right,
+            albums.getBoundingClientRect().right <= controls.getBoundingClientRect().right + 1,
         }
       })
       assert.ok(layout.overflow <= 1, 'expanded controls do not create horizontal scrolling')
-      assert.ok(layout.resultsTop >= layout.queryBottom, 'result options follow filters vertically')
-      assert.ok(
-        layout.resultsTop - layout.queryBottom < 30,
-        'filters do not stretch with window height',
-      )
-      assert.ok(layout.albumsInside, 'saved filters stay within the sidebar')
+      assert.ok(layout.albumsInside, 'saved filters fit the full-width filter panel')
+      assert.ok((await page.locator('.asset-library-gallery').boundingBox()).height > 120)
     }
     await page.setViewportSize({ width: 1320, height: 900 })
     await page.getByTestId('asset-library-albums').locator('summary').click()
@@ -268,16 +252,18 @@ async function run() {
     await page.getByTestId('asset-filter-source').selectOption('manual')
     await page.getByTestId('asset-library-empty').waitFor()
     await page.getByTestId('asset-clear-filters').click()
-    await page.getByTestId('asset-library-filters').locator('summary').click()
+    await page.getByTestId('asset-library-filters').locator(':scope > summary').click()
     await page.locator('.asset-library-card').first().waitFor()
     await page.getByTestId('asset-select').nth(0).check()
     await page.getByTestId('asset-select').nth(1).check()
+    await page.getByTestId('asset-library-batch-actions').locator('summary').click()
     await page.getByTestId('asset-library-create-collection').click()
     await page.getByTestId('collection-name').fill('新品参考')
     await shell.locator('form').getByRole('button', { name: '创建', exact: true }).click()
     await page.waitForFunction(
       () => document.querySelector('[data-testid="asset-library-collection-select"]').value === '3',
     )
+    await page.getByTestId('asset-library-batch-actions').locator('summary').click()
     await page.evaluate(() => {
       window.__libraryFixture.failCollect = true
     })
@@ -376,7 +362,7 @@ async function run() {
       passed: true,
       themes: 2,
       widths: [1920, 1320, 946, 760],
-      sidebarControls: true,
+      simpleBrowsing: true,
       reviewSidebarControls: true,
       collectionCreate: true,
       collectionWriteRetry: true,

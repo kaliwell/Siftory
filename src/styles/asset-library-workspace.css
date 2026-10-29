@@ -554,3 +554,162 @@
     padding: 12px;
   }
 }
+
+/* Everyday browsing uses one surface; specialist tools retain their sidebar. */
+.asset-library-header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.focused-workspace .asset-library-shell[data-layout='simple'] {
+  display: flex !important;
+  flex-direction: column;
+  gap: 16px !important;
+  padding: 8px;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-sidebar {
+  flex: 0 1 auto;
+  max-height: 40%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 8px;
+  scrollbar-gutter: auto;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-view-controls {
+  display: none;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-header-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-topbar {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-primary-tabs,
+.asset-library-shell[data-layout='simple'] .asset-library-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-topbar-actions[hidden] {
+  display: none;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-tools[open] {
+  flex: 1 0 100%;
+  padding: 12px;
+  max-height: none;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-tools > div:first-of-type,
+.asset-library-shell[data-layout='simple'] .asset-library-advanced-views,
+.asset-library-shell[data-layout='simple'] .asset-library-advanced-views > div {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 8px !important;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-content {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: hidden;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-control-group {
+  flex: 0 1 auto;
+  max-height: 48%;
+  overflow: auto;
+  gap: 10px;
+}
+.focused-workspace .asset-library-shell[data-layout='simple'] .asset-library-browser-controls {
+  max-height: none;
+  overflow: visible;
+  padding: 0 0 10px;
+  gap: 10px;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-query-bar > input {
+  flex: 1 1 260px;
+  max-width: none;
+  min-height: 40px;
+  border-radius: 10px;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-more-filters[open] {
+  flex: 1 0 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-filter-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 0;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-filter-fields label {
+  min-width: 0;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-filter-fields :is(input, select) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-results-bar {
+  justify-content: space-between;
+  color: rgb(var(--color-text-muted));
+}
+.asset-library-shell[data-layout='simple'] .asset-library-results-options {
+  margin-left: auto;
+}
+.asset-library-display-fields {
+  padding: 12px 0;
+}
+.asset-library-shell[data-layout='simple'] .asset-library-selection-bar {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--ui-accent-soft);
+}
+.asset-library-shell[data-layout='simple']
+  :is(.asset-library-card, .asset-library-collection-card) {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+.asset-library-shell[data-layout='simple']
+  :is(.asset-library-card, .asset-library-collection-card)[data-selected='true'] {
+  border-color: rgb(var(--color-accent)) !important;
+  background: var(--ui-accent-soft) !important;
+}
+.asset-library-shell[data-layout='simple']
+  :is(.asset-library-card-preview, .asset-library-collection-preview) {
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgb(var(--color-surface));
+}
+.asset-library-shell[data-layout='simple'] .asset-library-card-actions button {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: rgb(var(--color-text-muted));
+}
+.asset-library-shell[data-layout='simple'] .asset-library-card-actions button:hover,
+.asset-library-shell[data-layout='simple'] .asset-library-card-actions button:focus-visible {
+  background: var(--ui-accent-soft) !important;
+  color: rgb(var(--color-accent));
+}
+@media (max-width: 900px) {
+  .asset-library-shell[data-layout='simple'] .asset-library-filter-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .asset-library-shell[data-layout='simple'] .asset-library-primary-tabs button {
+    padding-inline: 12px;
+  }
+  .asset-library-shell[data-layout='simple'] .asset-library-header-actions {
+    gap: 8px;
+  }
+}
+.asset-library-shell[data-layout='simple'] .asset-library-collection-toolbar > select {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 360px;
+}

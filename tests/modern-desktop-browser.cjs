@@ -165,9 +165,9 @@ async function run() {
       }
       if (domain === 'library') {
         assert.equal(await page.getByTestId('asset-filter-source').isVisible(), false)
-        await page.getByTestId('asset-library-filters').locator('summary').click()
+        await page.getByTestId('asset-library-filters').locator(':scope > summary').click()
         assert.equal(await page.getByTestId('asset-filter-source').isVisible(), true)
-        await page.getByTestId('asset-library-filters').locator('summary').click()
+        await page.getByTestId('asset-library-filters').locator(':scope > summary').click()
         assert.doesNotMatch(await page.locator('.asset-library-shell').innerText(), /undefined/)
         for (const width of [2560, 1920, 1440, 1000, 760]) {
           await page.setViewportSize({ width, height: 900 })
@@ -189,7 +189,7 @@ async function run() {
           if (width >= 1200) {
             const controls = await page.locator('.asset-library-browser-controls').boundingBox()
             const gallery = await page.locator('.asset-library-gallery').boundingBox()
-            assert.ok(controls.x + controls.width <= gallery.x)
+            assert.ok(controls.y + controls.height <= gallery.y + 1)
             assert.ok(gallery.height > 300)
           }
           const actions = await card.locator('.asset-library-card-actions').boundingBox()
@@ -197,15 +197,19 @@ async function run() {
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
           await page.screenshot({ path: path.join(evidence, `library-${width}.png`) })
         }
+        await page.getByTestId('asset-library-display-options').locator('summary').click()
         const size = page.getByTestId('asset-thumbnail-size')
         await size.fill('320')
         await page.waitForTimeout(200)
         assert.ok((await page.locator('.asset-library-card').first().boundingBox()).width >= 319)
+        await page.getByTestId('asset-library-display-options').locator('summary').click()
         await page.getByTestId('asset-select').first().check()
         await page.getByTestId('asset-library-batch-actions').locator('summary').click()
         assert.ok((await page.locator('.asset-library-gallery').boundingBox()).height > 120)
         await page.getByTestId('asset-library-batch-actions').locator('summary').click()
+        await page.getByTestId('asset-library-display-options').locator('summary').click()
         await size.fill('240')
+        await page.getByTestId('asset-library-display-options').locator('summary').click()
         await page.setViewportSize({ width: 1920, height: 900 })
         await page.evaluate(() => window.__workspaceTest.store.getState().setThemeMode('dark'))
         await page.waitForFunction(() => document.documentElement.dataset.effectiveMode === 'dark')

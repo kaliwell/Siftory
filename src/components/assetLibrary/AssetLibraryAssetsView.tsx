@@ -336,6 +336,7 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
     modifiedBefore,
     minRating,
     favoriteOnly,
+    selectedSmartAlbumId,
   ].filter(Boolean).length
   const resetFilters = () => {
     onQueryChange('')
@@ -363,30 +364,6 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
               placeholder={t('Filter by file name or path...')}
               onChange={(event) => onQueryChange(event.target.value)}
             />
-            <select
-              aria-label={t('Category')}
-              data-testid="asset-filter-category"
-              value={categoryFilter}
-              onChange={(event) => onCategoryFilterChange(Number(event.target.value))}
-            >
-              <option value={0}>{t('All categories')}</option>
-              {rows.map(({ category, depth }) => (
-                <option key={category.id} value={category.id}>
-                  {'  '.repeat(depth)}
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            <select
-              data-testid="asset-filter-kind"
-              aria-label={t('Media type')}
-              value={kindFilter}
-              onChange={(event) => onKindFilterChange(event.target.value as AssetKindFilter)}
-            >
-              <option value="all">{t('All media types')}</option>
-              <option value="image">{t('Images')}</option>
-              <option value="video_frame">{t('Video frames')}</option>
-            </select>
             <label className="asset-library-star-filter">
               <input
                 data-testid="asset-filter-favorite"
@@ -401,10 +378,40 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
               data-testid="asset-library-filters"
             >
               <summary>
-                {t('More filters')}
+                {t('Library filters')}
                 {activeFilters > 0 ? ` · ${activeFilters}` : ''}
               </summary>
               <div className="asset-library-filter-fields">
+                <label>
+                  {t('Category')}{' '}
+                  <select
+                    aria-label={t('Category')}
+                    data-testid="asset-filter-category"
+                    value={categoryFilter}
+                    onChange={(event) => onCategoryFilterChange(Number(event.target.value))}
+                  >
+                    <option value={0}>{t('All categories')}</option>
+                    {rows.map(({ category, depth }) => (
+                      <option key={category.id} value={category.id}>
+                        {'  '.repeat(depth)}
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t('Media type')}{' '}
+                  <select
+                    data-testid="asset-filter-kind"
+                    aria-label={t('Media type')}
+                    value={kindFilter}
+                    onChange={(event) => onKindFilterChange(event.target.value as AssetKindFilter)}
+                  >
+                    <option value="all">{t('All media types')}</option>
+                    <option value="image">{t('Images')}</option>
+                    <option value="video_frame">{t('Video frames')}</option>
+                  </select>
+                </label>
                 <label>
                   {t('Tags')}
                   <select
@@ -485,32 +492,6 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                   {t('Removed')} ({formatAssetLibraryNumber(stats.archivedAssets)})
                 </label>
               </div>
-            </details>
-            {(activeFilters > 0 || query) && (
-              <button data-testid="asset-clear-filters" onClick={resetFilters}>
-                {t('Clear filters')}
-              </button>
-            )}
-          </div>
-          <div className="asset-library-results-bar">
-            <span aria-live="polite">
-              {loading
-                ? t('Loading')
-                : t('{count} assets', { count: formatAssetLibraryNumber(total) })}
-            </span>
-            <button onClick={onSelectPage} disabled={assets.length === 0}>
-              {t('Select page')}
-            </button>
-            <div className="asset-library-results-options">
-              <select
-                aria-label={t('Sort')}
-                value={sort}
-                onChange={(event) => onSortChange(event.target.value as AssetSort)}
-              >
-                <option value="updated_desc">{t('Recent')}</option>
-                <option value="name_asc">{t('Name')}</option>
-                <option value="size_desc">{t('Size')}</option>
-              </select>
               <details className="workspace-disclosure" data-testid="asset-library-albums">
                 <summary>{t('Saved filters')}</summary>
                 <AssetSmartAlbumBar
@@ -525,24 +506,60 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                   onDelete={onSmartAlbumDelete}
                 />
               </details>
-              <label className="asset-library-thumbnail-size">
-                {t('Thumbnail size')}
-                <input
-                  data-testid="asset-thumbnail-size"
-                  type="range"
-                  min={180}
-                  max={320}
-                  step={20}
-                  value={thumbnailWidth}
-                  aria-label={t('Thumbnail size')}
-                  onChange={(event) => setThumbnailWidth(Number(event.target.value))}
-                />
-              </label>
+            </details>
+            {(activeFilters > 0 || query) && (
+              <button data-testid="asset-clear-filters" onClick={resetFilters}>
+                {t('Clear filters')}
+              </button>
+            )}
+          </div>
+          <div className="asset-library-results-bar">
+            <span aria-live="polite">
+              {loading
+                ? t('Loading')
+                : t('{count} assets', { count: formatAssetLibraryNumber(total) })}
+            </span>
+            <div className="asset-library-results-options">
+              <select
+                aria-label={t('Sort')}
+                value={sort}
+                onChange={(event) => onSortChange(event.target.value as AssetSort)}
+              >
+                <option value="updated_desc">{t('Recent')}</option>
+                <option value="name_asc">{t('Name')}</option>
+                <option value="size_desc">{t('Size')}</option>
+              </select>
+              <details
+                className="workspace-disclosure asset-library-display-options"
+                data-testid="asset-library-display-options"
+              >
+                <summary>{t('Display options')}</summary>
+                <div className="asset-library-display-fields">
+                  {' '}
+                  <label className="asset-library-thumbnail-size">
+                    {t('Thumbnail size')}
+                    <input
+                      data-testid="asset-thumbnail-size"
+                      type="range"
+                      min={180}
+                      max={320}
+                      step={20}
+                      value={thumbnailWidth}
+                      aria-label={t('Thumbnail size')}
+                      onChange={(event) => setThumbnailWidth(Number(event.target.value))}
+                    />
+                  </label>
+                </div>
+              </details>
             </div>
           </div>
           {selectedIds.size > 0 && (
             <div className="asset-library-selection-bar" data-testid="asset-library-selection-bar">
               <strong>{t('{count} selected', { count: selectedIds.size })}</strong>
+              <button onClick={onSelectPage} disabled={assets.length === 0}>
+                {t('Select page')}
+              </button>
+
               <select
                 data-testid="asset-library-collection-select"
                 aria-label={t('Choose collection')}
@@ -565,23 +582,24 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
               >
                 {t(collecting ? 'Collecting...' : 'Add to collection')}
               </button>
-              <button
-                data-testid="asset-library-create-collection"
-                disabled={collecting}
-                onClick={() => setCreatingCollection((value) => !value)}
-              >
-                {t('New collection')}
-              </button>
-              <button
-                data-testid="asset-favorite-selected"
-                disabled={archivedOnly}
-                onClick={() => onSetSelectedFavorite(true)}
-              >
-                {t('Star selected')}
-              </button>
               <details className="workspace-disclosure" data-testid="asset-library-batch-actions">
                 <summary>{t('More actions')}</summary>
                 <div className="asset-library-batch-fields">
+                  {' '}
+                  <button
+                    data-testid="asset-library-create-collection"
+                    disabled={collecting}
+                    onClick={() => setCreatingCollection((value) => !value)}
+                  >
+                    {t('New collection')}
+                  </button>
+                  <button
+                    data-testid="asset-favorite-selected"
+                    disabled={archivedOnly}
+                    onClick={() => onSetSelectedFavorite(true)}
+                  >
+                    {t('Star selected')}
+                  </button>
                   <select
                     data-testid="asset-rating-selected"
                     disabled={archivedOnly || selectedIds.size === 0}
@@ -682,7 +700,6 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                   >
                     {t('Add tag')}
                   </button>
-
                   {archivedOnly ? (
                     <button onClick={onRestoreSelected}>{t('Restore selected')}</button>
                   ) : (

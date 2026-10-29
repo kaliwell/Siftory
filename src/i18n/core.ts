@@ -52,6 +52,8 @@ const zhCN: Record<string, string> = {
   'Choose collection': '选择收藏夹',
   'New collection': '新建收藏夹',
   'Collection name': '收藏夹名称',
+  'Library filters': '筛选',
+  'Display options': '显示',
   'Add to collection': '加入收藏夹',
   'Added {count} items to collection': '已将 {count} 项素材加入收藏夹',
   'Star selected': '添加星标',
