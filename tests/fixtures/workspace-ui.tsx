@@ -118,6 +118,18 @@ let persistedSettings: any = {
   },
 }
 const handlers: Record<string, (...args: any[]) => any> = {
+  'storageLocation.getStatus': () => ({
+    backend: 'local',
+    libraryId: 'fixture-library',
+    root: 'C:/fixtures/Siftory-data',
+    pending: false,
+    externalMediaDirectory: false,
+  }),
+  'storageLocation.selectDestination': () => ({
+    token: 'fixture-migration',
+    destination: 'E:/Siftory-data-fixture',
+  }),
+  'storageLocation.startMigration': () => ({ scheduled: false }),
   loadSettings: () =>
     JSON.parse(
       sessionStorage.getItem('workspace-ui-settings') || JSON.stringify(persistedSettings),

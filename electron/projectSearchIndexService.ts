@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
@@ -243,7 +244,7 @@ export function collectProjectIndexedPaths(
 }
 
 function normalizedKey(filePath: string): string {
-  const resolved = path.resolve(filePath)
+  const resolved = path.resolve(resolveStoredDataPath(filePath))
   return process.platform === 'win32' ? resolved.toLowerCase() : resolved
 }
 

@@ -1,3 +1,4 @@
+import StorageLocationSettings from './StorageLocationSettings'
 import GlobalHotkeyEditor from './GlobalHotkeyEditor'
 import React, { useState, useEffect, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
@@ -1187,6 +1188,7 @@ const SettingsPanel: React.FC = () => {
             expanded={expandedSections.dataReset}
             onToggle={() => toggleSection('dataReset')}
           >
+            <StorageLocationSettings />
             {btn(t('Open App Data Folder'), () => window.electronAPI.openConfigDir())}
             {btn(t('Reset Sizes'), () => {
               useStore.setState({

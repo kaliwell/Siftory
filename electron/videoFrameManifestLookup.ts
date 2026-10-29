@@ -147,7 +147,14 @@ export class VideoFrameManifestLookup {
   constructor(
     private readonly manifestPath: string,
     private readonly databasePath: string,
+    private readonly resolveImagePath: (value: string) => string = (value) => value,
   ) {}
+
+  private decodeRecord(json: unknown): MediaSearchVideoFrameRecord {
+    const record = JSON.parse(String(json)) as MediaSearchVideoFrameRecord
+    if (record.imagePath) record.imagePath = this.resolveImagePath(record.imagePath)
+    return record
+  }
 
   private withFreshDatabase<T>(read: (database: DatabaseSync) => T): T {
     let fresh = false
@@ -184,7 +191,7 @@ export class VideoFrameManifestLookup {
       database
         .prepare('SELECT json FROM frame_records ORDER BY ordinal')
         .all()
-        .map((row) => JSON.parse(String(row.json)) as MediaSearchVideoFrameRecord),
+        .map((row) => this.decodeRecord(row.json)),
     )
   }
 
@@ -202,7 +209,7 @@ export class VideoFrameManifestLookup {
       frames: database
         .prepare('SELECT json FROM frame_records ORDER BY ordinal DESC LIMIT ?')
         .all(Math.max(1, Math.min(2000, Math.floor(limit))))
-        .map((row) => JSON.parse(String(row.json)) as MediaSearchVideoFrameRecord),
+        .map((row) => this.decodeRecord(row.json)),
       total: Number(
         database.prepare('SELECT COUNT(*) AS count FROM frame_records').get()?.count ?? 0,
       ),
@@ -214,7 +221,7 @@ export class VideoFrameManifestLookup {
       const row = database
         .prepare("SELECT json FROM frame_records WHERE frame_id=? AND status='done'")
         .get(frameId)
-      return row ? (JSON.parse(String(row.json)) as MediaSearchVideoFrameRecord) : null
+      return row ? this.decodeRecord(row.json) : null
     })
   }
 
@@ -223,7 +230,7 @@ export class VideoFrameManifestLookup {
       database
         .prepare("SELECT json FROM frame_records WHERE status='done' ORDER BY ordinal")
         .all()
-        .map((row) => JSON.parse(String(row.json)) as MediaSearchVideoFrameRecord),
+        .map((row) => this.decodeRecord(row.json)),
     )
   }
 }

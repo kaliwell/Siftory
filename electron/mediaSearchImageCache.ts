@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import fs from 'fs'
 import path from 'path'
 import { getMediaSearchDir } from './mediaCacheService'
@@ -25,7 +26,7 @@ export function readMediaSearchImageDataUrl(
   if (!imagePath) return undefined
   try {
     const cacheRoot = path.resolve(getMediaSearchDir())
-    const resolved = path.resolve(imagePath)
+    const resolved = path.resolve(resolveStoredDataPath(imagePath))
     if (
       resolved !== cacheRoot &&
       !resolved.startsWith(`${cacheRoot}${path.sep}`) &&

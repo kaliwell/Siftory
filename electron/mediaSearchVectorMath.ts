@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import path from 'path'
 import { getVisionModelCapability, type VisionModelName } from './modelRegistry'
 import { requireNormalizedEmbeddingVector } from './embeddingVectorValidation'
@@ -5,7 +6,7 @@ import { requireNormalizedEmbeddingVector } from './embeddingVectorValidation'
 export type MediaFrameModelName = VisionModelName
 
 export function normalizeFrameKey(filePath: string): string {
-  const resolved = path.resolve(filePath)
+  const resolved = path.resolve(resolveStoredDataPath(filePath))
   return process.platform === 'win32' ? resolved.toLowerCase() : resolved
 }
 

@@ -149,7 +149,10 @@ const entries = [
   // add three dependency-free nodes. Existing hot-module and byte caps stay fixed.
   // Alpha 11 adds shared/globalHotkey.ts so renderer recording and main-process
   // startup/save validation use one implementation. No extra runtime service.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 316 },
+  // Data relocation adds five bounded nodes: the shared location contract,
+  // filesystem service, cold-copy verifier, path resolver and Electron adapter. No packages
+  // or network listeners are added; hot-module and byte caps stay fixed.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 321 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports

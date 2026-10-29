@@ -6,6 +6,9 @@ import path from 'path'
 import { initImageSearchService, shutdownImageSearchForQuit } from './imageSearchService'
 import { shutdownImageSearchDataCatalogForQuit } from './imageSearchDataCatalogService'
 import { initAppStorageService } from './appStorageService'
+import { StorageLocationService, readStoragePathAliases } from './storageLocationService'
+import { configureStoragePathResolver } from './storagePathResolver'
+import { prepareStorageLocationStartup, registerStorageLocationIpc } from './storageLocationIpc'
 import { loadProfiles } from './remoteTerminalService'
 import { registerBatchRenameIpc } from './batchRenameIpc'
 import { registerSubjectSearchIpc } from './subjectSearchIpc'
@@ -130,10 +133,22 @@ const startupSecurity = validateStartupSecurity({
   disableSandboxSwitchPresent: app.commandLine.hasSwitch('disable-sandbox'),
 })
 app.setName(PRODUCT_NAME)
+// Acquire the instance lock at a stable location, before binding a movable root.
+app.setPath(
+  'userData',
+  startupSecurity.smokeUserDataPath ?? resolveStableUserDataPath(app.getPath('appData')),
+)
+const hasSingleInstanceLock = app.requestSingleInstanceLock()
+const storageLocations = new StorageLocationService(app.getPath('appData'), app.getPath('userData'))
+let storageLocationStartupError: unknown
 if (startupSecurity.smokeUserDataPath) {
   app.setPath('userData', startupSecurity.smokeUserDataPath)
 } else {
-  app.setPath('userData', resolveStableUserDataPath(app.getPath('appData')))
+  try {
+    app.setPath('userData', storageLocations.resolveRoot())
+  } catch (error) {
+    storageLocationStartupError = error
+  }
 }
 
 if (process.platform === 'win32' && normalizeWindowsPathEnvironment(process.env)) {
@@ -780,8 +795,6 @@ function createWindow() {
   })
 }
 
-const hasSingleInstanceLock = app.requestSingleInstanceLock()
-
 if (!hasSingleInstanceLock) {
   app.quit()
 } else {
@@ -796,6 +809,26 @@ if (!hasSingleInstanceLock) {
 
   void app.whenReady().then(async () => {
     recordStartupPhase('electron-ready')
+    try {
+      if (
+        !startupSecurity.smokeUserDataPath &&
+        !(await prepareStorageLocationStartup(storageLocations, storageLocationStartupError))
+      )
+        return
+    } catch {
+      dialog.showErrorBox(
+        'Siftory',
+        '应用数据初始化失败，请保留原目录并检查磁盘和权限。\nApplication data initialization failed. Keep the original directory and check disk access and permissions.',
+      )
+      app.quit()
+      return
+    }
+    if (!startupSecurity.smokeUserDataPath) {
+      configureStoragePathResolver(
+        app.getPath('userData'),
+        readStoragePathAliases(app.getPath('userData')),
+      )
+    }
     const dataDirectorySecurity = await hardenDataDirectoryPermissions(app.getPath('userData'), {
       enabled: app.isPackaged && !uiSmokeMode && !aiControlSmokeReportPath,
     })
@@ -945,6 +978,7 @@ if (!hasSingleInstanceLock) {
       app.getPath('userData'),
     )
     registerAppCoreIpc(appCoreOptions)
+    registerStorageLocationIpc(storageLocations, Boolean(startupSecurity.smokeUserDataPath))
     // Register handlers before loading the renderer. Profile-dependent handlers
     // share the same asynchronous initialization barrier.
     registerRemoteTerminalProfileIpc(app.getPath('userData'), profilesReady)

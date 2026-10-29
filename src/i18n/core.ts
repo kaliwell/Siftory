@@ -38,6 +38,21 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Application data location': '应用数据位置',
+  'Move indexes, vectors, library metadata and generated caches together. Original media stays in place.':
+    '统一迁移索引、向量、素材库元数据和生成缓存，原始素材位置保持不变。',
+  'Previous data directory retained': '保留的旧数据目录',
+  'The last migration stopped. The original data is still active.':
+    '上次迁移未完成，仍在使用原数据。',
+  'Remove the custom video cache environment override before migrating data':
+    '当前使用视频缓存路径环境变量覆盖，请取消覆盖后再迁移。',
+  'Choose new data location': '选择新数据位置',
+  'Siftory will restart, copy and verify the data, then switch locations. The old directory is kept.':
+    '软件将重启，复制并校验数据，成功后切换位置。旧目录会保留。',
+  'Restart and migrate': '重启并迁移',
+  'Data location is unavailable': '无法读取数据位置',
+  'Please wait...': '请稍候……',
+
   Rating: '评分',
   Source: '来源',
   Tags: '标签',

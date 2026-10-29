@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
@@ -166,7 +167,7 @@ function sanitizePart(value: string): string {
 }
 
 export function embeddingCachePathKey(filePath: string): string {
-  return filePath.replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase()
+  return resolveStoredDataPath(filePath).replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase()
 }
 
 function cachePaths(

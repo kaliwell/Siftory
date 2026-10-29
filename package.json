@@ -315,7 +315,7 @@
     "test:modern-desktop:browser": "node tests/modern-desktop-browser.cjs",
     "test:asset-library:browser": "node tests/asset-library-browser.cjs",
     "test:subject-picker:browser": "node tests/subject-picker-browser.cjs",
-    "test:core-behavior": "node --test tests/unified-search.test.cjs tests/unified-search-guards.test.cjs tests/discovery-catalog.test.cjs tests/source-file-sync.test.cjs tests/automatic-maintenance.test.cjs tests/vector-gc.test.cjs tests/product-unified-search-filters.test.cjs tests/license-compliance.test.cjs tests/end-user-terms.test.cjs tests/end-user-terms-ipc.test.cjs tests/source-derived-data-cleanup.test.cjs",
+    "test:core-behavior": "node --test tests/storage-location.test.cjs tests/storage-location-ipc.test.cjs tests/unified-search.test.cjs tests/unified-search-guards.test.cjs tests/discovery-catalog.test.cjs tests/source-file-sync.test.cjs tests/automatic-maintenance.test.cjs tests/vector-gc.test.cjs tests/product-unified-search-filters.test.cjs tests/license-compliance.test.cjs tests/end-user-terms.test.cjs tests/end-user-terms-ipc.test.cjs tests/source-derived-data-cleanup.test.cjs",
     "benchmark:core-search": "node scripts/benchmark-core-search.cjs",
     "test:model-preparation:browser": "node tests/model-preparation-browser.cjs",
     "test:task-drawer:browser": "node tests/task-drawer-browser.cjs",

@@ -1,3 +1,4 @@
+import type { StorageLocationStatus, StorageMigrationSelection } from './storage-location'
 import type {
   ModelStatus,
   EmbeddingProgress,
@@ -234,6 +235,11 @@ export interface ElectronAPI {
   saveSettings: (settings: Partial<AppSettingsData>) => Promise<void>
   loadConfig: () => Promise<AppConfigData | null>
   saveConfig: (config: AppConfigData) => Promise<void>
+  storageLocation: {
+    getStatus: () => Promise<StorageLocationStatus>
+    selectDestination: () => Promise<StorageMigrationSelection | null>
+    startMigration: (token: string) => Promise<{ scheduled: boolean }>
+  }
   openConfigDir: () => Promise<void>
   setIgnoreMouseEvents: (ignore: boolean, generation: number) => Promise<void>
   setOverlayShape: (

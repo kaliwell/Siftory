@@ -72,6 +72,11 @@ const api: ElectronAPI = {
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   loadConfig: () => ipcRenderer.invoke('load-config'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
+  storageLocation: {
+    getStatus: () => ipcRenderer.invoke('appStorage:getLocation'),
+    selectDestination: () => ipcRenderer.invoke('appStorage:selectMigrationDestination'),
+    startMigration: (token) => ipcRenderer.invoke('appStorage:startMigration', token),
+  },
   openConfigDir: () => ipcRenderer.invoke('open-config-dir'),
   setIgnoreMouseEvents: (ignore, generation) =>
     ipcRenderer.invoke('set-ignore-mouse', ignore, generation),

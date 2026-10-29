@@ -1,3 +1,5 @@
+import { resolveDataPathInRoots } from './storagePathResolver'
+import { readStoragePathAliases } from './storageLocationService'
 import crypto from 'crypto'
 import fs from 'fs'
 import fsp from 'fs/promises'
@@ -65,7 +67,7 @@ export class ProjectPreviewManifestStore {
   private loaded = false
   private writeChain: Promise<void> = Promise.resolve()
 
-  constructor(userDataPath: string) {
+  constructor(private readonly userDataPath: string) {
     this.rootDir = path.join(userDataPath, 'project-previews', 'v1')
     this.previewsDir = path.join(this.rootDir, 'previews')
     this.manifestPath = path.join(this.rootDir, 'manifest.json')
@@ -81,6 +83,12 @@ export class ProjectPreviewManifestStore {
       if (parsed.version !== 1 || !Array.isArray(parsed.entries)) {
         throw new Error('Unsupported project preview manifest')
       }
+      let aliases: string[] = []
+      try {
+        aliases = readStoragePathAliases(this.userDataPath)
+      } catch {
+        /* Legacy standalone test/cache without a location descriptor. */
+      }
       for (const entry of parsed.entries) {
         if (
           entry &&
@@ -88,6 +96,12 @@ export class ProjectPreviewManifestStore {
           typeof entry.sourcePath === 'string' &&
           Array.isArray(entry.keywords)
         ) {
+          if (entry.previewPath)
+            entry.previewPath = resolveDataPathInRoots(
+              this.userDataPath,
+              aliases,
+              entry.previewPath,
+            )
           this.entries.set(entry.sourceId, entry)
         }
       }

@@ -1,3 +1,4 @@
+import StorageLocationSettings from './StorageLocationSettings'
 import React, { useCallback, useState } from 'react'
 import DraggablePanel from './DraggablePanel'
 import ImageSearchDataManager from './ImageSearchDataManager'
@@ -25,6 +26,7 @@ const AppStoragePanel: React.FC = () => {
           {t('Manage Siftory indexes and generated caches. Original assets are kept.')}
         </p>
         {message && <p role="status">{message}</p>}
+        <StorageLocationSettings />
         <AutomaticMaintenancePanel suggestedScopes={scanPaths} />
         <ImageSearchDataManager
           standalone

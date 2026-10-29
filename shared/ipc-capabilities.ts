@@ -123,6 +123,7 @@ export function getIpcCapabilityDeclaration(channel: string): IpcCapabilityDecla
   ) {
     capabilities.add('FS')
   }
+  if (channel === 'appStorage:startMigration') capabilities.add('PROC')
   if (EXTERNAL_OPERATION.test(channel)) capabilities.add('EXT')
   if (PROCESS_DOMAINS.has(domain)) capabilities.add('PROC')
   if (domain === 'remoteTerminal') {

@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import crypto from 'crypto'
 import fs from 'fs'
 import readline from 'readline'
@@ -108,6 +109,7 @@ function frameManifestLookup(): VideoFrameManifestLookup {
   return new VideoFrameManifestLookup(
     frameManifestPath(),
     path.join(getMediaSearchDir(), 'manifests', 'video_frames.lookup.sqlite'),
+    resolveStoredDataPath,
   )
 }
 

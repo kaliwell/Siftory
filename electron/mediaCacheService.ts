@@ -16,37 +16,15 @@ const MEDIA_CACHE_STATS_TTL_MS = 10_000
 const MEDIA_CACHE_STAT_CONCURRENCY = 32
 const MEDIA_CACHE_DIRECTORY_CONCURRENCY = 8
 
-function getManifestByteSize(dir: string): number {
-  const manifest = path.join(dir, 'manifests', 'video_files.jsonl')
-  try {
-    return fs.statSync(manifest).size
-  } catch {
-    return 0
-  }
-}
-
 function resolveDefaultMediaSearchDir(): string {
   const override =
     process.env.SIFTORY_MEDIA_SEARCH_DIR?.trim() ||
     process.env.FLOATING_CLOCK_MEDIA_SEARCH_DIR?.trim()
   if (override) return path.resolve(override)
 
-  const stableDir = path.join(app.getPath('appData'), 'floating-clock-electron', 'media-search')
-  const userDataDir = path.join(app.getPath('userData'), 'media-search')
-  const candidates = Array.from(new Set([stableDir, userDataDir].map((dir) => path.resolve(dir))))
-
-  // Keep Media Search data stable across dev/package app names. If one candidate
-  // already has scanned videos, use it; otherwise default to the package-name dir.
-  let best = path.resolve(stableDir)
-  let bestSize = -1
-  for (const candidate of candidates) {
-    const size = getManifestByteSize(candidate)
-    if (size > bestSize) {
-      best = candidate
-      bestSize = size
-    }
-  }
-  return best
+  // userData is selected before any service starts. Never prefer the old disk
+  // merely because its retained migration copy contains a larger manifest.
+  return path.join(app.getPath('userData'), 'media-search')
 }
 
 export function getMediaSearchDir(): string {

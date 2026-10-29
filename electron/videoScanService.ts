@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import crypto from 'crypto'
 import fs from 'fs'
 import fsp from 'fs/promises'
@@ -115,6 +116,7 @@ function parseRecord(line: string): MediaSearchVideoRecord | null {
   try {
     const value = JSON.parse(line) as Partial<MediaSearchVideoRecord>
     if (typeof value.path !== 'string' || typeof value.videoId !== 'string') return null
+    if (value.thumbnailPath) value.thumbnailPath = resolveStoredDataPath(value.thumbnailPath)
     return value as MediaSearchVideoRecord
   } catch {
     return null

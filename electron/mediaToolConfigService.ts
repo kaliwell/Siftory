@@ -1,3 +1,4 @@
+import { resolveStoredDataPath } from './storagePathResolver'
 import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
@@ -36,7 +37,7 @@ function hasMediaTools(dirPath: string): boolean {
 export function normalizeFfmpegDirectory(inputPath: string): MediaSearchToolConfigResult {
   const trimmed = inputPath.trim()
   if (!trimmed) return { ok: false, error: 'Invalid ffmpeg directory' }
-  const resolved = path.resolve(trimmed)
+  const resolved = path.resolve(resolveStoredDataPath(trimmed))
   const candidates = [resolved, path.join(resolved, 'bin')]
   for (const candidate of candidates) {
     try {

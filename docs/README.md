@@ -1,5 +1,7 @@
 # Siftory（寻藏）文档中心
 
+- [应用数据目录迁移与后续局域网边界](current/2026-10-29-data-directory-migration.md)
+
 > 状态：当前入口  
 > 更新日期：2026-10-28
 > 适用项目：Siftory（寻藏）桌面应用

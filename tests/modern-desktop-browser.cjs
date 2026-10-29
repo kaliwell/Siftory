@@ -378,6 +378,22 @@ async function run() {
           .filter({ hasText: '未安装' })
           .waitFor()
       }
+      if (category === 'dataReset') {
+        const location = page
+          .locator('[data-settings-category="dataReset"]:visible')
+          .getByTestId('storage-location-settings')
+        await location.getByText('C:/fixtures/Siftory-data', { exact: true }).waitFor()
+        await location.getByTestId('storage-location-choose').click()
+        await location
+          .getByTestId('storage-location-destination')
+          .filter({ hasText: 'E:/Siftory-data-fixture' })
+          .waitFor()
+        await location.getByTestId('storage-location-migrate').click()
+        await location.getByTestId('storage-location-destination').waitFor({ state: 'detached' })
+        await location.getByTestId('storage-location-choose').click()
+        await location.getByRole('button', { name: '取消', exact: true }).click()
+        assert.equal(await location.getByTestId('storage-location-destination').count(), 0)
+      }
       if (category === 'system') {
         await page.evaluate(() => {
           window.__workspaceTest.setHandler('registerHotkey', (accelerator) => ({
