@@ -1,5 +1,6 @@
 # Siftory（寻藏）文档中心
 
+- [搜索性能优化与本地验收分工](current/2026-11-02-search-performance-handoff.md)
 - [共享目录增量索引与历史记录去重](current/2026-10-29-network-index-idempotence.md)
 - [应用数据目录迁移与后续局域网边界](current/2026-10-29-data-directory-migration.md)
 

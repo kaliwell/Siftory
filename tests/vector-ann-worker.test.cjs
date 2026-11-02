@@ -20,6 +20,49 @@ require.cache[electronModulePath] = {
   exports: { app: { isPackaged: false, getPath: () => os.tmpdir() } },
 }
 const annHost = loadTsModule('electron/vectorAnnWorkerHost.ts')
+const runtimeTrace = loadTsModule('electron/runtimeMemoryTrace.ts')
+
+test('ANN trace records actual rerank phases without counting load time twice', async (context) => {
+  if (!fs.existsSync(workerPath)) {
+    context.skip('run npm run build:renderer before the worker integration test')
+    return
+  }
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-ann-trace-'))
+  try {
+    assert.equal(
+      runtimeTrace.configureRuntimeMemoryTraceFromEnvironment({
+        SIFTORY_RUNTIME_MEMORY_TRACE_DIR: fs.realpathSync(root),
+        SIFTORY_RUNTIME_MEMORY_RUN_ID: 'rerank-parity',
+      }),
+      true,
+    )
+    const cache = createCache(root)
+    const result = await annHost.searchVectorAnn(
+      cache,
+      [1, ...new Array(cache.meta.dim - 1).fill(0)],
+      8,
+    )
+    const events = fs
+      .readFileSync(path.join(root, 'runtime-memory-events-00.jsonl'), 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse)
+    const rerank = events.find((event) => event.stage === 'rerank' && event.phase === 'finish')
+    const search = events.find((event) => event.stage === 'search' && event.phase === 'finish')
+    assert.equal(rerank.durationMs, result.timings.rerankMs)
+    assert.equal(search.durationMs, result.searchMs)
+    assert.equal(rerank.metrics.candidateMs, result.timings.candidateMs)
+    assert.equal(rerank.metrics.scopeMs, result.timings.scopeMs)
+    assert.equal(rerank.metrics.pathMappingMs, result.timings.pathMappingMs)
+  } finally {
+    annHost.disposeVectorAnnWorker()
+    runtimeTrace.configureRuntimeMemoryTraceFromEnvironment({
+      SIFTORY_RUNTIME_MEMORY_TRACE_DIR: path.join(root, 'missing'),
+      SIFTORY_RUNTIME_MEMORY_RUN_ID: 'disabled',
+    })
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
 
 function createCache(directory, options = {}) {
   const dim = options.dim || 32
@@ -149,6 +192,13 @@ test('ANN worker rebuilds a missing or corrupt derived index', async (context) =
     const first = await search(cache)
     assert.equal(first.built, true)
     assert.equal(first.buildMode, 'full')
+    assert.deepEqual(Object.keys(first.timings).sort(), [
+      'candidateMs',
+      'pathMappingMs',
+      'rerankMs',
+      'scopeMs',
+    ])
+    assert.ok(Object.values(first.timings).every((value) => Number.isFinite(value) && value >= 0))
     assert.equal(first.results[0].path, 'C:\\synthetic\\image-0.png')
 
     const signaturePath = path.join(directory, 'synthetic.ann-simhash-v1.bin')
@@ -565,6 +615,12 @@ test('ANN host forwards the scope snapshot to the worker', async (context) => {
       )
       assert.equal(batch.results.length, 0)
       assert.equal(batch.queryResults.length, 2)
+      for (const phase of ['candidateMs', 'rerankMs', 'pathMappingMs']) {
+        assert.equal(
+          batch.timings[phase],
+          batch.queryResults.reduce((sum, item) => sum + item.timings[phase], 0),
+        )
+      }
       assert.deepEqual(batch.queryResults[0].results, batch.queryResults[1].results)
       assert.deepEqual(
         batch.queryResults[0].results.map((item) => item.path),

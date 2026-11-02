@@ -1,5 +1,6 @@
 import fs from 'fs'
-import { float16ToFloat32, type EmbeddingF16CacheHandle } from './embeddingF16Cache'
+import type { EmbeddingF16CacheHandle } from './embeddingF16Cache'
+import { createF16DotProduct } from './f16DotProduct'
 import { requireNormalizedEmbeddingVectorFloat32 } from './embeddingVectorValidation'
 import { VECTOR_ANN_MAX_TOP_K, type VectorAnnScoredRow } from './vectorAnnIndex'
 
@@ -222,6 +223,7 @@ export function scoreF16SnapshotCandidates(
     throw new RangeError(`ANN topK must be a positive safe integer <= ${VECTOR_ANN_MAX_TOP_K}`)
   }
   const heap: VectorAnnScoredRow[] = []
+  const dotProduct = createF16DotProduct(query)
   let previousRow = -1
   for (let index = 0; index < candidates.length; index++) {
     if ((index & 1023) === 0 && isCancelled?.()) throw new Error('ANN search cancelled')
@@ -230,11 +232,7 @@ export function scoreF16SnapshotCandidates(
     previousRow = row
     const page = reader.readPageForRow(row)
     const rowOffset = page.localRow * reader.rowBytes
-    let dot = 0
-    for (let dimension = 0; dimension < reader.dim; dimension++) {
-      dot +=
-        query[dimension] * float16ToFloat32(page.buffer.readUInt16LE(rowOffset + dimension * 2))
-    }
+    const dot = dotProduct(page.buffer, rowOffset)
     pushScoredRow(heap, { row, score: (dot + 1) / 2 }, topK)
   }
   return heap.sort((left, right) => right.score - left.score || left.row - right.row)

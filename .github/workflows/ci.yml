@@ -43,6 +43,10 @@ jobs:
       - run: npm ci
       - run: npm run ci:verify:source
       - run: npm run test:core-behavior
+      - run: node --test tests/f16-dot-product.test.cjs tests/f16-snapshot-reader.test.cjs tests/vector-ann-index.test.cjs tests/vector-ann-worker.test.cjs
+      - run: npm run benchmark:vector-rerank -- --rows=2048 --dim=128 --samples=5
+      - run: npm run benchmark:vector-local -- --fixture --samples=3
+      - run: npm run benchmark:vector-local -- --fixture-composite --samples=3
       - run: node --test --test-name-pattern="project updates honor|project search indexes|manifest cache identity|project preview proxy" tests/project-preview.test.cjs
       - run: npm run benchmark:core-search
       - run: npx playwright install chromium

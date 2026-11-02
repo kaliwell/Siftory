@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { parentPort } from 'worker_threads'
+import { performance } from 'node:perf_hooks'
 import {
   createFileChunkIntegritySync,
   sameFileChunkIntegrity,
@@ -993,7 +994,12 @@ function searchLoadedIndex(
   topK: number,
   candidateRatio: number | undefined,
   isCancelled: () => boolean,
-): { results: VectorAnnWorkerSearchResult[]; candidateCount: number } {
+): {
+  results: VectorAnnWorkerSearchResult[]
+  candidateCount: number
+  timings: { candidateMs: number; rerankMs: number; pathMappingMs: number }
+} {
+  const candidateStartedAt = performance.now()
   const candidates = collectVectorAnnProjectionCandidates(
     index.projections,
     index.meta.count,
@@ -1005,6 +1011,8 @@ function searchLoadedIndex(
     candidateRatio,
     isCancelled,
   )
+  const candidateMs = performance.now() - candidateStartedAt
+  const rerankStartedAt = performance.now()
   const scored = scoreF16SnapshotCandidates(
     index.vectorReader,
     candidates,
@@ -1012,12 +1020,16 @@ function searchLoadedIndex(
     topK,
     isCancelled,
   )
+  const rerankMs = performance.now() - rerankStartedAt
+  const mappingStartedAt = performance.now()
+  const results = scored.flatMap((item): VectorAnnWorkerSearchResult[] => {
+    const filePath = index.paths.get(item.row)
+    return filePath ? [{ path: filePath, row: item.row, score: item.score }] : []
+  })
   return {
-    results: scored.flatMap((item): VectorAnnWorkerSearchResult[] => {
-      const filePath = index.paths.get(item.row)
-      return filePath ? [{ path: filePath, row: item.row, score: item.score }] : []
-    }),
+    results,
     candidateCount: candidates.length,
+    timings: { candidateMs, rerankMs, pathMappingMs: performance.now() - mappingStartedAt },
   }
 }
 
@@ -1027,7 +1039,9 @@ async function search(request: VectorAnnWorkerSearchRequest): Promise<void> {
   const startedAt = Date.now()
   try {
     const ensured = ensureLoaded(request.requestId, request.cache, isCancelled)
+    const scopeStartedAt = performance.now()
     const activeRows = collectActiveRows(ensured.index, request.acceptPathKeys, isCancelled)
+    const scopeMs = performance.now() - scopeStartedAt
     const query = searchLoadedIndex(
       ensured.index,
       activeRows,
@@ -1042,6 +1056,7 @@ async function search(request: VectorAnnWorkerSearchRequest): Promise<void> {
       result: {
         results: query.results,
         candidateCount: query.candidateCount,
+        timings: { scopeMs, ...query.timings },
         indexedCount: ensured.index.meta.count,
         built: ensured.built,
         buildMode: ensured.buildMode,
@@ -1069,7 +1084,9 @@ async function searchBatch(request: VectorAnnWorkerBatchSearchRequest): Promise<
       throw new Error('ANN batch query count must be between 1 and 8')
     }
     const ensured = ensureLoaded(request.requestId, request.cache, isCancelled)
+    const scopeStartedAt = performance.now()
     const activeRows = collectActiveRows(ensured.index, request.acceptPathKeys, isCancelled)
+    const scopeMs = performance.now() - scopeStartedAt
     const queryResults = request.queryVectors.map((queryVector) =>
       searchLoadedIndex(
         ensured.index,
@@ -1087,6 +1104,12 @@ async function searchBatch(request: VectorAnnWorkerBatchSearchRequest): Promise<
         results: [],
         candidateCount: queryResults.reduce((sum, item) => sum + item.candidateCount, 0),
         queryResults,
+        timings: {
+          scopeMs,
+          candidateMs: queryResults.reduce((sum, item) => sum + item.timings.candidateMs, 0),
+          rerankMs: queryResults.reduce((sum, item) => sum + item.timings.rerankMs, 0),
+          pathMappingMs: queryResults.reduce((sum, item) => sum + item.timings.pathMappingMs, 0),
+        },
         indexedCount: ensured.index.meta.count,
         built: ensured.built,
         buildMode: ensured.buildMode,

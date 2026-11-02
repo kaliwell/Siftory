@@ -1,4 +1,5 @@
 import { float16ToFloat32 } from './embeddingF16Cache'
+import { createF16DotProduct } from './f16DotProduct'
 import {
   MAX_EMBEDDING_VECTOR_DIM,
   requireNormalizedEmbeddingVectorFloat32,
@@ -478,6 +479,7 @@ export function scoreVectorAnnCandidates(
   const segments = validateSegments(vectors, count, dim * 2, 'ANN vector')
   const heap: VectorAnnScoredRow[] = []
   const limit = topK
+  const dotProduct = createF16DotProduct(normalizedQuery)
   let segmentIndex = 0
   let segment = segments?.[0]
   let previousRow = -1
@@ -502,12 +504,7 @@ export function scoreVectorAnnCandidates(
     const buffer = segment?.buffer || (vectors as Buffer)
     const localRow = segment ? row - segment.startRow : row
     const rowOffset = localRow * dim * 2
-    let dot = 0
-    for (let dimension = 0; dimension < dim; dimension++) {
-      dot +=
-        normalizedQuery[dimension] *
-        float16ToFloat32(buffer.readUInt16LE(rowOffset + dimension * 2))
-    }
+    const dot = dotProduct(buffer, rowOffset)
     pushScoredRow(heap, { row, score: (dot + 1) / 2 }, limit)
   }
   return heap.sort((left, right) => right.score - left.score || left.row - right.row)

@@ -24,6 +24,7 @@ export interface VectorAnnSearchResult {
   queryResults?: Array<{
     results: Array<{ path: string; row: number; score: number }>
     candidateCount: number
+    timings?: { candidateMs: number; rerankMs: number; pathMappingMs: number }
   }>
   candidateCount: number
   indexedCount: number
@@ -35,6 +36,8 @@ export interface VectorAnnSearchResult {
   reusedVectorBytes: number
   loadMs: number
   searchMs: number
+  /** Non-overlapping query phases; searchMs already includes loading. */
+  timings?: { scopeMs: number; candidateMs: number; rerankMs: number; pathMappingMs: number }
   memory?: VectorAnnOwnedMemoryStats
 }
 
@@ -307,17 +310,21 @@ function ensureWorker(): Worker {
             runId: traceRunId,
             stage: 'rerank',
             phase: 'finish',
-            durationMs: result.searchMs,
+            durationMs: result.timings?.rerankMs ?? result.searchMs,
             model: active.modelName,
             provider: 'node-worker',
-            metrics: { candidateCount: result.candidateCount, indexedCount: result.indexedCount },
+            metrics: {
+              candidateCount: result.candidateCount,
+              indexedCount: result.indexedCount,
+              ...result.timings,
+            },
           })
         }
         emitRuntimeMemoryTrace({
           runId: traceRunId,
           stage: active.kind,
           phase: 'finish',
-          durationMs: result.loadMs + result.searchMs,
+          durationMs: result.searchMs,
           model: active.modelName,
           provider: 'node-worker',
         })
