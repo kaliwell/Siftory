@@ -11,8 +11,10 @@ const { loadTsModule } = require('../tests/guard-utils.cjs')
 const {
   defaultMaintenanceRoot,
   validateMaintenanceRoot,
+  bindMaintenanceStorageRoot,
 } = require('./maintenance-storage-context.cjs')
 const api = loadTsModule('electron/embeddingF16Cache.ts')
+const { MODEL_DIMENSIONS, readBenchmarkSnapshot } = require('./vector-benchmark-snapshot.cjs')
 const workerPath = path.resolve(__dirname, '../dist-electron/vectorAnnWorker.js')
 
 function option(name) {
@@ -178,28 +180,27 @@ async function main() {
     throw new Error('--samples must be between 3 and 100')
   const compositeFixture = process.argv.includes('--fixture-composite')
   const synthetic = compositeFixture || process.argv.includes('--fixture')
+  const modelName = option('model') || 'dinov2_vitb14'
+  if (!MODEL_DIMENSIONS[modelName])
+    throw new Error('--model must be dinov2_vitb14 or clip_vit_base_patch32')
   const directory = fs.mkdtempSync(
     path.join(fs.realpathSync(os.tmpdir()), 'siftory-local-vector-benchmark-'),
   )
   const sessions = []
+  let restoreStorageRoot
   try {
     const root = synthetic
       ? null
       : option('user-data')
         ? validateMaintenanceRoot(option('user-data'))
         : defaultMaintenanceRoot()
+    if (root) restoreStorageRoot = bindMaintenanceStorageRoot(root)
     const source = synthetic
       ? fixture(directory, compositeFixture)
-      : api.readExistingEmbeddingF16Cache({
-          cacheDir: path.join(root, 'vector-db', 'embedding-cache'),
-          modelName: 'dinov2_vitb14',
-          embeddingType: 'global',
-          dim: 768,
-          sourcePaths: [],
-        })
+      : readBenchmarkSnapshot(root, modelName)
     if (!source || source.meta.count < 50)
       throw new Error(
-        'No complete DINO vector snapshot with at least 50 rows; build it in Siftory first',
+        `No complete ${modelName} vector snapshot with at least 50 rows; benchmark does not rebuild user data`,
       )
     console.error(
       '[vector-local] Checking and copying the committed snapshot; original files stay read-only',
@@ -289,6 +290,7 @@ async function main() {
         cpu: os.cpus()[0]?.model,
       },
       workload: {
+        modelName: cache.meta.modelName,
         rows: cache.meta.count,
         dim: cache.meta.dim,
         samples,
@@ -344,6 +346,7 @@ async function main() {
     return report
   } finally {
     await Promise.allSettled(sessions.map((mode) => mode.worker.terminate()))
+    restoreStorageRoot?.()
     fs.rmSync(directory, { recursive: true, force: true })
   }
 }

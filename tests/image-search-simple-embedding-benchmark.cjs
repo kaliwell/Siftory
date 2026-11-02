@@ -4,7 +4,6 @@ const crypto = require('node:crypto')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
-const readline = require('node:readline')
 const { promisify } = require('node:util')
 const { performance } = require('node:perf_hooks')
 
@@ -22,7 +21,12 @@ const execFileAsync = promisify(childProcess.execFile)
 const { readNvidiaVideoMemory, selectEmbeddingBatchSize } = loadTsModule(
   'electron/embeddingBatchPolicy.ts',
 )
-const { batchMetricsFromChildMessage } = loadTsModule('electron/embeddingChildLineFraming.ts')
+const { batchMetricsFromChildMessage, providerTelemetryFromChildMessage } = loadTsModule(
+  'electron/embeddingChildLineFraming.ts',
+)
+const { EmbeddingChildBinaryFrameDecoder, decodeEmbeddingChildVector } = loadTsModule(
+  'electron/embeddingChildBinaryProtocol.ts',
+)
 
 function option(argv, name, fallback) {
   return argv.find((value) => value.startsWith(`--${name}=`))?.slice(name.length + 3) || fallback
@@ -272,6 +276,7 @@ async function runModel(config, images, options) {
   const errors = []
   const workers = []
   const stageMetrics = createStageMetrics()
+  const providerSelections = []
   let resolveDone
   let rejectDone
   const done = new Promise((resolve, reject) => {
@@ -339,14 +344,7 @@ async function runModel(config, images, options) {
         )
       }
     })
-    const lines = readline.createInterface({ input: child.stdout, crlfDelay: Infinity })
-    lines.on('line', (line) => {
-      let message
-      try {
-        message = JSON.parse(line)
-      } catch {
-        return
-      }
+    const handleMessage = (message) => {
       if (message.type === 'ready') {
         dispatch(worker)
         dispatch(worker, true)
@@ -356,6 +354,8 @@ async function runModel(config, images, options) {
         dispatch(worker, true)
         return
       }
+      const provider = providerTelemetryFromChildMessage(message)
+      if (provider) providerSelections.push(provider)
       const metrics = batchMetricsFromChildMessage(message)
       if (metrics?.model === config.name) {
         addStageMetrics(stageMetrics, metrics)
@@ -374,6 +374,21 @@ async function runModel(config, images, options) {
         dispatch(worker, true)
       } else if (options.tensorPrefetch && worker.pending.size === options.batchSize) {
         dispatch(worker, true)
+      }
+    }
+    const decoder = new EmbeddingChildBinaryFrameDecoder()
+    child.stdout.on('data', (chunk) => {
+      try {
+        const decoded = decoder.push(chunk)
+        if (decoded.overflow)
+          throw new Error('Embedding benchmark received an invalid binary frame')
+        for (const frame of decoded.frames) {
+          const message = { ...frame.header }
+          if (frame.body.length) message.vector = decodeEmbeddingChildVector(frame, config.dim)
+          handleMessage(message)
+        }
+      } catch (error) {
+        rejectDone(error)
       }
     })
   }
@@ -417,6 +432,7 @@ async function runModel(config, images, options) {
     workerWorkingSetMiB: workingSet.totalMiB,
     maxWorkerWorkingSetMiB: workingSet.maxMiB,
     digest,
+    providerSelections,
   }
   if (options.stageMetrics) {
     const coreMs =
@@ -613,7 +629,9 @@ async function main() {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.stack || error.message : String(error))
-  process.exitCode = 1
-})
+if (require.main === module)
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.stack || error.message : String(error))
+    process.exitCode = 1
+  })
+module.exports = { runModel, parseArgs }

@@ -43,7 +43,7 @@ jobs:
       - run: npm ci
       - run: npm run ci:verify:source
       - run: npm run test:core-behavior
-      - run: node --test tests/f16-dot-product.test.cjs tests/f16-snapshot-reader.test.cjs tests/vector-ann-index.test.cjs tests/vector-ann-worker.test.cjs
+      - run: node --test tests/embedding-benchmark-protocol.test.cjs tests/vector-benchmark-snapshot.test.cjs tests/f16-dot-product.test.cjs tests/f16-snapshot-reader.test.cjs tests/vector-ann-index.test.cjs tests/vector-ann-worker.test.cjs
       - run: npm run benchmark:vector-rerank -- --rows=2048 --dim=128 --samples=5
       - run: npm run benchmark:vector-local -- --fixture --samples=3
       - run: npm run benchmark:vector-local -- --fixture-composite --samples=3

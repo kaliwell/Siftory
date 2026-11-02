@@ -1,0 +1,1643 @@
+{
+  "schemaVersion": 1,
+  "status": "partial-user-stopped-further-testing",
+  "generatedAt": "2026-11-02T14:11:40.130Z",
+  "executor": "Local Codex / GPT-6 series; exact minor version unknown",
+  "baseCommit": "dc7716dd8bbe7c286c4ad3db172604d642e834a0",
+  "hardware": {
+    "cpu": "Intel Core i7-12700H",
+    "logicalProcessors": 20,
+    "memoryGiB": 15.63,
+    "gpu": "NVIDIA RTX 3050 Laptop GPU",
+    "gpuTotalMiB": 4096,
+    "nvidiaDriver": "621.01",
+    "providerAdapterAttribution": "DirectML provider observed; adapter identity not pinned; NVIDIA memory metrics are global"
+  },
+  "cpuVectorAcceptance": [
+    {
+      "model": "dinov2_vitb14",
+      "rounds": [
+        {
+          "round": 1,
+          "rows": 220444,
+          "dimension": 768,
+          "samples": 20,
+          "scalarP50Ms": 504.79699999999866,
+          "lookupP50Ms": 448.2782999999981,
+          "averageRecall": 1,
+          "minimumRecall": 1,
+          "exactParity": true,
+          "sourceFilesUnchanged": true,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "rows": 220444,
+          "dimension": 768,
+          "samples": 20,
+          "scalarP50Ms": 531.0475000000006,
+          "lookupP50Ms": 476.60909999999785,
+          "averageRecall": 1,
+          "minimumRecall": 1,
+          "exactParity": true,
+          "sourceFilesUnchanged": true,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "rows": 220444,
+          "dimension": 768,
+          "samples": 20,
+          "scalarP50Ms": 485.6358,
+          "lookupP50Ms": 433.40769999999975,
+          "averageRecall": 1,
+          "minimumRecall": 1,
+          "exactParity": true,
+          "sourceFilesUnchanged": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "model": "clip_vit_base_patch32",
+      "rounds": [
+        {
+          "round": 1,
+          "rows": 216692,
+          "dimension": 512,
+          "samples": 20,
+          "scalarP50Ms": 408.6617000000042,
+          "lookupP50Ms": 377.40699999999924,
+          "averageRecall": 0.998,
+          "minimumRecall": 0.98,
+          "exactParity": true,
+          "sourceFilesUnchanged": true,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "rows": 216692,
+          "dimension": 512,
+          "samples": 20,
+          "scalarP50Ms": 403.4244000000035,
+          "lookupP50Ms": 372.53540000000066,
+          "averageRecall": 0.998,
+          "minimumRecall": 0.98,
+          "exactParity": true,
+          "sourceFilesUnchanged": true,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "rows": 216692,
+          "dimension": 512,
+          "samples": 20,
+          "scalarP50Ms": 405.58400000000256,
+          "lookupP50Ms": 374.0769,
+          "averageRecall": 0.998,
+          "minimumRecall": 0.98,
+          "exactParity": true,
+          "sourceFilesUnchanged": true,
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "inferenceMatrices": [
+    {
+      "requestedBackend": "gpu",
+      "sample": 32,
+      "concurrency": [1],
+      "runs": [
+        {
+          "model": "dino",
+          "batchSize": 4,
+          "status": "completed",
+          "providerSelections": [
+            {
+              "model": "dino",
+              "requestedBackend": "gpu",
+              "selectedProvider": "dml",
+              "fallback": false,
+              "reason": "session-created"
+            }
+          ],
+          "imagesPerSecond": 9.11,
+          "stageMetrics": {
+            "schemaVersion": 1,
+            "batches": 8,
+            "items": 32,
+            "succeeded": 32,
+            "failed": 0,
+            "fallbackBatches": 0,
+            "queueWaitMsTotal": 1.794,
+            "queueWaitMsMax": 0.313,
+            "batchWallMsTotal": 3345.91,
+            "batchWallMsMax": 2074.752,
+            "runtimeLoadMsTotal": 645.696,
+            "decodeNormalizeMsTotal": 269.533,
+            "preprocessMsTotal": 0,
+            "inferenceMsTotal": 2397.716,
+            "postprocessMsTotal": 22.255,
+            "fallbackMsTotal": 0,
+            "tensorPrefetchBatches": 0,
+            "tensorBytesMax": 0,
+            "prefetchPrepareMsTotal": 0,
+            "prefetchWaitMsTotal": 0,
+            "prefetchOverlapMsTotal": 0,
+            "preInferenceSharePercent": 8.081,
+            "inferenceSharePercent": 71.891
+          },
+          "resources": {
+            "sampling": {
+              "intervalMs": 100,
+              "samples": 35,
+              "errors": 0,
+              "failureCode": null,
+              "failureDetail": null,
+              "checkpointRecovered": false,
+              "processRaceSkips": 0,
+              "observedChildProcesses": 1,
+              "childMetricsApproximate": true,
+              "childScope": "direct child processes spawned during the measured interval",
+              "gpuScope": "all NVIDIA devices (global, not process-attributed)"
+            },
+            "wallMs": 5472.62,
+            "cpu": {
+              "logicalProcessors": 20,
+              "mainUserMs": 0,
+              "mainSystemMs": 15,
+              "childMsApprox": 2312.5,
+              "logicalCapacityPercentApprox": 2.13
+            },
+            "memory": {
+              "mainPeakRssMiB": 78.55,
+              "mainPeakHeapUsedMiB": 26.85,
+              "mainPeakHeapTotalMiB": 44.72,
+              "mainPeakExternalMiB": 2.57,
+              "mainPeakArrayBuffersMiB": 0.39,
+              "childPeakAggregateRssMiBApprox": 446.69,
+              "childLargestPeakRssMiBApprox": 446.69,
+              "systemMinFreeMiB": 4951.28
+            },
+            "gpu": {
+              "deviceCount": 1,
+              "baselineUsedMiB": 1264,
+              "peakUsedMiB": 1535,
+              "peakDeltaUsedMiB": 271,
+              "totalMiB": 4096,
+              "peakUtilizationPercent": 68
+            },
+            "io": {
+              "mainReadBytesApprox": 203025,
+              "mainWriteBytesApprox": 22043,
+              "childReadBytesApprox": 122467793,
+              "childWriteBytesApprox": 466491,
+              "mainFsReadOperations": 42,
+              "mainFsWriteOperations": 17
+            },
+            "processes": {
+              "spawned": 1,
+              "peakActive": 1,
+              "byCommand": {
+                "node.exe": 1
+              }
+            }
+          },
+          "preflight": {
+            "allowed": true,
+            "reason": "within-auto-8-memory-headroom",
+            "policyMaxBatchSize": 8,
+            "freeSystemMemoryMiB": 5794.32,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": 2657,
+            "totalVideoMemoryMiB": 4096
+          }
+        },
+        {
+          "model": "dino",
+          "batchSize": 8,
+          "status": "completed",
+          "providerSelections": [
+            {
+              "model": "dino",
+              "requestedBackend": "gpu",
+              "selectedProvider": "dml",
+              "fallback": false,
+              "reason": "session-created"
+            }
+          ],
+          "imagesPerSecond": 13.4,
+          "qualityVsBaseline": {
+            "baselineJobs": 1,
+            "baselineBatchSize": 4,
+            "minCosine": 1,
+            "meanCosine": 1,
+            "maxAbsDiff": 0
+          },
+          "stageMetrics": {
+            "schemaVersion": 1,
+            "batches": 4,
+            "items": 32,
+            "succeeded": 32,
+            "failed": 0,
+            "fallbackBatches": 0,
+            "queueWaitMsTotal": 2.469,
+            "queueWaitMsMax": 0.298,
+            "batchWallMsTotal": 2268.734,
+            "batchWallMsMax": 1215.065,
+            "runtimeLoadMsTotal": 495.2,
+            "decodeNormalizeMsTotal": 168.582,
+            "preprocessMsTotal": 0,
+            "inferenceMsTotal": 1575.045,
+            "postprocessMsTotal": 23.728,
+            "fallbackMsTotal": 0,
+            "tensorPrefetchBatches": 0,
+            "tensorBytesMax": 0,
+            "prefetchPrepareMsTotal": 0,
+            "prefetchWaitMsTotal": 0,
+            "prefetchOverlapMsTotal": 0,
+            "preInferenceSharePercent": 7.451,
+            "inferenceSharePercent": 69.614
+          },
+          "resources": {
+            "sampling": {
+              "intervalMs": 100,
+              "samples": 27,
+              "errors": 0,
+              "failureCode": null,
+              "failureDetail": null,
+              "checkpointRecovered": false,
+              "processRaceSkips": 0,
+              "observedChildProcesses": 1,
+              "childMetricsApproximate": true,
+              "childScope": "direct child processes spawned during the measured interval",
+              "gpuScope": "all NVIDIA devices (global, not process-attributed)"
+            },
+            "wallMs": 4104.74,
+            "cpu": {
+              "logicalProcessors": 20,
+              "mainUserMs": 0,
+              "mainSystemMs": 0,
+              "childMsApprox": 2625,
+              "logicalCapacityPercentApprox": 3.2
+            },
+            "memory": {
+              "mainPeakRssMiB": 71.02,
+              "mainPeakHeapUsedMiB": 25.86,
+              "mainPeakHeapTotalMiB": 27.22,
+              "mainPeakExternalMiB": 2.52,
+              "mainPeakArrayBuffersMiB": 0.3,
+              "childPeakAggregateRssMiBApprox": 423.41,
+              "childLargestPeakRssMiBApprox": 423.41,
+              "systemMinFreeMiB": 5138.39
+            },
+            "gpu": {
+              "deviceCount": 1,
+              "baselineUsedMiB": 1247,
+              "peakUsedMiB": 1676,
+              "peakDeltaUsedMiB": 429,
+              "totalMiB": 4096,
+              "peakUtilizationPercent": 40
+            },
+            "io": {
+              "mainReadBytesApprox": 200887,
+              "mainWriteBytesApprox": 19104,
+              "childReadBytesApprox": 122531033,
+              "childWriteBytesApprox": 202282,
+              "mainFsReadOperations": 28,
+              "mainFsWriteOperations": 9
+            },
+            "processes": {
+              "spawned": 1,
+              "peakActive": 1,
+              "byCommand": {
+                "node.exe": 1
+              }
+            }
+          },
+          "preflight": {
+            "allowed": true,
+            "reason": "within-auto-8-memory-headroom",
+            "policyMaxBatchSize": 8,
+            "freeSystemMemoryMiB": 5632.34,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": 2709,
+            "totalVideoMemoryMiB": 4096
+          }
+        },
+        {
+          "model": "dino",
+          "batchSize": 16,
+          "status": "skipped",
+          "preflight": {
+            "allowed": false,
+            "reason": "exceeds-auto-8-memory-headroom",
+            "policyMaxBatchSize": 8,
+            "freeSystemMemoryMiB": 5799.3,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": 2718,
+            "totalVideoMemoryMiB": 4096
+          }
+        },
+        {
+          "model": "clip",
+          "batchSize": 4,
+          "status": "completed",
+          "providerSelections": [
+            {
+              "model": "clip",
+              "requestedBackend": "gpu",
+              "selectedProvider": "dml",
+              "fallback": false,
+              "reason": "session-created"
+            }
+          ],
+          "imagesPerSecond": 9.8,
+          "stageMetrics": {
+            "schemaVersion": 1,
+            "batches": 8,
+            "items": 32,
+            "succeeded": 32,
+            "failed": 0,
+            "fallbackBatches": 0,
+            "queueWaitMsTotal": 1.959,
+            "queueWaitMsMax": 0.352,
+            "batchWallMsTotal": 3123.501,
+            "batchWallMsMax": 2209.811,
+            "runtimeLoadMsTotal": 1239.103,
+            "decodeNormalizeMsTotal": 91.592,
+            "preprocessMsTotal": 167.933,
+            "inferenceMsTotal": 1605.605,
+            "postprocessMsTotal": 3.73,
+            "fallbackMsTotal": 0,
+            "tensorPrefetchBatches": 0,
+            "tensorBytesMax": 0,
+            "prefetchPrepareMsTotal": 0,
+            "prefetchWaitMsTotal": 0,
+            "prefetchOverlapMsTotal": 0,
+            "preInferenceSharePercent": 8.35,
+            "inferenceSharePercent": 51.661
+          },
+          "resources": {
+            "sampling": {
+              "intervalMs": 100,
+              "samples": 33,
+              "errors": 0,
+              "failureCode": null,
+              "failureDetail": null,
+              "checkpointRecovered": false,
+              "processRaceSkips": 0,
+              "observedChildProcesses": 1,
+              "childMetricsApproximate": true,
+              "childScope": "direct child processes spawned during the measured interval",
+              "gpuScope": "all NVIDIA devices (global, not process-attributed)"
+            },
+            "wallMs": 5157.14,
+            "cpu": {
+              "logicalProcessors": 20,
+              "mainUserMs": 0,
+              "mainSystemMs": 0,
+              "childMsApprox": 3609.38,
+              "logicalCapacityPercentApprox": 3.5
+            },
+            "memory": {
+              "mainPeakRssMiB": 71.48,
+              "mainPeakHeapUsedMiB": 26.28,
+              "mainPeakHeapTotalMiB": 28.47,
+              "mainPeakExternalMiB": 2.5,
+              "mainPeakArrayBuffersMiB": 0.33,
+              "childPeakAggregateRssMiBApprox": 720.93,
+              "childLargestPeakRssMiBApprox": 720.93,
+              "systemMinFreeMiB": 4670.94
+            },
+            "gpu": {
+              "deviceCount": 1,
+              "baselineUsedMiB": 1301,
+              "peakUsedMiB": 1665,
+              "peakDeltaUsedMiB": 364,
+              "totalMiB": 4096,
+              "peakUtilizationPercent": 60
+            },
+            "io": {
+              "mainReadBytesApprox": 137478,
+              "mainWriteBytesApprox": 22806,
+              "childReadBytesApprox": 395562209,
+              "childWriteBytesApprox": 456360,
+              "mainFsReadOperations": 42,
+              "mainFsWriteOperations": 17
+            },
+            "processes": {
+              "spawned": 1,
+              "peakActive": 1,
+              "byCommand": {
+                "node.exe": 1
+              }
+            }
+          },
+          "preflight": {
+            "allowed": true,
+            "reason": "within-auto-8-memory-headroom",
+            "policyMaxBatchSize": 8,
+            "freeSystemMemoryMiB": 5799.64,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": 2718,
+            "totalVideoMemoryMiB": 4096
+          }
+        },
+        {
+          "model": "clip",
+          "batchSize": 8,
+          "status": "completed",
+          "providerSelections": [
+            {
+              "model": "clip",
+              "requestedBackend": "gpu",
+              "selectedProvider": "dml",
+              "fallback": false,
+              "reason": "session-created"
+            }
+          ],
+          "imagesPerSecond": 11.16,
+          "qualityVsBaseline": {
+            "baselineJobs": 1,
+            "baselineBatchSize": 4,
+            "minCosine": 1,
+            "meanCosine": 1,
+            "maxAbsDiff": 0.00000221
+          },
+          "stageMetrics": {
+            "schemaVersion": 1,
+            "batches": 4,
+            "items": 32,
+            "succeeded": 32,
+            "failed": 0,
+            "fallbackBatches": 0,
+            "queueWaitMsTotal": 2.848,
+            "queueWaitMsMax": 0.354,
+            "batchWallMsTotal": 2750.363,
+            "batchWallMsMax": 2028.517,
+            "runtimeLoadMsTotal": 1166.228,
+            "decodeNormalizeMsTotal": 92.006,
+            "preprocessMsTotal": 185.081,
+            "inferenceMsTotal": 1295.141,
+            "postprocessMsTotal": 2.523,
+            "fallbackMsTotal": 0,
+            "tensorPrefetchBatches": 0,
+            "tensorBytesMax": 0,
+            "prefetchPrepareMsTotal": 0,
+            "prefetchWaitMsTotal": 0,
+            "prefetchOverlapMsTotal": 0,
+            "preInferenceSharePercent": 10.109,
+            "inferenceSharePercent": 47.251
+          },
+          "resources": {
+            "sampling": {
+              "intervalMs": 100,
+              "samples": 32,
+              "errors": 0,
+              "failureCode": null,
+              "failureDetail": null,
+              "checkpointRecovered": false,
+              "processRaceSkips": 0,
+              "observedChildProcesses": 1,
+              "childMetricsApproximate": true,
+              "childScope": "direct child processes spawned during the measured interval",
+              "gpuScope": "all NVIDIA devices (global, not process-attributed)"
+            },
+            "wallMs": 4919.75,
+            "cpu": {
+              "logicalProcessors": 20,
+              "mainUserMs": 0,
+              "mainSystemMs": 0,
+              "childMsApprox": 1875,
+              "logicalCapacityPercentApprox": 1.91
+            },
+            "memory": {
+              "mainPeakRssMiB": 71.58,
+              "mainPeakHeapUsedMiB": 26.34,
+              "mainPeakHeapTotalMiB": 28.47,
+              "mainPeakExternalMiB": 2.47,
+              "mainPeakArrayBuffersMiB": 0.29,
+              "childPeakAggregateRssMiBApprox": 736.64,
+              "childLargestPeakRssMiBApprox": 736.64,
+              "systemMinFreeMiB": 4695.57
+            },
+            "gpu": {
+              "deviceCount": 1,
+              "baselineUsedMiB": 1351,
+              "peakUsedMiB": 1708,
+              "peakDeltaUsedMiB": 357,
+              "totalMiB": 4096,
+              "peakUtilizationPercent": 19
+            },
+            "io": {
+              "mainReadBytesApprox": 135334,
+              "mainWriteBytesApprox": 19760,
+              "childReadBytesApprox": 395676617,
+              "childWriteBytesApprox": 273920,
+              "mainFsReadOperations": 30,
+              "mainFsWriteOperations": 9
+            },
+            "processes": {
+              "spawned": 1,
+              "peakActive": 1,
+              "byCommand": {
+                "node.exe": 1
+              }
+            }
+          },
+          "preflight": {
+            "allowed": true,
+            "reason": "within-auto-8-memory-headroom",
+            "policyMaxBatchSize": 8,
+            "freeSystemMemoryMiB": 5477.81,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": 2620,
+            "totalVideoMemoryMiB": 4096
+          }
+        },
+        {
+          "model": "clip",
+          "batchSize": 16,
+          "status": "skipped",
+          "preflight": {
+            "allowed": false,
+            "reason": "exceeds-auto-8-memory-headroom",
+            "policyMaxBatchSize": 8,
+            "freeSystemMemoryMiB": 5667.42,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": 2710,
+            "totalVideoMemoryMiB": 4096
+          }
+        }
+      ],
+      "sourceUnchanged": true
+    },
+    {
+      "requestedBackend": "cpu",
+      "sample": 32,
+      "concurrency": [1],
+      "runs": [
+        {
+          "model": "dino",
+          "batchSize": 4,
+          "status": "completed",
+          "providerSelections": [
+            {
+              "model": "dino",
+              "requestedBackend": "cpu",
+              "selectedProvider": "cpu",
+              "fallback": false,
+              "reason": "session-created"
+            }
+          ],
+          "imagesPerSecond": 9.92,
+          "stageMetrics": {
+            "schemaVersion": 1,
+            "batches": 8,
+            "items": 32,
+            "succeeded": 32,
+            "failed": 0,
+            "fallbackBatches": 0,
+            "queueWaitMsTotal": 2.064,
+            "queueWaitMsMax": 0.323,
+            "batchWallMsTotal": 3094.71,
+            "batchWallMsMax": 672.048,
+            "runtimeLoadMsTotal": 209.748,
+            "decodeNormalizeMsTotal": 195.679,
+            "preprocessMsTotal": 0,
+            "inferenceMsTotal": 2644.986,
+            "postprocessMsTotal": 35.356,
+            "fallbackMsTotal": 0,
+            "tensorPrefetchBatches": 0,
+            "tensorBytesMax": 0,
+            "prefetchPrepareMsTotal": 0,
+            "prefetchWaitMsTotal": 0,
+            "prefetchOverlapMsTotal": 0,
+            "preInferenceSharePercent": 6.341,
+            "inferenceSharePercent": 85.716
+          },
+          "resources": {
+            "sampling": {
+              "intervalMs": 100,
+              "samples": 30,
+              "errors": 0,
+              "failureCode": null,
+              "failureDetail": null,
+              "checkpointRecovered": false,
+              "processRaceSkips": 0,
+              "observedChildProcesses": 1,
+              "childMetricsApproximate": true,
+              "childScope": "direct child processes spawned during the measured interval",
+              "gpuScope": "all NVIDIA devices (global, not process-attributed)"
+            },
+            "wallMs": 4804.47,
+            "cpu": {
+              "logicalProcessors": 20,
+              "mainUserMs": 0,
+              "mainSystemMs": 0,
+              "childMsApprox": 17781.25,
+              "logicalCapacityPercentApprox": 18.5
+            },
+            "memory": {
+              "mainPeakRssMiB": 78.81,
+              "mainPeakHeapUsedMiB": 26.84,
+              "mainPeakHeapTotalMiB": 44.72,
+              "mainPeakExternalMiB": 2.57,
+              "mainPeakArrayBuffersMiB": 0.39,
+              "childPeakAggregateRssMiBApprox": 350.22,
+              "childLargestPeakRssMiBApprox": 350.22,
+              "systemMinFreeMiB": 5159.6
+            },
+            "gpu": {
+              "deviceCount": 1,
+              "baselineUsedMiB": 1274,
+              "peakUsedMiB": 1274,
+              "peakDeltaUsedMiB": 0,
+              "totalMiB": 4096,
+              "peakUtilizationPercent": 61
+            },
+            "io": {
+              "mainReadBytesApprox": 203054,
+              "mainWriteBytesApprox": 22071,
+              "childReadBytesApprox": 117976062,
+              "childWriteBytesApprox": 203015,
+              "mainFsReadOperations": 46,
+              "mainFsWriteOperations": 17
+            },
+            "processes": {
+              "spawned": 1,
+              "peakActive": 1,
+              "byCommand": {
+                "node.exe": 1
+              }
+            }
+          },
+          "preflight": {
+            "allowed": true,
+            "reason": "within-cpu-auto-conservative",
+            "policyMaxBatchSize": 4,
+            "freeSystemMemoryMiB": 5663.32,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": null,
+            "totalVideoMemoryMiB": null
+          }
+        },
+        {
+          "model": "dino",
+          "batchSize": 8,
+          "status": "skipped",
+          "preflight": {
+            "allowed": false,
+            "reason": "exceeds-cpu-auto-conservative",
+            "policyMaxBatchSize": 4,
+            "freeSystemMemoryMiB": 5766.28,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": null,
+            "totalVideoMemoryMiB": null
+          }
+        },
+        {
+          "model": "dino",
+          "batchSize": 16,
+          "status": "skipped",
+          "preflight": {
+            "allowed": false,
+            "reason": "exceeds-cpu-auto-conservative",
+            "policyMaxBatchSize": 4,
+            "freeSystemMemoryMiB": 5766.28,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": null,
+            "totalVideoMemoryMiB": null
+          }
+        },
+        {
+          "model": "clip",
+          "batchSize": 4,
+          "status": "completed",
+          "providerSelections": [
+            {
+              "model": "clip",
+              "requestedBackend": "cpu",
+              "selectedProvider": "cpu",
+              "fallback": false,
+              "reason": "session-created"
+            }
+          ],
+          "imagesPerSecond": 18.56,
+          "stageMetrics": {
+            "schemaVersion": 1,
+            "batches": 8,
+            "items": 32,
+            "succeeded": 32,
+            "failed": 0,
+            "fallbackBatches": 0,
+            "queueWaitMsTotal": 2.275,
+            "queueWaitMsMax": 0.355,
+            "batchWallMsTotal": 1595.842,
+            "batchWallMsMax": 817.287,
+            "runtimeLoadMsTotal": 690.663,
+            "decodeNormalizeMsTotal": 89.764,
+            "preprocessMsTotal": 204.983,
+            "inferenceMsTotal": 594.703,
+            "postprocessMsTotal": 3.661,
+            "fallbackMsTotal": 0,
+            "tensorPrefetchBatches": 0,
+            "tensorBytesMax": 0,
+            "prefetchPrepareMsTotal": 0,
+            "prefetchWaitMsTotal": 0,
+            "prefetchOverlapMsTotal": 0,
+            "preInferenceSharePercent": 18.61,
+            "inferenceSharePercent": 37.55
+          },
+          "resources": {
+            "sampling": {
+              "intervalMs": 100,
+              "samples": 21,
+              "errors": 0,
+              "failureCode": null,
+              "failureDetail": null,
+              "checkpointRecovered": false,
+              "processRaceSkips": 0,
+              "observedChildProcesses": 1,
+              "childMetricsApproximate": true,
+              "childScope": "direct child processes spawned during the measured interval",
+              "gpuScope": "all NVIDIA devices (global, not process-attributed)"
+            },
+            "wallMs": 3387.57,
+            "cpu": {
+              "logicalProcessors": 20,
+              "mainUserMs": 16,
+              "mainSystemMs": 0,
+              "childMsApprox": 12906.25,
+              "logicalCapacityPercentApprox": 19.07
+            },
+            "memory": {
+              "mainPeakRssMiB": 70.64,
+              "mainPeakHeapUsedMiB": 25.83,
+              "mainPeakHeapTotalMiB": 27.47,
+              "mainPeakExternalMiB": 2.47,
+              "mainPeakArrayBuffersMiB": 0.3,
+              "childPeakAggregateRssMiBApprox": 542.41,
+              "childLargestPeakRssMiBApprox": 542.41,
+              "systemMinFreeMiB": 5115.14
+            },
+            "gpu": {
+              "deviceCount": 1,
+              "baselineUsedMiB": 1275,
+              "peakUsedMiB": 1276,
+              "peakDeltaUsedMiB": 1,
+              "totalMiB": 4096,
+              "peakUtilizationPercent": 67
+            },
+            "io": {
+              "mainReadBytesApprox": 137407,
+              "mainWriteBytesApprox": 22770,
+              "childReadBytesApprox": 391055326,
+              "childWriteBytesApprox": 137407,
+              "mainFsReadOperations": 42,
+              "mainFsWriteOperations": 17
+            },
+            "processes": {
+              "spawned": 1,
+              "peakActive": 1,
+              "byCommand": {
+                "node.exe": 1
+              }
+            }
+          },
+          "preflight": {
+            "allowed": true,
+            "reason": "within-cpu-auto-conservative",
+            "policyMaxBatchSize": 4,
+            "freeSystemMemoryMiB": 5766.28,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": null,
+            "totalVideoMemoryMiB": null
+          }
+        },
+        {
+          "model": "clip",
+          "batchSize": 8,
+          "status": "skipped",
+          "preflight": {
+            "allowed": false,
+            "reason": "exceeds-cpu-auto-conservative",
+            "policyMaxBatchSize": 4,
+            "freeSystemMemoryMiB": 5785.51,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": null,
+            "totalVideoMemoryMiB": null
+          }
+        },
+        {
+          "model": "clip",
+          "batchSize": 16,
+          "status": "skipped",
+          "preflight": {
+            "allowed": false,
+            "reason": "exceeds-cpu-auto-conservative",
+            "policyMaxBatchSize": 4,
+            "freeSystemMemoryMiB": 5785.51,
+            "totalSystemMemoryMiB": 16004.54,
+            "freeVideoMemoryMiB": null,
+            "totalVideoMemoryMiB": null
+          }
+        }
+      ],
+      "sourceUnchanged": true
+    }
+  ],
+  "dinoSnapshot": {
+    "rows": 220444,
+    "dimension": 768,
+    "existingVectorsConvertedOnly": true,
+    "modelInferenceDuringConversion": false,
+    "sourceSha256Unchanged": true,
+    "originalLibraryWritten": false,
+    "uncommittedOriginalF16NotAdopted": true
+  },
+  "fullUi": {
+    "actualApplication": true,
+    "actualReactRenderer": true,
+    "isolatedProfile": true,
+    "completeAcceptancePassed": false,
+    "queries": [
+      {
+        "intendedBackend": "gpu",
+        "observedProvider": "dml",
+        "sample": 0,
+        "coldModelSession": true,
+        "clickToResultCommitMs": 3182.399999976158,
+        "clickToViewportImagesMs": null,
+        "decodedImages": 0,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 29
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 33
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 47
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 48
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1978
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 3153
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 3153
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 3154
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.25950000000000273,
+            "queueWaitMsMax": 0.25950000000000273,
+            "batchWallMs": 1701.9452,
+            "runtimeLoadMs": 633.2068000000002,
+            "decodeNormalizeMs": 241.8173,
+            "preprocessMs": 0,
+            "inferenceMs": 821.4688999999998,
+            "postprocessMs": 4.38130000000001,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 407060480,
+            "privateBytes": null,
+            "externalBytes": 15512229,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 691200,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 3125,
+          "hashMs": 5,
+          "vectorMs": 3105,
+          "rerankMs": 15,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 0
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "gpu",
+        "observedProvider": "dml",
+        "sample": 1,
+        "coldModelSession": false,
+        "clickToResultCommitMs": 1593.4000000357628,
+        "clickToViewportImagesMs": 1697.800000011921,
+        "decodedImages": 6,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 23
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 25
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 62
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 72
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 129
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1245
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1245
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1399
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1400
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1400
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1400
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1400
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1400
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1401
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.005399999998189742,
+            "queueWaitMsMax": 0.005399999998189742,
+            "batchWallMs": 54.76100000000224,
+            "runtimeLoadMs": 0.0059000000001105946,
+            "decodeNormalizeMs": 7.200600000000122,
+            "preprocessMs": 0,
+            "inferenceMs": 44.30739999999787,
+            "postprocessMs": 2.620199999997567,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 460869632,
+            "privateBytes": null,
+            "externalBytes": 63586468,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 786432,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1377,
+          "hashMs": 37,
+          "vectorMs": 1172,
+          "rerankMs": 168,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 100
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "gpu",
+        "observedProvider": "dml",
+        "sample": 2,
+        "coldModelSession": false,
+        "clickToResultCommitMs": 1397.6000000238419,
+        "clickToViewportImagesMs": 1606.3999999761581,
+        "decodedImages": 9,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 23
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 25
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 27
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 37
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 164
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1360
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1360
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1366
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1366
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1366
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.005000000001018634,
+            "queueWaitMsMax": 0.005000000001018634,
+            "batchWallMs": 124.8726999999999,
+            "runtimeLoadMs": 0.004899999999906868,
+            "decodeNormalizeMs": 5.052300000003015,
+            "preprocessMs": 0,
+            "inferenceMs": 118.70369999999821,
+            "postprocessMs": 0.4249999999992724,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 408801280,
+            "privateBytes": null,
+            "externalBytes": 9281827,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 288,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1342,
+          "hashMs": 2,
+          "vectorMs": 1322,
+          "rerankMs": 18,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 9
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "gpu",
+        "observedProvider": "dml",
+        "sample": 3,
+        "coldModelSession": false,
+        "clickToResultCommitMs": 1825.0999999642372,
+        "clickToViewportImagesMs": 1933.0999999642372,
+        "decodedImages": 6,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 24
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 25
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 40
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 50
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 165
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1739
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1739
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1783
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1784
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1784
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1784
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.0059000000001105946,
+            "queueWaitMsMax": 0.0059000000001105946,
+            "batchWallMs": 114.59969999999885,
+            "runtimeLoadMs": 0.005799999998998828,
+            "decodeNormalizeMs": 8.165899999999965,
+            "preprocessMs": 0,
+            "inferenceMs": 104.74319999999716,
+            "postprocessMs": 1.1323000000011234,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 409698304,
+            "privateBytes": null,
+            "externalBytes": 11054371,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 786432,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1760,
+          "hashMs": 14,
+          "vectorMs": 1690,
+          "rerankMs": 56,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 40
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "cpu",
+        "observedProvider": "dml",
+        "sample": 0,
+        "coldModelSession": true,
+        "clickToResultCommitMs": 1699.800000011921,
+        "clickToViewportImagesMs": 1797,
+        "decodedImages": 1,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 20
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 21
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 24
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 35
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 323
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1671
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1671
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1672
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1672
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.006600000000617001,
+            "queueWaitMsMax": 0.006600000000617001,
+            "batchWallMs": 286.454099999999,
+            "runtimeLoadMs": 0.0059000000001105946,
+            "decodeNormalizeMs": 10.550499999997555,
+            "preprocessMs": 0,
+            "inferenceMs": 273.58520000000135,
+            "postprocessMs": 1.811600000000908,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 415109120,
+            "privateBytes": null,
+            "externalBytes": 15243561,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 691200,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1652,
+          "hashMs": 2,
+          "vectorMs": 1636,
+          "rerankMs": 14,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 1
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "cpu",
+        "observedProvider": "dml",
+        "sample": 1,
+        "coldModelSession": false,
+        "clickToResultCommitMs": 1426,
+        "clickToViewportImagesMs": 1439.199999988079,
+        "decodedImages": 12,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 24
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 25
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 66
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 76
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 138
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1367
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1367
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1382
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1382
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1382
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1382
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1382
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1382
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1382
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.0059000000001105946,
+            "queueWaitMsMax": 0.0059000000001105946,
+            "batchWallMs": 60.11769999999888,
+            "runtimeLoadMs": 0.007900000000518048,
+            "decodeNormalizeMs": 10.777699999998731,
+            "preprocessMs": 0,
+            "inferenceMs": 48.56170000000202,
+            "postprocessMs": 0.26260000000183936,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 412233728,
+            "privateBytes": null,
+            "externalBytes": 12397067,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 786432,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1358,
+          "hashMs": 40,
+          "vectorMs": 1290,
+          "rerankMs": 28,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 100
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "cpu",
+        "observedProvider": "dml",
+        "sample": 2,
+        "coldModelSession": false,
+        "clickToResultCommitMs": 1356.3999999761581,
+        "clickToViewportImagesMs": 1370.8999999761581,
+        "decodedImages": 9,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 25
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 26
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 28
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 38
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 155
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1317
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1317
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1318
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1318
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1319
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.004499999999097781,
+            "queueWaitMsMax": 0.004499999999097781,
+            "batchWallMs": 114.92870000000039,
+            "runtimeLoadMs": 0.025799999999435386,
+            "decodeNormalizeMs": 6.224999999998545,
+            "preprocessMs": 0,
+            "inferenceMs": 108.04799999999886,
+            "postprocessMs": 0.23750000000291038,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 413290496,
+            "privateBytes": null,
+            "externalBytes": 15884883,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 288,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1295,
+          "hashMs": 2,
+          "vectorMs": 1278,
+          "rerankMs": 15,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 9
+        },
+        "validAsCpuBaseline": false
+      },
+      {
+        "intendedBackend": "cpu",
+        "observedProvider": "dml",
+        "sample": 3,
+        "coldModelSession": false,
+        "clickToResultCommitMs": 1467.300000011921,
+        "clickToViewportImagesMs": 1481.9000000357628,
+        "decodedImages": 12,
+        "phases": [
+          {
+            "phase": "preparing",
+            "elapsedMs": 25
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 28
+          },
+          {
+            "phase": "hash",
+            "elapsedMs": 42
+          },
+          {
+            "phase": "vector_embedding",
+            "elapsedMs": 54
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 241
+          },
+          {
+            "phase": "vector_search",
+            "elapsedMs": 1428
+          },
+          {
+            "phase": "merge",
+            "elapsedMs": 1429
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1435
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1435
+          },
+          {
+            "phase": "rerank",
+            "elapsedMs": 1436
+          },
+          {
+            "phase": "done",
+            "elapsedMs": 1436
+          }
+        ],
+        "modelBatchMetrics": [
+          {
+            "model": "dino",
+            "batchSize": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "fallback": false,
+            "queueWaitMsTotal": 0.004899999999906868,
+            "queueWaitMsMax": 0.004899999999906868,
+            "batchWallMs": 186.22339999999895,
+            "runtimeLoadMs": 0.007499999999708962,
+            "decodeNormalizeMs": 7.968799999998737,
+            "preprocessMs": 0,
+            "inferenceMs": 177.33209999999963,
+            "postprocessMs": 0.20890000000144937,
+            "fallbackMs": 0,
+            "tensorPrefetch": false,
+            "tensorBytes": 0,
+            "prefetchPrepareMs": 0,
+            "prefetchWaitMs": 0,
+            "prefetchOverlapMs": 0,
+            "rssBytes": 418209792,
+            "privateBytes": null,
+            "externalBytes": 20748379,
+            "arrayBuffersBytes": 0,
+            "decodedPixelBytes": 786432,
+            "temporaryTensorBytes": 789504
+          }
+        ],
+        "backendResponse": {
+          "totalMs": 1410,
+          "hashMs": 16,
+          "vectorMs": 1375,
+          "rerankMs": 19,
+          "degraded": false,
+          "degradationReasons": [],
+          "vectorCandidateCount": 0,
+          "mergedCandidateCount": 40
+        },
+        "validAsCpuBaseline": false
+      }
+    ],
+    "limitations": [
+      "First GPU query had no decoded viewport thumbnails before the harness deadline; thumbnail acceptance is incomplete",
+      "Intended CPU queries still reported DirectML; those queries are not valid CPU baselines",
+      "Further testing and optimization stopped at the explicit user request",
+      "No inference backend defaults or concurrency settings changed in the original application profile"
+    ],
+    "rendererErrors": []
+  },
+  "privacy": {
+    "rawMediaUploaded": false,
+    "rawVectorFilesUploaded": false,
+    "originalPathsOmitted": true
+  },
+  "notPerformed": [
+    "NAS acceptance",
+    "CUDA acceptance",
+    "installer build",
+    "full release verification"
+  ]
+}
