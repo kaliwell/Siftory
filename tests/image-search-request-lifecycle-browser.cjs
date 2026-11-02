@@ -52,10 +52,9 @@ async function main() {
     await text.press('Enter')
     assert.equal(await semanticCalls(), 0, 'Enter must honor the unavailable model')
     await page.evaluate(() => {
-      window.__workspaceTest.delayMethod('vector.searchLayered', 550)
+      window.__workspaceTest.delayMethod('vector.searchLayered', 0)
       window.__workspaceTest.setHandler('vector.searchLayered', (request) => {
-        window.__imageAuditFinished = true
-        return {
+        const response = {
           results: [],
           degraded: false,
           degradationReasons: [],
@@ -65,15 +64,20 @@ async function main() {
           mergedCandidateCount: 0,
           totalMs: 550,
         }
+        return new Promise((resolve) => {
+          window.__releaseImageAudit = () => {
+            window.__imageAuditFinished = true
+            resolve(response)
+          }
+        })
       })
     })
     await query.click()
-    await page.waitForFunction(() =>
-      window.__workspaceTest.calls.some((c) => c.method === 'vector.searchLayered'),
-    )
+    await page.waitForFunction(() => typeof window.__releaseImageAudit === 'function')
     assert.equal(await text.isDisabled(), true)
     // A dispatched keyboard event also exercises the handler's own disabled-state guard.
     await text.dispatchEvent('keydown', { key: 'Enter', bubbles: true })
+    await page.evaluate(() => window.__releaseImageAudit())
     await page.waitForFunction(() => window.__imageAuditFinished)
     await page.waitForFunction(
       () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
@@ -89,14 +93,21 @@ async function main() {
         installedPath: 'C:/fixtures/verified-model',
       }))
       f.delayMethod('vector.getModelStatus', 100)
-      f.delayMethod('vector.searchSemantic', 200)
-      f.setHandler('vector.searchSemantic', () => ({
-        results: [],
-        degraded: false,
-        degradationReasons: [],
-        totalMs: 200,
-        totalCandidates: 0,
-      }))
+      f.delayMethod('vector.searchSemantic', 0)
+      f.setHandler(
+        'vector.searchSemantic',
+        () =>
+          new Promise((resolve) => {
+            window.__releaseSemanticAudit = () =>
+              resolve({
+                results: [],
+                degraded: false,
+                degradationReasons: [],
+                totalMs: 200,
+                totalCandidates: 0,
+              })
+          }),
+      )
       window.dispatchEvent(new Event('focus'))
     })
     await page.waitForFunction(
@@ -104,9 +115,8 @@ async function main() {
     )
     await text.press('Enter')
     await text.dispatchEvent('keydown', { key: 'Enter', bubbles: true })
-    await page.waitForFunction(() =>
-      window.__workspaceTest.calls.some((c) => c.method === 'vector.searchSemantic'),
-    )
+    await page.waitForFunction(() => typeof window.__releaseSemanticAudit === 'function')
+    await page.evaluate(() => window.__releaseSemanticAudit())
     await page.waitForFunction(
       () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
     )
@@ -116,10 +126,9 @@ async function main() {
     await page.evaluate(() => {
       const f = window.__workspaceTest
       f.setHandler('imageSearch.selectImage', () => 'C:/fixtures/old.jpg')
-      f.delayMethod('vector.searchLayered', 1200)
+      f.delayMethod('vector.searchLayered', 0)
       f.setHandler('vector.searchLayered', (request) => {
-        if (request.imagePath.endsWith('old.jpg')) window.__oldSearchFinished = true
-        return {
+        const response = {
           results: [
             { imageId: request.imagePath, path: request.imagePath, finalScore: 1, reasons: [] },
           ],
@@ -131,9 +140,19 @@ async function main() {
           mergedCandidateCount: 1,
           totalMs: 1,
         }
+        if (request.imagePath.endsWith('old.jpg')) {
+          return new Promise((resolve) => {
+            window.__releaseOldSearch = () => {
+              window.__oldSearchFinished = true
+              resolve(response)
+            }
+          })
+        }
+        return response
       })
     })
     await query.click()
+    await page.waitForFunction(() => typeof window.__releaseOldSearch === 'function')
     await page.locator('button[title="停止当前搜索"]').click()
     assert.equal(await query.isEnabled(), true)
     await page.evaluate(() => {
@@ -142,6 +161,10 @@ async function main() {
     })
     await query.click()
     await page.getByTestId('image-search-results').filter({ hasText: 'new.jpg' }).waitFor()
+    await page.evaluate(async () => {
+      window.__releaseOldSearch()
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    })
     await page.waitForFunction(() => window.__oldSearchFinished)
     assert.match(await page.getByTestId('image-search-results').innerText(), /new\.jpg/)
     assert.doesNotMatch(await page.getByTestId('image-search-results').innerText(), /old\.jpg/)
