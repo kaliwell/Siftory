@@ -31,7 +31,7 @@ test('ANN trace records actual rerank phases without counting load time twice', 
   try {
     assert.equal(
       runtimeTrace.configureRuntimeMemoryTraceFromEnvironment({
-        SIFTORY_RUNTIME_MEMORY_TRACE_DIR: fs.realpathSync(root),
+        SIFTORY_RUNTIME_MEMORY_TRACE_DIR: fs.realpathSync.native(root),
         SIFTORY_RUNTIME_MEMORY_RUN_ID: 'rerank-parity',
       }),
       true,
