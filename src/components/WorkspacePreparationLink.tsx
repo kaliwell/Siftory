@@ -16,12 +16,12 @@ export default function WorkspacePreparationLink({
         {t(ready ? 'Library available for search' : 'Prepare your sources to enable search')}
       </span>
       <button
-        onClick={() =>
+        onClick={() => {
           openWorkspaceRoute(
             kind === 'image' ? 'image-sources' : 'video-sources',
             kind === 'image' ? 'workspace-prepare-library-focus' : undefined,
           )
-        }
+        }}
       >
         {t(ready ? 'Manage sources' : 'Prepare library')}
         <span aria-hidden="true"> →</span>

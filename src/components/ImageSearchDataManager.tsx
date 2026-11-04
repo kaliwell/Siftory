@@ -847,6 +847,7 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
                       type="button"
                       key={record.path}
                       onClick={() => setSelectedPath(record.path)}
+                      className="maintenance-index-record"
                       title={record.path}
                       style={{
                         display: 'grid',
@@ -871,7 +872,8 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {record.path}
+                        <strong>{record.path.split(/[\\/]/).pop()}</strong>
+                        <small>{record.path}</small>
                       </span>
                       <span>
                         {record.width}×{record.height} · {formatBytes(record.fileSize)}
@@ -893,7 +895,11 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
               )}
 
               {selected && (
-                <div style={{ fontSize: 12, opacity: 0.78, wordBreak: 'break-all' }}>
+                <div
+                  className="maintenance-selected-path"
+                  title={selected.path}
+                  style={{ fontSize: 12, opacity: 0.78, wordBreak: 'break-all' }}
+                >
                   {t('Selected')}: {selected.path}
                   {!selected.exists && ` ${t('(source missing)')}`}
                 </div>
@@ -924,245 +930,250 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 5 }}>
-                <input
-                  value={replacementPath}
-                  onChange={(event) => setReplacementPath(event.target.value)}
-                  placeholder={t('New source path for selected missing/moved image')}
-                  style={{ minWidth: 0, fontSize: 12 }}
-                />
-                <button type="button" onClick={() => void chooseReplacement()}>
-                  {t('Browse')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void repairSelectedPath()}
-                  disabled={loading || !selectedPath || !replacementPath.trim()}
-                  style={{ gridColumn: '1 / -1' }}
-                  title={t(
-                    'Requires the new file to have the same byte size as the indexed source',
-                  )}
+              <details className="maintenance-subsection maintenance-path-repair">
+                <summary>{t('Repair Selected Path')}</summary>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 5 }}>
+                  <input
+                    value={replacementPath}
+                    onChange={(event) => setReplacementPath(event.target.value)}
+                    placeholder={t('New source path for selected missing/moved image')}
+                    style={{ minWidth: 0, fontSize: 12 }}
+                  />
+                  <button type="button" onClick={() => void chooseReplacement()}>
+                    {t('Browse')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void repairSelectedPath()}
+                    disabled={loading || !selectedPath || !replacementPath.trim()}
+                    style={{ gridColumn: '1 / -1' }}
+                    title={t(
+                      'Requires the new file to have the same byte size as the indexed source',
+                    )}
+                  >
+                    {t('Repair Selected Path')}
+                  </button>
+                </div>
+              </details>
+              <details className="maintenance-subsection maintenance-thumbnail-tools">
+                <summary>{t('Rebuild Optimized Thumbnails')}</summary>
+                <div
+                  style={{
+                    paddingTop: 6,
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    display: 'grid',
+                    gap: 5,
+                  }}
                 >
-                  {t('Repair Selected Path')}
-                </button>
-              </div>
-
-              <div
-                style={{
-                  paddingTop: 6,
-                  borderTop: '1px solid rgba(255,255,255,0.1)',
-                  display: 'grid',
-                  gap: 5,
-                }}
-              >
-                <strong style={{ fontSize: 12 }}>{t('Rebuild Optimized Thumbnails')}</strong>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
-                    {t('Acceleration')}
-                    <select
-                      value={rebuildBackend}
-                      disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
-                      onChange={(event) => {
-                        const value = event.target.value as ThumbnailRebuildBackend
-                        setImageSearchUiPreferences({ thumbnailRebuildBackend: value })
-                      }}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                      {t('Acceleration')}
+                      <select
+                        value={rebuildBackend}
+                        disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
+                        onChange={(event) => {
+                          const value = event.target.value as ThumbnailRebuildBackend
+                          setImageSearchUiPreferences({ thumbnailRebuildBackend: value })
+                        }}
+                        title={t(
+                          'Native C++ streams JPEG decode/resize/encode through WIC. CUDA requires a compatible Toolkit and nvJPEG runtime.',
+                        )}
+                      >
+                        <option value="native">{t('Native C++ (JPEG fast)')}</option>
+                        <option value="cuda">{t('CUDA / nvJPEG preferred')}</option>
+                        <option value="auto">{t('Auto (adaptive CPU/GPU)')}</option>
+                        <option value="gpu">{t('GPU preferred')}</option>
+                        <option value="cpu">{t('CPU only')}</option>
+                      </select>
+                    </label>
+                    <label
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
                       title={t(
-                        'Native C++ streams JPEG decode/resize/encode through WIC. CUDA requires a compatible Toolkit and nvJPEG runtime.',
+                        'Parallel GPU pipeline jobs. Up to 8 physical GPU contexts are reused. Higher values use more RAM.',
                       )}
                     >
-                      <option value="native">{t('Native C++ (JPEG fast)')}</option>
-                      <option value="cuda">{t('CUDA / nvJPEG preferred')}</option>
-                      <option value="auto">{t('Auto (adaptive CPU/GPU)')}</option>
-                      <option value="gpu">{t('GPU preferred')}</option>
-                      <option value="cpu">{t('CPU only')}</option>
-                    </select>
-                  </label>
-                  <label
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
-                    title={t(
-                      'Parallel GPU pipeline jobs. Up to 8 physical GPU contexts are reused. Higher values use more RAM.',
-                    )}
-                  >
-                    {rebuildBackend === 'native' || rebuildBackend === 'cuda'
-                      ? t('Workers')
-                      : t('GPU Jobs')}
-                    <select
-                      value={thumbnailGpuJobs}
-                      disabled={
-                        rebuildBackend === 'cpu' ||
-                        rebuild.state === 'running' ||
-                        rebuild.state === 'stopping'
-                      }
-                      onChange={(event) => {
-                        const value = Number(event.target.value)
-                        setImageSearchUiPreferences({ thumbnailGpuJobs: value })
-                      }}
+                      {rebuildBackend === 'native' || rebuildBackend === 'cuda'
+                        ? t('Workers')
+                        : t('GPU Jobs')}
+                      <select
+                        value={thumbnailGpuJobs}
+                        disabled={
+                          rebuildBackend === 'cpu' ||
+                          rebuild.state === 'running' ||
+                          rebuild.state === 'stopping'
+                        }
+                        onChange={(event) => {
+                          const value = Number(event.target.value)
+                          setImageSearchUiPreferences({ thumbnailGpuJobs: value })
+                        }}
+                      >
+                        {THUMBNAIL_GPU_JOB_OPTIONS.map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+                      title={t(
+                        'Images read ahead per GPU job. The effective value is reduced when needed so total in-flight work stays at 40 or less.',
+                      )}
                     >
-                      {THUMBNAIL_GPU_JOB_OPTIONS.map((value) => (
-                        <option key={value} value={value}>
-                          {value}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
-                    title={t(
-                      'Images read ahead per GPU job. The effective value is reduced when needed so total in-flight work stays at 40 or less.',
-                    )}
-                  >
-                    {t('Batch')}
-                    <select
-                      value={thumbnailBatchSize}
+                      {t('Batch')}
+                      <select
+                        value={thumbnailBatchSize}
+                        disabled={
+                          rebuildBackend === 'cpu' ||
+                          rebuildBackend === 'native' ||
+                          rebuildBackend === 'cuda' ||
+                          rebuild.state === 'running' ||
+                          rebuild.state === 'stopping'
+                        }
+                        onChange={(event) => {
+                          const value = Number(event.target.value)
+                          setImageSearchUiPreferences({ thumbnailBatchSize: value })
+                        }}
+                      >
+                        {THUMBNAIL_BATCH_OPTIONS.map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => void startRebuild(selectedPath ? [selectedPath] : [])}
                       disabled={
-                        rebuildBackend === 'cpu' ||
-                        rebuildBackend === 'native' ||
-                        rebuildBackend === 'cuda' ||
                         rebuild.state === 'running' ||
-                        rebuild.state === 'stopping'
+                        rebuild.state === 'stopping' ||
+                        !selected?.exists
                       }
-                      onChange={(event) => {
-                        const value = Number(event.target.value)
-                        setImageSearchUiPreferences({ thumbnailBatchSize: value })
-                      }}
                     >
-                      {THUMBNAIL_BATCH_OPTIONS.map((value) => (
-                        <option key={value} value={value}>
-                          {value}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => void startRebuild(selectedPath ? [selectedPath] : [])}
-                    disabled={
-                      rebuild.state === 'running' ||
-                      rebuild.state === 'stopping' ||
-                      !selected?.exists
-                    }
-                  >
-                    {t('Selected Image')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void startRebuild(scanPaths)}
-                    disabled={
-                      rebuild.state === 'running' ||
-                      rebuild.state === 'stopping' ||
-                      scanPaths.length === 0
-                    }
-                  >
-                    {t('All Scan Paths')}
-                  </button>
-                  {(rebuild.state === 'running' || rebuild.state === 'stopping') && (
-                    <button type="button" onClick={() => void stopRebuild()}>
-                      {t('Stop')}
+                      {t('Selected Image')}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => void clearThumbnailCache()}
-                    disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
-                    style={clearCacheArmed ? { color: 'rgb(255,150,150)' } : undefined}
-                    title={t(
-                      'Retires only generated thumbnail cache files; source images are never deleted',
-                    )}
-                  >
-                    {clearCacheArmed ? t('Confirm Clear Cache') : t('Clear Legacy Cache')}
-                  </button>
-                </div>
-                {rebuild.state !== 'idle' && (
-                  <>
-                    <div
-                      style={{
-                        height: 5,
-                        borderRadius: 3,
-                        overflow: 'hidden',
-                        background: 'rgba(255,255,255,0.1)',
-                      }}
+                    <button
+                      type="button"
+                      onClick={() => void startRebuild(scanPaths)}
+                      disabled={
+                        rebuild.state === 'running' ||
+                        rebuild.state === 'stopping' ||
+                        scanPaths.length === 0
+                      }
                     >
+                      {t('All Scan Paths')}
+                    </button>
+                    {(rebuild.state === 'running' || rebuild.state === 'stopping') && (
+                      <button type="button" onClick={() => void stopRebuild()}>
+                        {t('Stop')}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void clearThumbnailCache()}
+                      disabled={rebuild.state === 'running' || rebuild.state === 'stopping'}
+                      style={clearCacheArmed ? { color: 'rgb(255,150,150)' } : undefined}
+                      title={t(
+                        'Retires only generated thumbnail cache files; source images are never deleted',
+                      )}
+                    >
+                      {clearCacheArmed ? t('Confirm Clear Cache') : t('Clear Legacy Cache')}
+                    </button>
+                  </div>
+                  {rebuild.state !== 'idle' && (
+                    <>
                       <div
                         style={{
-                          width: `${rebuildPercent}%`,
-                          height: '100%',
-                          background: 'rgb(75,185,135)',
-                        }}
-                      />
-                    </div>
-                    <div style={{ fontSize: 12, opacity: 0.78 }}>
-                      {t(rebuild.state)} · {rebuildProcessed}/{rebuild.total || '?'} · {t('failed')}{' '}
-                      {rebuild.failed} · {t('skipped')} {rebuild.skipped} · {rebuildRate}{' '}
-                      {t('img/s')}
-                    </div>
-                    <div style={{ fontSize: 12, opacity: 0.72 }}>
-                      {t('Backend')}:{' '}
-                      {rebuild.effectiveBackend || rebuild.requestedBackend || t('detecting')} ·
-                      {t('Jobs')} {rebuild.gpuJobs || 0} · {t('GPU lanes')} {rebuild.gpuLanes || 0}{' '}
-                      · {t('CPU lanes')} {rebuild.cpuLanes || 0} · {t('Batch')}{' '}
-                      {rebuild.batchSize || 1} · {t('In-flight')} {rebuild.inFlight || 0}/
-                      {rebuild.peakInFlight || 0} · GPU {rebuild.gpuCompleted || 0} · CPU{' '}
-                      {rebuild.cpuCompleted || 0} · {t('fallback')} {rebuild.fallbackCount || 0}
-                    </div>
-                    <div style={{ fontSize: 11, opacity: 0.58 }}>
-                      {t('Queues')}: GPU {rebuild.gpuQueueDepth || 0} · CPU{' '}
-                      {rebuild.cpuQueueDepth || 0} ·{t('Cache')} {rebuild.cacheQueueDepth || 0} ·
-                      Auto→CPU {rebuild.autoCpuRouted || 0} ·{t('Writes')}{' '}
-                      {rebuild.cacheWrites || 0}
-                      {(rebuild.cacheWriteFailures || 0) > 0
-                        ? ` · ${t('write failed')} ${rebuild.cacheWriteFailures}`
-                        : ''}
-                    </div>
-                    {rebuild.gpuDevice && (
-                      <div
-                        title={rebuild.gpuDevice}
-                        style={{
-                          fontSize: 11,
-                          opacity: 0.62,
+                          height: 5,
+                          borderRadius: 3,
                           overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
+                          background: 'rgba(255,255,255,0.1)',
                         }}
                       >
-                        GPU: {rebuild.gpuDevice}
+                        <div
+                          style={{
+                            width: `${rebuildPercent}%`,
+                            height: '100%',
+                            background: 'rgb(75,185,135)',
+                          }}
+                        />
                       </div>
-                    )}
-                    {rebuild.gpuError && (
-                      <div style={{ fontSize: 11, color: 'rgb(255,185,110)' }}>
-                        {t('GPU unavailable')}: {rebuild.gpuError}.{' '}
-                        {t('CPU fallback remains active.')}
+                      <div style={{ fontSize: 12, opacity: 0.78 }}>
+                        {t(rebuild.state)} · {rebuildProcessed}/{rebuild.total || '?'} ·{' '}
+                        {t('failed')} {rebuild.failed} · {t('skipped')} {rebuild.skipped} ·{' '}
+                        {rebuildRate} {t('img/s')}
                       </div>
-                    )}
-                    <div style={{ fontSize: 11, opacity: 0.52 }}>
-                      {rebuild.effectiveBackend === 'native-cpp'
-                        ? t(
-                            'Native C++ streams JPEG files through WIC without Node buffers or base64.',
-                          )
-                        : rebuild.effectiveBackend === 'cuda'
-                          ? t('CUDA nvJPEG decode/resize backend is active.')
-                          : t(
-                              'GPU % covers resize only; decoding and WebP encoding remain CPU work. Compare img/s when tuning.',
-                            )}
-                    </div>
-                    {rebuild.currentPath && (
-                      <div
-                        title={rebuild.currentPath}
-                        style={{
-                          fontSize: 11,
-                          opacity: 0.55,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {rebuild.currentPath}
+                      <div style={{ fontSize: 12, opacity: 0.72 }}>
+                        {t('Backend')}:{' '}
+                        {rebuild.effectiveBackend || rebuild.requestedBackend || t('detecting')} ·
+                        {t('Jobs')} {rebuild.gpuJobs || 0} · {t('GPU lanes')}{' '}
+                        {rebuild.gpuLanes || 0} · {t('CPU lanes')} {rebuild.cpuLanes || 0} ·{' '}
+                        {t('Batch')} {rebuild.batchSize || 1} · {t('In-flight')}{' '}
+                        {rebuild.inFlight || 0}/{rebuild.peakInFlight || 0} · GPU{' '}
+                        {rebuild.gpuCompleted || 0} · CPU {rebuild.cpuCompleted || 0} ·{' '}
+                        {t('fallback')} {rebuild.fallbackCount || 0}
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                      <div style={{ fontSize: 11, opacity: 0.58 }}>
+                        {t('Queues')}: GPU {rebuild.gpuQueueDepth || 0} · CPU{' '}
+                        {rebuild.cpuQueueDepth || 0} ·{t('Cache')} {rebuild.cacheQueueDepth || 0} ·
+                        Auto→CPU {rebuild.autoCpuRouted || 0} ·{t('Writes')}{' '}
+                        {rebuild.cacheWrites || 0}
+                        {(rebuild.cacheWriteFailures || 0) > 0
+                          ? ` · ${t('write failed')} ${rebuild.cacheWriteFailures}`
+                          : ''}
+                      </div>
+                      {rebuild.gpuDevice && (
+                        <div
+                          title={rebuild.gpuDevice}
+                          style={{
+                            fontSize: 11,
+                            opacity: 0.62,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          GPU: {rebuild.gpuDevice}
+                        </div>
+                      )}
+                      {rebuild.gpuError && (
+                        <div style={{ fontSize: 11, color: 'rgb(255,185,110)' }}>
+                          {t('GPU unavailable')}: {rebuild.gpuError}.{' '}
+                          {t('CPU fallback remains active.')}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 11, opacity: 0.52 }}>
+                        {rebuild.effectiveBackend === 'native-cpp'
+                          ? t(
+                              'Native C++ streams JPEG files through WIC without Node buffers or base64.',
+                            )
+                          : rebuild.effectiveBackend === 'cuda'
+                            ? t('CUDA nvJPEG decode/resize backend is active.')
+                            : t(
+                                'GPU % covers resize only; decoding and WebP encoding remain CPU work. Compare img/s when tuning.',
+                              )}
+                      </div>
+                      {rebuild.currentPath && (
+                        <div
+                          title={rebuild.currentPath}
+                          style={{
+                            fontSize: 11,
+                            opacity: 0.55,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {rebuild.currentPath}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </details>
             </div>
           </details>
         </div>

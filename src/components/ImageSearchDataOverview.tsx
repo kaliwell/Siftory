@@ -428,7 +428,7 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
         </div>
 
         {tab === 'stores' && (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="maintenance-index-table" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ textAlign: 'left', opacity: 0.68 }}>

@@ -1214,6 +1214,21 @@ const AssetLibraryPanel: React.FC = () => {
 
   const simpleView =
     !backupOpen && (collectionsOpen || (view === 'library' && libraryMode === 'assets'))
+  const navigateLibrary = (
+    target: 'assets' | 'collections' | 'categories' | 'review' | 'clusters',
+  ) => {
+    setCollectionsOpen(target === 'collections')
+    setSelectedIds(new Set())
+    setLibraryMode(target === 'categories' ? 'categories' : 'assets')
+    selectTab(target === 'review' || target === 'clusters' ? target : 'library')
+  }
+  const activeDestination = backupOpen
+    ? 'backups'
+    : collectionsOpen
+      ? 'collections'
+      : view === 'library'
+        ? libraryMode
+        : view
 
   return (
     <DraggablePanel
@@ -1238,125 +1253,134 @@ const AssetLibraryPanel: React.FC = () => {
       visibilityLocked={visibilityLocked}
       onToggleVisibilityLock={() => toggleVisibilityLock('assetLibrary')}
     >
-      <div
-        className="asset-library-shell"
-        data-layout={simpleView ? 'simple' : 'tools'}
-        style={{
-          height: '100%',
-          minHeight: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-          fontSize: 10,
-        }}
-      >
-        <AssetLibraryControlsTarget.Provider
-          value={simpleView ? null : (controlsTarget ?? undefined)}
+      <div className="asset-library-workspace">
+        <nav
+          className="asset-library-navigation"
+          aria-label={t('Library views')}
+          data-testid="asset-library-navigation"
         >
-          <aside className="asset-library-sidebar" data-testid="asset-library-sidebar">
-            <AssetLibraryHeader
-              collectionsOpen={collectionsOpen}
-              categoriesOpen={view === 'library' && libraryMode === 'categories'}
-              onCollections={() => {
-                setCollectionsOpen(true)
-                setSelectedIds(new Set())
-                if (backupOpen) toggleBackups()
-              }}
-              onCategories={() => {
-                setCollectionsOpen(false)
-                selectTab('library')
-                setLibraryMode('categories')
-                if (backupOpen) toggleBackups()
-              }}
-              activeTask={activeTask}
-              backupOpen={backupOpen}
-              backupCount={backups.length}
-              view={view}
-              stats={stats}
-              feedbackStatus={feedbackStatus}
-              task={task}
-              error={error}
-              onSync={() =>
-                void runTask(() =>
-                  window.electronAPI.assetLibrary.syncFromImageIndex(manifestPath || undefined),
-                )
-              }
-              onRefresh={() => {
-                void refreshBase()
-                if (view === 'library' && libraryMode === 'assets') void loadAssets()
-                if (view === 'review' && reviewMode === 'sampleSearch')
-                  void loadSampleSearchResults()
-                if (view === 'review' && reviewMode === 'similar') void loadSimilarSearchResults()
-                if (view === 'review' && reviewMode === 'suggestions') void loadSuggestions()
-                if (view === 'clusters') void loadClusters()
-              }}
-              onToggleBackups={toggleBackups}
-              onExportReport={() =>
-                void runMutation(async () => {
-                  const result = await window.electronAPI.assetLibrary.exportLibraryReport()
-                  if (result.canceled) return { ok: true }
-                  if (!result.ok) throw new Error(result.error)
-                  return result
-                }, true)
-              }
-              onRebuildLearning={() =>
-                void runTask(() => window.electronAPI.assetLibrary.rebuildFeedbackModel())
-              }
-              onLearningEnabledChange={(enabled) =>
-                void runMutation(async () => {
-                  const nextStatus =
-                    await window.electronAPI.assetLibrary.setFeedbackEnabled(enabled)
-                  setFeedbackStatus(nextStatus)
-                })
-              }
-              onStop={() => void window.electronAPI.assetLibrary.stopTask(task?.taskId)}
-              onViewChange={(next) => {
-                setCollectionsOpen(false)
-                setLibraryMode('assets')
-                selectTab(next)
-                if (backupOpen) toggleBackups()
-              }}
-            />
-            <div ref={setControlsTarget} className="asset-library-view-controls" />
-          </aside>
-          <main className="asset-library-content" data-testid="asset-library-content">
-            {backupOpen && (
-              <AssetLibraryBackupView
+          <strong>{t('Library')}</strong>
+          {(
+            [
+              ['assets', 'All assets', 'asset-mode-assets'],
+              ['collections', 'Collections', 'asset-library-collections'],
+              ['categories', 'Categories & Tags', 'asset-mode-categories'],
+              ['review', 'Review', 'asset-view-review'],
+              ['clusters', 'Clusters', 'asset-view-clusters'],
+            ] as const
+          ).map(([id, label, testId]) => (
+            <button
+              key={id}
+              data-testid={testId}
+              aria-current={activeDestination === id ? 'page' : undefined}
+              onClick={() => navigateLibrary(id)}
+            >
+              <span>{t(label)}</span>
+              {id === 'clusters' && <small>{stats.clusterCount.toLocaleString()}</small>}
+            </button>
+          ))}
+        </nav>
+        <div
+          className="asset-library-shell"
+          data-layout={simpleView ? 'simple' : 'tools'}
+          style={{
+            height: '100%',
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            fontSize: 10,
+          }}
+        >
+          <AssetLibraryControlsTarget.Provider
+            value={simpleView ? null : (controlsTarget ?? undefined)}
+          >
+            <aside className="asset-library-sidebar" data-testid="asset-library-sidebar">
+              <AssetLibraryHeader
+                collectionsOpen={collectionsOpen}
                 activeTask={activeTask}
-                backups={backups}
-                busy={backupBusy}
-                message={backupMessage}
-                passphrase={backupPassphrase}
-                passphraseConfirmation={backupPassphraseConfirmation}
-                restoreArmedId={backupRestoreArmed}
-                deleteArmedId={backupDeleteArmed}
-                verification={backupVerification}
-                onCreate={() => void createBackup()}
-                onRefresh={() => void loadBackups()}
-                onOpenFolder={() => void window.electronAPI.assetLibrary.openBackupFolder()}
-                onPassphraseChange={setBackupPassphrase}
-                onPassphraseConfirmationChange={setBackupPassphraseConfirmation}
-                onImport={() => void importBackup()}
-                onVerify={(backupId) => void verifyBackup(backupId)}
-                onExport={(backupId) => void exportBackup(backupId)}
-                onDelete={(backupId) => void deleteBackup(backupId)}
-                onRestore={(backupId) => void restoreBackup(backupId)}
-              />
-            )}
-            {!backupOpen && collectionsOpen && (
-              <AssetLibraryCollectionsView
-                onBrowseAssets={() => {
-                  setCollectionsOpen(false)
-                  setLibraryMode('assets')
-                  selectTab('library')
+                backupOpen={backupOpen}
+                backupCount={backups.length}
+                stats={stats}
+                feedbackStatus={feedbackStatus}
+                task={task}
+                error={error}
+                onSync={() =>
+                  void runTask(() =>
+                    window.electronAPI.assetLibrary.syncFromImageIndex(manifestPath || undefined),
+                  )
+                }
+                onRefresh={() => {
+                  void refreshBase()
+                  if (view === 'library' && libraryMode === 'assets') void loadAssets()
+                  if (view === 'review' && reviewMode === 'sampleSearch')
+                    void loadSampleSearchResults()
+                  if (view === 'review' && reviewMode === 'similar') void loadSimilarSearchResults()
+                  if (view === 'review' && reviewMode === 'suggestions') void loadSuggestions()
+                  if (view === 'clusters') void loadClusters()
                 }}
+                onToggleBackups={toggleBackups}
+                onExportReport={() =>
+                  void runMutation(async () => {
+                    const result = await window.electronAPI.assetLibrary.exportLibraryReport()
+                    if (result.canceled) return { ok: true }
+                    if (!result.ok) throw new Error(result.error)
+                    return result
+                  }, true)
+                }
+                onRebuildLearning={() =>
+                  void runTask(() => window.electronAPI.assetLibrary.rebuildFeedbackModel())
+                }
+                onLearningEnabledChange={(enabled) =>
+                  void runMutation(async () => {
+                    const nextStatus =
+                      await window.electronAPI.assetLibrary.setFeedbackEnabled(enabled)
+                    setFeedbackStatus(nextStatus)
+                  })
+                }
+                onStop={() => void window.electronAPI.assetLibrary.stopTask(task?.taskId)}
               />
-            )}
-            {!backupOpen && !collectionsOpen && view === 'library' && renderLibrary()}
-            {!backupOpen && !collectionsOpen && view === 'review' && renderReview()}
-            {!backupOpen && !collectionsOpen && view === 'clusters' && renderClusters()}
-          </main>
-        </AssetLibraryControlsTarget.Provider>
+              <div ref={setControlsTarget} className="asset-library-view-controls" />
+            </aside>
+            <main className="asset-library-content" data-testid="asset-library-content">
+              {backupOpen && (
+                <AssetLibraryBackupView
+                  activeTask={activeTask}
+                  backups={backups}
+                  busy={backupBusy}
+                  message={backupMessage}
+                  passphrase={backupPassphrase}
+                  passphraseConfirmation={backupPassphraseConfirmation}
+                  restoreArmedId={backupRestoreArmed}
+                  deleteArmedId={backupDeleteArmed}
+                  verification={backupVerification}
+                  onCreate={() => void createBackup()}
+                  onRefresh={() => void loadBackups()}
+                  onOpenFolder={() => void window.electronAPI.assetLibrary.openBackupFolder()}
+                  onPassphraseChange={setBackupPassphrase}
+                  onPassphraseConfirmationChange={setBackupPassphraseConfirmation}
+                  onImport={() => void importBackup()}
+                  onVerify={(backupId) => void verifyBackup(backupId)}
+                  onExport={(backupId) => void exportBackup(backupId)}
+                  onDelete={(backupId) => void deleteBackup(backupId)}
+                  onRestore={(backupId) => void restoreBackup(backupId)}
+                />
+              )}
+              {!backupOpen && collectionsOpen && (
+                <AssetLibraryCollectionsView
+                  onBrowseAssets={() => {
+                    setCollectionsOpen(false)
+                    setLibraryMode('assets')
+                    selectTab('library')
+                  }}
+                />
+              )}
+              {!backupOpen && !collectionsOpen && view === 'library' && renderLibrary()}
+              {!backupOpen && !collectionsOpen && view === 'review' && renderReview()}
+              {!backupOpen && !collectionsOpen && view === 'clusters' && renderClusters()}
+            </main>
+          </AssetLibraryControlsTarget.Provider>
+        </div>
       </div>
     </DraggablePanel>
   )

@@ -57,7 +57,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
   const categoryById = new Map(categories.map((category) => [category.id, category]))
   const tagById = new Map(tags.map((tag) => [tag.id, tag]))
   const previewHeight = Math.round(thumbnailWidth * 0.75)
-  const rowHeight = previewHeight + (scoresByAssetId ? 154 : 140)
+  const rowHeight = previewHeight + (scoresByAssetId ? 128 : 104)
   const gap = 12
   const {
     columns,
@@ -152,7 +152,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 5,
-                  padding: 10,
+                  padding: 8,
                   boxSizing: 'border-box',
                   border: selected
                     ? '1px solid rgb(var(--color-accent))'
@@ -165,6 +165,7 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
               >
                 <div
                   className="asset-library-card-preview"
+                  onDoubleClick={() => onOpen(item.asset.id)}
                   style={{ position: 'relative', height: previewHeight, flexShrink: 0 }}
                 >
                   <ThumbnailImage
@@ -192,23 +193,27 @@ const AssetLibraryAssetGrid: React.FC<AssetLibraryAssetGridProps> = ({
                     style={{ position: 'absolute', top: 4, left: 4, margin: 0 }}
                   />
                 </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {fileName(item.asset.path)}
+                <div className="asset-library-card-caption">
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {fileName(item.asset.path)}
+                  </span>
+                  {Boolean(item.asset.favorite || item.asset.rating) && (
+                    <span style={{ fontSize: 11, flexShrink: 0, color: 'rgb(255,190,70)' }}>
+                      {item.asset.favorite ? '★ ' : ''}
+                      {item.asset.rating ? `${'★'.repeat(item.asset.rating)}` : ''}
+                    </span>
+                  )}
                 </div>
-                {Boolean(item.asset.favorite || item.asset.rating) && (
-                  <div style={{ fontSize: 12, color: 'rgb(255,190,70)' }}>
-                    {item.asset.favorite ? '★ ' : ''}
-                    {item.asset.rating ? `${'★'.repeat(item.asset.rating)}` : ''}
-                  </div>
-                )}
                 {sampleScore && (
                   <div
                     style={{

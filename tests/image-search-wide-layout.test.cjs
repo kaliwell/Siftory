@@ -68,14 +68,23 @@ test('image search controls are grouped into four readable workflow sections', (
   const collapsible = source('src/components/CollapsibleSearchSection.tsx')
   const styles = source('src/styles/window-system.css')
 
-  assert.match(panel, /testId="image-search-sources-section"/)
+  assert.doesNotMatch(panel, /DiscoverySourcesSection|image-search-sources-section/)
+  assert.match(
+    source('src/components/AppStoragePanel.tsx'),
+    /<DiscoverySourcesSection hostPanel="appStorage"\s*\/>/,
+  )
   assert.match(controls, /testId="image-search-library-section"/)
   assert.match(controls, /testId="image-search-query-section"/)
   assert.match(panel, /testId="image-search-maintenance-section"/)
-  assert.match(panel, /Data sources and collections/)
+  assert.match(source('src/components/AppStoragePanel.tsx'), /Data sources and collections/)
   assert.match(controls, /Library preparation/)
   assert.match(controls, /Search input/)
-  assert.match(panel, /Index and maintenance/)
+  assert.match(panel, /Search readiness/)
+  assert.doesNotMatch(panel, /ImageSearchDataManager/)
+  assert.match(
+    source('src/components/AppStoragePanel.tsx'),
+    /<ImageSearchDataManager[\s\S]*?standalone/,
+  )
 
   assert.match(collapsible, /aria-expanded=\{effectiveExpanded\}/)
   assert.match(collapsible, /aria-controls=\{contentId\}/)
@@ -101,11 +110,12 @@ test('image search controls are grouped into four readable workflow sections', (
   assert.match(panel, /isManagedSearchModelReady\(latestModels\?\.clip_vit_base_patch32\)/)
   assert.match(controls, /semanticModelReady: boolean/)
   assert.match(controls, /disabled=\{searching \|\| workflowRunning \|\| !semanticModelReady\}/)
-  const imageSourcesStart = panel.indexOf('id="image-search-sources-section"')
-  const imageSourcesEnd = panel.indexOf('</CollapsibleSearchSection>', imageSourcesStart)
+  const maintenance = source('src/components/AppStoragePanel.tsx')
+  const imageSourcesStart = maintenance.indexOf('id="maintenance-sources-section"')
+  const imageSourcesEnd = maintenance.indexOf('</CollapsibleSearchSection>', imageSourcesStart)
   assert.ok(imageSourcesStart > 0 && imageSourcesEnd > imageSourcesStart)
   assert.doesNotMatch(
-    panel.slice(imageSourcesStart, imageSourcesEnd),
+    maintenance.slice(imageSourcesStart, imageSourcesEnd),
     /SearchExperienceModeBar|summary=\{t\(experienceMode/,
   )
   assert.doesNotMatch(sources, /image-search-sources-content__toggle/)

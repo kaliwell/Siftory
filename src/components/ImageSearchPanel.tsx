@@ -15,9 +15,7 @@ import ImageSearchIndexFooter from './ImageSearchIndexFooter'
 import RecentManifestBar from './RecentManifestBar'
 import ImageSearchControls from './ImageSearchControls'
 import { sortImageSearchResults, type ImageSearchSortMode } from './imageSearchSort'
-import ImageSearchDataManager from './ImageSearchDataManager'
 import SearchExperienceModeBar from './SearchExperienceModeBar'
-import DiscoverySourcesSection from './DiscoverySourcesSection'
 import SearchSetupProgress from './SearchSetupProgress'
 import {
   ConfirmWholeDriveBanner,
@@ -1362,23 +1360,6 @@ const ImageSearchPanel: React.FC = () => {
               />
             )}
 
-            {sourcesOnly && (
-              <CollapsibleSearchSection
-                id="image-search-sources-section"
-                step="01"
-                title={t('Data sources and collections')}
-                description={t(
-                  'Register storage locations, organize collections, and check connectivity.',
-                )}
-                expanded={expandedControlSections.sources}
-                onToggle={() => toggleControlSection('sources')}
-                tone="sources"
-                testId="image-search-sources-section"
-              >
-                <DiscoverySourcesSection />
-              </CollapsibleSearchSection>
-            )}
-
             <ImageSearchControls
               hideQuery={sourcesOnly}
               hideLibrary={!sourcesOnly}
@@ -1454,25 +1435,14 @@ const ImageSearchPanel: React.FC = () => {
               <CollapsibleSearchSection
                 id="image-search-maintenance-section"
                 step="04"
-                title={t('Index and maintenance')}
-                description={t('Review index health, storage, rebuild tools, and diagnostics.')}
+                title={t('Search readiness')}
+                description={t('Choose folders, scan changes, and build the searchable library.')}
                 expanded={expandedControlSections.maintenance}
                 onToggle={() => toggleControlSection('maintenance')}
                 tone="maintenance"
                 testId="image-search-maintenance-section"
                 summary={t(status.state)}
               >
-                <ImageSearchDataManager
-                  scanPaths={scanPaths}
-                  disabled={isScanning || setupRunning}
-                  onChanged={() => {
-                    setResults([])
-                    setLayeredResults([])
-                    void fetchStatus()
-                  }}
-                  showToast={showToast}
-                />
-
                 {experienceMode === 'simple' && (
                   <SearchSetupProgress
                     workflow={setupWorkflow}

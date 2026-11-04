@@ -122,13 +122,14 @@ const WorkspaceNavigator: React.FC<WorkspaceNavigatorProps> = ({ tasksOpen, setT
   }
   const onReadinessAction = (action: ProductReadinessAction) => {
     if (action === 'review-derived-reset') navigate('settings', 'workspace-review-derived-reset')
-    else if (['add-source', 'scan-sources', 'reconnect-source'].includes(action))
-      navigate('imageSearch', 'workspace-sources-focus')
+    else if (['add-source', 'reconnect-source'].includes(action))
+      navigate('appStorage', 'workspace-maintenance-sources-focus')
+    else if (action === 'scan-sources') navigate('imageSearch', 'workspace-prepare-library-focus')
     else if (['prepare-image-search', 'retry-image-index'].includes(action)) navigate('imageSearch')
     else navigate('mediaSearch')
   }
   const openFirstRunStep = (step: ProductFirstRunGuideStepId) => {
-    if (step === 'source') navigate('imageSearch', 'workspace-sources-focus')
+    if (step === 'source') navigate('appStorage', 'workspace-maintenance-sources-focus')
     else if (step === 'models') navigate('settings', 'workspace-open-model-settings')
     else if (step === 'catalog') navigate('imageSearch', 'workspace-prepare-library-focus')
     else navigate('imageSearch', 'workspace-first-search-focus', 'search')

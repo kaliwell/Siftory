@@ -124,13 +124,17 @@ function resultIndexLabel(indexState: readonly string[]): string {
 
 interface DiscoverySourcesSectionProps {
   enableEmbeddedSearch?: boolean
+  hostPanel?: 'imageSearch' | 'appStorage'
 }
 
 const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   enableEmbeddedSearch = false,
+  hostPanel = 'imageSearch',
 }) => {
   const { t } = useTranslation()
-  const isVisible = useStore((state) => state.showImageSearch)
+  const isVisible = useStore((state) =>
+    hostPanel === 'appStorage' ? state.showAppStorage : state.showImageSearch,
+  )
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [sources, setSources] = useState<DiscoverySourceListItem[]>([])
   const [statuses, setStatuses] = useState<Record<string, DiscoveryScanStatus>>({})
@@ -631,68 +635,72 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
       </div>
 
       <div id="image-search-sources-content-body" className="image-search-sources-content__body">
-        <div
-          className={`discovery-source-form ${sourceType === 'sftp' ? 'is-sftp' : ''}`}
-          style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-        >
-          <select
-            className="discovery-source-type"
-            value={sourceType}
-            onChange={(event) =>
-              setSourceType(event.target.value as 'local-ntfs' | 'mounted-network' | 'sftp')
-            }
-            aria-label={t('Source type')}
-            style={{ fontSize: 13, padding: '2px 6px' }}
+        <details className="maintenance-subsection maintenance-add-source">
+          <summary>{t('Add source')}</summary>
+          <div
+            className={`discovery-source-form ${sourceType === 'sftp' ? 'is-sftp' : ''}`}
+            style={{ display: 'flex', gap: 6, alignItems: 'center' }}
           >
-            <option value="local-ntfs">{t('Local drive')}</option>
-            <option value="mounted-network">{t('Mounted network')}</option>
-            <option value="sftp">{t('SFTP source')}</option>
-          </select>
-          {sourceType === 'sftp' && (
             <select
-              className="discovery-source-profile"
-              value={sftpProfileId}
-              onChange={(event) => setSftpProfileId(event.target.value)}
-              aria-label={t('SFTP profile')}
-              style={{ fontSize: 13, padding: '2px 6px', maxWidth: 140 }}
+              className="discovery-source-type"
+              value={sourceType}
+              onChange={(event) =>
+                setSourceType(event.target.value as 'local-ntfs' | 'mounted-network' | 'sftp')
+              }
+              aria-label={t('Source type')}
+              style={{ fontSize: 13, padding: '2px 6px' }}
             >
-              <option value="">{t('Select profile')}</option>
-              {remoteProfiles.map((profile) => (
-                <option key={profile.id} value={profile.id} disabled={!profile.hostFingerprint}>
-                  {profile.name}
-                </option>
-              ))}
+              <option value="local-ntfs">{t('Local drive')}</option>
+              <option value="mounted-network">{t('Mounted network')}</option>
+              <option value="sftp">{t('SFTP source')}</option>
             </select>
-          )}
-          <input
-            className="discovery-source-name"
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder={t('Name')}
-            style={{ width: 110, fontSize: 13, padding: '2px 6px' }}
-          />
-          <input
-            className="discovery-source-root"
-            value={rootPath}
-            onChange={(event) => setRootPath(event.target.value)}
-            placeholder={sourceType === 'sftp' ? t('Remote root') : t('Root path')}
-            style={{ flex: 1, fontSize: 13, padding: '2px 6px' }}
-          />
-          <button
-            className="discovery-source-add"
-            onClick={() => void handleAddSource()}
-            disabled={
-              !displayName.trim() || !rootPath.trim() || (sourceType === 'sftp' && !sftpProfileId)
-            }
-            style={{ fontSize: 13, padding: '2px 8px' }}
-          >
-            {t('Add source')}
-          </button>
-        </div>
+            {sourceType === 'sftp' && (
+              <select
+                className="discovery-source-profile"
+                value={sftpProfileId}
+                onChange={(event) => setSftpProfileId(event.target.value)}
+                aria-label={t('SFTP profile')}
+                style={{ fontSize: 13, padding: '2px 6px', maxWidth: 140 }}
+              >
+                <option value="">{t('Select profile')}</option>
+                {remoteProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id} disabled={!profile.hostFingerprint}>
+                    {profile.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <input
+              className="discovery-source-name"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder={t('Name')}
+              style={{ width: 110, fontSize: 13, padding: '2px 6px' }}
+            />
+            <input
+              className="discovery-source-root"
+              value={rootPath}
+              onChange={(event) => setRootPath(event.target.value)}
+              placeholder={sourceType === 'sftp' ? t('Remote root') : t('Root path')}
+              style={{ flex: 1, fontSize: 13, padding: '2px 6px' }}
+            />
+            <button
+              className="discovery-source-add"
+              onClick={() => void handleAddSource()}
+              disabled={
+                !displayName.trim() || !rootPath.trim() || (sourceType === 'sftp' && !sftpProfileId)
+              }
+              style={{ fontSize: 13, padding: '2px 8px' }}
+            >
+              {t('Add source')}
+            </button>
+          </div>
+        </details>
         {error && <div style={{ fontSize: 13, color: '#e07070' }}>{error}</div>}
         {notice && <div style={{ fontSize: 13, color: '#62b47a' }}>{notice}</div>}
 
-        <div
+        <details
+          className="maintenance-subsection maintenance-collections"
           data-testid="asset-collection-tray"
           onDragOver={(event) => {
             if (event.dataTransfer.types.includes(COLLECTION_DRAG_TYPE)) event.preventDefault()
@@ -705,6 +713,10 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
           }}
           style={{ border: '1px solid rgba(var(--date), 0.25)', borderRadius: 4, padding: 6 }}
         >
+          <summary>
+            {t('Collection tray')}{' '}
+            <span>{t('{count} collected items', { count: collectionItems.length })}</span>
+          </summary>
           <div
             className="asset-collection-toolbar"
             style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}
@@ -785,7 +797,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               {t('{count} collected items', { count: collectionItems.length })}
             </span>
           </div>
-          {selectedCollectionId && collectionItems.length === 0 && (
+          {selectedCollectionId !== 0 && collectionItems.length === 0 && (
             <div style={{ marginTop: 4, fontSize: 12, opacity: 0.6 }}>
               {t('Collect search results here without moving the originals.')}
             </div>
@@ -817,7 +829,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               ))}
             </div>
           )}
-        </div>
+        </details>
 
         <div
           data-testid="source-health-center"

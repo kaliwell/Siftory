@@ -181,6 +181,8 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
   onSmartAlbumDelete,
 }) => {
   const { t } = useTranslation()
+  const filtersRef = React.useRef<HTMLDialogElement>(null)
+  const filtersId = React.useId()
   const {
     collectionId,
     collections,
@@ -373,145 +375,174 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
               />
               {t('Starred only')}
             </label>
-            <details
-              className="workspace-disclosure asset-library-more-filters"
+            <button
+              className="asset-library-filter-trigger"
+              data-testid="asset-library-filter-toggle"
+              aria-haspopup="dialog"
+              aria-controls={filtersId}
+              onClick={() => filtersRef.current?.showModal()}
+            >
+              {t('Library filters')}
+              <span className="asset-library-filter-count" data-active={activeFilters > 0}>
+                {activeFilters || ''}
+              </span>
+            </button>
+            <dialog
+              ref={filtersRef}
+              id={filtersId}
+              className="asset-library-filter-drawer"
+              aria-label={t('Library filters')}
               data-testid="asset-library-filters"
             >
-              <summary>
-                {t('Library filters')}
-                {activeFilters > 0 ? ` · ${activeFilters}` : ''}
-              </summary>
-              <div className="asset-library-filter-fields">
-                <label>
-                  {t('Category')}{' '}
-                  <select
-                    aria-label={t('Category')}
-                    data-testid="asset-filter-category"
-                    value={categoryFilter}
-                    onChange={(event) => onCategoryFilterChange(Number(event.target.value))}
-                  >
-                    <option value={0}>{t('All categories')}</option>
-                    {rows.map(({ category, depth }) => (
-                      <option key={category.id} value={category.id}>
-                        {'  '.repeat(depth)}
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  {t('Media type')}{' '}
-                  <select
-                    data-testid="asset-filter-kind"
-                    aria-label={t('Media type')}
-                    value={kindFilter}
-                    onChange={(event) => onKindFilterChange(event.target.value as AssetKindFilter)}
-                  >
-                    <option value="all">{t('All media types')}</option>
-                    <option value="image">{t('Images')}</option>
-                    <option value="video_frame">{t('Video frames')}</option>
-                  </select>
-                </label>
-                <label>
-                  {t('Tags')}
-                  <select
-                    value={tagFilter}
-                    onChange={(event) => onTagFilterChange(Number(event.target.value))}
-                  >
-                    <option value={0}>{t('All tags')}</option>
-                    {tags.map((tag) => (
-                      <option key={tag.id} value={tag.id}>
-                        {tag.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  {t('Source')}
-                  <select
-                    data-testid="asset-filter-source"
-                    value={sourceFilter}
-                    onChange={(event) =>
-                      onSourceFilterChange(event.target.value as AssetSourceFilter)
-                    }
-                  >
-                    <option value="all">{t('All asset sources')}</option>
-                    <option value="image_search">{t('Image index')}</option>
-                    <option value="manual">{t('Manual import')}</option>
-                  </select>
-                </label>
-                <label>
-                  {t('Modified from')}
-                  <input
-                    data-testid="asset-filter-modified-after"
-                    type="date"
-                    value={dateInputValue(modifiedAfter)}
-                    onChange={(event) =>
-                      onModifiedAfterChange(startOfLocalDate(event.target.value))
-                    }
+              <header className="asset-library-drawer-header">
+                <strong>{t('Library filters')}</strong>
+                <button aria-label={t('Close')} onClick={() => filtersRef.current?.close()}>
+                  ×
+                </button>
+              </header>
+              <div className="asset-library-drawer-body">
+                <div className="asset-library-filter-fields">
+                  <label>
+                    {t('Category')}{' '}
+                    <select
+                      aria-label={t('Category')}
+                      data-testid="asset-filter-category"
+                      value={categoryFilter}
+                      onChange={(event) => onCategoryFilterChange(Number(event.target.value))}
+                    >
+                      <option value={0}>{t('All categories')}</option>
+                      {rows.map(({ category, depth }) => (
+                        <option key={category.id} value={category.id}>
+                          {'  '.repeat(depth)}
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t('Media type')}{' '}
+                    <select
+                      data-testid="asset-filter-kind"
+                      aria-label={t('Media type')}
+                      value={kindFilter}
+                      onChange={(event) =>
+                        onKindFilterChange(event.target.value as AssetKindFilter)
+                      }
+                    >
+                      <option value="all">{t('All media types')}</option>
+                      <option value="image">{t('Images')}</option>
+                      <option value="video_frame">{t('Video frames')}</option>
+                    </select>
+                  </label>
+                  <label>
+                    {t('Tags')}
+                    <select
+                      value={tagFilter}
+                      onChange={(event) => onTagFilterChange(Number(event.target.value))}
+                    >
+                      <option value={0}>{t('All tags')}</option>
+                      {tags.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t('Source')}
+                    <select
+                      data-testid="asset-filter-source"
+                      value={sourceFilter}
+                      onChange={(event) =>
+                        onSourceFilterChange(event.target.value as AssetSourceFilter)
+                      }
+                    >
+                      <option value="all">{t('All asset sources')}</option>
+                      <option value="image_search">{t('Image index')}</option>
+                      <option value="manual">{t('Manual import')}</option>
+                    </select>
+                  </label>
+                  <label>
+                    {t('Modified from')}
+                    <input
+                      data-testid="asset-filter-modified-after"
+                      type="date"
+                      value={dateInputValue(modifiedAfter)}
+                      onChange={(event) =>
+                        onModifiedAfterChange(startOfLocalDate(event.target.value))
+                      }
+                    />
+                  </label>
+                  <label>
+                    {t('Modified to')}
+                    <input
+                      data-testid="asset-filter-modified-before"
+                      type="date"
+                      value={dateInputValue(modifiedBefore)}
+                      onChange={(event) =>
+                        onModifiedBeforeChange(endOfLocalDate(event.target.value))
+                      }
+                    />
+                  </label>
+                  <label>
+                    {t('Rating')}
+                    <select
+                      data-testid="asset-filter-rating"
+                      value={minRating}
+                      onChange={(event) => onMinRatingChange(Number(event.target.value))}
+                    >
+                      <option value={0}>{t('Any rating')}</option>
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <option key={rating} value={rating}>
+                          {rating}+ ★
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="asset-library-check">
+                    <input
+                      type="checkbox"
+                      checked={unclassifiedOnly}
+                      onChange={(event) => onUnclassifiedChange(event.target.checked)}
+                    />
+                    {t('Unclassified')}
+                  </label>
+                  <label className="asset-library-check">
+                    <input
+                      type="checkbox"
+                      checked={archivedOnly}
+                      onChange={(event) => onArchivedChange(event.target.checked)}
+                    />
+                    {t('Removed')} ({formatAssetLibraryNumber(stats.archivedAssets)})
+                  </label>
+                </div>
+                <details className="workspace-disclosure" data-testid="asset-library-albums">
+                  <summary>{t('Saved filters')}</summary>
+                  <AssetSmartAlbumBar
+                    albums={smartAlbums}
+                    selectedId={selectedSmartAlbumId}
+                    draftName={smartAlbumName}
+                    busy={smartAlbumBusy}
+                    onSelect={onSmartAlbumSelect}
+                    onDraftNameChange={onSmartAlbumNameChange}
+                    onCreate={onSmartAlbumCreate}
+                    onUpdate={onSmartAlbumUpdate}
+                    onDelete={onSmartAlbumDelete}
                   />
-                </label>
-                <label>
-                  {t('Modified to')}
-                  <input
-                    data-testid="asset-filter-modified-before"
-                    type="date"
-                    value={dateInputValue(modifiedBefore)}
-                    onChange={(event) => onModifiedBeforeChange(endOfLocalDate(event.target.value))}
-                  />
-                </label>
-                <label>
-                  {t('Rating')}
-                  <select
-                    data-testid="asset-filter-rating"
-                    value={minRating}
-                    onChange={(event) => onMinRatingChange(Number(event.target.value))}
-                  >
-                    <option value={0}>{t('Any rating')}</option>
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <option key={rating} value={rating}>
-                        {rating}+ ★
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="asset-library-check">
-                  <input
-                    type="checkbox"
-                    checked={unclassifiedOnly}
-                    onChange={(event) => onUnclassifiedChange(event.target.checked)}
-                  />
-                  {t('Unclassified')}
-                </label>
-                <label className="asset-library-check">
-                  <input
-                    type="checkbox"
-                    checked={archivedOnly}
-                    onChange={(event) => onArchivedChange(event.target.checked)}
-                  />
-                  {t('Removed')} ({formatAssetLibraryNumber(stats.archivedAssets)})
-                </label>
+                </details>
               </div>
-              <details className="workspace-disclosure" data-testid="asset-library-albums">
-                <summary>{t('Saved filters')}</summary>
-                <AssetSmartAlbumBar
-                  albums={smartAlbums}
-                  selectedId={selectedSmartAlbumId}
-                  draftName={smartAlbumName}
-                  busy={smartAlbumBusy}
-                  onSelect={onSmartAlbumSelect}
-                  onDraftNameChange={onSmartAlbumNameChange}
-                  onCreate={onSmartAlbumCreate}
-                  onUpdate={onSmartAlbumUpdate}
-                  onDelete={onSmartAlbumDelete}
-                />
-              </details>
-            </details>
-            {(activeFilters > 0 || query) && (
-              <button data-testid="asset-clear-filters" onClick={resetFilters}>
-                {t('Clear filters')}
-              </button>
-            )}
+              <footer className="asset-library-drawer-footer">
+                <button data-testid="asset-drawer-clear-filters" onClick={resetFilters}>
+                  {t('Clear filters')}
+                </button>
+                <button
+                  className="workspace-button-primary"
+                  onClick={() => filtersRef.current?.close()}
+                >
+                  {t('Close')}
+                </button>
+              </footer>
+            </dialog>
           </div>
           <div className="asset-library-results-bar">
             <span aria-live="polite">
@@ -519,7 +550,16 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                 ? t('Loading')
                 : t('{count} assets', { count: formatAssetLibraryNumber(total) })}
             </span>
+            {(activeFilters > 0 || query) && (
+              <button data-testid="asset-clear-filters" onClick={resetFilters}>
+                {t('Clear filters')}
+              </button>
+            )}
+            <button onClick={onSelectPage} disabled={assets.length === 0}>
+              {t('Select page')}
+            </button>
             <div className="asset-library-results-options">
+              <span>{t('Sort')}</span>
               <select
                 aria-label={t('Sort')}
                 value={sort}
@@ -529,28 +569,19 @@ const AssetLibraryAssetsView: React.FC<AssetLibraryAssetsViewProps> = ({
                 <option value="name_asc">{t('Name')}</option>
                 <option value="size_desc">{t('Size')}</option>
               </select>
-              <details
-                className="workspace-disclosure asset-library-display-options"
-                data-testid="asset-library-display-options"
-              >
-                <summary>{t('Display options')}</summary>
-                <div className="asset-library-display-fields">
-                  {' '}
-                  <label className="asset-library-thumbnail-size">
-                    {t('Thumbnail size')}
-                    <input
-                      data-testid="asset-thumbnail-size"
-                      type="range"
-                      min={180}
-                      max={320}
-                      step={20}
-                      value={thumbnailWidth}
-                      aria-label={t('Thumbnail size')}
-                      onChange={(event) => setThumbnailWidth(Number(event.target.value))}
-                    />
-                  </label>
-                </div>
-              </details>
+              <label className="asset-library-thumbnail-size">
+                {t('Thumbnail size')}
+                <input
+                  data-testid="asset-thumbnail-size"
+                  type="range"
+                  min={180}
+                  max={320}
+                  step={20}
+                  value={thumbnailWidth}
+                  aria-label={t('Thumbnail size')}
+                  onChange={(event) => setThumbnailWidth(Number(event.target.value))}
+                />
+              </label>
             </div>
           </div>
           {selectedIds.size > 0 && (

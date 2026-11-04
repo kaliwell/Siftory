@@ -1301,7 +1301,7 @@ export function configureUiSmoke(
                 assetBackups?.click()
                 await new Promise((resolve) => setTimeout(resolve, 100))
               }
-              byPanel('neko-search', 'asset-view-library')?.click()
+              byPanel('neko-search', 'asset-mode-assets')?.click()
               await new Promise((resolve) => setTimeout(resolve, 50))
               byPanel('neko-search', 'asset-mode-categories')?.click()
               await new Promise((resolve) => setTimeout(resolve, 120))
@@ -1352,7 +1352,7 @@ export function configureUiSmoke(
                 ['media-search', 'search-mode-simple'],
                 ['media-search', 'search-mode-advanced'],
                 ['media-search', 'search-prepare-library'],
-                ['neko-search', 'asset-view-library'],
+                ['neko-search', 'asset-mode-assets'],
                 ['neko-search', 'asset-view-review'],
                 ['neko-search', 'asset-view-clusters'],
                 ['neko-search', 'asset-backups-toggle'],
@@ -1581,7 +1581,7 @@ export function configureUiSmoke(
               select?.dispatchEvent(new Event('change', { bubbles: true }))
             }
             const mergedNavigation = Boolean(
-              byTestId('asset-view-library') && byTestId('asset-view-review'),
+              byTestId('asset-mode-assets') && byTestId('asset-view-review'),
             )
             byTestId('asset-mode-categories')?.click()
             await new Promise((resolve) => setTimeout(resolve, 100))
@@ -1647,7 +1647,7 @@ export function configureUiSmoke(
               Array.from(clusterCategorySelect?.querySelectorAll('option') || []).some(
                 (option) => option.value === '0',
               )
-            byTestId('asset-view-library')?.click()
+            byTestId('asset-mode-assets')?.click()
             await new Promise((resolve) => setTimeout(resolve, 50))
             byTestId('asset-mode-assets')?.click()
             await new Promise((resolve) => setTimeout(resolve, 80))

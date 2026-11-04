@@ -1,13 +1,12 @@
+import { useId, useRef } from 'react'
 import type {
   AssetFeedbackModelStatus,
   AssetLibraryStats,
   AssetLibraryTaskProgress,
 } from '../../../shared/ipc-contract'
 import {
-  assetLibraryButtonStyle as buttonStyle,
   formatAssetLibraryDuration as formatDuration,
   formatAssetLibraryNumber as formatNumber,
-  type AssetLibraryViewMode,
 } from './assetLibraryViewUtils'
 import { useTranslation } from '../../i18n/useTranslation'
 
@@ -15,15 +14,11 @@ interface Props {
   activeTask: boolean
   backupOpen: boolean
   backupCount: number
-  view: AssetLibraryViewMode
   stats: AssetLibraryStats
   feedbackStatus: AssetFeedbackModelStatus
   task: AssetLibraryTaskProgress | null
   error: string
   collectionsOpen: boolean
-  categoriesOpen: boolean
-  onCollections: () => void
-  onCategories: () => void
   onSync: () => void
   onRefresh: () => void
   onToggleBackups: () => void
@@ -31,22 +26,17 @@ interface Props {
   onRebuildLearning: () => void
   onLearningEnabledChange: (enabled: boolean) => void
   onStop: () => void
-  onViewChange: (view: AssetLibraryViewMode) => void
 }
 
 export default function AssetLibraryHeader({
   activeTask,
   backupOpen,
   backupCount,
-  view,
   stats,
   feedbackStatus,
   task,
   error,
   collectionsOpen,
-  categoriesOpen,
-  onCollections,
-  onCategories,
   onSync,
   onRefresh,
   onToggleBackups,
@@ -54,36 +44,18 @@ export default function AssetLibraryHeader({
   onRebuildLearning,
   onLearningEnabledChange,
   onStop,
-  onViewChange,
 }: Props) {
   const { t } = useTranslation()
-  const chooseView = (next: AssetLibraryViewMode) => {
-    onViewChange(next)
+  const toolsRef = useRef<HTMLDialogElement>(null)
+  const toolsId = useId()
+  const navigate = (action: () => void) => {
+    toolsRef.current?.close()
+    action()
   }
   return (
     <>
       <div className="asset-library-header-actions">
         <div className="asset-library-topbar">
-          <nav className="asset-library-primary-tabs" aria-label={t('Library views')}>
-            <button
-              data-testid="asset-mode-assets"
-              aria-current={
-                !collectionsOpen && view === 'library' && !categoriesOpen && !backupOpen
-                  ? 'page'
-                  : undefined
-              }
-              onClick={() => onViewChange('library')}
-            >
-              {t('All assets')}
-            </button>
-            <button
-              data-testid="asset-library-collections"
-              aria-current={collectionsOpen && !backupOpen ? 'page' : undefined}
-              onClick={onCollections}
-            >
-              {t('Collections')}
-            </button>
-          </nav>
           <div className="asset-library-topbar-actions" hidden={collectionsOpen}>
             <button
               data-testid="asset-library-sync"
@@ -96,137 +68,140 @@ export default function AssetLibraryHeader({
             <button onClick={onRefresh}>{t('Refresh')}</button>
           </div>
         </div>
-        <details
-          className="workspace-disclosure asset-library-tools"
-          data-testid="asset-library-tools"
+        <button
+          className="asset-library-tools-trigger"
+          data-testid="asset-library-tools-toggle"
+          aria-haspopup="dialog"
+          aria-controls={toolsId}
+          onClick={() => toolsRef.current?.showModal()}
         >
-          <summary>{t('Organize and maintain')}</summary>
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              data-testid="asset-backups-toggle"
-              onClick={onToggleBackups}
-              style={{
-                ...buttonStyle,
-                color: backupOpen ? 'rgb(85,220,160)' : undefined,
-                borderColor: backupOpen ? 'rgb(85,220,160)' : undefined,
-              }}
-            >
-              {t('Backups')} ({formatNumber(backupCount)})
+          {t('Organize and maintain')}
+        </button>
+        <dialog
+          ref={toolsRef}
+          id={toolsId}
+          className="asset-library-filter-drawer asset-library-tools-drawer"
+          data-testid="asset-library-tools"
+          aria-label={t('Organize and maintain')}
+        >
+          <header className="asset-library-drawer-header">
+            <strong>{t('Organize and maintain')}</strong>
+            <button aria-label={t('Close')} onClick={() => toolsRef.current?.close()}>
+              ×
             </button>
-            <button
-              onClick={onExportReport}
-              title={t(
-                'Export a library report (stats, categories, tags, deletion history) as JSON',
-              )}
-              style={buttonStyle}
-            >
-              {t('Report')}
-            </button>
-            <button
-              disabled={activeTask || feedbackStatus.state === 'building'}
-              onClick={onRebuildLearning}
-              style={buttonStyle}
-              title={t(
-                'Rebuild the local search model from accepted, rejected, and manual classifications',
-              )}
-            >
-              {t('Build Search Learning')}
-            </button>
-            <label
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9 }}
-              title={t(
-                'Apply accepted and rejected NekoSearch samples to Image Search semantic ranking',
-              )}
-            >
-              <input
-                type="checkbox"
-                checked={feedbackStatus.enabled}
-                disabled={activeTask}
-                onChange={(event) => onLearningEnabledChange(event.target.checked)}
-              />
-              {t('Learning')}
-            </label>
-            <span style={{ fontSize: 9, opacity: 0.65 }}>
-              {t('Assets')} {formatNumber(stats.totalAssets)} / {t('Classified')}{' '}
-              {formatNumber(stats.classifiedAssets)} / {t('Unclassified')}{' '}
-              {formatNumber(stats.unclassifiedAssets)} / {t('Suggestions')}{' '}
-              {formatNumber(stats.suggestedCount)} / {t('Removed')}{' '}
-              {formatNumber(stats.archivedAssets)}
-            </span>
-            {stats.storageState !== 'ready' && (
-              <span
-                style={{ fontSize: 9, color: 'rgb(255,105,105)' }}
-                title={stats.storageError || t('Asset metadata storage requires repair')}
-              >
-                {t('Data')} {t(stats.storageState === 'read_only' ? 'read-only' : 'unavailable')}
-                {stats.storageCorruptRows > 0
-                  ? ` (${t('{count} damaged rows', {
-                      count: formatNumber(stats.storageCorruptRows),
-                    })})`
-                  : ''}
-              </span>
-            )}
-            <span
-              style={{
-                fontSize: 9,
-                color:
-                  feedbackStatus.state === 'ready'
-                    ? 'rgb(75,220,155)'
-                    : feedbackStatus.state === 'error'
-                      ? 'rgb(255,105,105)'
-                      : 'rgb(235,185,90)',
-              }}
-              title={
-                feedbackStatus.error ||
-                feedbackStatus.dirtyReason ||
-                t('{positive} positive and {negative} negative prototypes', {
-                  positive: feedbackStatus.positivePrototypeCount,
-                  negative: feedbackStatus.negativePrototypeCount,
-                })
-              }
-            >
-              {t('Search learning')}: {t(feedbackStatus.enabled ? feedbackStatus.state : 'off')}{' '}
-              {t('Revision {built}/{current}', {
-                built: feedbackStatus.builtRevision,
-                current: feedbackStatus.revision,
-              })}{' '}
-              ({t('{count} targets', { count: feedbackStatus.targetCount })})
-            </span>
-          </div>
-          <div className="asset-library-advanced-views">
-            <button data-testid="asset-mode-categories" onClick={onCategories}>
-              {t('Categories & Tags')}
-            </button>
-            <div
-              style={{
-                display: 'flex',
-                gap: 3,
-                borderBottom: '1px solid rgba(var(--date),0.18)',
-                paddingBottom: 4,
-              }}
-            >
+          </header>
+          <div className="asset-library-drawer-body">
+            <dl className="asset-library-maintenance-stats">
               {(
                 [
-                  ['library', 'Library'],
-                  ['review', 'Review'],
-                  ['clusters', `${t('Clusters')} (${formatNumber(stats.clusterCount)})`],
-                ] as Array<[AssetLibraryViewMode, string]>
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  data-testid={`asset-view-${id}`}
-                  onClick={() => chooseView(id)}
-                  style={{
-                    ...buttonStyle,
-                    background: view === id ? 'rgba(70,210,155,0.16)' : undefined,
-                  }}
-                >
-                  {t(label)}
-                </button>
+                  ['Assets', stats.totalAssets],
+                  ['Classified', stats.classifiedAssets],
+                  ['Unclassified', stats.unclassifiedAssets],
+                  ['Suggestions', stats.suggestedCount],
+                  ['Removed', stats.archivedAssets],
+                ] as Array<[string, number]>
+              ).map(([label, count]) => (
+                <div key={label}>
+                  <dt>{t(label)}</dt>
+                  <dd>{formatNumber(count)}</dd>
+                </div>
               ))}
-            </div>
+            </dl>
+
+            <section className="asset-library-tool-section">
+              <h3>
+                {t('Backups')} · {t('Report')}
+              </h3>
+              <div className="asset-library-tool-grid">
+                <button
+                  data-testid="asset-backups-toggle"
+                  aria-pressed={backupOpen}
+                  onClick={() => navigate(onToggleBackups)}
+                >
+                  {t('Backups')} ({formatNumber(backupCount)})
+                </button>
+                <button
+                  onClick={onExportReport}
+                  title={t(
+                    'Export a library report (stats, categories, tags, deletion history) as JSON',
+                  )}
+                >
+                  {t('Report')}
+                </button>
+              </div>
+              {stats.storageState !== 'ready' && (
+                <p
+                  role="alert"
+                  className="asset-library-error"
+                  title={stats.storageError || t('Asset metadata storage requires repair')}
+                >
+                  {t('Asset metadata storage requires repair')}
+                  {stats.storageCorruptRows > 0
+                    ? ` (${t('{count} damaged rows', {
+                        count: formatNumber(stats.storageCorruptRows),
+                      })})`
+                    : ''}
+                </p>
+              )}
+            </section>
+            <section className="asset-library-tool-section">
+              <div className="asset-library-tool-heading">
+                <h3>{t('Search learning')}</h3>
+                <label
+                  className="asset-library-check"
+                  title={t(
+                    'Apply accepted and rejected NekoSearch samples to Image Search semantic ranking',
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={feedbackStatus.enabled}
+                    disabled={activeTask}
+                    onChange={(event) => onLearningEnabledChange(event.target.checked)}
+                  />
+                  {t('Learning')}
+                </label>
+              </div>
+              <div
+                className="asset-library-learning-status"
+                role="status"
+                data-state={feedbackStatus.enabled ? feedbackStatus.state : 'off'}
+              >
+                <strong>{t(feedbackStatus.enabled ? feedbackStatus.state : 'off')}</strong>
+                <span>
+                  {t('Revision {built}/{current}', {
+                    built: feedbackStatus.builtRevision,
+                    current: feedbackStatus.revision,
+                  })}{' '}
+                  · {t('{count} targets', { count: feedbackStatus.targetCount })}
+                </span>
+                {(feedbackStatus.error || feedbackStatus.dirtyReason) && (
+                  <span>{feedbackStatus.error || feedbackStatus.dirtyReason}</span>
+                )}
+                <small>
+                  {t('{positive} positive and {negative} negative prototypes', {
+                    positive: feedbackStatus.positivePrototypeCount,
+                    negative: feedbackStatus.negativePrototypeCount,
+                  })}
+                </small>
+              </div>
+              <button
+                className="asset-library-rebuild-learning"
+                disabled={activeTask || feedbackStatus.state === 'building'}
+                onClick={onRebuildLearning}
+                title={t(
+                  'Rebuild the local search model from accepted, rejected, and manual classifications',
+                )}
+              >
+                {t('Build Search Learning')}
+              </button>
+              {activeTask && <button onClick={onStop}>{t('Stop')}</button>}
+            </section>
           </div>
-        </details>
+          <footer className="asset-library-drawer-footer">
+            <button onClick={() => toolsRef.current?.close()}>{t('Close')}</button>
+          </footer>
+        </dialog>
       </div>
 
       {activeTask && (

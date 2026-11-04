@@ -196,7 +196,6 @@ test('UI smoke interactions use stable test ids instead of translated labels', (
     'search-mode-simple',
     'search-mode-advanced',
     'search-prepare-library',
-    'asset-view-library',
     'asset-view-review',
     'asset-view-clusters',
     'asset-mode-assets',

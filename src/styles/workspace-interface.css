@@ -461,6 +461,208 @@
   width: 100%;
   max-width: 1120px;
   margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.workspace-maintenance-intro {
+  margin: 0;
+  color: rgb(var(--color-text-muted));
+  font-size: 13px;
+  line-height: 1.6;
+}
+.workspace-maintenance-page .search-control-section__body {
+  padding: 18px 20px;
+}
+.workspace-maintenance-page button:not(.search-control-section__header),
+.workspace-maintenance-page input:not([type='checkbox']),
+.workspace-maintenance-page select {
+  min-height: 34px;
+  border-radius: 8px;
+  font-size: 12px !important;
+}
+.workspace-maintenance-page button:not(.search-control-section__header) {
+  padding: 6px 10px;
+}
+.workspace-maintenance-page .maintenance-subsection {
+  min-width: 0;
+  padding: 0 0 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--ui-border) !important;
+  border-radius: 0 !important;
+  background: transparent;
+}
+.workspace-maintenance-page .maintenance-subsection > summary {
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgb(var(--color-text));
+}
+.workspace-maintenance-page .maintenance-subsection > summary::marker {
+  color: rgb(var(--color-text-muted));
+}
+.workspace-maintenance-page .maintenance-subsection > summary > span {
+  float: right;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgb(var(--color-text-muted));
+}
+.workspace-maintenance-page .maintenance-subsection[open] > summary {
+  margin-bottom: 10px;
+}
+.workspace-maintenance-page .image-search-sources-content__header > span:first-child,
+.workspace-maintenance-page .asset-collection-toolbar > strong,
+.workspace-maintenance-page .asset-collection-toolbar > span:last-child,
+.workspace-maintenance-page [data-testid='storage-location-settings'] > p:first-of-type,
+.workspace-maintenance-page [data-testid='image-search-data-overview'] > div:first-child > strong {
+  display: none;
+}
+.workspace-maintenance-page .image-search-sources-content__body {
+  display: grid;
+  gap: 12px;
+}
+.workspace-maintenance-page .discovery-source-form {
+  display: grid !important;
+  grid-template-columns: 145px 160px minmax(100px, 1fr) auto;
+  gap: 8px;
+  padding: 0;
+}
+.workspace-maintenance-page .discovery-source-form.is-sftp {
+  grid-template-columns: 130px 140px 150px minmax(100px, 1fr) auto;
+}
+.workspace-maintenance-page .discovery-source-form input {
+  width: 100% !important;
+  min-width: 0;
+}
+.workspace-maintenance-page .asset-collection-toolbar {
+  display: grid !important;
+  grid-template-columns: minmax(130px, 1fr) minmax(160px, 1.2fr) repeat(5, auto);
+  gap: 8px !important;
+}
+.workspace-maintenance-page .asset-collection-toolbar input,
+.workspace-maintenance-page .asset-collection-toolbar select {
+  min-width: 0;
+  width: 100% !important;
+  max-width: none !important;
+}
+.workspace-maintenance-page .source-drive-group {
+  margin: 0;
+}
+.focused-workspace .workspace-maintenance-page [data-testid='image-search-data-overview'] {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  gap: 16px !important;
+}
+.workspace-maintenance-page .index-overview-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+.workspace-maintenance-page .index-overview-metrics strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 24px !important;
+  font-weight: 600;
+}
+.workspace-maintenance-page .workspace-maintenance-explanation {
+  margin: 0;
+  line-height: 1.7;
+  font-size: 12px;
+}
+.workspace-maintenance-page .workspace-index-diagnostics,
+.workspace-maintenance-page .workspace-advanced-maintenance {
+  border-top: 1px solid var(--ui-border);
+  padding-top: 14px;
+}
+.workspace-maintenance-page .workspace-index-diagnostics > summary,
+.workspace-maintenance-page .workspace-advanced-maintenance > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.workspace-maintenance-page .maintenance-index-table {
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+}
+.workspace-maintenance-page .maintenance-index-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgb(var(--color-surface));
+}
+.workspace-maintenance-page .maintenance-index-table th,
+.workspace-maintenance-page .maintenance-index-table td {
+  padding: 8px 10px !important;
+  white-space: nowrap;
+}
+.workspace-maintenance-page .maintenance-index-record {
+  min-height: 58px !important;
+  padding: 10px 12px !important;
+  gap: 12px !important;
+}
+.workspace-maintenance-page .maintenance-index-record > span:nth-child(2) {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.workspace-maintenance-page .maintenance-index-record strong,
+.workspace-maintenance-page .maintenance-index-record small,
+.workspace-maintenance-page .maintenance-selected-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal !important;
+}
+.workspace-maintenance-page .maintenance-index-record small,
+.workspace-maintenance-page .maintenance-index-record > span:last-child {
+  font-size: 11px;
+  opacity: 0.65;
+}
+.workspace-maintenance-page .maintenance-thumbnail-tools > div {
+  border: 0 !important;
+  gap: 12px !important;
+}
+@media (max-width: 1000px) {
+  .workspace-maintenance-page .discovery-source-form,
+  .workspace-maintenance-page .discovery-source-form.is-sftp {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .workspace-maintenance-page .discovery-source-root {
+    grid-column: 1 / -1;
+  }
+  .workspace-maintenance-page .asset-collection-toolbar {
+    display: flex !important;
+    flex-wrap: wrap;
+  }
+  .workspace-maintenance-page .asset-collection-toolbar input,
+  .workspace-maintenance-page .asset-collection-toolbar select {
+    flex: 1 1 170px;
+    width: auto !important;
+  }
+  .workspace-maintenance-page .index-overview-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+.workspace-maintenance-page .search-control-section {
+  margin: 0;
+}
+.workspace-maintenance-page .automatic-maintenance-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.workspace-maintenance-page [data-testid='storage-location-settings'] > h3,
+.workspace-maintenance-page .automatic-maintenance-heading h3,
+.workspace-maintenance-page .automatic-maintenance-heading h3 + p {
+  display: none;
+}
+.focused-workspace .workspace-maintenance-page .image-search-data-manager__body {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
 }
 .workspace-info-banner {
   margin: 0 0 20px;

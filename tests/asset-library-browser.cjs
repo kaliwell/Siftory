@@ -184,10 +184,10 @@ async function run() {
     }
     await page.locator('.asset-library-card').first().waitFor()
     assert.equal(await page.getByTestId('asset-library-selection-bar').count(), 0)
-    assert.equal(await page.getByTestId('asset-view-review').isVisible(), false)
+    assert.equal(await page.getByTestId('asset-view-review').isVisible(), true)
     assert.equal(await page.getByTestId('asset-filter-source').isVisible(), false)
     assert.equal(await page.getByTestId('asset-filter-category').isVisible(), false)
-    assert.equal(await page.getByTestId('asset-thumbnail-size').isVisible(), false)
+    assert.equal(await page.getByTestId('asset-thumbnail-size').isVisible(), true)
     assert.equal(await page.locator('.asset-library-shell').getAttribute('data-layout'), 'simple')
     for (const mode of ['dark', 'light']) {
       await page.evaluate(
@@ -211,6 +211,8 @@ async function run() {
           const bounds = await card.boundingBox()
           const actions = await card.locator('.asset-library-card-actions').boundingBox()
           assert.ok(actions.y + actions.height <= bounds.y + bounds.height + 1)
+          const caption = await card.locator('.asset-library-card-caption').boundingBox()
+          assert.ok(caption.height >= 18, 'file names remain visible on starred cards')
         }
       }
     }
@@ -219,22 +221,31 @@ async function run() {
     await page.getByTestId('asset-filter-query').fill('产品设计')
     await page.waitForFunction(() => document.querySelectorAll('.asset-library-card').length === 6)
     await page.getByTestId('asset-clear-filters').click()
-    await page.getByTestId('asset-library-filters').locator(':scope > summary').click()
+    const triggerBefore = await page.getByTestId('asset-library-filter-toggle').boundingBox()
+    const galleryBefore = await page.locator('.asset-library-gallery').boundingBox()
+    await page.getByTestId('asset-library-filter-toggle').click()
+    assert.deepEqual(await page.locator('.asset-library-gallery').boundingBox(), galleryBefore)
     await page.getByTestId('asset-filter-category').selectOption('2')
     await page.waitForFunction(() =>
       window.__workspaceTest.calls.some(
         (c) => c.method === 'assetLibrary.listAssets' && c.args[0].categoryId === 2,
       ),
     )
+    await page.keyboard.press('Escape')
+    assert.deepEqual(
+      await page.getByTestId('asset-library-filter-toggle').boundingBox(),
+      triggerBefore,
+    )
     await page.getByTestId('asset-filter-favorite').check()
     await page.waitForFunction(() => document.querySelectorAll('.asset-library-card').length === 2)
     await page.getByTestId('asset-clear-filters').click()
     await page.waitForFunction(() => document.querySelectorAll('.asset-library-card').length >= 4)
+    await page.getByTestId('asset-library-filter-toggle').click()
     await page.getByTestId('asset-library-albums').locator('summary').click()
     for (const height of [900, 1400]) {
       await page.setViewportSize({ width: 1920, height })
       await capture(`library-expanded-filters-${height}`)
-      const layout = await page.locator('.asset-library-browser-controls').evaluate((controls) => {
+      const layout = await page.getByTestId('asset-library-filters').evaluate((controls) => {
         const albums = controls.querySelector('[data-testid="asset-smart-album-bar"]')
         return {
           overflow: controls.scrollWidth - controls.clientWidth,
@@ -243,7 +254,8 @@ async function run() {
         }
       })
       assert.ok(layout.overflow <= 1, 'expanded controls do not create horizontal scrolling')
-      assert.ok(layout.albumsInside, 'saved filters fit the full-width filter panel')
+      assert.ok(layout.albumsInside, 'saved filters fit the filter drawer')
+      assert.ok((await page.getByTestId('asset-filter-category').boundingBox()).width > 300)
       assert.ok((await page.locator('.asset-library-gallery').boundingBox()).height > 120)
     }
     await page.setViewportSize({ width: 1320, height: 900 })
@@ -251,8 +263,8 @@ async function run() {
     await capture('library-more-filters')
     await page.getByTestId('asset-filter-source').selectOption('manual')
     await page.getByTestId('asset-library-empty').waitFor()
-    await page.getByTestId('asset-clear-filters').click()
-    await page.getByTestId('asset-library-filters').locator(':scope > summary').click()
+    await page.getByTestId('asset-drawer-clear-filters').click()
+    await page.keyboard.press('Escape')
     await page.locator('.asset-library-card').first().waitFor()
     await page.getByTestId('asset-select').nth(0).check()
     await page.getByTestId('asset-select').nth(1).check()
@@ -325,7 +337,16 @@ async function run() {
     await shell.locator('form [role="alert"]').waitFor()
     await shell.locator('form').getByRole('button', { name: '取消', exact: true }).click()
     await page.getByTestId('asset-mode-assets').click()
-    await page.getByTestId('asset-library-tools').locator('summary').click()
+    const toolsBefore = await page.getByTestId('asset-library-tools-toggle').boundingBox()
+    const toolsGalleryBefore = await page.locator('.asset-library-gallery').boundingBox()
+    await page.getByTestId('asset-library-tools-toggle').click()
+    assert.deepEqual(await page.locator('.asset-library-gallery').boundingBox(), toolsGalleryBefore)
+    await capture('library-organize-drawer')
+    await page.keyboard.press('Escape')
+    assert.deepEqual(
+      await page.getByTestId('asset-library-tools-toggle').boundingBox(),
+      toolsBefore,
+    )
     await page.getByTestId('asset-mode-categories').click()
     await page.getByTestId('asset-new-category-name').waitFor()
     await page.getByTestId('asset-view-review').click()
@@ -337,7 +358,6 @@ async function run() {
     )
     await capture('library-sample-search-sidebar')
     await page.getByTestId('asset-mode-assets').click()
-    await page.getByTestId('asset-library-tools').locator('summary').click()
     await page.evaluate(() => {
       window.__libraryFixture.collections.splice(0)
       window.dispatchEvent(new Event('asset-collections-changed'))
