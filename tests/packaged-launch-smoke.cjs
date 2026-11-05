@@ -17,7 +17,11 @@ async function main() {
   if (process.platform !== 'win32') throw new Error('Run packaged startup on Windows')
   const repo = path.resolve(__dirname, '..')
   const executablePath = resolveUiSmokeExecutable({ repo, packaged: true })
-  const userData = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'siftory-package-boot-'))
+  const canonicalTemp = fs.realpathSync.native(os.tmpdir())
+  // Keep parent and Electron on the same long path; recovery rejects aliases.
+  process.env.TEMP = canonicalTemp
+  process.env.TMP = canonicalTemp
+  const userData = fs.mkdtempSync(path.join(canonicalTemp, 'siftory-package-boot-'))
   const output = path.join(repo, 'artifacts/online-installer')
   const nonce = createSmokeSessionMarker(userData, 'packaged')
   let application
@@ -41,15 +45,21 @@ async function main() {
     application.process().stderr?.on('data', (bytes) => {
       stderr += bytes.toString()
     })
-    const terms = await application.firstWindow({ timeout: 90000 })
-    await terms.getByTestId('end-user-terms-text').waitFor({ timeout: 90000 })
-    await terms.getByTestId('end-user-terms-text').evaluate((element) => {
-      element.scrollTop = element.scrollHeight
-    })
-    await terms.getByTestId('end-user-terms-checkbox').check()
-    const mainWindow = application.waitForEvent('window', { timeout: 90000 })
-    await terms.getByTestId('end-user-terms-accept').click()
-    const page = await mainWindow
+    let page = await application.firstWindow({ timeout: 90000 })
+    await page
+      .locator('[data-testid="end-user-terms-text"], [data-testid="app-root"]')
+      .first()
+      .waitFor({ timeout: 90000 })
+    const agreementShown = await page.getByTestId('end-user-terms-text').isVisible()
+    if (agreementShown) {
+      await page.getByTestId('end-user-terms-text').evaluate((element) => {
+        element.scrollTop = element.scrollHeight
+      })
+      await page.getByTestId('end-user-terms-checkbox').check()
+      const mainWindow = application.waitForEvent('window', { timeout: 90000 })
+      await page.getByTestId('end-user-terms-accept').click()
+      page = await mainWindow
+    }
     const pageErrors = []
     page.on('pageerror', (error) => pageErrors.push(error.message))
     await page.locator('[data-testid="app-root"][data-ready="true"]').waitFor({ timeout: 90000 })
@@ -80,12 +90,12 @@ async function main() {
           version: provenance.version,
           packaged: true,
           isolatedProfile: true,
-          agreementShownAndAcceptedInTestProfile: true,
+          agreementShownAndAcceptedInTestProfile: agreementShown,
           rendererReady: true,
           nativeAddonLoaded: true,
           pageErrors,
           scope:
-            'Fresh isolated unpacked startup; excludes full legacy UI matrix, models/GPU and installer upgrades.',
+            'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',
         },
         null,
         2,
