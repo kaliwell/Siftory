@@ -40,7 +40,8 @@ run(npmCli, ['run', 'build:native:electron'])
 run(npmCli, ['run', 'resources:verify', '--', `--profile=${profile}`])
 const prepared = preparePackageProfile(process.cwd(), profile)
 console.log(`[package-profile] ${profile}: ${prepared.configPath}`)
-run(electronBuilderCli, ['--config', prepared.configPath])
+// Publishing is a separate release step after package verification.
+run(electronBuilderCli, ['--config', prepared.configPath, '--publish', 'never'])
 run(path.join(__dirname, 'check-covered-source.cjs'), [
   '--resources',
   path.resolve(
