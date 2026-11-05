@@ -37,7 +37,23 @@ jobs:
           $installer = Join-Path $root 'Siftory-1.0.1-alpha.22-Windows-x64-Setup.exe'
           if ((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'd72d5c10f4f9a3a2ab6c3b26713114094ac2499f22747ebbb4cd9545eeb4011b') { throw 'Reviewed installer hash mismatch' }
           $seven = 'C:\Program Files\7-Zip\7z.exe'
-          & $seven x $installer "-o$root/payload" -r canvas-rust-sources.zip -y | Out-Null
+          # Slice the hash-verified embedded archive explicitly: Windows 7-Zip
+          # otherwise detects the executable stub instead of the 7z payload.
+          $archive = Join-Path $root 'reviewed-app.7z'
+          $inputFile = [IO.File]::OpenRead($installer)
+          $outputFile = [IO.File]::Create($archive)
+          try {
+            [void]$inputFile.Seek(202233, [IO.SeekOrigin]::Begin)
+            $remaining = 175581359
+            $buffer = New-Object byte[] 1048576
+            while ($remaining -gt 0) {
+              $count = $inputFile.Read($buffer, 0, [Math]::Min($buffer.Length, $remaining))
+              if ($count -eq 0) { throw 'Truncated embedded archive' }
+              $outputFile.Write($buffer, 0, $count)
+              $remaining -= $count
+            }
+          } finally { $outputFile.Dispose(); $inputFile.Dispose() }
+          & $seven x $archive "-o$root/payload" 'resources/legal/covered-source/canvas-rust-sources.zip' -y | Out-Null
           if ($LASTEXITCODE -ne 0) { throw 'Cannot extract reviewed covered source' }
           $source = @(Get-ChildItem "$root/payload" -Recurse -Filter canvas-rust-sources.zip -File)
           if ($source.Count -ne 1 -or $source[0].Length -ne 3341429) { throw 'Unexpected covered source payload' }
