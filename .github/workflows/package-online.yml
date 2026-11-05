@@ -25,6 +25,28 @@ jobs:
       - run: npm ci
       - name: Fetch the pinned online font
         run: npm run resources:fetch -- --profile=online --component=adobe-source-han-sans-cn-vf-2-005 --cache-dir=.runtime-cache
+      - name: Restore hash-pinned covered-source archive from Alpha 22
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP 'siftory-reviewed-source'
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          gh release download v1.0.1-alpha.22 --repo $env:GITHUB_REPOSITORY --pattern Siftory-1.0.1-alpha.22-Windows-x64-Setup.exe --dir $root
+          if ($LASTEXITCODE -ne 0) { throw 'Could not retrieve reviewed installer' }
+          $installer = Join-Path $root 'Siftory-1.0.1-alpha.22-Windows-x64-Setup.exe'
+          if ((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'd72d5c10f4f9a3a2ab6c3b26713114094ac2499f22747ebbb4cd9545eeb4011b') { throw 'Reviewed installer hash mismatch' }
+          $seven = 'C:\Program Files\7-Zip\7z.exe'
+          & $seven x $installer "-o$root/nsis" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot unpack reviewed installer' }
+          $archive = @(Get-ChildItem "$root/nsis" -Recurse -Filter 'app-64.7z' -File)
+          if ($archive.Count -ne 1) { throw 'Expected one reviewed x64 application archive' }
+          & $seven x $archive[0].FullName "-o$root/payload" -r canvas-rust-sources.zip -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot extract covered source' }
+          $source = @(Get-ChildItem "$root/payload" -Recurse -Filter canvas-rust-sources.zip -File)
+          if ($source.Count -ne 1 -or $source[0].Length -ne 3341429) { throw 'Unexpected covered source payload' }
+          if ((Get-FileHash $source[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne '22d7c34a95cbbc3aca6402f218fe60d6ee1b5d1fa8b55c30a0eb88448e84a5ae') { throw 'Covered source hash mismatch' }
+          Copy-Item $source[0].FullName legal/covered-source/canvas-rust-sources.zip
       - run: npm run build:native:electron
       - name: Record freshly compiled native provenance
         run: node scripts/record-native-package-build.cjs
