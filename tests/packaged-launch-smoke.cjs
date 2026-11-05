@@ -16,9 +16,7 @@ async function main() {
   if (process.platform !== 'win32') throw new Error('Run packaged startup on Windows')
   const repo = path.resolve(__dirname, '..')
   const executablePath = resolveUiSmokeExecutable({ repo, packaged: true })
-  const userData = fs.mkdtempSync(
-    path.join(fs.realpathSync.native(os.tmpdir()), 'siftory-package-boot-'),
-  )
+  const userData = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'siftory-package-boot-'))
   const output = path.join(repo, 'artifacts/online-installer')
   const nonce = createSmokeSessionMarker(userData, 'packaged')
   let application
