@@ -37,12 +37,8 @@ jobs:
           $installer = Join-Path $root 'Siftory-1.0.1-alpha.22-Windows-x64-Setup.exe'
           if ((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'd72d5c10f4f9a3a2ab6c3b26713114094ac2499f22747ebbb4cd9545eeb4011b') { throw 'Reviewed installer hash mismatch' }
           $seven = 'C:\Program Files\7-Zip\7z.exe'
-          & $seven x $installer "-o$root/nsis" -y | Out-Null
-          if ($LASTEXITCODE -ne 0) { throw 'Cannot unpack reviewed installer' }
-          $archive = @(Get-ChildItem "$root/nsis" -Recurse -Filter 'app-64.7z' -File)
-          if ($archive.Count -ne 1) { throw 'Expected one reviewed x64 application archive' }
-          & $seven x $archive[0].FullName "-o$root/payload" -r canvas-rust-sources.zip -y | Out-Null
-          if ($LASTEXITCODE -ne 0) { throw 'Cannot extract covered source' }
+          & $seven x $installer "-o$root/payload" -r canvas-rust-sources.zip -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot extract reviewed covered source' }
           $source = @(Get-ChildItem "$root/payload" -Recurse -Filter canvas-rust-sources.zip -File)
           if ($source.Count -ne 1 -or $source[0].Length -ne 3341429) { throw 'Unexpected covered source payload' }
           if ((Get-FileHash $source[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne '22d7c34a95cbbc3aca6402f218fe60d6ee1b5d1fa8b55c30a0eb88448e84a5ae') { throw 'Covered source hash mismatch' }
