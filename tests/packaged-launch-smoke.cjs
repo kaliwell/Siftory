@@ -10,6 +10,7 @@ const {
   createSmokeSpawnEnvironment,
   resolveUiSmokeExecutable,
   assertTemporaryDirectory,
+  redactSmokeText,
 } = require('./smoke-test-utils.cjs')
 
 async function main() {
@@ -21,9 +22,11 @@ async function main() {
   const nonce = createSmokeSessionMarker(userData, 'packaged')
   let application
   let stdout = ''
+  let stderr = ''
   try {
     application = await electron.launch({
       chromiumSandbox: true,
+      cwd: path.dirname(executablePath),
       executablePath,
       timeout: 90000,
       env: createSmokeSpawnEnvironment({
@@ -34,6 +37,9 @@ async function main() {
     })
     application.process().stdout?.on('data', (bytes) => {
       stdout += bytes.toString()
+    })
+    application.process().stderr?.on('data', (bytes) => {
+      stderr += bytes.toString()
     })
     const terms = await application.firstWindow({ timeout: 90000 })
     await terms.getByTestId('end-user-terms-text').waitFor({ timeout: 90000 })
@@ -88,6 +94,10 @@ async function main() {
     console.log(
       JSON.stringify({ passed: true, version: provenance.version, nativeAddonLoaded: true }),
     )
+  } catch (error) {
+    console.error(redactSmokeText(stdout.slice(-16000)))
+    console.error(redactSmokeText(stderr.slice(-16000)))
+    throw error
   } finally {
     await application?.close()
     assertTemporaryDirectory(userData)
