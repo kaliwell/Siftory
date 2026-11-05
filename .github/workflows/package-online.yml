@@ -1,0 +1,66 @@
+name: Windows online installer
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: online-installer-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      FLOATING_CLOCK_KEEP_UNPACKED: '1'
+      FLOATING_CLOCK_PACKAGE_PROFILE: online
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.19.1
+      - run: npm ci
+      - name: Fetch the pinned online font
+        run: npm run resources:fetch -- --profile=online --component=adobe-source-han-sans-cn-vf-2-005 --cache-dir=.runtime-cache
+      - run: npm run build:native:electron
+      - name: Record freshly compiled native provenance
+        run: node scripts/record-native-package-build.cjs
+      - run: node scripts/generate-third-party-components.cjs
+      - run: npm run licenses:gate -- --profile=online
+      - run: npm run build:online
+      - run: npm run smoke:packaged:resources -- --profile=online
+      - run: npm run smoke:installer:archive -- --profile=online
+      - run: npm run smoke:ui:packaged:locales
+      - name: Stage installer and verification evidence
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $installer = Get-ChildItem release -Filter '*.exe' -File | Where-Object { $_.Name -like '*Setup*' }
+          if (@($installer).Count -ne 1) { throw 'Expected one installer' }
+          $name = "Siftory-$version-Windows-x64-Setup.exe"
+          Copy-Item $installer.FullName "artifacts/online-installer/$name"
+          $hash = (Get-FileHash "artifacts/online-installer/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $name" | Set-Content artifacts/online-installer/SHA256SUMS.txt -Encoding ascii
+          Copy-Item resources/runtime-manifest.json artifacts/online-installer/runtime-manifest.json
+          Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
+          Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
+          Copy-Item docs/current/2026-11-05-alpha23-release.md artifacts/online-installer/RELEASE_NOTES.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-online-installer
+          path: artifacts/online-installer
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-package-checks
+          path: |
+            artifacts/installer-archive-smoke
+            artifacts/ui-smoke*
+            artifacts/online-installer/native-build.json
+          if-no-files-found: warn
+          retention-days: 14
