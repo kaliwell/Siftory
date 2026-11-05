@@ -71,7 +71,7 @@ test('image search controls are grouped into four readable workflow sections', (
   assert.doesNotMatch(panel, /DiscoverySourcesSection|image-search-sources-section/)
   assert.match(
     source('src/components/AppStoragePanel.tsx'),
-    /<DiscoverySourcesSection hostPanel="appStorage"\s*\/>/,
+    /<DiscoverySourcesSection hostPanel="appStorage" enabled=\{sourcesExpanded\}\s*\/>/,
   )
   assert.match(controls, /testId="image-search-library-section"/)
   assert.match(controls, /testId="image-search-query-section"/)

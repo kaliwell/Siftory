@@ -324,7 +324,7 @@
     "test:task-drawer:browser": "node tests/task-drawer-browser.cjs",
     "test:workspace-theme:browser": "node tests/workspace-theme-browser.cjs",
     "test:asset-collections:state": "node --test tests/asset-collections-refresh.test.cjs",
-    "test:desktop:browser": "npm run test:focused-workspace:browser && npm run test:modern-desktop:browser && npm run test:search-request-lifecycle:browser && npm run test:asset-library:browser",
+    "test:desktop:browser": "npm run test:focused-workspace:browser && npm run test:modern-desktop:browser && npm run test:search-request-lifecycle:browser && npm run test:asset-library:browser && node tests/source-maintenance-browser.cjs",
     "test:storage:metadata": "node --test tests/asset-library-sqlite.test.cjs"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
 // Source registration and scan status over the unified Discovery Catalog.
 // Unified querying now lives in the first-class UnifiedSearchPanel.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   DiscoveryScanStatus,
   DiscoveryProbeResult,
@@ -125,15 +125,20 @@ function resultIndexLabel(indexState: readonly string[]): string {
 interface DiscoverySourcesSectionProps {
   enableEmbeddedSearch?: boolean
   hostPanel?: 'imageSearch' | 'appStorage'
+  enabled?: boolean
 }
 
 const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   enableEmbeddedSearch = false,
   hostPanel = 'imageSearch',
+  enabled = true,
 }) => {
   const { t } = useTranslation()
-  const isVisible = useStore((state) =>
-    hostPanel === 'appStorage' ? state.showAppStorage : state.showImageSearch,
+  const isVisible = useStore(
+    (state) =>
+      enabled &&
+      state.globalVisible &&
+      (hostPanel === 'appStorage' ? state.showAppStorage : state.showImageSearch),
   )
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [sources, setSources] = useState<DiscoverySourceListItem[]>([])
@@ -164,7 +169,43 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   const [selectedResultIds, setSelectedResultIds] = useState<Set<string>>(new Set())
   const [collections, setCollections] = useState<AssetCollection[]>([])
   const [selectedCollectionId, setSelectedCollectionId] = useState(0)
-  const [collectionItems, setCollectionItems] = useState<AssetCollectionItem[]>([])
+  const [collectionSnapshot, setCollectionSnapshot] = useState<{
+    collectionId: number
+    items: AssetCollectionItem[]
+  }>({ collectionId: 0, items: [] })
+  const collectionContext = useRef({ id: selectedCollectionId, revision: 0 })
+  if (collectionContext.current.id !== selectedCollectionId) {
+    collectionContext.current = {
+      id: selectedCollectionId,
+      revision: collectionContext.current.revision + 1,
+    }
+  }
+  const collectionItems = useMemo(
+    () =>
+      collectionSnapshot.collectionId === selectedCollectionId ? collectionSnapshot.items : [],
+    [collectionSnapshot, selectedCollectionId],
+  )
+  const collectionMounted = useRef(true)
+  const loadCollectionItems = useCallback(async (collectionId: number) => {
+    if (!collectionMounted.current || collectionContext.current.id !== collectionId) return
+    const revision = ++collectionContext.current.revision
+    try {
+      const items = collectionId
+        ? await window.electronAPI.assetLibrary.listCollectionItems(collectionId)
+        : []
+      if (
+        collectionContext.current.id === collectionId &&
+        collectionContext.current.revision === revision
+      )
+        setCollectionSnapshot({ collectionId, items })
+    } catch {
+      if (
+        collectionContext.current.id === collectionId &&
+        collectionContext.current.revision === revision
+      )
+        setCollectionSnapshot({ collectionId, items: [] })
+    }
+  }, [])
   const [collectionName, setCollectionName] = useState('')
   const [collectionPending, setCollectionPending] = useState(false)
   const [resultTotal, setResultTotal] = useState(0)
@@ -176,7 +217,10 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
     ? ''
     : sources.map((source) => `${source.id}:${source.fileCount}:${source.availability}`).join('|')
 
+  const refreshing = useRef(false)
   const refresh = useCallback(async () => {
+    if (refreshing.current) return
+    refreshing.current = true
     try {
       const api = window.electronAPI.discoveryCatalog
       const [list, statusList, profiles] = await Promise.all([
@@ -189,6 +233,8 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
       setRemoteProfiles(profiles)
     } catch {
       /* catalog not initialized yet; next poll retries */
+    } finally {
+      refreshing.current = false
     }
   }, [])
 
@@ -204,15 +250,21 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
 
   useEffect(() => {
     if (!isVisible) return
-    void refresh()
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout>
+    const poll = async () => {
+      await refresh()
+      if (!cancelled) timer = setTimeout(() => void poll(), 2000)
+    }
+    void poll()
     const unsubscribe = window.electronAPI.discoveryCatalog.onScanStatusChanged((status) => {
       setStatuses((previous) => ({ ...previous, [status.sourceId]: status }))
       if (!status.running) void refresh()
     })
-    const timer = setInterval(() => void refresh(), 2000)
     return () => {
+      cancelled = true
       unsubscribe()
-      clearInterval(timer)
+      clearTimeout(timer)
     }
   }, [isVisible, refresh])
 
@@ -221,15 +273,13 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   }, [refreshCollections])
 
   useEffect(() => {
-    if (!selectedCollectionId) {
-      setCollectionItems([])
-      return
+    collectionMounted.current = true
+    void loadCollectionItems(selectedCollectionId)
+    return () => {
+      collectionMounted.current = false
+      collectionContext.current.revision++
     }
-    void window.electronAPI.assetLibrary
-      .listCollectionItems(selectedCollectionId)
-      .then(setCollectionItems)
-      .catch(() => setCollectionItems([]))
-  }, [selectedCollectionId])
+  }, [selectedCollectionId, loadCollectionItems])
 
   useEffect(() => {
     const visibleIds = new Set(results.map((item) => item.fileEntryId))
@@ -512,7 +562,11 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
     setCollectionPending(true)
     try {
       await window.electronAPI.assetLibrary.deleteCollection(selectedCollectionId)
-      setCollectionItems([])
+      setCollectionSnapshot((current) =>
+        current.collectionId === selectedCollectionId
+          ? { collectionId: selectedCollectionId, items: [] }
+          : current,
+      )
       await refreshCollections()
       notifyAssetCollectionsChanged()
     } finally {
@@ -565,16 +619,14 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
           selectedCollectionId,
           collectionInputFromResult(item),
         )
-        setCollectionItems(
-          await window.electronAPI.assetLibrary.listCollectionItems(selectedCollectionId),
-        )
+        await loadCollectionItems(selectedCollectionId)
       } catch (requestError) {
         setError(requestError instanceof Error ? requestError.message : t('The operation failed.'))
       } finally {
         setCollectionPending(false)
       }
     },
-    [selectedCollectionId, t],
+    [selectedCollectionId, loadCollectionItems, t],
   )
 
   const handleCollectSelected = useCallback(async () => {
@@ -587,21 +639,47 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
         selectedCollectionId,
         selected.map(collectionInputFromResult),
       )
-      setCollectionItems(
-        await window.electronAPI.assetLibrary.listCollectionItems(selectedCollectionId),
-      )
+      await loadCollectionItems(selectedCollectionId)
       setSelectedResultIds(new Set())
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : t('The operation failed.'))
     } finally {
       setCollectionPending(false)
     }
-  }, [results, selectedCollectionId, selectedResultIds, t])
+  }, [results, selectedCollectionId, selectedResultIds, loadCollectionItems, t])
 
-  const handleRemoveCollected = useCallback(async (id: number) => {
-    await window.electronAPI.assetLibrary.removeCollectionItem(id)
-    setCollectionItems((items) => items.filter((item) => item.id !== id))
-  }, [])
+  const removingItems = useRef(new Set<number>())
+  const handleRemoveCollected = useCallback(
+    async (id: number) => {
+      const collectionId = selectedCollectionId
+      if (
+        collectionContext.current.id !== collectionId ||
+        !collectionItems.some((item) => item.id === id) ||
+        removingItems.current.has(id)
+      )
+        return
+      removingItems.current.add(id)
+      setError(null)
+      try {
+        const result = await window.electronAPI.assetLibrary.removeCollectionItem(id)
+        if (!result.ok) throw new Error(result.error || t('The operation failed.'))
+        setCollectionSnapshot((current) =>
+          current.collectionId === collectionId
+            ? { ...current, items: current.items.filter((item) => item.id !== id) }
+            : current,
+        )
+        await loadCollectionItems(collectionId)
+      } catch (requestError) {
+        if (collectionContext.current.id === collectionId)
+          setError(
+            requestError instanceof Error ? requestError.message : t('The operation failed.'),
+          )
+      } finally {
+        removingItems.current.delete(id)
+      }
+    },
+    [selectedCollectionId, collectionItems, loadCollectionItems, t],
+  )
 
   const handleOpenCollected = useCallback(
     async (item: AssetCollectionItem) => {
@@ -725,6 +803,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
             <select
               data-testid="asset-collection-select"
               value={selectedCollectionId}
+              disabled={collectionPending}
               onChange={(event) => setSelectedCollectionId(Number(event.target.value))}
               style={{ maxWidth: 160, fontSize: 13 }}
             >

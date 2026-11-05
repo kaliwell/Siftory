@@ -65,7 +65,7 @@ const AppStoragePanel: React.FC = () => {
           tone="sources"
           testId="maintenance-sources-section"
         >
-          <DiscoverySourcesSection hostPanel="appStorage" />
+          <DiscoverySourcesSection hostPanel="appStorage" enabled={sourcesExpanded} />
         </CollapsibleSearchSection>
         <CollapsibleSearchSection
           id="maintenance-location-section"

@@ -1,5 +1,8 @@
 # Siftory v1.0.1-alpha.22
 
+> 状态：当前  
+> 更新日期：2026-11-04
+
 This Alpha updates the library and maintenance workspace layouts.
 
 - Add persistent library navigation for all assets, collections, categories and tags, review, and clusters.
