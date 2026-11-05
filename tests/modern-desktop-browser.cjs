@@ -218,6 +218,9 @@ async function run() {
     }
     await go('maintenance')
     await page.evaluate(() => window.__workspaceTest.setCatalogAnalyzed(false))
+    const indexSection = page.getByTestId('maintenance-index-section')
+    if ((await indexSection.getAttribute('data-collapsed')) === 'true')
+      await indexSection.locator('button.search-control-section__header').click()
     const inventory = page.getByTestId('image-search-data-overview')
     await inventory.getByRole('button', { name: '刷新文件清单', exact: true }).click()
     await inventory
@@ -232,6 +235,9 @@ async function run() {
     await page.screenshot({ path: path.join(evidence, 'maintenance-not-analyzed.png') })
     await page.evaluate(() => window.__workspaceTest.setCatalogAnalyzed(true))
     await inventory.getByRole('button', { name: '刷新文件清单', exact: true }).click()
+    const automaticSection = page.getByTestId('maintenance-automatic-section')
+    if ((await automaticSection.getAttribute('data-collapsed')) === 'true')
+      await automaticSection.locator('button.search-control-section__header').click()
     await page.getByTestId('automatic-maintenance').waitFor()
     await page.getByTestId('automatic-maintenance-enabled').check()
     await page.getByTestId('automatic-maintenance-check').click()
@@ -674,6 +680,9 @@ async function run() {
     await page.getByTestId('workspace-sidebar-toggle').click()
     assert.equal(await page.locator('.workspace-sidebar').getAttribute('data-collapsed'), 'false')
     await go('maintenance')
+    if ((await indexSection.getAttribute('data-collapsed')) === 'true')
+      await indexSection.locator('button.search-control-section__header').click()
+    await page.locator('.workspace-advanced-maintenance').waitFor()
     assert.equal(await page.locator('.workspace-advanced-maintenance').getAttribute('open'), null)
     assert.equal(
       await page.evaluate(
@@ -689,6 +698,18 @@ async function run() {
       window.__workspaceTest.calls.some((call) => call.method === 'imageSearch.queryData'),
     )
     await page.screenshot({ path: path.join(evidence, 'maintenance-advanced.png') })
+    // Use a genuinely long image source list: moving source management out of
+    // this view means the empty preparation form no longer needs to overflow.
+    await page.evaluate(() =>
+      window.__workspaceTest.store
+        .getState()
+        .setImageSearchScanPaths(
+          Array.from(
+            { length: 64 },
+            (_, index) => `C:/fixtures/scroll-source-${index}-long-folder-name`,
+          ),
+        ),
+    )
     // Source controls stay reachable while both source libraries scroll.
     for (const width of [1920, 1320, 946, 760]) {
       await page.setViewportSize({ width, height: 850 })
