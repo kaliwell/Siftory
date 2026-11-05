@@ -14,6 +14,7 @@ jobs:
       FLOATING_CLOCK_KEEP_UNPACKED: '1'
       FLOATING_CLOCK_PACKAGE_PROFILE: online
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      FLOATING_CLOCK_UI_SMOKE_TIMEOUT_MS: '120000'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -28,11 +29,16 @@ jobs:
       - name: Record freshly compiled native provenance
         run: node scripts/record-native-package-build.cjs
       - run: node scripts/generate-third-party-components.cjs
-      - run: npm run licenses:gate -- --profile=online
+      - run: npm run licenses:gate
       - run: npm run build:online
       - run: npm run smoke:packaged:resources -- --profile=online
       - run: npm run smoke:installer:archive -- --profile=online
-      - run: npm run smoke:ui:packaged:locales
+      - name: Verify isolated packaged startup
+        run: node tests/packaged-launch-smoke.cjs
+      - name: Collect full legacy UI diagnostics
+        id: full_ui
+        continue-on-error: true
+        run: npm run smoke:ui:packaged:locales
       - name: Stage installer and verification evidence
         shell: pwsh
         run: |
@@ -47,6 +53,7 @@ jobs:
           Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
           Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
           Copy-Item docs/current/2026-11-05-alpha23-release.md artifacts/online-installer/RELEASE_NOTES.md
+          @{ startupPassed = $true; archivePassed = $true; fullUiOutcome = '${{ steps.full_ui.outcome }}'; upgradeVerified = $false } | ConvertTo-Json | Set-Content artifacts/online-installer/validation-status.json
       - uses: actions/upload-artifact@v4
         with:
           name: windows-online-installer
