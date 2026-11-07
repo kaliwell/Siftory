@@ -11,6 +11,7 @@ import { useTranslation } from '../i18n/useTranslation'
 const AppStoragePanel: React.FC = () => {
   const { t } = useTranslation()
   const scanPaths = useStore((state) => state.imageSearchScanPaths)
+  const isVisible = useStore((state) => state.showAppStorage && !state.workspaceTaskPageOpen)
   const [message, setMessage] = useState('')
   const [sourcesExpanded, setSourcesExpanded] = useState(false)
   const [locationExpanded, setLocationExpanded] = useState(false)
@@ -93,7 +94,10 @@ const AppStoragePanel: React.FC = () => {
           expanded={automaticExpanded}
           onToggle={() => setAutomaticExpanded((expanded) => !expanded)}
         >
-          <AutomaticMaintenancePanel suggestedScopes={scanPaths} />
+          <AutomaticMaintenancePanel
+            suggestedScopes={scanPaths}
+            active={isVisible && automaticExpanded}
+          />
         </CollapsibleSearchSection>
         <CollapsibleSearchSection
           id="maintenance-index-section"

@@ -1,6 +1,6 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.23",
+  "version": "1.0.1-alpha.24",
   "private": true,
   "license": "Apache-2.0",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",
@@ -12,7 +12,7 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "postinstall": "node scripts/install-electron.cjs",
-    "test": "npm run test:core-behavior && npm run test:focused-workspace && npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:copyright-source && npm run test:optimization-todo && npm run test:operations-automation && npm run test:foundation-automation && npm run test:productization && npm run test:qa-toolchain && npm run test:audit-regressions && npm run test:guards && npm run test:architecture && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run test:safe-eval && npm run test:settings && npm run test:window-visibility && npm run test:ui-smoke-contract && npm run test:file-drag && npm run test:fm-security && npm run test:fm-watcher && npm run test:app-storage && npm run test:duplicate-finder && npm run test:media-search && npm run test:image-search-sort && npm run test:image-search-shutdown && npm run test:image-search-data-folders && npm run test:asset-library && npm run test:asset-library-sqlite && npm run test:neko-search-cluster && npm run test:transaction-faults && npm run test:remote-terminal && npm run test:remote-sftp && npm run test:remote-transfer && npm run test:remote-stress && npm run test:vector-pipeline && npm run test:vector-ann && npm run test:text-encoder && npm run test:model-download && npm run test:runtime-package && npm run test:covered-source && npm run test:reproducible-build && npm run test:batch-rename && npm run test:face-match && npm run test:person-reid && npm run test:subject-crop && npm run test:project-preview && npm run test:discovery-catalog && npm run test:asset-identity && npm run test:unified-search && npm run build:native && npm run test:native",
+    "test": "npm run test:core-behavior && npm run test:focused-workspace && npm run test:performance:regression && npm run test:git-policy && npm run test:git-history-audit && npm run test:privacy && npm run test:copyright-source && npm run test:optimization-todo && npm run test:operations-automation && npm run test:foundation-automation && npm run test:productization && npm run test:qa-toolchain && npm run test:audit-regressions && npm run test:guards && npm run test:architecture && npm run test:i18n-static && npm run test:ipc-validation && npm run test:ipc-registration && npm run test:preload-contract && npm run test:safe-eval && npm run test:settings && npm run test:window-visibility && npm run test:ui-smoke-contract && npm run test:file-drag && npm run test:fm-security && npm run test:fm-watcher && npm run test:app-storage && npm run test:duplicate-finder && npm run test:media-search && npm run test:image-search-sort && npm run test:image-search-shutdown && npm run test:image-search-data-folders && npm run test:asset-library && npm run test:asset-library-sqlite && npm run test:neko-search-cluster && npm run test:transaction-faults && npm run test:remote-terminal && npm run test:remote-sftp && npm run test:remote-transfer && npm run test:remote-stress && npm run test:vector-pipeline && npm run test:vector-ann && npm run test:text-encoder && npm run test:model-download && npm run test:runtime-package && npm run test:covered-source && npm run test:reproducible-build && npm run test:batch-rename && npm run test:face-match && npm run test:person-reid && npm run test:subject-crop && npm run test:project-preview && npm run test:discovery-catalog && npm run test:asset-identity && npm run test:unified-search && npm run build:native && npm run test:native",
     "dev": "set SIFTORY_MEDIA_SEARCH_DIR=%APPDATA%\\floating-clock-electron\\media-search&& vite --config vite.config.mjs --configLoader runner",
     "build": "node scripts/build.cjs --profile=online",
     "build:offline": "node scripts/build.cjs --profile=offline",
@@ -324,8 +324,10 @@
     "test:task-drawer:browser": "node tests/task-drawer-browser.cjs",
     "test:workspace-theme:browser": "node tests/workspace-theme-browser.cjs",
     "test:asset-collections:state": "node --test tests/asset-collections-refresh.test.cjs",
-    "test:desktop:browser": "npm run test:focused-workspace:browser && npm run test:modern-desktop:browser && npm run test:search-request-lifecycle:browser && npm run test:asset-library:browser && node tests/source-maintenance-browser.cjs",
-    "test:storage:metadata": "node --test tests/asset-library-sqlite.test.cjs"
+    "test:desktop:browser": "npm run test:focused-workspace:browser && npm run test:modern-desktop:browser && npm run test:search-request-lifecycle:browser && npm run test:asset-library:browser && node tests/source-maintenance-browser.cjs && npm run test:performance:browser",
+    "test:storage:metadata": "node --test tests/asset-library-sqlite.test.cjs",
+    "test:performance:regression": "node --test tests/ffmpeg-warmup-lifecycle.test.cjs tests/thumbnail-request-scheduler.test.cjs tests/thumbnail-policy.test.cjs tests/thumbnail-rebuild-pipeline.test.cjs tests/workspace-performance-soak-policy.test.cjs tests/runtime-memory-process-sampler.test.cjs",
+    "test:performance:browser": "node tests/managed-model-lifecycle-browser.cjs && node tests/automatic-maintenance-lifecycle-browser.cjs && node tests/thumbnail-cache-lifecycle-browser.cjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",

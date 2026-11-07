@@ -374,7 +374,12 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   loadWhenRendered = false,
   targetSize,
 }) => {
-  const [dataUrl, setDataUrl] = useState<string | null>(null)
+  const thumbDim = bucketThumbnailDimension(targetSize ?? thumbnailSizeForView(viewMode))
+  const previewCacheKey = isDirectory ? null : `${filePath}@${thumbDim}`
+  // Scrolling defers new work, but an already cached preview can be shown at once.
+  const [dataUrl, setDataUrl] = useState<string | null>(() =>
+    previewCacheKey ? (cacheGet(previewCacheKey) ?? null) : null,
+  )
   const [error, setError] = useState(false)
   const [retryVersion, setRetryVersion] = useState(0)
   const activeRequestKey = useRef<string | null>(null)
@@ -382,7 +387,6 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [visible, setVisible] = useState(false)
   const [documentVisible, setDocumentVisible] = useState(isDocumentVisible)
-  const thumbDim = bucketThumbnailDimension(targetSize ?? thumbnailSizeForView(viewMode))
   const requestKey = isDirectory ? `folder:${filePath}` : `file:${filePath}@${thumbDim}`
   const imageFile = isImageFile(ext)
   const projectFile = isProjectFile(filePath)
@@ -399,10 +403,10 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   // A virtualized card can be reused for another result. Never leave the old
   // preview or terminal error attached to the new source path.
   useEffect(() => {
-    setDataUrl(null)
+    setDataUrl(previewCacheKey ? (cacheGet(previewCacheKey) ?? null) : null)
     setError(false)
     projectRetryState.current = { key: requestKey, attempt: 0 }
-  }, [requestKey])
+  }, [requestKey, previewCacheKey])
 
   // Load only when near the visible viewport.
   useEffect(() => {

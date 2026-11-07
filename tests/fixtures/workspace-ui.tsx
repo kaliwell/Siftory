@@ -473,4 +473,20 @@ const api = (prefix = ''): any => {
   },
   dispatch: (name: string) => window.dispatchEvent(new Event(name)),
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+const renderProfile: Array<{ phase: string; actualDuration: number; commitTime: number }> = []
+;(window as any).__workspaceRenderProfile = renderProfile
+const profileRenders = new URLSearchParams(location.search).get('profileRenders') === '1'
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  profileRenders ? (
+    <React.Profiler
+      id="workspace"
+      onRender={(_id, phase, actualDuration, _base, _start, commitTime) => {
+        if (renderProfile.length < 5000) renderProfile.push({ phase, actualDuration, commitTime })
+      }}
+    >
+      <App />
+    </React.Profiler>
+  ) : (
+    <App />
+  ),
+)

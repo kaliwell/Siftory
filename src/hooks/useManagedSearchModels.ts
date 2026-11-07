@@ -14,7 +14,7 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-export function useManagedSearchModels() {
+export function useManagedSearchModels(active = true) {
   const [statuses, setStatuses] = useState<ManagedSearchModelStatuses>(
     createInitialManagedSearchModelStatuses,
   )
@@ -67,17 +67,23 @@ export function useManagedSearchModels() {
       setChecking(false)
       setCheckError(null)
     })
+    return () => {
+      unsubscribe?.()
+      requestIdRef.current += 1
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!active) return
     void refresh()
     const onFocus = () => void refresh()
     window.addEventListener('focus', onFocus)
     const timer = window.setInterval(() => void refresh(), 15000)
     return () => {
-      unsubscribe?.()
       window.removeEventListener('focus', onFocus)
       window.clearInterval(timer)
-      requestIdRef.current += 1
     }
-  }, [refresh])
+  }, [active, refresh])
 
   const readiness = useMemo(
     () => resolveManagedSearchModelReadiness(statuses, checking, checkError),

@@ -5,8 +5,10 @@ import { useTranslation } from '../i18n/useTranslation'
 
 export default function AutomaticMaintenancePanel({
   suggestedScopes,
+  active = true,
 }: {
   suggestedScopes: string[]
+  active?: boolean
 }) {
   const { t } = useTranslation()
   const [status, setStatus] = useState<AutomaticMaintenanceStatus | null>(null)
@@ -14,32 +16,42 @@ export default function AutomaticMaintenancePanel({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const mounted = useRef(true)
+  const initializeScopes = useRef(true)
   useEffect(() => {
     mounted.current = true
-    let first = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+  useEffect(() => {
+    initializeScopes.current = true
+  }, [suggestedScopes, t])
+  useEffect(() => {
+    if (!active) return
+    let cancelled = false
     const refresh = async () => {
       try {
         const value = await window.electronAPI.sourceDerivedData.autoStatus()
         if (!value?.config || !Array.isArray(value.config.scopes))
           throw new Error(t('Automatic maintenance is unavailable'))
-        if (!mounted.current) return
+        if (cancelled || !mounted.current) return
         setStatus(value)
-        if (first) {
-          first = false
+        if (initializeScopes.current) {
+          initializeScopes.current = false
           setScopes(value.config.scopes.length ? value.config.scopes : suggestedScopes)
         }
       } catch (reason) {
-        if (mounted.current)
+        if (!cancelled && mounted.current)
           setError(reason instanceof Error ? reason.message : t('The operation failed.'))
       }
     }
     void refresh()
     const timer = window.setInterval(() => void refresh(), 5000)
     return () => {
-      mounted.current = false
+      cancelled = true
       window.clearInterval(timer)
     }
-  }, [suggestedScopes, t])
+  }, [active, suggestedScopes, t])
   const save = async (enabled: boolean, nextScopes = scopes) => {
     setBusy(true)
     setError('')

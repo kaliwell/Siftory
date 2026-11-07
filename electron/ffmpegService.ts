@@ -28,6 +28,7 @@ const activeMediaToolChildren = new Set<ChildProcess>()
 let temporaryMediaSequence = 0
 let cachedStatus: FfmpegStatus | null = null
 let statusGeneration = 0
+let mediaToolCancellationGeneration = 0
 let warmingStatus: {
   generation: number
   promise: Promise<FfmpegStatus>
@@ -35,6 +36,7 @@ let warmingStatus: {
 } | null = null
 
 export function cancelRunningMediaTools(): void {
+  mediaToolCancellationGeneration += 1
   for (const child of activeMediaToolChildren) {
     try {
       child.kill()
@@ -216,15 +218,23 @@ export function warmFfmpegStatusCache(): Promise<FfmpegStatus> {
   if (cachedStatus) return Promise.resolve(cachedStatus)
   const generation = statusGeneration
   if (warmingStatus?.generation === generation) return warmingStatus.promise
+  const cancellationGeneration = mediaToolCancellationGeneration
   const token = Symbol('ffmpeg-status-probe')
   const promise = (async () => {
     try {
+      // Let window creation proceed before spawning probes or checking candidates.
+      await new Promise<void>((resolve) => setImmediate(resolve))
+      if (cancellationGeneration !== mediaToolCancellationGeneration) return getCachedFfmpegStatus()
       const [ffmpeg, ffprobe] = await Promise.all([
-        probeToolAsync('ffmpeg'),
-        probeToolAsync('ffprobe'),
+        probeToolAsync('ffmpeg', () => cancellationGeneration !== mediaToolCancellationGeneration),
+        probeToolAsync('ffprobe', () => cancellationGeneration !== mediaToolCancellationGeneration),
       ])
       const value = { ffmpeg, ffprobe }
-      if (generation === statusGeneration) cachedStatus = value
+      if (
+        generation === statusGeneration &&
+        cancellationGeneration === mediaToolCancellationGeneration
+      )
+        cachedStatus = value
       return value
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -232,7 +242,11 @@ export function warmFfmpegStatusCache(): Promise<FfmpegStatus> {
         ffmpeg: { available: false, command: 'ffmpeg', error: message },
         ffprobe: { available: false, command: 'ffprobe', error: message },
       }
-      if (generation === statusGeneration) cachedStatus = value
+      if (
+        generation === statusGeneration &&
+        cancellationGeneration === mediaToolCancellationGeneration
+      )
+        cachedStatus = value
       return value
     } finally {
       if (warmingStatus?.token === token) warmingStatus = null
@@ -280,9 +294,13 @@ async function probeCommandAsync(command: string): Promise<MediaToolStatus> {
   }
 }
 
-async function probeToolAsync(toolName: 'ffmpeg' | 'ffprobe'): Promise<MediaToolStatus> {
+async function probeToolAsync(
+  toolName: 'ffmpeg' | 'ffprobe',
+  isCancelled: () => boolean,
+): Promise<MediaToolStatus> {
   let lastResult: MediaToolStatus | null = null
   for (const command of buildMediaToolCandidates(toolName)) {
+    if (isCancelled()) return { available: false, command: toolName, error: 'cancelled' }
     if (path.isAbsolute(command) && !fs.existsSync(command)) {
       lastResult = { available: false, command, error: 'not found' }
       continue

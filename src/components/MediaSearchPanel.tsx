@@ -121,12 +121,13 @@ const MediaSearchPanelInner: React.FC = () => {
   const handleMove = useLinkedMove('mediaSearch', mediaSearchPos, setMediaSearchPos, linkedMove)
   const experienceMode = useStore((s) => s.mediaSearchUiPreferences.experienceMode)
   const setMediaSearchUiPreferences = useStore((s) => s.setMediaSearchUiPreferences)
+  const modelPollingActive = useStore((s) => s.showMediaSearch && !s.workspaceTaskPageOpen)
   const {
     checking: managedModelsChecking,
     checkError: managedModelsCheckError,
     isModelReady: isManagedModelReady,
     refresh: refreshManagedModels,
-  } = useManagedSearchModels()
+  } = useManagedSearchModels(modelPollingActive)
 
   const [status, setStatus] = useState<MediaSearchStatus>(defaultStatus)
   const [cacheStats, setCacheStats] = useState<MediaSearchCacheStats | null>(null)

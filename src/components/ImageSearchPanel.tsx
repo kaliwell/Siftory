@@ -106,13 +106,14 @@ const ImageSearchPanel: React.FC = () => {
     (mode: SearchExperienceMode) => setImageSearchUiPreferences({ experienceMode: mode }),
     [setImageSearchUiPreferences],
   )
+  const modelPollingActive = useStore((s) => s.showImageSearch && !s.workspaceTaskPageOpen)
   const {
     statuses: managedModelStatuses,
     checking: managedModelsChecking,
     checkError: managedModelsCheckError,
     isModelReady: isManagedModelReady,
     refresh: refreshManagedModels,
-  } = useManagedSearchModels()
+  } = useManagedSearchModels(modelPollingActive)
   const dinoModelStatus = managedModelStatuses.dinov2_vitb14
   const clipModelStatus = managedModelStatuses.clip_vit_base_patch32
 

@@ -89,14 +89,14 @@ export class BoundedBatchScheduler<Input, Output> {
     }
   }
 
-  private schedule(): void {
+  private schedule(delayMs = this.options.delayMs): void {
     if (this.loading || this.timer !== null || this.queuedCount() === 0) return
     this.timer = setTimeout(
       () => {
         this.timer = null
         void this.flush()
       },
-      Math.max(0, this.options.delayMs),
+      Math.max(0, delayMs),
     )
   }
 
@@ -129,7 +129,8 @@ export class BoundedBatchScheduler<Input, Output> {
     } finally {
       for (const entry of entries) this.entries.delete(entry.key)
       this.loading = false
-      this.schedule()
+      // The queued work already waited for the active batch; only debounce a new burst.
+      this.schedule(0)
     }
   }
 

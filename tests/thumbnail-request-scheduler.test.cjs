@@ -6,6 +6,40 @@ const { BoundedBatchScheduler } = loadTsModule('src/utils/boundedBatchScheduler.
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5))
 
+test('queued batches drain after the first debounce without adding concurrency', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const batches = []
+  let completeFirst
+  const scheduler = new BoundedBatchScheduler({
+    batchSize: 1,
+    delayMs: 24,
+    maxQueued: 8,
+    keyOf: (input) => input,
+    loadBatch: async (inputs) => {
+      batches.push(inputs)
+      if (batches.length === 1)
+        await new Promise((resolve) => {
+          completeFirst = resolve
+        })
+      return new Map(inputs.map((input) => [input, input]))
+    },
+  })
+  const first = scheduler.request('first')
+  const second = scheduler.request('second')
+  t.mock.timers.tick(23)
+  assert.equal(batches.length, 0)
+  t.mock.timers.tick(1)
+  assert.deepEqual(batches, [['first']])
+  t.mock.timers.tick(100)
+  assert.equal(batches.length, 1, 'waiting work cannot overlap the active batch')
+  completeFirst()
+  await Promise.resolve()
+  await Promise.resolve()
+  t.mock.timers.tick(0)
+  assert.deepEqual(await Promise.all([first, second]), ['first', 'second'])
+  assert.deepEqual(batches, [['first'], ['second']])
+})
+
 test('thumbnail scheduler batches and de-duplicates matching requests', async () => {
   const batches = []
   const scheduler = new BoundedBatchScheduler({

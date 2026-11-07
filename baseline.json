@@ -1,0 +1,597 @@
+{
+  "sourceCommit": "cb8d4d5",
+  "status": "partial-valid-standard-window-baseline",
+  "scope": "Fresh isolated empty library, development build; OS caches uncontrolled; first-paint and real image workload not measured. Navigation includes automation and two animation frames. OS samples at 1-second intervals may precede phase labels by an interval.",
+  "runs": [
+    {
+      "run": 1,
+      "status": "passed",
+      "startup": {
+        "firstWindowObservedMs": 1109.3269,
+        "searchNavigationInteractiveMs": 1420.2973
+      },
+      "idle60": {
+        "workingSetMiB": 431.15625,
+        "privateMiB": 350.05078125,
+        "roles": [
+          "utility",
+          "renderer",
+          "gpu",
+          "main",
+          "worker"
+        ]
+      },
+      "after100": {
+        "workingSetMiB": 571.5703125,
+        "privateMiB": 542.23046875,
+        "roles": [
+          "renderer",
+          "other-child",
+          "other-child",
+          "utility",
+          "main",
+          "worker",
+          "gpu"
+        ]
+      },
+      "switches": 100,
+      "p95SwitchMs": 48.351499999989755,
+      "idleCpuOneCorePercent": 0.05083287632761701
+    },
+    {
+      "run": 2,
+      "status": "passed",
+      "startup": {
+        "firstWindowObservedMs": 1072.2481,
+        "searchNavigationInteractiveMs": 1317.8401
+      },
+      "idle60": {
+        "workingSetMiB": 431.18359375,
+        "privateMiB": 349.88671875,
+        "roles": [
+          "utility",
+          "renderer",
+          "gpu",
+          "main",
+          "worker"
+        ]
+      },
+      "after100": {
+        "workingSetMiB": 571.9453125,
+        "privateMiB": 537.43359375,
+        "roles": [
+          "renderer",
+          "other-child",
+          "other-child",
+          "utility",
+          "main",
+          "worker",
+          "gpu"
+        ]
+      },
+      "switches": 100,
+      "p95SwitchMs": 54.84499999999389,
+      "idleCpuOneCorePercent": 0.15596588534095648
+    },
+    {
+      "run": 3,
+      "status": "passed",
+      "startup": {
+        "firstWindowObservedMs": 1003.7672999999922,
+        "searchNavigationInteractiveMs": 1310.684699999998
+      },
+      "idle60": {
+        "workingSetMiB": 432.39453125,
+        "privateMiB": 349.04296875,
+        "roles": [
+          "utility",
+          "renderer",
+          "gpu",
+          "main",
+          "worker"
+        ]
+      },
+      "after100": {
+        "workingSetMiB": 563.453125,
+        "privateMiB": 533.58203125,
+        "roles": [
+          "renderer",
+          "other-child",
+          "other-child",
+          "utility",
+          "main",
+          "worker",
+          "gpu"
+        ]
+      },
+      "switches": 100,
+      "p95SwitchMs": 61.396400000026915,
+      "idleCpuOneCorePercent": 0.130046633265226
+    }
+  ],
+  "summary": {
+    "medianInteractiveMs": 1317.8401,
+    "medianIdleWorkingSetMiB": 431.18359375,
+    "medianAfter100WorkingSetMiB": 571.5703125,
+    "fiveMinuteIdleCpuOneCorePercent": 0.8221888792193962,
+    "fiveMinuteIdleSampleCount": 60
+  },
+  "evidence": [
+    "artifacts/benchmark/runtime-memory/standard-window-v3-20261107/run-1.json",
+    "artifacts/benchmark/runtime-memory/standard-window-v4-20261107/run-2.json",
+    "artifacts/benchmark/runtime-memory/standard-window-v4-20261107/run-3.json"
+  ],
+  "thumbnails": {
+    "scope": "Real native IPC with generated fixture; same 256px output for first and repeat passes, not real photo-library accuracy or scroll.",
+    "sourceFilesUnchanged": true,
+    "verifiedFiles": 10000,
+    "reports": [
+      {
+        "count": 1000,
+        "scope": "Generated JPEG fixture; real preload/IPC and thumbnail service; two batch callers, six requests per batch, 256px; no gallery scrolling or model workload.",
+        "passes": [
+          {
+            "pass": "first-profile-pass",
+            "ms": 19102.79999999702,
+            "ok": 1000,
+            "failed": 0,
+            "totalDataUrlCharacters": 2755660
+          },
+          {
+            "pass": "repeat-profile-pass",
+            "ms": 2764.7999999970198,
+            "ok": 1000,
+            "failed": 0,
+            "totalDataUrlCharacters": 2755660
+          }
+        ],
+        "errors": [],
+        "status": "passed",
+        "processSampleCount": 44,
+        "peakWorkingSetMiB": 783.29296875
+      },
+      {
+        "count": 5000,
+        "scope": "Generated JPEG fixture; real preload/IPC and thumbnail service; two batch callers, six requests per batch, 256px; no gallery scrolling or model workload.",
+        "passes": [
+          {
+            "pass": "first-profile-pass",
+            "ms": 95819.90000000596,
+            "ok": 5000,
+            "failed": 0,
+            "totalDataUrlCharacters": 13779480
+          },
+          {
+            "pass": "repeat-profile-pass",
+            "ms": 13046,
+            "ok": 5000,
+            "failed": 0,
+            "totalDataUrlCharacters": 13779480
+          }
+        ],
+        "errors": [],
+        "status": "passed",
+        "processSampleCount": 217,
+        "peakWorkingSetMiB": 849.29296875
+      },
+      {
+        "count": 10000,
+        "scope": "Generated JPEG fixture; real preload/IPC and thumbnail service; two batch callers, six requests per batch, 256px; no gallery scrolling or model workload.",
+        "passes": [
+          {
+            "pass": "first-profile-pass",
+            "ms": 203925.10000000894,
+            "ok": 10000,
+            "failed": 0,
+            "totalDataUrlCharacters": 27558448
+          },
+          {
+            "pass": "repeat-profile-pass",
+            "ms": 26248,
+            "ok": 10000,
+            "failed": 0,
+            "totalDataUrlCharacters": 27558448
+          }
+        ],
+        "errors": [],
+        "status": "passed",
+        "processSampleCount": 458,
+        "peakWorkingSetMiB": 862.23046875
+      }
+    ]
+  },
+  "matchedComparison": {
+    "before": {
+      "runs": [
+        {
+          "run": 1,
+          "status": "passed",
+          "fcp": 1140,
+          "interactive": 1240.5563,
+          "idleMiB": 436.765625,
+          "settledMiB": 493.06640625,
+          "p95": 88.54170000000158,
+          "peakMiB": 743.09765625
+        },
+        {
+          "run": 2,
+          "status": "passed",
+          "fcp": 1106.89990234375,
+          "interactive": 1192.259699999995,
+          "idleMiB": 430.703125,
+          "settledMiB": 488.140625,
+          "p95": 95.80100000000675,
+          "peakMiB": 737.3828125
+        },
+        {
+          "run": 3,
+          "status": "passed",
+          "fcp": 1159.699951171875,
+          "interactive": 1239.0950000000012,
+          "idleMiB": 432.08984375,
+          "settledMiB": 488.1328125,
+          "p95": 67.66659999999683,
+          "peakMiB": 738.97265625
+        }
+      ],
+      "median": {
+        "fcp": 1140,
+        "interactive": 1239.0950000000012,
+        "idleMiB": 432.08984375,
+        "settledMiB": 488.140625,
+        "p95": 88.54170000000158,
+        "peakMiB": 738.97265625
+      },
+      "idleCpu": {
+        "samples": 60,
+        "meanCorePercent": 0.1910098349154236
+      }
+    },
+    "after": {
+      "runs": [
+        {
+          "run": 1,
+          "status": "passed",
+          "fcp": 1131.5,
+          "interactive": 1223.3864999999998,
+          "idleMiB": 431.86328125,
+          "settledMiB": 494.3125,
+          "p95": 79.16650000000664,
+          "peakMiB": 743.625
+        },
+        {
+          "run": 2,
+          "status": "passed",
+          "fcp": 1113.60009765625,
+          "interactive": 1204.4296000000031,
+          "idleMiB": 432.4609375,
+          "settledMiB": 503.171875,
+          "p95": 84.22940000001108,
+          "peakMiB": 749.640625
+        },
+        {
+          "run": 3,
+          "status": "passed",
+          "fcp": 1244,
+          "interactive": 1247.8762999999744,
+          "idleMiB": 430.6328125,
+          "settledMiB": 494.703125,
+          "p95": 68.43839999998454,
+          "peakMiB": 743.33984375
+        }
+      ],
+      "median": {
+        "fcp": 1131.5,
+        "interactive": 1223.3864999999998,
+        "idleMiB": 431.86328125,
+        "settledMiB": 494.703125,
+        "p95": 79.16650000000664,
+        "peakMiB": 743.625
+      },
+      "idleCpu": {
+        "samples": 60,
+        "meanCorePercent": 0.08844091466828553
+      }
+    }
+  },
+  "matchedComparisonEvidence": "artifacts/benchmark/runtime-memory/{final-comparison-20261107,idle-cpu-comparison-20261107}",
+  "packagedTwoHourAcceptance": {
+    "passed": true,
+    "status": "completed",
+    "evidence": "artifacts/benchmark/runtime-memory/packaged-soak-8EB3Zq/report.json",
+    "activeMinutes": 120.00008333333334,
+    "actions": 480,
+    "memory": {
+      "samples": 14149,
+      "firstWorkingSetMiB": 482.4375,
+      "lastWorkingSetMiB": 553.5,
+      "peakWorkingSetMiB": 828.296875,
+      "minFreePhysicalMiB": 1206.2421875
+    },
+    "sampleCoverage": {
+      "valid": true,
+      "samples": 14149,
+      "firstAt": "2026-11-07T05:09:32.0421989Z",
+      "lastAt": "2026-11-07T07:09:39.5322108Z",
+      "maximumGapMs": 3172,
+      "allowedGapMs": 15000
+    },
+    "lateWorkingSetSlopeMiBPerMinute": 0.19585266657018202,
+    "memoryTrendReviewRequired": false,
+    "mainProcessExited": true,
+    "errors": [],
+    "shutdownRequested": false
+  },
+  "ffmpegStartupComparison": {
+    "before": {
+      "runs": 6,
+      "interactiveMs": 1233.3733,
+      "fcpMs": 1135.9000244140625,
+      "windowMs": 981.2672999999998
+    },
+    "candidate": {
+      "runs": 6,
+      "interactiveMs": 1199.4308999999998,
+      "fcpMs": 1099.7999267578125,
+      "windowMs": 944.5784999999994
+    }
+  },
+  "maintenancePollingComparison": {
+    "before": {
+      "commits": 6,
+      "actualRenderDurationMs": 5.499999970197678,
+      "scope": "Synthetic bridge, real React hooks, automatic maintenance section mounted then hidden behind Settings; 31-second observation. IPC count metric, not CPU throughput.",
+      "hiddenStatusCalls": 6,
+      "errors": []
+    },
+    "after": {
+      "commits": 6,
+      "actualRenderDurationMs": 4.799999952316284,
+      "scope": "Synthetic bridge, real React hooks, automatic maintenance section mounted then hidden behind Settings; 31-second observation. IPC count metric, not CPU throughput.",
+      "hiddenStatusCalls": 0,
+      "errors": []
+    }
+  },
+  "realGalleryComparison": {
+    "status": "passed",
+    "inputsUnchanged": true,
+    "outputsIdentical": true,
+    "rows": [
+      {
+        "count": 1000,
+        "variant": "before",
+        "runs": 3,
+        "visibleReadyFraction": 0.01832460732984293,
+        "warmStopMs": 137.58290000000034,
+        "p95FrameMs": 8.699999988079071,
+        "frameP95Range": [
+          8.5,
+          8.699999988079071,
+          8.799999982118607
+        ],
+        "firstViewportMs": 589.4202,
+        "warmIpcCalls": [
+          0,
+          0,
+          0
+        ],
+        "peakWorkingSetMiB": 797.2421875,
+        "diskHits": [
+          6,
+          6,
+          6
+        ],
+        "decodeFailures": [
+          0,
+          0,
+          0
+        ],
+        "cacheImages": [
+          100,
+          100,
+          100
+        ]
+      },
+      {
+        "count": 1000,
+        "variant": "candidate",
+        "runs": 3,
+        "visibleReadyFraction": 1,
+        "warmStopMs": 13.654200000000856,
+        "p95FrameMs": 9.199999988079071,
+        "frameP95Range": [
+          14.099999994039536,
+          8.300000011920929,
+          9.199999988079071
+        ],
+        "firstViewportMs": 613.0439000000001,
+        "warmIpcCalls": [
+          0,
+          0,
+          0
+        ],
+        "peakWorkingSetMiB": 807.03515625,
+        "diskHits": [
+          6,
+          6,
+          6
+        ],
+        "decodeFailures": [
+          0,
+          0,
+          0
+        ],
+        "cacheImages": [
+          100,
+          100,
+          100
+        ]
+      },
+      {
+        "count": 5000,
+        "variant": "before",
+        "runs": 3,
+        "visibleReadyFraction": 0.01832460732984293,
+        "warmStopMs": 135.50400000000081,
+        "p95FrameMs": 9.699999988079071,
+        "frameP95Range": [
+          8.599999994039536,
+          10.800000011920929,
+          9.699999988079071
+        ],
+        "firstViewportMs": 460.6349999999984,
+        "warmIpcCalls": [
+          0,
+          0,
+          0
+        ],
+        "peakWorkingSetMiB": 799.8515625,
+        "diskHits": [
+          6,
+          6,
+          6
+        ],
+        "decodeFailures": [
+          0,
+          0,
+          0
+        ],
+        "cacheImages": [
+          100,
+          100,
+          100
+        ]
+      },
+      {
+        "count": 5000,
+        "variant": "candidate",
+        "runs": 3,
+        "visibleReadyFraction": 1,
+        "warmStopMs": 14.420600000001286,
+        "p95FrameMs": 13,
+        "frameP95Range": [
+          13,
+          8.900000005960464,
+          13.599999994039536
+        ],
+        "firstViewportMs": 879.8911000000007,
+        "warmIpcCalls": [
+          0,
+          0,
+          0
+        ],
+        "peakWorkingSetMiB": 824.765625,
+        "diskHits": [
+          6,
+          6,
+          6
+        ],
+        "decodeFailures": [
+          0,
+          0,
+          0
+        ],
+        "cacheImages": [
+          100,
+          100,
+          100
+        ]
+      },
+      {
+        "count": 10000,
+        "variant": "before",
+        "runs": 3,
+        "visibleReadyFraction": 0.01832460732984293,
+        "warmStopMs": 131.3153999999995,
+        "p95FrameMs": 10.200000017881393,
+        "frameP95Range": [
+          10.200000017881393,
+          8.899999976158142,
+          11.300000011920929
+        ],
+        "firstViewportMs": 500.6898000000001,
+        "warmIpcCalls": [
+          0,
+          0,
+          0
+        ],
+        "peakWorkingSetMiB": 800.8203125,
+        "diskHits": [
+          6,
+          6,
+          6
+        ],
+        "decodeFailures": [
+          0,
+          0,
+          0
+        ],
+        "cacheImages": [
+          100,
+          100,
+          100
+        ]
+      },
+      {
+        "count": 10000,
+        "variant": "candidate",
+        "runs": 3,
+        "visibleReadyFraction": 1,
+        "warmStopMs": 14.68539999999848,
+        "p95FrameMs": 8.5,
+        "frameP95Range": [
+          8.5,
+          8.299999982118607,
+          14.299999982118607
+        ],
+        "firstViewportMs": 466.4959999999992,
+        "warmIpcCalls": [
+          0,
+          0,
+          0
+        ],
+        "peakWorkingSetMiB": 820.8046875,
+        "diskHits": [
+          6,
+          6,
+          6
+        ],
+        "decodeFailures": [
+          0,
+          0,
+          0
+        ],
+        "cacheImages": [
+          100,
+          100,
+          100
+        ]
+      }
+    ],
+    "evidence": "artifacts/benchmark/runtime-memory/real-gallery-cache-comparison-Fy9pcZ/comparison.json"
+  },
+  "realGalleryOpenFollowup": {
+    "before": {
+      "runs": 4,
+      "firstViewportMs": 452.4689000000001,
+      "cardPresentMs": 357.6068499999999,
+      "allReady": [
+        449.05330000000004,
+        831.4210000000003,
+        449.39300000000003,
+        455.5448000000001
+      ]
+    },
+    "candidate": {
+      "runs": 4,
+      "firstViewportMs": 440.22035000000005,
+      "cardPresentMs": 352.29855,
+      "allReady": [
+        441.1582000000003,
+        439.2824999999998,
+        858.0821000000001,
+        436.84670000000006
+      ]
+    }
+  }
+}
