@@ -4,7 +4,11 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 import os from 'os'
 import path from 'path'
-import { bucketThumbnailDimension, classifyThumbnailSource } from '../shared/thumbnailPolicy'
+import {
+  bucketThumbnailDimension,
+  classifyThumbnailSource,
+  shouldUseOsThumbnailFallback,
+} from '../shared/thumbnailPolicy'
 import type { ThumbnailRebuildBackend, ThumbnailRebuildProgress } from '../shared/ipc-contract'
 import { MAX_THUMBNAIL_BATCH, safeShellPath } from './pathGuards'
 import { ThumbnailGpuPool } from './thumbnailGpuService'
@@ -15,6 +19,7 @@ import {
   startNativeThumbnailRebuild,
   stopNativeThumbnailRebuild,
 } from './imageSearchService'
+import { createOsThumbnail } from './osThumbnailFallback'
 import { getProjectPreviewService } from './projectPreviewService'
 import {
   cacheKey,
@@ -380,6 +385,10 @@ async function generateImageThumbnail(
       }
       if (img.isEmpty()) {
         img = nativeImage.createFromPath(filePath)
+      }
+      if (img.isEmpty() && shouldUseOsThumbnailFallback(ext)) {
+        const osThumbnail = await createOsThumbnail(filePath, dim)
+        if (osThumbnail) img = osThumbnail
       }
       if (img.isEmpty()) {
         return { path: filePath, dataUrl: null, error: 'Cannot decode' }

@@ -1,4 +1,4 @@
-﻿# Performance TODO — execution status
+# Performance TODO — execution status
 
 Reference: GitHub main cb8d4d5, Alpha23; local branch fast-forwarded before measurements. Existing benchmark, process sampler, nonce isolation, native catalog fixture writer and browser tests reused. Four earlier production variables passed combined package/two-hour acceptance. A fifth variable, renderer cached-preview initialization, passed real-gallery A/B; its targeted validation/package is tracked separately.
 
@@ -16,7 +16,8 @@ Reference: GitHub main cb8d4d5, Alpha23; local branch fast-forwarded before meas
 - [x] Phase 5: production queue single-variable A/B and reverse test; initial coalescing, bounds, priority, cancellation and quality retained; native scrolling tested at all three catalog sizes.
 - [x] Phase 5: fixed 10000-image real-library sample (1.78GiB), native 1k/5k/10k catalog A/B, actual cache hit counters, per-image IPC/browser decode profiling, and full source/output hash verification.
 - [x] Phase 5: cached previews remain visible during scrolling, no extra IPC; dedicated lifecycle browser and 23 thumbnail unit checks passed.
-- [ ] Phase 5: investigate the eight sampled BMP decode failures, occasional pre-card cold-open delay, and finer libvips CPU/thread attribution separately.
+- [x] Phase 5: the eight sampled BMP decode failures are fixed by the OS-thumbnail fallback; see [BMP 预览解码降级路径](docs/current/2026-11-10-bmp-preview-decode-fallback.md). Occasional pre-card cold-open delay and finer libvips CPU/thread attribution remain open.
+- [ ] Phase 5: investigate the occasional pre-card cold-open delay and finer libvips CPU/thread attribution separately.
 - [x] Phase 6: eliminate measured redundant model-status invokes; scheduler dedup/cancel tests passed.
 - [ ] Phase 6: app-wide IPC frequency/large payload/Worker lifecycle profiling remains incomplete.
 - [x] Phase 7: matched three-run startup/memory/100-switch regression, focused workspace and browser, typecheck, scheduler, lifecycle, real read-only DINO checks.

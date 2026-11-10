@@ -22,6 +22,17 @@ export interface ThumbnailSourcePolicy {
 
 const MIB = 1024 * 1024
 
+// Electron's nativeImage decodes only PNG/JPEG buffers, and the bundled libvips
+// build behind sharp has no BMP loader, so BMP previews need the OS thumbnail
+// provider as a last resort. Keep this list narrow: shell thumbnail lookups can
+// be slow on network paths and may return a generic icon for unsupported files.
+const OS_THUMBNAIL_FALLBACK_EXTENSIONS = new Set(['.bmp', '.ico'])
+
+/** True when the preview chain should retry with `nativeImage.createThumbnailFromPath`. */
+export function shouldUseOsThumbnailFallback(extension: string): boolean {
+  return OS_THUMBNAIL_FALLBACK_EXTENSIONS.has(extension.toLowerCase())
+}
+
 /**
  * Collapse arbitrary renderer sizes into reusable cache buckets. The layout
  * continues to use its requested CSS size; only the decoded bitmap is bucketed.

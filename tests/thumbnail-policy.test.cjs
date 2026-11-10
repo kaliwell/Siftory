@@ -2,9 +2,8 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 const { loadTsModule } = require('./guard-utils.cjs')
 
-const { bucketThumbnailDimension, classifyThumbnailSource } = loadTsModule(
-  'shared/thumbnailPolicy.ts',
-)
+const { bucketThumbnailDimension, classifyThumbnailSource, shouldUseOsThumbnailFallback } =
+  loadTsModule('shared/thumbnailPolicy.ts')
 
 test('thumbnail dimensions share 64, 128, and 256 pixel cache buckets', () => {
   assert.equal(bucketThumbnailDimension(24), 64)
@@ -38,4 +37,19 @@ test('thumbnail source classification rejects decompression-bomb dimensions', ()
   })
   assert.equal(policy.tier, 'unsafe')
   assert.equal(policy.safeToDecode, false)
+})
+
+test('only formats without an in-process decoder fall back to the OS thumbnail provider', () => {
+  // Chromium's nativeImage rejects BMP buffers and the bundled libvips has no BMP
+  // loader; .ico shares the same gap and the same OS-level recovery.
+  assert.equal(shouldUseOsThumbnailFallback('.bmp'), true)
+  assert.equal(shouldUseOsThumbnailFallback('.BMP'), true)
+  assert.equal(shouldUseOsThumbnailFallback('.ico'), true)
+  // Formats the existing chain already decodes must not pay a shell lookup.
+  assert.equal(shouldUseOsThumbnailFallback('.jpg'), false)
+  assert.equal(shouldUseOsThumbnailFallback('.jpeg'), false)
+  assert.equal(shouldUseOsThumbnailFallback('.png'), false)
+  assert.equal(shouldUseOsThumbnailFallback('.webp'), false)
+  assert.equal(shouldUseOsThumbnailFallback('.gif'), false)
+  assert.equal(shouldUseOsThumbnailFallback(''), false)
 })

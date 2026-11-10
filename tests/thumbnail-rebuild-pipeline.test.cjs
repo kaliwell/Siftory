@@ -341,3 +341,17 @@ test('thumbnail cache maintenance persists its interval and honors cancellation'
     fs.rmSync(userDataPath, { recursive: true, force: true })
   }
 })
+
+test('BMP previews retry through the OS thumbnail provider before failing', () => {
+  const source = fs.readFileSync(
+    path.resolve(__dirname, '..', 'electron', 'thumbnailIpc.ts'),
+    'utf8',
+  )
+  const guardIndex = source.indexOf('shouldUseOsThumbnailFallback(ext)')
+  const decodeIndex = source.indexOf('await createOsThumbnail(filePath, dim)')
+  const errorIndex = source.indexOf("error: 'Cannot decode'")
+  assert.ok(guardIndex > 0, 'fallback is gated by the shared extension policy')
+  assert.ok(decodeIndex > guardIndex, 'fallback runs after the extension check')
+  assert.ok(errorIndex > decodeIndex, 'fallback runs before the Cannot decode result')
+  assert.match(source, /import \{ createOsThumbnail \} from '\.\/osThumbnailFallback'/)
+})

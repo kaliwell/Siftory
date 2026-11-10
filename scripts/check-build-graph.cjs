@@ -155,7 +155,11 @@ const entries = [
   // Alpha 14/15: the startup-only migration window and its pure presentation
   // module add exactly two nodes. They isolate sandboxed UI from filesystem
   // verification, add no packages, and leave worker/renderer and byte caps intact.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 323 },
+  // 2026-11-10: osThumbnailFallback isolates the platform thumbnail decode that
+  // keeps BMP/ICO previews working (Chromium's nativeImage rejects BMP buffers and
+  // the bundled libvips has no BMP loader). It adds one node, no packages, and no
+  // renderer/worker edges.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 324 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports
