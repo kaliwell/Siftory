@@ -20,6 +20,28 @@ function commitsForUpdate(cwd, localSha, remoteSha) {
   return output ? output.split(/\r?\n/) : []
 }
 
+/**
+ * Resolve the commits a push introduces.
+ *
+ * A brand-new tag must resolve to the commit it points at instead of the whole
+ * reachable history; otherwise every new tag re-validates legacy commits that
+ * predate the current message policy and can never be pushed.
+ */
+function updateCommits(cwd, localRef, localSha, remoteSha) {
+  if (!localSha || localSha === ZERO_SHA) return []
+  if (remoteSha === ZERO_SHA && localRef.startsWith('refs/tags/')) {
+    return [git(['rev-parse', `${localSha}^{commit}`], cwd)]
+  }
+  return commitsForUpdate(cwd, localSha, remoteSha)
+}
+
+function updateTip(cwd, localRef, localSha, remoteSha) {
+  if (remoteSha === ZERO_SHA && localRef.startsWith('refs/tags/')) {
+    return git(['rev-parse', `${localSha}^{commit}`], cwd)
+  }
+  return localSha
+}
+
 function main() {
   const repoRoot = git(['rev-parse', '--show-toplevel'], process.cwd())
   const updates = fs
@@ -30,11 +52,11 @@ function main() {
   const tips = new Set()
   const commits = new Set()
 
-  for (const [, localSha, , remoteSha] of updates) {
+  for (const [localRef, localSha, , remoteSha] of updates) {
     if (!localSha || !remoteSha) throw new Error('invalid pre-push input')
     if (localSha === ZERO_SHA) continue
-    tips.add(localSha)
-    for (const commit of commitsForUpdate(repoRoot, localSha, remoteSha)) commits.add(commit)
+    tips.add(updateTip(repoRoot, localRef, localSha, remoteSha))
+    for (const commit of updateCommits(repoRoot, localRef, localSha, remoteSha)) commits.add(commit)
   }
 
   const metadataErrors = []
@@ -60,9 +82,13 @@ function main() {
   console.log(`[pre-push] passed: ${commits.size} new commit(s), ${tips.size} tip(s)`)
 }
 
-try {
-  main()
-} catch (error) {
-  console.error(`[pre-push] ${error instanceof Error ? error.message : String(error)}`)
-  process.exitCode = 1
+if (require.main === module) {
+  try {
+    main()
+  } catch (error) {
+    console.error(`[pre-push] ${error instanceof Error ? error.message : String(error)}`)
+    process.exitCode = 1
+  }
 }
+
+module.exports = { updateCommits, updateTip, ZERO_SHA }

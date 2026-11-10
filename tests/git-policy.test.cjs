@@ -187,6 +187,30 @@ test('push validation rejects invalid metadata anywhere in the new range', async
   })
 })
 
+test('a brand-new tag validates only the commit it points at', async () => {
+  const { updateCommits, updateTip } = require('../scripts/validate-push.cjs')
+  await withTempRepo(async (dir) => {
+    fs.writeFileSync(path.join(dir, 'README.md'), 'baseline\n')
+    git(dir, ['add', 'README.md'])
+    git(dir, ['commit', '-m', 'invalid legacy message'])
+    fs.writeFileSync(path.join(dir, 'README.md'), 'release\n')
+    git(dir, ['add', 'README.md'])
+    git(dir, [
+      'commit',
+      '-m',
+      'fix(repo): release commit\n\nExecutor-System: DeepSeek\nExecutor-Model: unknown\nTask: tag-fixture\nValidation: fixture',
+    ])
+    const head = git(dir, ['rev-parse', 'HEAD'])
+    git(dir, ['tag', '-a', 'v1.0.0', '-m', 'release tag'])
+    const tag = git(dir, ['rev-parse', 'v1.0.0'])
+    const zero = '0'.repeat(40)
+    assert.deepEqual(updateCommits(dir, 'refs/tags/v1.0.0', tag, zero), [head])
+    assert.equal(updateTip(dir, 'refs/tags/v1.0.0', tag, zero), head)
+    // A new branch still validates its whole reachable range.
+    assert.equal(updateCommits(dir, 'refs/heads/task/x', head, zero).length, 2)
+  })
+})
+
 test('commit metadata rejects generated-message bypasses and duplicate ownership', () => {
   const valid = [
     'fix(repo): close commit policy bypasses',
@@ -205,7 +229,10 @@ test('commit metadata rejects generated-message bypasses and duplicate ownership
     ),
   )
   // DeepSeek is a first-class executor runtime alongside the original four models.
-  assert.deepEqual(validate(valid.replace('Executor-System: Codex', 'Executor-System: DeepSeek')), [])
+  assert.deepEqual(
+    validate(valid.replace('Executor-System: Codex', 'Executor-System: DeepSeek')),
+    [],
+  )
 })
 
 test('task worktree helper creates an isolated branch outside the repository', async () => {
