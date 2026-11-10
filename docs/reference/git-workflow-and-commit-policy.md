@@ -124,7 +124,7 @@ Task: git-policy
 Validation: npm.cmd run test:git-policy; 11/11 passed
 ```
 
-- `Executor-System` 仅允许 `Codex`、`Kimi`、`Claude`、`Gemini`、`Human`、`Mixed`。
+- `Executor-System` 仅允许 `Codex`、`Kimi`、`Claude`、`Gemini`、`DeepSeek`、`Human`、`Mixed`。
 - `Executor-Model` 只写可确认粒度；精确版本不可见时写 `unknown`，不得猜测。
 - `Task` 写 Todo、Issue ID 或稳定的短任务名。
 - `Validation` 写实际命令与结果；未运行写 `not-run: 原因`，但这不等于门禁通过。

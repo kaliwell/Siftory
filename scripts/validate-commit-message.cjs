@@ -3,7 +3,7 @@ const fs = require('node:fs')
 const HEADER_PATTERN =
   /^(feat|fix|perf|refactor|test|docs|build|ci|chore|revert)\([a-z0-9][a-z0-9-]*\): (.{2,})$/
 const REQUIRED_TRAILERS = ['Executor-System', 'Executor-Model', 'Task', 'Validation']
-const ALLOWED_EXECUTOR_SYSTEMS = new Set(['Codex', 'Kimi', 'Claude', 'Gemini', 'Human', 'Mixed'])
+const ALLOWED_EXECUTOR_SYSTEMS = new Set(['Codex', 'Kimi', 'Claude', 'Gemini', 'DeepSeek', 'Human', 'Mixed'])
 
 function trailerValues(lines, name) {
   return lines

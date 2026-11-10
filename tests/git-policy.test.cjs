@@ -204,6 +204,8 @@ test('commit metadata rejects generated-message bypasses and duplicate ownership
       /must be one of/.test(error),
     ),
   )
+  // DeepSeek is a first-class executor runtime alongside the original four models.
+  assert.deepEqual(validate(valid.replace('Executor-System: Codex', 'Executor-System: DeepSeek')), [])
 })
 
 test('task worktree helper creates an isolated branch outside the repository', async () => {
