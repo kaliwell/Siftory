@@ -1240,3 +1240,22 @@ test('legacy Native large snapshots and delete batches fail before synchronous w
   assert.equal(result.removedCount, 0)
   assert.match(result.error, /Update the Native scanner/)
 })
+
+test('broad source cleanup is linked from the folder index editor instead of duplicated', () => {
+  const root = path.resolve(__dirname, '..')
+  const editor = fs.readFileSync(
+    path.join(root, 'src/components/ImageSearchDataManager.tsx'),
+    'utf8',
+  )
+  const settings = fs.readFileSync(path.join(root, 'src/components/SettingsPanel.tsx'), 'utf8')
+  const cleanup = fs.readFileSync(
+    path.join(root, 'src/components/SourceDerivedDataCleanup.tsx'),
+    'utf8',
+  )
+  // The editor keeps its documented single-layer surgery, but points to the one
+  // broad cleanup surface (thumbnails, video layers, shared caches).
+  assert.match(editor, /openWorkspacePanel\('settings', 'workspace-open-source-cleanup'\)/)
+  assert.match(editor, /image-search-open-source-cleanup/)
+  assert.match(settings, /addEventListener\('workspace-open-source-cleanup'/)
+  assert.match(cleanup, /Advanced index tools\./)
+})

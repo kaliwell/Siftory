@@ -48,6 +48,9 @@ const zhCN: Record<string, string> = {
   'Remove the custom video cache environment override before migrating data':
     '当前使用视频缓存路径环境变量覆盖，请取消覆盖后再迁移。',
   'Choose new data location': '选择新数据位置',
+  'Change in Settings': '在设置中修改',
+  'Shows the active data directory. Migration is available in Settings.':
+    '显示当前数据目录；迁移操作在设置中。',
   'Siftory will restart, copy and verify the data, then switch locations. The old directory is kept.':
     '软件将重启，复制并校验数据，成功后切换位置。旧目录会保留。',
   'Restart and migrate': '重启并迁移',
@@ -142,9 +145,7 @@ const zhCN: Record<string, string> = {
   'Ctrl+K': 'Ctrl+K',
   'Library tools': '同步、备份与维护',
   'Batch actions': '批量操作',
-  'Your local media workspace': '本地素材工作台',
   'Local workspace': '本地工作区',
-  'Local processing': '本地运行',
   'Search your library': '搜索素材',
   'Search by image': '以图搜图',
   'From a reference image to your original file': '从一张图，找到原文件',
@@ -1153,6 +1154,12 @@ const zhCN: Record<string, string> = {
   'Yes, reset': '确认重置',
   'Clear Processed Image Data': '清除图搜处理数据',
   'Delete generated data by source': '按来源删除派生数据',
+  'Need to remove a single index layer from one folder? Use Index and maintenance → Image Search Data Overview → Advanced index tools.':
+    '只想删除某个文件夹的单一索引层？请用 索引与维护 → 图片索引总览 → 高级索引工具。',
+  'This removes only the selected index layers. Thumbnails, video data and shared caches are cleaned per source in Settings.':
+    '这里只删除所选索引层；缩略图、视频数据和共享缓存请在设置中按来源清理。',
+  'Clean up per source in Settings': '在设置中按来源清理',
+  'Scan folders': '扫描目录',
   'Source index maintenance': '来源索引维护',
   'Choose a drive or folder to synchronize deleted source files or manage generated data for that scope.':
     '选择盘符或文件夹，同步已删除的源文件，或管理该范围内的派生数据。',

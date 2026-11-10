@@ -24,9 +24,7 @@ import {
 } from '../hooks/settingsWriter'
 
 export const WORKSPACE_DOMAINS = ['Search', 'Library', 'Sources', 'Tasks', 'Settings'] as const
-// Product marks retain the same spelling in every locale.
 const WorkspaceTasksPage = React.lazy(() => import('./WorkspaceTasksPage'))
-const BRAND = { mark: 'S', name: 'Siftory', localName: '寻藏' } as const
 
 interface WorkspaceNavigatorProps {
   tasksOpen: boolean
@@ -141,9 +139,15 @@ const WorkspaceNavigator: React.FC<WorkspaceNavigatorProps> = ({ tasksOpen, setT
       stats.lanes.gpu.queued
     : 0
   const entries = [
-    { label: 'Search', panel: 'imageSearch', icon: 'search', view: 'search' },
-    { label: 'Library', panel: 'assetLibrary', icon: 'library' },
-    { label: 'Sources', panel: 'imageSearch', icon: 'folder', view: 'sources' },
+    { label: 'Search', display: 'Search', panel: 'imageSearch', icon: 'search', view: 'search' },
+    { label: 'Library', display: 'Library', panel: 'assetLibrary', icon: 'library' },
+    {
+      label: 'Sources',
+      display: 'Scan folders',
+      panel: 'imageSearch',
+      icon: 'folder',
+      view: 'sources',
+    },
   ] as const
 
   return (
@@ -159,17 +163,6 @@ const WorkspaceNavigator: React.FC<WorkspaceNavigatorProps> = ({ tasksOpen, setT
           }
         }}
       >
-        <div className="workspace-sidebar__brand">
-          <span className="workspace-brand-mark" aria-hidden="true">
-            {BRAND.mark}
-          </span>
-          <div>
-            <strong>
-              {BRAND.name} <span>{BRAND.localName}</span>
-            </strong>
-            <small>{t('Your local media workspace')}</small>
-          </div>
-        </div>
         <button
           className="workspace-sidebar-toggle"
           data-testid="workspace-sidebar-toggle"
@@ -181,7 +174,6 @@ const WorkspaceNavigator: React.FC<WorkspaceNavigatorProps> = ({ tasksOpen, setT
           <WorkspaceIcon name="filter" />
           <span>{t('Collapse navigation')}</span>
         </button>
-        <span className="workspace-nav-label">{t('Workspace')}</span>
         <div className="workspace-sidebar__links" role="group" aria-label={t('Workspace')}>
           {entries.map((entry, index) => (
             <button
@@ -190,8 +182,8 @@ const WorkspaceNavigator: React.FC<WorkspaceNavigatorProps> = ({ tasksOpen, setT
                 refs.current[index] = element
               }}
               data-testid={`workspace-domain-${entry.label.toLowerCase().replaceAll(' ', '-')}`}
-              title={t(entry.label)}
-              aria-label={t(entry.label)}
+              title={t(entry.display)}
+              aria-label={t(entry.display)}
               aria-current={
                 !tasksOpen &&
                 (entry.label === 'Search'
@@ -226,7 +218,7 @@ const WorkspaceNavigator: React.FC<WorkspaceNavigatorProps> = ({ tasksOpen, setT
               }}
             >
               <WorkspaceIcon name={entry.icon} />
-              <span>{t(entry.label)}</span>
+              <span>{t(entry.display)}</span>
             </button>
           ))}
         </div>

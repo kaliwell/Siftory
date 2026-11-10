@@ -423,13 +423,12 @@ const DraggablePanel: React.FC<DraggablePanelProps> = ({
         data-docked="true"
         aria-label={displayTitle ?? t(title)}
       >
-        <header className="panel-header">
+        <header className="panel-header" data-visually-hidden="true">
           <div className="workspace-page-heading">
             <span>{t('Workspace')}</span>
             <h1 className="panel-title">{displayTitle ?? t(title)}</h1>
             {(pageDescription || description) && <p>{pageDescription || t(description!)}</p>}
           </div>
-          <span className="workspace-local-badge">{t('Local processing')}</span>
         </header>
         <WorkspaceSectionTabs panel={panelId as WorkspacePanel} />
         <div className="panel-body">{children}</div>

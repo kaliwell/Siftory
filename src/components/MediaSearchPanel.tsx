@@ -1266,7 +1266,7 @@ const MediaSearchPanelInner: React.FC = () => {
     <DraggablePanel
       panelId="mediaSearch"
       title="Media Search"
-      displayTitle={t(sourcesOnly ? 'Sources' : 'Search')}
+      displayTitle={t(sourcesOnly ? 'Scan folders' : 'Search')}
       pageDescription={t(
         sourcesOnly
           ? 'Prepare video libraries for frame and semantic search.'

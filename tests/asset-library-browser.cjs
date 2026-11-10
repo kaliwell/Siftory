@@ -394,7 +394,7 @@ async function run() {
     await page.waitForFunction(
       () =>
         document.querySelector('[data-panel="image-search"] .panel-title')?.textContent ===
-        '数据源',
+        '扫描目录',
     )
     assert.deepEqual(errors, [])
     const report = {

@@ -3,9 +3,21 @@ import type {
   StorageLocationStatus,
   StorageMigrationSelection,
 } from '../../shared/ipc/storage-location'
+import { openWorkspacePanel } from '../services/openWorkspace'
 import { useTranslation } from '../i18n/useTranslation'
 
-export default function StorageLocationSettings() {
+interface StorageLocationSettingsProps {
+  /**
+   * Read-only summary for surfaces that must not start a migration themselves.
+   * The only action left is a jump to Settings -> Data & Reset, which owns the
+   * single editable instance of this control.
+   */
+  readOnly?: boolean
+}
+
+export default function StorageLocationSettings({
+  readOnly = false,
+}: StorageLocationSettingsProps) {
   const { t } = useTranslation()
   const [status, setStatus] = useState<StorageLocationStatus | null>(null)
   const [selection, setSelection] = useState<StorageMigrationSelection | null>(null)
@@ -52,6 +64,9 @@ export default function StorageLocationSettings() {
     setSelection(null)
     setBusy(false)
   }
+  const openDataLocationInSettings = () => {
+    openWorkspacePanel('settings', 'workspace-open-storage-location')
+  }
   return (
     <section className="automatic-maintenance" data-testid="storage-location-settings">
       <h3>{t('Application data location')}</h3>
@@ -81,15 +96,15 @@ export default function StorageLocationSettings() {
             </p>
           )}
           <button
-            data-testid="storage-location-choose"
-            disabled={busy || status.pending || status.externalMediaDirectory}
-            onClick={() => void choose()}
+            data-testid={readOnly ? 'storage-location-open-settings' : 'storage-location-choose'}
+            disabled={!readOnly && (busy || status.pending || status.externalMediaDirectory)}
+            onClick={readOnly ? openDataLocationInSettings : () => void choose()}
           >
-            {t('Choose new data location')}
+            {readOnly ? t('Change in Settings') : t('Choose new data location')}
           </button>
         </>
       )}
-      {selection && (
+      {!readOnly && selection && (
         <div>
           <p style={{ overflowWrap: 'anywhere' }} data-testid="storage-location-destination">
             {selection.destination}

@@ -67,7 +67,7 @@ async function main() {
               expectedCanvas: color(p.canvas),
               surface: actual('.workspace-sidebar').backgroundColor,
               expectedSurface: color(p.surface),
-              accent: actual('.workspace-brand-mark').backgroundColor,
+              accent: actual('[data-testid="image-search-query-image"]').backgroundColor,
               expectedAccent: color(p.accent),
               selection: actual('.workspace-sidebar button[aria-current="page"]').backgroundColor,
               expectedSelection: color(p.selection),

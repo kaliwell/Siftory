@@ -1273,7 +1273,7 @@ const ImageSearchPanel: React.FC = () => {
     <DraggablePanel
       panelId="imageSearch"
       title="Image Search"
-      displayTitle={t(sourcesOnly ? 'Sources' : 'Search')}
+      displayTitle={t(sourcesOnly ? 'Scan folders' : 'Search')}
       pageDescription={
         sourcesOnly ? t('Connect folders and manage your indexed sources.') : undefined
       }

@@ -74,13 +74,11 @@ const AppStoragePanel: React.FC = () => {
           tone="library"
           testId="maintenance-location-section"
           title={t('Application data location')}
-          description={t(
-            'Move indexes, vectors, library metadata and generated caches together. Original media stays in place.',
-          )}
+          description={t('Shows the active data directory. Migration is available in Settings.')}
           expanded={locationExpanded}
           onToggle={() => setLocationExpanded((expanded) => !expanded)}
         >
-          <StorageLocationSettings />
+          <StorageLocationSettings readOnly />
         </CollapsibleSearchSection>
         <CollapsibleSearchSection
           id="maintenance-automatic-section"

@@ -511,6 +511,11 @@ export default function SourceDerivedDataCleanup(): React.ReactElement {
         )}
       </div>
       <div style={{ fontSize: 11, fontWeight: 600 }}>{t('Delete generated data by source')}</div>
+      <div style={{ fontSize: 10, opacity: 0.72 }}>
+        {t(
+          'Need to remove a single index layer from one folder? Use Index and maintenance → Image Search Data Overview → Advanced index tools.',
+        )}
+      </div>
       <button type="button" disabled={busy || !sourcePath} onClick={() => void analyze()}>
         {busy && progress?.state === 'previewing'
           ? t('Analyzing generated data...')

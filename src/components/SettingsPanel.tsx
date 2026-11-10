@@ -776,6 +776,40 @@ const SettingsPanel: React.FC = () => {
   }, [])
 
   useEffect(() => {
+    // The index editor removes single layers; the broad per-source cleanup
+    // (thumbnails, video, shared caches) lives here and is linked from there.
+    const openSourceCleanup = () => {
+      setActiveSection('dataReset')
+      setExpandedSections((current) => ({ ...current, dataReset: true }))
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>('[data-testid="source-derived-data-cleanup"]')
+          ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      })
+    }
+    window.addEventListener('workspace-open-source-cleanup', openSourceCleanup)
+    return () => window.removeEventListener('workspace-open-source-cleanup', openSourceCleanup)
+  }, [])
+
+  useEffect(() => {
+    // The maintenance page keeps a read-only copy of the data location; this
+    // event brings the editable instance in Data & Reset into view.
+    const openStorageLocation = () => {
+      setActiveSection('dataReset')
+      setExpandedSections((current) => ({ ...current, dataReset: true }))
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>(
+            '[data-settings-category="dataReset"] [data-testid="storage-location-settings"]',
+          )
+          ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      })
+    }
+    window.addEventListener('workspace-open-storage-location', openStorageLocation)
+    return () => window.removeEventListener('workspace-open-storage-location', openStorageLocation)
+  }, [])
+
+  useEffect(() => {
     if (!showClearData) return
     let cancelled = false
     setClearDataPreview(null)

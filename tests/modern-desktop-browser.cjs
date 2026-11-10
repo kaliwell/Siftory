@@ -159,7 +159,7 @@ async function run() {
         assert.equal(await page.getByTestId('image-search-query-section').count(), 0)
         assert.equal(
           await page.locator('[data-panel="image-search"] .panel-title').innerText(),
-          '数据源',
+          '扫描目录',
         )
         assert.equal(await page.locator('.image-search-results-pane').count(), 0)
       }
@@ -698,6 +698,26 @@ async function run() {
       window.__workspaceTest.calls.some((call) => call.method === 'imageSearch.queryData'),
     )
     await page.screenshot({ path: path.join(evidence, 'maintenance-advanced.png') })
+    // Data location has one editable owner: the maintenance surface is a
+    // read-only summary and must jump to Settings -> Data & Reset instead of
+    // offering a second migration control.
+    const locationSection = page.getByTestId('maintenance-location-section')
+    if ((await locationSection.getAttribute('data-collapsed')) === 'true')
+      await locationSection.locator('button.search-control-section__header').click()
+    const readOnlyLocation = locationSection.getByTestId('storage-location-settings')
+    await readOnlyLocation.getByTestId('storage-location-current').waitFor()
+    assert.equal(await readOnlyLocation.getByTestId('storage-location-choose').count(), 0)
+    await readOnlyLocation.getByTestId('storage-location-open-settings').click()
+    const editableLocation = page.locator(
+      '[data-settings-category="dataReset"] [data-testid="storage-location-settings"]',
+    )
+    await editableLocation.getByTestId('storage-location-choose').waitFor()
+    assert.equal(
+      await page.locator('[data-settings-category="dataReset"]:visible').count(),
+      1,
+      'jump opens the editable data location in Settings',
+    )
+    await page.getByTestId('workspace-domain-maintenance').click()
     // Use a genuinely long image source list: moving source management out of
     // this view means the empty preparation form no longer needs to overflow.
     await page.evaluate(() =>
@@ -712,7 +732,10 @@ async function run() {
     )
     // Source controls stay reachable while both source libraries scroll.
     for (const width of [1920, 1320, 946, 760]) {
-      await page.setViewportSize({ width, height: 850 })
+      // Use a shorter window so the expanded source lists still overflow after the
+      // compact chrome removed the page-heading row (54px). Both libraries must
+      // scroll here for the pinned-toolbar assertion to mean anything.
+      await page.setViewportSize({ width, height: 720 })
       for (const domain of ['sources', 'video-indexing']) {
         await go(domain)
         const prefix = domain === 'sources' ? 'image-search' : 'media-search'

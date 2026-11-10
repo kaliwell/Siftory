@@ -9,10 +9,6 @@
 .focused-workspace *::after {
   box-sizing: border-box;
 }
-.focused-workspace .panel[data-docked='true'] > .panel-header {
-  min-height: 116px;
-  padding-block: 23px;
-}
 .workspace-page-heading > p {
   margin: 7px 0 0;
   max-width: 620px;
@@ -982,15 +978,8 @@
   }
 }
 @media (max-width: 850px) {
-  .focused-workspace .panel[data-docked='true'] > .panel-header {
-    min-height: 108px;
-    padding: 18px 20px;
-  }
   .focused-workspace .panel[data-docked='true'] > .panel-body {
     padding: 18px;
-  }
-  .workspace-local-badge {
-    display: none;
   }
   .workspace-page-heading > p {
     font-size: 12px;

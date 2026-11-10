@@ -9,6 +9,7 @@ import type {
 } from '../../shared/ipc-contract'
 import { useTranslation } from '../i18n/useTranslation'
 import { imageSearchBridge } from '../services/imageSearchBridge'
+import { openWorkspacePanel } from '../services/openWorkspace'
 import ImageSearchDataOverview from './ImageSearchDataOverview'
 import { useStore } from '../stores/useStore'
 
@@ -319,6 +320,12 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
 
   const cancelFolderEdit = async () => {
     await imageSearchBridge.cancelFolderDataEdit()
+  }
+
+  // The broad "by source" cleanup (thumbnails, video layers, shared caches)
+  // lives in Settings; this editor only removes selected index layers.
+  const openSourceCleanupInSettings = () => {
+    openWorkspacePanel('settings', 'workspace-open-source-cleanup')
   }
 
   const deleteDirNameRecords = async () => {
@@ -696,6 +703,32 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
                     <span style={{ fontSize: 12, opacity: 0.65 }}>
                       {t('Source images are never deleted')}
                     </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      fontSize: 11,
+                      opacity: 0.8,
+                    }}
+                  >
+                    <span>
+                      {t(
+                        'This removes only the selected index layers. Thumbnails, video data and shared caches are cleaned per source in Settings.',
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      data-testid="image-search-open-source-cleanup"
+                      onClick={openSourceCleanupInSettings}
+                      disabled={folderEditActive}
+                      style={{ fontSize: 11 }}
+                    >
+                      {t('Clean up per source in Settings')}
+                    </button>
                   </div>
 
                   {folderEditPreview?.ok && (

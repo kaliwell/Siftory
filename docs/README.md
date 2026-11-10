@@ -1,5 +1,9 @@
 # Siftory（寻藏）文档中心
 
+- [派生数据删除入口的边界与命名](current/2026-11-10-source-cleanup-boundaries.md)
+- [应用数据位置收敛为单一入口](current/2026-11-10-storage-location-single-entry.md)
+- [工作台页头与侧栏品牌精简](current/2026-11-10-workspace-chrome-trim.md)
+- [BMP 预览解码降级路径](current/2026-11-10-bmp-preview-decode-fallback.md)
 - [本地搜索性能验收与待完成条件](current/2026-11-02-local-search-acceptance.md)
 - [搜索性能优化与本地验收分工](current/2026-11-02-search-performance-handoff.md)
 - [共享目录增量索引与历史记录去重](current/2026-10-29-network-index-idempotence.md)
@@ -30,6 +34,14 @@
 当前运行时只能查询和管理自己的代理。一个运行时看不到某代理，不代表其他运行时中不存在该代理。
 
 ## 当前基线
+
+最新命名与边界：[派生数据删除入口的边界与命名](current/2026-11-10-source-cleanup-boundaries.md)。三种删除作用域保留但互相说明并跳转；导航「数据源」改名为「扫描目录」，与维护页的来源注册区分。
+
+最新结构收敛：[应用数据位置收敛为单一入口](current/2026-11-10-storage-location-single-entry.md)。迁移只在 设置 → 数据与重置 发起；索引与维护页改为只读摘要并提供跳转。
+
+最新界面精简：[工作台页头与侧栏品牌精简](current/2026-11-10-workspace-chrome-trim.md)。移除侧栏品牌文字、图标和「工作台」小标题，停靠面板页头行和「本地运行」徽标，内容区上移约 54px；页标题仅对读屏保留，导航分组仍保留语义标签。
+
+最新维护修复：[BMP 预览解码降级路径](current/2026-11-10-bmp-preview-decode-fallback.md)。Alpha 24 未解决的 8 张 BMP 预览失败已修复：CPU 链路在 `nativeImage` 与 `sharp` 都不支持 BMP 时降级到系统缩略图，仅对 `.bmp`/`.ico` 生效。
 
 最新审计修复与未关闭项：[Alpha 22 审计修复及升级验收交接](current/2026-11-05-alpha22-audit-fixes.md)。
 
@@ -195,6 +207,7 @@ Alpha 仓库准备：[2026-10-10 Alpha 版本与公开仓库准备](current/2026
 
 ### Image Search
 
+- [BMP 预览解码降级路径](current/2026-11-10-bmp-preview-decode-fallback.md)：`sharp`/`nativeImage` 都不支持 BMP 时，CPU 预览链路降级到系统缩略图；`.bmp`/`.ico` 之外不启用，损坏文件仍返回原错误。
 - [源文件删除同步自动优化 TODO](current/2026-08-30-source-file-sync-auto-todo.md)：提供在线来源验证、失效图片/视频预览、确认后二次校验、批量索引持久化、素材库联动，以及取消、离线和读取失败时的保守保护。
 - [来源文件同步失败恢复与安全边界整改记录](current/2026-08-30-source-file-sync-audit-remediation-todo.md)：跟踪掉线重检、Native 原子提交、向量失效 outbox、视频 missing 过滤、双向维护互斥、阶段验收和残余风险。
 
