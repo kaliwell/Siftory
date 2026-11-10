@@ -1,6 +1,6 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.24",
+  "version": "1.0.1-alpha.25",
   "private": true,
   "license": "Apache-2.0",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",

@@ -1,5 +1,6 @@
 # Siftory（寻藏）文档中心
 
+- [Siftory v1.0.1-alpha.25](current/2026-11-10-alpha25-release.md)
 - [派生数据删除入口的边界与命名](current/2026-11-10-source-cleanup-boundaries.md)
 - [应用数据位置收敛为单一入口](current/2026-11-10-storage-location-single-entry.md)
 - [工作台页头与侧栏品牌精简](current/2026-11-10-workspace-chrome-trim.md)
@@ -34,6 +35,8 @@
 当前运行时只能查询和管理自己的代理。一个运行时看不到某代理，不代表其他运行时中不存在该代理。
 
 ## 当前基线
+
+当前版本：[Alpha 25](current/2026-11-10-alpha25-release.md)。Windows x64 Online 维护版，包含 BMP 预览修复与工作台界面/入口收敛。
 
 最新命名与边界：[派生数据删除入口的边界与命名](current/2026-11-10-source-cleanup-boundaries.md)。三种删除作用域保留但互相说明并跳转；导航「数据源」改名为「扫描目录」，与维护页的来源注册区分。
 
