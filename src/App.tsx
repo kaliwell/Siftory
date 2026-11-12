@@ -1,7 +1,6 @@
-import { PANEL_IDENTITIES } from '../shared/ipc/app-core'
 import './styles/focused-workspace.css'
-import { focusedWorkspaceVisibility, WORKSPACE_PANELS } from './services/focusedWorkspace'
-import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { focusedWorkspaceVisibility } from './services/focusedWorkspace'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { normalizeImageSearchScanPaths, useStore } from './stores/useStore'
 import { useFMStore } from './stores/useFMStore'
 import WorkspaceNavigator from './components/WorkspaceNavigator'
@@ -92,33 +91,6 @@ function safeSize(value: unknown): PanelSize | undefined {
 }
 
 const App: React.FC = () => {
-  const tasksOpen = useStore((state) => state.workspaceTaskPageOpen)
-  const setTasksOpen = useCallback<React.Dispatch<React.SetStateAction<boolean>>>((value) => {
-    useStore.setState((state) => ({
-      workspaceTaskPageOpen:
-        typeof value === 'function' ? value(state.workspaceTaskPageOpen) : value,
-    }))
-  }, [])
-  useEffect(() => {
-    if (!tasksOpen) return
-    return useStore.subscribe((state, previous) => {
-      if (!state.globalVisible || !previous.globalVisible) return
-      if (
-        WORKSPACE_PANELS.some((panel) => {
-          const key = PANEL_IDENTITIES[panel].visibilityKey
-          return state[key] && !previous[key]
-        })
-      )
-        setTasksOpen(false)
-    })
-  }, [tasksOpen, setTasksOpen])
-  useEffect(() => {
-    if (!tasksOpen) return
-    const frame = requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>('.workspace-task-page')?.focus({ preventScroll: true }),
-    )
-    return () => cancelAnimationFrame(frame)
-  }, [tasksOpen])
   const themeIdx = useStore((s) => s.themeIdx)
   const themeId = useStore((s) => s.themeId)
   const themeMode = useStore((s) => s.themeMode)
@@ -750,7 +722,7 @@ const App: React.FC = () => {
       data-testid="app-root"
       data-ready={ready ? 'true' : 'false'}
       data-presentation="desktop"
-      data-workspace-view={tasksOpen ? 'tasks' : 'panel'}
+      data-workspace-view="panel"
     >
       {legacyOverlay && (
         <Suspense fallback={null}>
@@ -759,11 +731,11 @@ const App: React.FC = () => {
       )}
       {ready && globalVisible && (
         <ErrorBoundary name="Workspace">
-          <WorkspaceNavigator tasksOpen={tasksOpen} setTasksOpen={setTasksOpen} />
+          <WorkspaceNavigator />
         </ErrorBoundary>
       )}
       {ready && showSettings && (
-        <div style={{ display: tasksOpen ? 'none' : 'contents' }}>
+        <div style={{ display: 'contents' }}>
           <ErrorBoundary name="Settings">
             <Suspense fallback={null}>
               <SettingsPanel />
@@ -789,7 +761,7 @@ const App: React.FC = () => {
               return null
             }
             return (
-              <div key={id} style={{ display: panelVisible && !tasksOpen ? 'contents' : 'none' }}>
+              <div key={id} style={{ display: panelVisible ? 'contents' : 'none' }}>
                 <ErrorBoundary name={boundaryName}>
                   <Suspense fallback={null}>
                     <Component />

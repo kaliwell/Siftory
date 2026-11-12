@@ -503,12 +503,25 @@
   margin-top: 4px;
   padding: 12px;
 }
+/* Source preparation keeps its column width when sections or modes change. */
+.focused-workspace
+  :is(.image-search-shell, .media-search-shell)[data-sources-only='true']
+  :is(
+    .image-search-control-pane,
+    .media-search-control-pane,
+    .media-search-control-stack,
+    .media-search-controls
+  ) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
 /* The source list owns scrolling; its mode and section controls remain pinned. */
 .focused-workspace
   :is(.image-search-shell, .media-search-shell)[data-sources-only='true']
   :is(.image-search-workspace, .media-search-workspace) {
   width: 100%;
-  max-width: 1120px;
+  max-width: 728px;
   margin-inline: auto;
   min-width: 0;
   box-sizing: border-box;
