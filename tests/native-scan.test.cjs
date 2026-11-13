@@ -2098,8 +2098,11 @@ test('adaptive Native thumbnail shutdown clears deferred paths and retained JPEG
   fs.mkdirSync(source)
   fs.mkdirSync(cache)
   const base = path.join(source, 'image-0000.jpg')
-  await createPatternJpeg(base, 1200, 900)
-  for (let index = 1; index < 256; index += 1) {
+  // Exercise queue cancellation, not relative decoder speeds: on hosted
+  // 4-core runners large JPEG hashing can be slower than the thumbnail lane.
+  // Small inputs and a longer stream reliably fill the one-slot queue.
+  await createPatternJpeg(base, 64, 64)
+  for (let index = 1; index < 1024; index += 1) {
     fs.linkSync(base, path.join(source, `image-${String(index).padStart(4, '0')}.jpg`))
   }
 
