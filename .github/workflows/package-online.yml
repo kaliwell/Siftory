@@ -25,7 +25,14 @@ jobs:
       - run: npm install --global npm@11.19.1
       - run: npm ci
       - name: Verify preview and native mutation regressions
+        env:
+          TEMP: ${{ runner.temp }}\siftory-native-tests
+          TMP: ${{ runner.temp }}\siftory-native-tests
         run: |
+          # Relative-root fixtures must remain relative. Across drive letters,
+          # path.relative returns an absolute path and selects volume-wide USN.
+          New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null
+          if ([IO.Path]::GetPathRoot($env:TEMP) -ne [IO.Path]::GetPathRoot($env:GITHUB_WORKSPACE)) { throw 'Native fixture temp must share the workspace drive' }
           npm run build:native
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test tests/native-incremental-index.test.cjs tests/native-exact-bulk-delete.test.cjs tests/native-scan.test.cjs tests/native-search-correctness.test.cjs tests/native-segment-v3.test.cjs
