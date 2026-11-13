@@ -1,0 +1,38 @@
+name: Publish verified Alpha 27
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-alpha27
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Verify pinned successful build
+        shell: bash
+        run: |
+          gh api repos/$GH_REPO/actions/runs/43398436011 > run.json
+          jq -e '.conclusion == "success" and .head_sha == "77ab4b3122f956322c51d174e5a71ff551f28b9f" and .path == ".github/workflows/package-online.yml"' run.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-online-installer
+          path: installer
+          run-id: 43398436011
+          github-token: ${{ github.token }}
+      - name: Verify and publish reviewed artifact
+        working-directory: installer
+        shell: bash
+        run: |
+          sha256sum --check SHA256SUMS.txt
+          jq -e '.passed == true and .packaged == true and .nativeAddonLoaded == true and .projectPreviewWorkerPassed == true and .rendererReady == true and .version == "1.0.1-alpha.27"' startup-check.json
+          jq -e '.startupPassed == true and .archivePassed == true' validation-status.json
+          cat validation-status.json
+          stat --format='%n %s bytes' *.exe
+          gh release create v1.0.1-alpha.27 ./* --target 77ab4b3122f956322c51d174e5a71ff551f28b9f --title 'Siftory 1.0.1-alpha.27 — Windows x64 Online' --prerelease --notes-file RELEASE_NOTES.md
