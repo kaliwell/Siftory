@@ -21,6 +21,8 @@ function fixture(t, overrides = {}) {
     'electron/main.ts': 'export {}',
     'electron/preload.ts': 'export {}',
     'electron/exampleWorker.ts': 'export {}',
+    'electron/projectPreviewImageWorker.cjs': "require('node:worker_threads')",
+    'electron/projectPreviewProviders.ts': 'export {}',
     'electron/endUserTermsPreload.ts':
       "import { contextBridge } from 'electron'; import type { Contract } from '../shared/contract'",
     'src/main.tsx': 'export {}',
@@ -218,3 +220,9 @@ for (const [name, overrides, diagnostic] of [
     assert.match(result.output, diagnostic)
   })
 }
+
+test('hot module line budgets warn without weakening dependency isolation', (t) => {
+  const result = fixture(t, { 'electron/imageSearchService.ts': '\n'.repeat(10000) })
+  assert.equal(result.status, 0, result.output)
+  assert.match(result.output, /architecture warning.*imageSearchService/)
+})

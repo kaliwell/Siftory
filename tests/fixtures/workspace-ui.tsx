@@ -406,6 +406,7 @@ const handlers: Record<string, (...args: any[]) => any> = {
     values.map((item) => ({ path: item.path, dataUrl: picture })),
   fmGetThumbnail: () => ({ dataUrl: picture }),
 }
+const bridgeListeners = new Map<string, Set<(...args: any[]) => void>>()
 const bridgeObjects = new Map<string, any>()
 const api = (prefix = ''): any => {
   if (bridgeObjects.has(prefix)) return bridgeObjects.get(prefix)
@@ -414,7 +415,13 @@ const api = (prefix = ''): any => {
       key === 'then' ? undefined : api(prefix ? prefix + '.' + String(key) : String(key)),
     apply: (_, __, args) => {
       const name = prefix.split('.').at(-1)!
-      if (name.startsWith('on')) return () => {}
+      if (name.startsWith('on')) {
+        if (typeof args[0] !== 'function') return () => {}
+        const listeners = bridgeListeners.get(prefix) ?? new Set()
+        bridgeListeners.set(prefix, listeners)
+        listeners.add(args[0])
+        return () => listeners.delete(args[0])
+      }
       calls.push({ method: prefix, args })
       inFlight[prefix] = (inFlight[prefix] ?? 0) + 1
       maximumInFlight[prefix] = Math.max(maximumInFlight[prefix] ?? 0, inFlight[prefix])
@@ -436,6 +443,9 @@ const api = (prefix = ''): any => {
 ;(window as any).electronAPI = api()
 ;(window as any).__workspaceTest = {
   store: useStore,
+  emit: (name: string, value: unknown) => {
+    for (const listener of bridgeListeners.get(name) ?? []) listener(value)
+  },
   calls,
   events,
   eventMounts,

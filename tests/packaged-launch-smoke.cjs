@@ -79,6 +79,24 @@ async function main() {
       stdout.includes('Native addon loaded: fast_scanner'),
       'packaged native addon must load',
     )
+    const previewSource = path.join(userData, 'packaged-preview-test.ai')
+    fs.writeFileSync(previewSource, require('./fixtures/project-preview-assets.cjs').makePdf())
+    const preview = await page.evaluate(
+      (filePath) => window.electronAPI.fmGetThumbnail(filePath, 256),
+      previewSource,
+    )
+    assert.ok(preview?.dataUrl, 'Packaged PDF/AI preview worker must produce a thumbnail')
+    const previewManifest = JSON.parse(
+      fs.readFileSync(path.join(userData, 'project-previews/v1/manifest.json'), 'utf8'),
+    )
+    assert.ok(
+      previewManifest.entries.some(
+        (entry) =>
+          entry.sourcePath === previewSource &&
+          entry.provider === 'pdfjs-first-page' &&
+          entry.status === 'ready',
+      ),
+    )
     assert.deepEqual(pageErrors, [])
     fs.mkdirSync(output, { recursive: true })
     await page.screenshot({ path: path.join(output, 'startup.png') })
@@ -93,6 +111,7 @@ async function main() {
           agreementShownAndAcceptedInTestProfile: agreementShown,
           rendererReady: true,
           nativeAddonLoaded: true,
+          projectPreviewWorkerPassed: true,
           pageErrors,
           scope:
             'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',

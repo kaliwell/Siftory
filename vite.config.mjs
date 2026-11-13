@@ -1,3 +1,4 @@
+import { builtinModules } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { basename, dirname, resolve } from 'node:path'
 import { randomBytes } from 'node:crypto'
@@ -291,6 +292,42 @@ export default defineConfig({
                 output: {
                   entryFileNames: 'vectorGenerationRecallWorker.js',
                 },
+              },
+            },
+          },
+        },
+        {
+          entry: 'electron/projectPreviewProviders.ts',
+          vite: {
+            build: {
+              outDir: 'dist-electron',
+              emptyOutDir: false,
+              rollupOptions: {
+                external: [
+                  ...builtinModules,
+                  ...builtinModules.map((name) => `node:${name}`),
+                  '@napi-rs/canvas',
+                  'pdfjs-dist/legacy/build/pdf.mjs',
+                  'electron',
+                ],
+                output: { entryFileNames: 'projectPreviewProvidersWorker.js' },
+              },
+            },
+          },
+        },
+        {
+          entry: 'electron/projectPreviewImageWorker.cjs',
+          vite: {
+            build: {
+              outDir: 'dist-electron',
+              emptyOutDir: false,
+              rollupOptions: {
+                external: [
+                  ...builtinModules,
+                  ...builtinModules.map((name) => `node:${name}`),
+                  'sharp',
+                ],
+                output: { entryFileNames: 'projectPreviewImageWorker.js' },
               },
             },
           },

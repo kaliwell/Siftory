@@ -1,3 +1,4 @@
+import { createProgressCoalescer } from './progressCoalescer'
 import path from 'path'
 import fs from 'fs'
 import type {
@@ -313,7 +314,12 @@ function getIndexModeCached(): ReturnType<NativeAddon['getIndexMode']> {
   }
 }
 
+const emitProgress = createProgressCoalescer(emitNow)
 function emit(): void {
+  emitProgress(['indexing', 'scanning'].includes(status.state) ? status.state : undefined)
+}
+
+function emitNow(): void {
   if (onStatusChange || statusListeners.size > 0) {
     const m = nativeAddon
       ? getIndexModeCached()

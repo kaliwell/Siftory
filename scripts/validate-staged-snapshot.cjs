@@ -2,10 +2,6 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
-const {
-  prepareSnapshotTools,
-  prepareSnapshotCoveredSource,
-} = require('./prepare-snapshot-tools.cjs')
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -95,6 +91,10 @@ async function main() {
     worktreeAdded = true
     linkDependencies(repoRoot, snapshotRoot)
     if (full && fs.existsSync(path.join(snapshotRoot, 'electron', 'ffmpegService.ts'))) {
+      const {
+        prepareSnapshotTools,
+        prepareSnapshotCoveredSource,
+      } = require('./prepare-snapshot-tools.cjs')
       const verifiedTools = await prepareSnapshotTools(repoRoot, snapshotRoot)
       console.log(`[staged-snapshot] prepared ${verifiedTools} hash-verified FFmpeg tools`)
       await prepareSnapshotCoveredSource(repoRoot, snapshotRoot)

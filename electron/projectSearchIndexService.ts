@@ -516,9 +516,9 @@ async function enumerateProjectSources(
     if (visitedDirectories.has(directoryKey)) continue
     visitedDirectories.add(directoryKey)
     if (previewRoot && isWithin(previewRoot, directory)) continue
-    let entries: fs.Dirent[]
+    let entries: fs.Dir
     try {
-      entries = await fsp.readdir(directory, { withFileTypes: true })
+      entries = await fsp.opendir(directory, { bufferSize: 64 })
     } catch {
       continue
     }
@@ -536,26 +536,33 @@ async function enumerateProjectSources(
       })
       await new Promise<void>((resolve) => setImmediate(resolve))
     }
-    for (const entry of entries) {
-      if (isCancelled()) break
-      const candidate = path.join(directory, entry.name)
-      if (entry.isSymbolicLink()) continue
-      if (entry.isDirectory()) {
-        if (!SKIPPED_DIRECTORY_NAMES.has(entry.name.toLowerCase())) stack.push(candidate)
-        continue
+    let visitedEntries = 0
+    try {
+      for await (const entry of entries) {
+        if (++visitedEntries % 128 === 0)
+          await new Promise<void>((resolve) => setImmediate(resolve))
+        if (isCancelled()) break
+        const candidate = path.join(directory, entry.name)
+        if (entry.isSymbolicLink()) continue
+        if (entry.isDirectory()) {
+          if (!SKIPPED_DIRECTORY_NAMES.has(entry.name.toLowerCase())) stack.push(candidate)
+          continue
+        }
+        if (!entry.isFile()) continue
+        const classification = classifyProjectFile(candidate)
+        if (!classification || !PROJECT_INDEX_EXTENSIONS.has(classification.sourceExt)) continue
+        const sourceKey = normalizedKey(candidate)
+        if (visitedSources.has(sourceKey)) continue
+        visitedSources.add(sourceKey)
+        sources.push(candidate)
+        if (sources.length >= MAX_PROJECT_SOURCES_PER_SCAN) {
+          truncated = true
+          stack.length = 0
+          break
+        }
       }
-      if (!entry.isFile()) continue
-      const classification = classifyProjectFile(candidate)
-      if (!classification || !PROJECT_INDEX_EXTENSIONS.has(classification.sourceExt)) continue
-      const sourceKey = normalizedKey(candidate)
-      if (visitedSources.has(sourceKey)) continue
-      visitedSources.add(sourceKey)
-      sources.push(candidate)
-      if (sources.length >= MAX_PROJECT_SOURCES_PER_SCAN) {
-        truncated = true
-        stack.length = 0
-        break
-      }
+    } catch {
+      /* A directory becoming unavailable must not block other roots. */
     }
   }
   return { sources, truncated }
@@ -610,87 +617,130 @@ export async function indexProjectPreviews(
     removed: 0,
   }
 
-  for (const sourcePath of sources) {
-    if (isCancelled()) break
-    options.onProgress?.({
-      phase: 'rendering',
-      currentPath: sourcePath,
-      ...state,
-    })
-    const previous = await service.manifest.get(sourcePath)
-    try {
-      const knownPreview =
-        previous?.status === 'ready' &&
-        previous.previewPath &&
-        adapter.hasIndexPath?.(previous.previewPath) &&
-        fs.existsSync(previous.previewPath)
-      if (options.scanMode === 'addNew' && knownPreview) {
-        state.skipped += 1
-        state.completed += 1
-        continue
-      }
-      const current = await service.getOrCreate(sourcePath)
-      if (options.scanMode !== 'updateAll' && knownPreview && current === previous) {
-        state.skipped += 1
-        state.completed += 1
-        continue
-      }
-      if (previous?.previewPath && previous.previewPath !== current.previewPath) {
-        adapter.deleteIndexPath(previous.previewPath)
-        adapter.removeSourceVectorData(sourcePath)
-      }
-      if (current.status !== 'ready' || !current.previewPath) {
-        state.unavailable += 1
-      } else {
-        adapter.deleteIndexPath(sourcePath)
-        const hashed = await adapter.hashImageAsync(current.previewPath)
-        if (!hashed.ok || !hashed.diffHash64 || !hashed.dctHash64) {
-          state.failed += 1
+  service.manifest.beginBatch()
+  try {
+    for (const sourcePath of sources) {
+      if (isCancelled()) break
+      options.onProgress?.({
+        phase: 'rendering',
+        currentPath: sourcePath,
+        ...state,
+      })
+      const previous = await service.manifest.get(sourcePath)
+      try {
+        const knownPreview =
+          previous?.status === 'ready' &&
+          previous.previewPath &&
+          adapter.hasIndexPath?.(previous.previewPath) &&
+          (await fsp.stat(previous.previewPath).then(
+            (stat) => stat.isFile(),
+            () => false,
+          ))
+        if (isCancelled()) break
+        if (options.scanMode === 'addNew' && knownPreview) {
+          state.skipped += 1
+          state.completed += 1
+          continue
+        }
+        const current = await service.getOrCreate(sourcePath)
+        if (isCancelled()) break
+        if (options.scanMode !== 'updateAll' && knownPreview && current === previous) {
+          state.skipped += 1
+          state.completed += 1
+          continue
+        }
+        if (previous?.previewPath && previous.previewPath !== current.previewPath) {
+          adapter.deleteIndexPath(previous.previewPath)
+          adapter.removeSourceVectorData(sourcePath)
+        }
+        if (current.status !== 'ready' || !current.previewPath) {
+          state.unavailable += 1
         } else {
-          const upserted = adapter.upsertIndexRecord(
-            current.previewPath,
-            hashed.width || current.width || 0,
-            hashed.height || current.height || 0,
-            current.size,
-            current.mtimeMs,
-            hashed.diffHash64,
-            hashed.dctHash64,
-          )
-          if (upserted.ok) {
-            await service.manifest.upsert({
-              ...current,
-              diffHash64: hashed.diffHash64,
-              dctHash64: hashed.dctHash64,
-            })
-            state.indexed += 1
-          } else state.failed += 1
+          adapter.deleteIndexPath(sourcePath)
+          const hashed = await adapter.hashImageAsync(current.previewPath)
+          if (isCancelled()) break
+          if (!hashed.ok || !hashed.diffHash64 || !hashed.dctHash64) {
+            state.failed += 1
+          } else {
+            const upserted = adapter.upsertIndexRecord(
+              current.previewPath,
+              hashed.width || current.width || 0,
+              hashed.height || current.height || 0,
+              current.size,
+              current.mtimeMs,
+              hashed.diffHash64,
+              hashed.dctHash64,
+            )
+            if (upserted.ok) {
+              await service.manifest.upsert({
+                ...current,
+                diffHash64: hashed.diffHash64,
+                dctHash64: hashed.dctHash64,
+              })
+              state.indexed += 1
+            } else state.failed += 1
+          }
         }
+      } catch {
+        state.failed += 1
       }
-    } catch {
-      state.failed += 1
+      state.completed += 1
     }
-    state.completed += 1
-  }
 
-  if (!isCancelled()) {
-    const staleEntries = (await service.manifest.list()).filter(
-      (entry) =>
-        isWithinAnyRoot(resolvedRoots, entry.sourcePath) && !fs.existsSync(entry.sourcePath),
-    )
-    for (const entry of staleEntries) {
-      if (entry.previewPath) {
-        adapter.deleteIndexPath(entry.previewPath)
-        if (isWithin(service.manifest.previewsDir, entry.previewPath)) {
-          await fsp.unlink(entry.previewPath).catch(() => {})
+    if (!isCancelled()) {
+      const staleEntries: ProjectPreviewManifestEntry[] = []
+      const accessibleRoots: string[] = []
+      for (const root of resolvedRoots) {
+        if (isCancelled()) break
+        try {
+          const directory = await fsp.opendir(root)
+          await directory.close()
+          accessibleRoots.push(root)
+        } catch {
+          /* Offline roots do not authorize pruning cached entries. */
         }
       }
-      adapter.removeSourceVectorData(entry.sourcePath)
-    }
-    if (staleEntries.length > 0) {
-      state.removed = await service.manifest.removeMany(
-        staleEntries.map((entry) => entry.sourcePath),
+      const candidates = (await service.manifest.list()).filter((entry) =>
+        isWithinAnyRoot(accessibleRoots, entry.sourcePath),
       )
+      // Never block Electron on synchronous network filesystem probes. Permission
+      // and transient network failures are not proof that a source was deleted.
+      let cursor = 0
+      await Promise.all(
+        Array.from({ length: Math.min(8, candidates.length) }, async () => {
+          while (!isCancelled()) {
+            const entry = candidates[cursor++]
+            if (!entry) return
+            try {
+              await fsp.stat(entry.sourcePath)
+            } catch (error) {
+              if (['ENOENT', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? ''))
+                staleEntries.push(entry)
+            }
+          }
+        }),
+      )
+      const removedSources: string[] = []
+      for (const entry of staleEntries) {
+        if (isCancelled()) break
+        if (entry.previewPath) {
+          const deleted = adapter.deleteIndexPath(entry.previewPath)
+          if (!deleted.ok) {
+            state.failed += 1
+            continue
+          }
+          if (isWithin(service.manifest.previewsDir, entry.previewPath)) {
+            await fsp.unlink(entry.previewPath).catch(() => {})
+          }
+        }
+        adapter.removeSourceVectorData(entry.sourcePath)
+        removedSources.push(entry.sourcePath)
+      }
+      if (removedSources.length > 0)
+        state.removed = await service.manifest.removeMany(removedSources)
     }
+  } finally {
+    await service.manifest.endBatch()
   }
 
   await refreshProjectSearchIndex()

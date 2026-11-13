@@ -1,3 +1,4 @@
+import { runProjectPreviewCompute } from './projectPreviewCompute'
 import { resolveDataPathInRoots } from './storagePathResolver'
 import { readStoragePathAliases } from './storageLocationService'
 import crypto from 'crypto'
@@ -65,6 +66,10 @@ export class ProjectPreviewManifestStore {
   readonly manifestPath: string
   private readonly entries = new Map<string, ProjectPreviewManifestEntry>()
   private loaded = false
+  private loading: Promise<void> | undefined
+  private batchDepth = 0
+  private revision = 0
+  private persistedRevision = 0
   private writeChain: Promise<void> = Promise.resolve()
 
   constructor(private readonly userDataPath: string) {
@@ -75,6 +80,14 @@ export class ProjectPreviewManifestStore {
 
   async load(): Promise<void> {
     if (this.loaded) return
+    if (!this.loading)
+      this.loading = this.loadOnce().finally(() => {
+        this.loading = undefined
+      })
+    return this.loading
+  }
+
+  private async loadOnce(): Promise<void> {
     await fsp.mkdir(this.previewsDir, { recursive: true })
     try {
       const parsed = JSON.parse(
@@ -122,8 +135,8 @@ export class ProjectPreviewManifestStore {
   async upsert(entry: ProjectPreviewManifestEntry): Promise<void> {
     await this.load()
     this.entries.set(entry.sourceId, entry)
-    this.writeChain = this.writeChain.then(() => this.writeAtomic())
-    await this.writeChain
+    this.revision += 1
+    if (this.batchDepth === 0 || this.revision - this.persistedRevision >= 32) await this.flush()
   }
 
   async list(): Promise<ProjectPreviewManifestEntry[]> {
@@ -138,19 +151,42 @@ export class ProjectPreviewManifestStore {
       if (this.entries.delete(projectSourceId(sourcePath))) removed += 1
     }
     if (removed > 0) {
-      this.writeChain = this.writeChain.then(() => this.writeAtomic())
-      await this.writeChain
+      this.revision += 1
+      await this.flush()
     }
     return removed
   }
 
+  beginBatch(): void {
+    this.batchDepth += 1
+  }
+
+  async endBatch(): Promise<void> {
+    this.batchDepth = Math.max(0, this.batchDepth - 1)
+    if (this.batchDepth === 0) await this.flush()
+  }
+
+  async flush(): Promise<void> {
+    const write = this.writeChain.then(async () => {
+      if (this.revision !== this.persistedRevision) await this.writeAtomic()
+    })
+    this.writeChain = write.catch(() => {})
+    return write
+  }
+
   private async writeAtomic(): Promise<void> {
+    const revision = this.revision
     const payload: ProjectPreviewManifestFile = {
       version: 1,
-      entries: [...this.entries.values()].sort((a, b) => a.sourcePath.localeCompare(b.sourcePath)),
+      entries: [...this.entries.values()],
     }
     const temporaryPath = `${this.manifestPath}.${process.pid}.${Date.now()}.tmp`
-    await fsp.writeFile(temporaryPath, JSON.stringify(payload, null, 2), 'utf8')
-    await fsp.rename(temporaryPath, this.manifestPath)
+    try {
+      await runProjectPreviewCompute({ kind: 'manifest', entries: payload.entries, temporaryPath })
+      await fsp.rename(temporaryPath, this.manifestPath)
+      this.persistedRevision = revision
+    } finally {
+      await fsp.unlink(temporaryPath).catch(() => {})
+    }
   }
 }

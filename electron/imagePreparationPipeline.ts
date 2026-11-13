@@ -1,3 +1,4 @@
+import { createProgressCoalescer } from './progressCoalescer'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -695,15 +696,18 @@ let cancelRequested = false
 let activeCancellation: { taskId: string; cancel: () => Promise<void> } | null = null
 const progressListeners = new Set<(progress: ImageSearchPreparationProgress) => void>()
 
-function emitProgress(progress: ImageSearchPreparationProgress): void {
-  activeProgress = { ...progress, updatedAt: Date.now() }
+const notifyProgress = createProgressCoalescer(() => {
   for (const listener of progressListeners) {
     try {
       listener({ ...activeProgress })
     } catch {
-      // A renderer listener must not break preparation.
+      /* Observers cannot break preparation. */
     }
   }
+})
+function emitProgress(progress: ImageSearchPreparationProgress): void {
+  activeProgress = { ...progress, updatedAt: Date.now() }
+  notifyProgress(progress.state === 'running' ? `${progress.taskId}:${progress.phase}` : undefined)
 }
 
 export function onImagePreparationProgress(

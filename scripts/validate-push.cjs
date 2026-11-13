@@ -1,5 +1,4 @@
 const fs = require('node:fs')
-const path = require('node:path')
 const { spawnSync } = require('node:child_process')
 const { validate } = require('./validate-commit-message.cjs')
 
@@ -15,7 +14,9 @@ function git(args, cwd) {
 
 function commitsForUpdate(cwd, localSha, remoteSha) {
   const args =
-    remoteSha === ZERO_SHA ? ['rev-list', localSha] : ['rev-list', `${remoteSha}..${localSha}`]
+    remoteSha === ZERO_SHA
+      ? ['rev-list', localSha, '--not', '--remotes']
+      : ['rev-list', `${remoteSha}..${localSha}`]
   const output = git(args, cwd)
   return output ? output.split(/\r?\n/) : []
 }
@@ -65,20 +66,13 @@ function main() {
     for (const error of validate(message)) metadataErrors.push(`${commit.slice(0, 12)}: ${error}`)
   }
   if (metadataErrors.length > 0) {
-    console.error('[pre-push] commit metadata blocked:')
+    console.error('[pre-push] commit message blocked:')
     for (const error of metadataErrors) console.error(`- ${error}`)
     process.exitCode = 1
     return
   }
 
-  const validator = path.join(repoRoot, 'scripts', 'validate-staged-snapshot.cjs')
-  for (const tip of tips) {
-    const result = spawnSync(process.execPath, [validator, '--commit', tip, '--full'], {
-      cwd: repoRoot,
-      stdio: 'inherit',
-    })
-    if (result.status !== 0) throw new Error(`full verification failed for ${tip}`)
-  }
+  // Push checks commit format only; CI owns source validation.
   console.log(`[pre-push] passed: ${commits.size} new commit(s), ${tips.size} tip(s)`)
 }
 

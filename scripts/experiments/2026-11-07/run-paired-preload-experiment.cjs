@@ -2,7 +2,7 @@
 const fs = require('node:fs'),
   path = require('node:path'),
   cp = require('node:child_process')
-const root = path.resolve(__dirname, '..'),
+const root = path.resolve(__dirname, '../../..'),
   file = path.join(root, 'src/App.tsx'),
   original = fs.readFileSync(file, 'utf8')
 const needle = 'const loaders = lazyPanels.map((panel) => panel.load)'

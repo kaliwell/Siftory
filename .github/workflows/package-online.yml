@@ -67,6 +67,13 @@ jobs:
       - run: npm run build:online
       - run: npm run smoke:packaged:resources -- --profile=online
       - run: npm run smoke:installer:archive -- --profile=online
+      - name: Verify packaged preview worker resources
+        shell: pwsh
+        run: |
+          foreach ($name in @('projectPreviewImageWorker.js', 'projectPreviewProvidersWorker.js')) {
+            $file = Join-Path 'release/win-unpacked/resources' $name
+            if (!(Test-Path $file) -or (Get-Item $file).Length -eq 0) { throw "Missing worker: $name" }
+          }
       - name: Verify isolated packaged startup
         run: node tests/packaged-launch-smoke.cjs
       - name: Collect full legacy UI diagnostics
@@ -86,7 +93,7 @@ jobs:
           Copy-Item resources/runtime-manifest.json artifacts/online-installer/runtime-manifest.json
           Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
           Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
-          Copy-Item docs/current/2026-11-05-alpha23-release.md artifacts/online-installer/RELEASE_NOTES.md
+          Copy-Item docs/current/2026-11-13-alpha26-release.md artifacts/online-installer/RELEASE_NOTES.md
           @{ startupPassed = $true; archivePassed = $true; fullUiOutcome = '${{ steps.full_ui.outcome }}'; upgradeVerified = $false } | ConvertTo-Json | Set-Content artifacts/online-installer/validation-status.json
       - uses: actions/upload-artifact@v4
         with:

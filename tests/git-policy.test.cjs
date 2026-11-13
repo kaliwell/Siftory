@@ -173,7 +173,7 @@ test('direct commits to main are blocked before and after the initial commit', a
   })
 })
 
-test('push validation rejects invalid metadata anywhere in the new range', async () => {
+test('push validation rejects invalid titles in the new range', async () => {
   await withTempRepo(async (dir) => {
     fs.writeFileSync(path.join(dir, 'README.md'), 'baseline\n')
     git(dir, ['add', 'README.md'])
@@ -183,7 +183,7 @@ test('push validation rejects invalid metadata anywhere in the new range', async
     const input = `refs/heads/task/test ${head} refs/heads/task/test ${'0'.repeat(40)}\n`
     const result = spawnSync(process.execPath, [validator], { cwd: dir, encoding: 'utf8', input })
     assert.notEqual(result.status, 0)
-    assert.match(result.stderr, /commit metadata blocked/)
+    assert.match(result.stderr, /commit message blocked/)
   })
 })
 
@@ -211,28 +211,11 @@ test('a brand-new tag validates only the commit it points at', async () => {
   })
 })
 
-test('commit metadata rejects generated-message bypasses and duplicate ownership', () => {
-  const valid = [
-    'fix(repo): close commit policy bypasses',
-    '',
-    'Executor-System: Codex',
-    'Executor-Model: GPT-5 series',
-    'Task: git-policy',
-    'Validation: node --test tests/git-policy.test.cjs; passed',
-  ].join('\n')
-  assert.deepEqual(validate(valid), [])
+test('commit messages accept concise headers without executor metadata', () => {
+  assert.deepEqual(validate('fix: simplify validation'), [])
+  assert.deepEqual(validate('fix(repo): simplify validation'), [])
   assert.ok(validate('Merge bypass').length > 0)
-  assert.ok(validate(`${valid}\nExecutor-System: Kimi`).some((error) => /exactly once/.test(error)))
-  assert.ok(
-    validate(valid.replace('Executor-System: Codex', 'Executor-System: Unknown')).some((error) =>
-      /must be one of/.test(error),
-    ),
-  )
-  // DeepSeek is a first-class executor runtime alongside the original four models.
-  assert.deepEqual(
-    validate(valid.replace('Executor-System: Codex', 'Executor-System: DeepSeek')),
-    [],
-  )
+  assert.ok(validate('WIP').length > 0)
 })
 
 test('task worktree helper creates an isolated branch outside the repository', async () => {
@@ -282,4 +265,24 @@ test('backup containment accepts a destination on another Windows drive', () => 
   assert.equal(isInside('C:\\repo', 'C:\\repo\\backup', path.win32), true)
   assert.equal(isInside('C:\\repo', 'C:\\repo-copy\\backup', path.win32), false)
   assert.equal(isInside('C:\\repo', 'D:\\ReasonixGitBackups', path.win32), false)
+})
+
+test('ordinary push accepts a concise commit without dependencies or full verification', async () => {
+  await withTempRepo(async (dir) => {
+    fs.writeFileSync(path.join(dir, 'README.md'), 'fixture\n')
+    git(dir, ['add', 'README.md'])
+    git(dir, ['commit', '-m', 'fix: simplify push'])
+    const head = git(dir, ['rev-parse', 'HEAD'])
+    const result = spawnSync(
+      process.execPath,
+      [path.join(__dirname, '..', 'scripts/validate-push.cjs')],
+      {
+        cwd: dir,
+        encoding: 'utf8',
+        input: `refs/heads/task/test ${head} refs/heads/task/test ${'0'.repeat(40)}\n`,
+      },
+    )
+    assert.equal(result.status, 0, result.stderr || result.stdout)
+    assert.doesNotMatch(result.stdout, /staged-snapshot|npm run/)
+  })
 })

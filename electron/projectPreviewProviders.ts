@@ -275,7 +275,10 @@ export async function extractWindowsShellThumbnail(sourcePath: string): Promise<
   }
 }
 
-export async function extractPdfFirstPage(sourcePath: string): Promise<Buffer | null> {
+export async function extractPdfFirstPage(
+  sourcePath: string,
+  moduleUrl?: string,
+): Promise<Buffer | null> {
   let destroyLoadingTask: (() => Promise<void>) | undefined
   try {
     const stat = await fsp.stat(sourcePath)
@@ -283,7 +286,9 @@ export async function extractPdfFirstPage(sourcePath: string): Promise<Buffer | 
     const bytes = await fsp.readFile(sourcePath)
     if (!bytes.subarray(0, 1024).includes(Buffer.from('%PDF-', 'ascii'))) return null
 
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+    const pdfjs = moduleUrl
+      ? await import(/* @vite-ignore */ moduleUrl)
+      : await import('pdfjs-dist/legacy/build/pdf.mjs')
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength),
       canvasMaxAreaInBytes: PDF_MAX_CANVAS_PIXELS * 4,

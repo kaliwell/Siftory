@@ -191,6 +191,8 @@ const ImageSearchPanel: React.FC = () => {
     }
   }, [setImageSearchUiPreferences])
   const [setupWorkflow, setSetupWorkflow] = useState(IDLE_SETUP_WORKFLOW)
+  const lastStatusStateRef = useRef<string | undefined>(undefined)
+  const lastPreparationKeyRef = useRef('')
   const setupTaskIdRef = useRef<string | null>(null)
   const handledPreparationTaskRef = useRef<string | null>(null)
   const setupPathsRef = useRef<string[]>([])
@@ -396,7 +398,11 @@ const ImageSearchPanel: React.FC = () => {
   // Listen for status changes.
   useEffect(() => {
     const unsub = imageSearchBridge.onStatusChanged((s) => {
-      setStatus(s)
+      const progressOnly =
+        ['indexing', 'scanning'].includes(s.state) && lastStatusStateRef.current === s.state
+      lastStatusStateRef.current = s.state
+      if (progressOnly) React.startTransition(() => setStatus(s))
+      else setStatus(s)
       // Sync autosave path to Store
       if (s.segmentPath && s.segmentPath !== manifestPath) {
         setManifestPath(s.segmentPath)
@@ -1039,7 +1045,12 @@ const ImageSearchPanel: React.FC = () => {
 
   const handlePreparationProgress = useCallback(
     (progress: ImageSearchPreparationProgress) => {
-      setSetupWorkflow(setupSnapshotFromImagePreparationProgress(progress))
+      const key = `${progress.taskId}:${progress.phase}`
+      const update = () => setSetupWorkflow(setupSnapshotFromImagePreparationProgress(progress))
+      if (progress.state === 'running' && lastPreparationKeyRef.current === key)
+        React.startTransition(update)
+      else update()
+      lastPreparationKeyRef.current = progress.state === 'running' ? key : ''
       if (progress.state === 'running') {
         if (progress.taskId && progress.taskId !== setupTaskIdRef.current) {
           setupTaskIdRef.current = progress.taskId
