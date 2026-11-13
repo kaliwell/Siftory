@@ -3450,7 +3450,11 @@ static napi_value UpsertIndexRecord(napi_env env,napi_callback_info info){
     if(found&&existing.width==rec.width&&existing.height==rec.height&&existing.fileSize==rec.fileSize&&
        existing.modifiedTime==rec.modifiedTime&&existing.diffHash64==rec.diffHash64&&existing.dctHash64==rec.dctHash64){
       set_bool(env,result,"ok",true);set_string(env,result,"path",existing.path.c_str());return result;}
-    index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& item){return normalize_path(item.path)==np;}),index.records.end());
+    // A genuinely new path has no physical overlay version to remove. Scanning
+    // every existing record here made N new preview inserts quadratic on the
+    // Electron thread. Deleted paths still require removal before resurrection.
+    if(found||index.deletedPaths.count(np))
+      index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& item){return normalize_path(item.path)==np;}),index.records.end());
     if(found&&(fromSegment||index.replacedPaths.count(np)))index.replacedPaths.insert(np);
     index.deletedPaths.erase(np);rec.id=index.nextId.fetch_add(1);index.records.push_back(rec);
     index.pathIndexMap[make_path_key(np)]={rec.fileSize,rec.modifiedTime,false};index.dirty.store(true);
@@ -4581,9 +4585,16 @@ static napi_value CheckUsnAvailability(napi_env env,napi_callback_info info){
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"checkUsnAvailability error");}
 }
 
-static napi_value GetIndexMode(napi_env env,napi_callback_info){
+static napi_value GetIndexMode(napi_env env,napi_callback_info info){
+  bool nonBlocking=false;size_t argc=1;napi_value argv[1];
+  napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);
+  if(argc>0)napi_get_value_bool(env,argv[0],&nonBlocking);
   auto& index=*get_addon_context(env).index;
-  napi_value r;napi_create_object(env,&r);std::shared_lock<std::shared_mutex> lk(index.mutex);
+  std::shared_lock<std::shared_mutex> lk(index.mutex,std::defer_lock);
+  if(nonBlocking){
+    if(!lk.try_lock()){napi_value busy;napi_get_null(env,&busy);return busy;}
+  }else lk.lock();
+  napi_value r;napi_create_object(env,&r);
   set_string(env,r,"mode",index.mode.c_str());set_string(env,r,"manifestPath",index.manifestPath.c_str());
   int maxVersion=2;
   for(auto& seg:index.segments){if(seg&&seg->version>maxVersion)maxVersion=seg->version;}
@@ -4597,8 +4608,11 @@ static napi_value GetIndexMode(napi_env env,napi_callback_info){
   set_int64(env,r,"overlayCount",index.mode!="memory"?(int64_t)index.records.size():(int64_t)0);
   set_int64(env,r,"replacedCount",(int64_t)index.replacedPaths.size());
   set_int64(env,r,"deletedCount",(int64_t)index.deletedPaths.size());
-  bool healthy=std::all_of(index.pathIndexMap.begin(),index.pathIndexMap.end(),[](const auto& entry){return !entry.second.fromSegment||entry.second.owner!=nullptr;});
-  napi_value hv;napi_get_boolean(env,healthy,&hv);napi_set_named_property(env,r,"pathMapHealthy",hv);
+  // Full health validation is a diagnostic operation, not a progress poll.
+  if(!nonBlocking){
+    bool healthy=std::all_of(index.pathIndexMap.begin(),index.pathIndexMap.end(),[](const auto& entry){return !entry.second.fromSegment||entry.second.owner!=nullptr;});
+    napi_value hv;napi_get_boolean(env,healthy,&hv);napi_set_named_property(env,r,"pathMapHealthy",hv);
+  }
   return r;
 }
 

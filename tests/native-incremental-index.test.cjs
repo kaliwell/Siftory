@@ -245,3 +245,46 @@ test('legacy duplicate aliases are hidden before topK without deleting immutable
   }
   assert.deepEqual(fs.readFileSync(oldSegment), unchangedBytes)
 })
+
+test('large overlay inserts stay unique and progress statistics skip full health traversal', async (t) => {
+  const { source } = fixture(t)
+  const total = 50000,
+    block = 10000,
+    timings = []
+  const { performance } = require('node:perf_hooks')
+  let started = performance.now()
+  for (let i = 0; i < total; i++) {
+    upsert(path.join(source, `synthetic-design-preview-${String(i).padStart(6, '0')}.jpg`), 1)
+    if ((i + 1) % block === 0) {
+      timings.push(Math.round(performance.now() - started))
+      started = performance.now()
+    }
+  }
+  const quick = addon.getIndexMode(true)
+  assert.ok(quick)
+  assert.equal(quick.recordCount, total)
+  assert.equal(quick.physicalRecordCount, total)
+  assert.equal(
+    quick.pathMapHealthy,
+    undefined,
+    'a progress query must not imply a full health validation',
+  )
+  const full = addon.getIndexMode()
+  assert.equal(full.pathMapHealthy, true)
+  const first = path.join(source, 'synthetic-design-preview-000000.jpg')
+  upsert(first, 1)
+  assert.equal(
+    addon.getIndexMode(true).physicalRecordCount,
+    total,
+    'idempotent repeat does not append',
+  )
+  assert.equal(addon.deleteIndexPath(first).ok, true)
+  upsert(first, 2)
+  assert.equal(addon.getIndexMode().recordCount, total)
+  assert.equal(
+    addon.getIndexMode().physicalRecordCount,
+    total,
+    'resurrection removes the tombstoned overlay version',
+  )
+  t.diagnostic(JSON.stringify({ records: total, insertBlockSize: block, insertBlockMs: timings }))
+})

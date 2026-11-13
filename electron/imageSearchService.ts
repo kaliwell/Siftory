@@ -296,9 +296,24 @@ function getIndexModeCached(): ReturnType<NativeAddon['getIndexMode']> {
     return _cachedIndexMode
   }
   if (nativeAddon) {
-    _cachedIndexMode = nativeAddon.getIndexMode()
+    const activeScan = ['scanning', 'indexing', 'paused', 'stopping'].includes(status.state)
+    const snapshot = activeScan ? nativeAddon.getIndexMode(true) : nativeAddon.getIndexMode()
     _cachedIndexModeTs = now
-    return _cachedIndexMode
+    if (snapshot) {
+      _cachedIndexMode = {
+        ...snapshot,
+        pathMapHealthy: snapshot.pathMapHealthy ?? _cachedIndexMode?.pathMapHealthy,
+      }
+      return _cachedIndexMode
+    }
+    if (_cachedIndexMode) return _cachedIndexMode
+    // Busy native writer: never fall back to a blocking lock on the UI thread.
+    return {
+      mode: status.indexMode ?? 'memory',
+      recordCount: status.indexedCount,
+      segmentPath: status.segmentPath ?? '',
+      version: status.segmentVersion ?? 0,
+    }
   }
   return {
     mode: 'memory',

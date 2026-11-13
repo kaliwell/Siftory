@@ -150,6 +150,21 @@ export interface NativeSearchResult {
   error?: string
 }
 
+export interface NativeIndexMode {
+  mode: string
+  recordCount: number
+  segmentPath: string
+  manifestPath?: string
+  version: number
+  physicalRecordCount?: number
+  pathIndexMapSize?: number
+  overlayCount?: number
+  replacedCount?: number
+  deletedCount?: number
+  pathMapHealthy?: boolean
+  segmentCount?: number
+}
+
 export interface NativeAddon {
   getNativeVersion(): string
   getNativeStatus(): {
@@ -337,20 +352,9 @@ export interface NativeAddon {
   ): NativeSearchResult
   saveIndexToSegment(filePath: string): { ok: boolean; recordCount: number; error?: string }
   loadIndexFromSegment(filePath: string): { ok: boolean; recordCount: number; error?: string }
-  getIndexMode(): {
-    mode: string
-    recordCount: number
-    segmentPath: string
-    manifestPath?: string
-    version: number
-    physicalRecordCount?: number
-    pathIndexMapSize?: number
-    overlayCount?: number
-    replacedCount?: number
-    deletedCount?: number
-    pathMapHealthy?: boolean
-    segmentCount?: number
-  }
+  getIndexMode(nonBlocking: true): NativeIndexMode | null
+  getIndexMode(): NativeIndexMode
+
   isIndexDirty(): {
     dirty: boolean
     memoryRecords: number

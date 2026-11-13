@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      native_only:
+        description: Run only native index validation
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -31,6 +36,7 @@ jobs:
       # thumbnail pressure workloads belong to their dedicated hardware checks.
       - run: node --test --test-name-pattern="manifest|mmap|index|resurrect|purge" tests/native-scan.test.cjs
   source-quality:
+    if: github.event_name != 'workflow_dispatch' || !inputs.native_only
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
