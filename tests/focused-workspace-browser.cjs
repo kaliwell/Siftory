@@ -89,13 +89,14 @@ async function run() {
     )
     await page.getByTestId('workspace-domain-search').click()
     assert.equal(await search.inputValue(), 'A')
-    await page.getByTestId('workspace-domain-tasks').click()
+    assert.equal(await page.getByTestId('workspace-domain-tasks').count(), 0)
+    await page.getByTestId('workspace-domain-settings').click()
     const beforePaste = await page.evaluate(
       () =>
         window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.pasteClipboardImage')
           .length,
     )
-    await page.locator('.workspace-task-page').focus()
+    await page.getByTestId('workspace-domain-settings').focus()
     await page.keyboard.press('Control+v')
     assert.equal(
       await page.evaluate(
@@ -126,125 +127,9 @@ async function run() {
     await page.getByTestId('workspace-save-error').waitFor({ state: 'hidden' })
     assert.equal(await page.evaluate(() => window.__workspaceTest.getSettings().linkedMove), true)
 
-    await page.getByTestId('workspace-domain-tasks').click()
-    await page.locator('.workspace-task-advanced > summary').click()
-    await page.evaluate(() => window.__workspaceTest.failResourceProfile(true))
-    await page.getByTestId('resource-governor-profile').selectOption('quality')
-    await page.getByTestId('workspace-task-summary').getByRole('alert').waitFor()
-    assert.equal(await page.getByTestId('resource-governor-profile').inputValue(), 'balanced')
-    await page.evaluate(() => window.__workspaceTest.failResourceProfile(false))
-    await page.getByTestId('resource-governor-profile').selectOption('power-saver')
-    await page.waitForFunction(() =>
-      window.__workspaceTest.calls.some(
-        (call) =>
-          call.method === 'unifiedSearch.setResourceProfile' && call.args[0] === 'power-saver',
-      ),
-    )
-    await page.waitForFunction(
-      () =>
-        document.querySelector('[data-testid="resource-governor-profile"]')?.value ===
-        'power-saver',
-    )
-    await page.getByTestId('workspace-first-run-guide').click()
-    await page
-      .getByTestId('product-first-run-guide')
-      .waitFor({ timeout: 10000 })
-      .catch(async (error) => {
-        console.error(
-          await page.evaluate(async () => {
-            try {
-              const m = await import('/src/services/productReadiness.ts')
-              await m.loadProductReadiness(window.electronAPI)
-              return {
-                readiness: 'ok',
-                text: document.querySelector('.workspace-guide-drawer')?.textContent,
-                errors: [],
-              }
-            } catch (cause) {
-              return { error: String(cause), stack: cause.stack }
-            }
-          }),
-        )
-        console.error('Browser errors:', errors)
-        throw error
-      })
-    // A slow readiness probe must not multiply every 2.5 seconds.
-    const scanCalls = await page.evaluate(() => {
-      const harness = window.__workspaceTest
-      harness.maximumInFlight['discoveryCatalog.getScanStatus'] = 0
-      harness.delayMethod('discoveryCatalog.getScanStatus', 3000)
-      return harness.calls.filter((call) => call.method === 'discoveryCatalog.getScanStatus').length
-    })
-    await page.waitForFunction(
-      (before) =>
-        window.__workspaceTest.calls.filter(
-          (call) => call.method === 'discoveryCatalog.getScanStatus',
-        ).length > before,
-      scanCalls,
-    )
-    await page.waitForTimeout(2700)
-    assert.equal(
-      await page.evaluate(
-        () => window.__workspaceTest.maximumInFlight['discoveryCatalog.getScanStatus'],
-      ),
-      1,
-    )
-    await page.evaluate(() =>
-      window.__workspaceTest.delayMethod('discoveryCatalog.getScanStatus', 0),
-    )
-    await page.getByTestId('first-run-current-action').click()
-    await page.locator('[data-panel="settings"]:visible').waitFor()
-    await page.waitForFunction(
-      () =>
-        document
-          .querySelector('[data-testid="settings-category-searchModels"]')
-          .getAttribute('aria-expanded') === 'true',
-    )
-    const hiddenGuideCalls = await page.evaluate(
-      () =>
-        window.__workspaceTest.calls.filter(
-          (call) => call.method === 'discoveryCatalog.getScanStatus',
-        ).length,
-    )
-    await page.waitForTimeout(5200)
-    assert.equal(
-      await page.evaluate(
-        () =>
-          window.__workspaceTest.calls.filter(
-            (call) => call.method === 'discoveryCatalog.getScanStatus',
-          ).length,
-      ),
-      hiddenGuideCalls,
-    )
-    await page.evaluate(() => window.__workspaceTest.dispatch('product-first-search-completed'))
-    await page.waitForFunction(
-      () => window.__workspaceTest.getSettings().firstRunGuide.firstSearchCompleted === true,
-    )
-
-    const schedulerCalls = await page.evaluate(() => {
-      const harness = window.__workspaceTest
-      harness.maximumInFlight['unifiedSearch.getSchedulerStats'] = 0
-      harness.delayMethod('unifiedSearch.getSchedulerStats', 6200)
-      return harness.calls.filter((call) => call.method === 'unifiedSearch.getSchedulerStats')
-        .length
-    })
-    await page.waitForFunction(
-      (before) =>
-        window.__workspaceTest.calls.filter(
-          (call) => call.method === 'unifiedSearch.getSchedulerStats',
-        ).length > before,
-      schedulerCalls,
-    )
-    await page.waitForTimeout(5300)
-    assert.equal(
-      await page.evaluate(
-        () => window.__workspaceTest.maximumInFlight['unifiedSearch.getSchedulerStats'],
-      ),
-      1,
-    )
-    await page.evaluate(() =>
-      window.__workspaceTest.delayMethod('unifiedSearch.getSchedulerStats', 0),
-    )
+    await page.evaluate(() => window.dispatchEvent(new Event('workspace-open-search-models')))
+    await page.locator('[data-settings-category="searchModels"]').waitFor({ state: 'visible' })
+    assert.equal(await page.getByTestId('workspace-task-summary').count(), 0)
     await page.getByTestId('workspace-domain-search').click()
     await page.evaluate(() => window.__workspaceTest.store.getState().toggleGlobalVisibility())
     assert.equal(await page.locator('.panel:visible').count(), 0)
@@ -281,13 +166,8 @@ async function run() {
           'retained query',
           'hidden clipboard',
           'settings failure and retry',
-          'resource failure feedback',
-          'resource profile',
-          'first-run model route',
-          'readiness request deduplication',
-          'hidden guide pauses polling',
-          'hidden guide retains search progress',
-          'scheduler request deduplication',
+          'model management routes to settings',
+          'task page removed',
           'hide/restore',
           'visibility lock',
         ],
