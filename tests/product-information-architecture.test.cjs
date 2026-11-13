@@ -155,7 +155,7 @@ test('mode switcher and quick navigation are keyboard reachable with visible foc
   assert.match(navigator, /refs.current\[next\]\?\.focus/)
   assert.match(navigator, /event.key === 'Escape'/)
   assert.match(navigator, /aria-current=/)
-  assert.match(navigator, /aria-controls=/)
+  assert.match(navigator, /aria-label=/)
   assert.match(navigator, /aria-expanded=/)
   assert.doesNotMatch(navigator, /moveNavigatorWithKeyboard|advancedSearchOpen/)
   assert.match(windowStyles, /button:focus-visible/)

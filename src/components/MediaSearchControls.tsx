@@ -1,3 +1,4 @@
+import RegisteredSourcePicker from './RegisteredSourcePicker'
 import React from 'react'
 import type { MediaSearchStatus } from '../../shared/ipc-contract'
 import type { SearchExperienceMode } from '../services/searchSetupWorkflow'
@@ -165,7 +166,6 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
             id="media-search-sources-section"
             step="01"
             title={t('Video sources')}
-            description={t('Choose videos, folders, or drives to include in this library.')}
             expanded={expandedSections.sources}
             onToggle={() => onToggleSection('sources')}
             tone="sources"
@@ -194,6 +194,7 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
               >
                 {t('Select Folder')}
               </button>
+              <RegisteredSourcePicker onPick={onAddDrivePath} disabled={running} />
               <div style={{ position: 'relative' }}>
                 <button onClick={onToggleDrivePicker} disabled={running}>
                   + {t('Drive')}
@@ -260,7 +261,6 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
             id="media-search-library-section"
             step="02"
             title={t('Video library preparation')}
-            description={t('Scan files, extract frames, and build visual embeddings.')}
             expanded={expandedSections.library}
             onToggle={() => onToggleSection('library')}
             tone="library"
@@ -286,41 +286,44 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
                 {t('Stop')}
               </button>
               {experienceMode === 'advanced' && (
-                <>
-                  <button onClick={onStartScan} disabled={running}>
-                    {t('Scan')}
-                  </button>
-                  <button
-                    onClick={onLoadData}
-                    disabled={running}
-                    title={t(
-                      'Load full Media Search lists and embedding coverage. This is intentionally manual because it can take seconds on large manifests.',
-                    )}
-                  >
-                    {t('Load Data')}
-                  </button>
-                  <button
-                    data-testid="media-search-build-frames"
-                    onClick={onBuildFrames}
-                    disabled={running}
-                  >
-                    {t('Build Frames')}
-                  </button>
-                  <button
-                    onClick={() => onBuildFrameEmbeddings('dinov2_vitb14')}
-                    disabled={running || !dinoModelReady}
-                    title={!dinoModelReady ? t('The selected model is not ready.') : undefined}
-                  >
-                    DINO {t('Frames')}
-                  </button>
-                  <button
-                    onClick={() => onBuildFrameEmbeddings('clip_vit_base_patch32')}
-                    disabled={running || !clipModelReady}
-                    title={!clipModelReady ? t('The selected model is not ready.') : undefined}
-                  >
-                    CLIP {t('Frames')}
-                  </button>
-                </>
+                <details className="preparation-advanced-options">
+                  <summary>{t('Advanced preparation')}</summary>
+                  <div>
+                    <button onClick={onStartScan} disabled={running}>
+                      {t('Scan')}
+                    </button>
+                    <button
+                      onClick={onLoadData}
+                      disabled={running}
+                      title={t(
+                        'Load full Media Search lists and embedding coverage. This is intentionally manual because it can take seconds on large manifests.',
+                      )}
+                    >
+                      {t('Load Data')}
+                    </button>
+                    <button
+                      data-testid="media-search-build-frames"
+                      onClick={onBuildFrames}
+                      disabled={running}
+                    >
+                      {t('Build Frames')}
+                    </button>
+                    <button
+                      onClick={() => onBuildFrameEmbeddings('dinov2_vitb14')}
+                      disabled={running || !dinoModelReady}
+                      title={!dinoModelReady ? t('The selected model is not ready.') : undefined}
+                    >
+                      DINO {t('Frames')}
+                    </button>
+                    <button
+                      onClick={() => onBuildFrameEmbeddings('clip_vit_base_patch32')}
+                      disabled={running || !clipModelReady}
+                      title={!clipModelReady ? t('The selected model is not ready.') : undefined}
+                    >
+                      CLIP {t('Frames')}
+                    </button>
+                  </div>
+                </details>
               )}
             </div>
             {libraryStatus}
@@ -332,7 +335,6 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
             id="media-search-query-section"
             step="03"
             title={t('Video search')}
-            description={t('Search by reference image, natural language, and result filters.')}
             expanded={true}
             collapsible={false}
             pinned
@@ -509,9 +511,6 @@ const MediaSearchControls: React.FC<MediaSearchControlsProps> = ({
             id="media-search-maintenance-section"
             step="04"
             title={t('AI semantics and maintenance')}
-            description={t(
-              'Review visual, language, dialogue, and audio readiness with maintenance diagnostics.',
-            )}
             expanded={expandedSections.maintenance}
             onToggle={() => onToggleSection('maintenance')}
             tone="maintenance"

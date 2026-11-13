@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 // ── Subject Search Service (compatible detector slot) ──────
 // Detection: user-supplied compatible ONNX → 80-class detection + NMS.
 //   Falls back to gradient saliency → center crop if model unavailable.
@@ -186,11 +187,14 @@ const COCO_CLASSES = [
 ]
 
 export async function detectSubjects(imagePath: string): Promise<SubjectDetectionResult> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   if (!fs.existsSync(imagePath)) {
     return { ok: false, imagePath, width: 0, height: 0, subjects: [], error: 'File not found' }
   }
   try {
-    const metadata = await sharp(imagePath).metadata()
+    const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
     // Work in display orientation (EXIF applied): the picker modal shows
     // EXIF-rotated thumbnails, so every bbox/mask must live in that space.
     const { width, height } = orientedDimensions(
@@ -218,7 +222,7 @@ export async function detectSubjects(imagePath: string): Promise<SubjectDetectio
         profile,
         session.inputMetadata.find((metadata) => metadata.name === inputName),
       )
-      const { data: rgbData } = await sharp(imagePath)
+      const { data: rgbData } = await sharp(await getSharpSourceSnapshot())
         .rotate()
         .resize(adapterSpec.width, adapterSpec.height, { fit: 'fill' })
         .removeAlpha()
@@ -298,7 +302,7 @@ export async function detectSubjects(imagePath: string): Promise<SubjectDetectio
     // Fallback: gradient saliency
     const sampleW = Math.min(width, 64)
     const sampleH = Math.min(height, 64)
-    const { data } = await sharp(imagePath)
+    const { data } = await sharp(await getSharpSourceSnapshot())
       .rotate()
       .resize(sampleW, sampleH, { fit: 'fill' })
       .grayscale()
@@ -630,7 +634,7 @@ async function rerankBySubjectCrop(
           const subject = matches.length > 0 ? matches[0] : undefined
           if (!subject) continue
           const cropPath = path.join(tmpDir, `${cropPaths.size}.jpg`)
-          await sharp(r.imagePath)
+          await sharp(await readSharpFileSnapshot(r.imagePath))
             .extract({ left: subject.x, top: subject.y, width: subject.w, height: subject.h })
             .jpeg({ quality: 90 })
             .toFile(cropPath)
@@ -739,6 +743,9 @@ export async function searchBySubject(
   onProgress?: (progress: LayeredSearchProgress) => void,
   maskSession?: SubjectMaskSessionData,
 ): Promise<{ ok: boolean; results: SubjectSearchResult[]; error?: string; subjectLabel?: string }> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   const progress = makeSubjectProgress(onProgress)
   // Step 1: resolve the subject — caller-supplied bbox (multi-subject
   // picker) or detect + pick the primary one
@@ -753,7 +760,7 @@ export async function searchBySubject(
   } else if (subjectOverride) {
     progress.emit(5, 'Preparing subject crop...')
     // clamp the override into the actual image bounds (display orientation)
-    const metadata = await sharp(imagePath).metadata()
+    const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
     const { width: imgW, height: imgH } = orientedDimensions(
       metadata.width ?? 0,
       metadata.height ?? 0,
@@ -791,7 +798,7 @@ export async function searchBySubject(
       bbox = { ...bbox, ...queryFiles.bbox }
       cropPath = queryFiles.maskedCropPath
     } else {
-      await sharp(imagePath)
+      await sharp(await getSharpSourceSnapshot())
         .rotate()
         .extract({ left: bbox.x, top: bbox.y, width: bbox.w, height: bbox.h })
         .jpeg({ quality: 92 })

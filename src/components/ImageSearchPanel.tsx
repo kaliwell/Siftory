@@ -3,7 +3,6 @@ import SearchDiagnosticsControls from './SearchDiagnosticsControls'
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../stores/useStore'
 import DraggablePanel from './DraggablePanel'
-import VectorMaintenanceBar from './VectorMaintenanceBar'
 import EmbeddingBuildControls from './EmbeddingBuildControls'
 import ImageSearchStatusBar from './ImageSearchStatusBar'
 import SearchProgressBar from './SearchProgressBar'
@@ -11,18 +10,17 @@ import ImageSearchResultGrid, {
   type ImageSearchDisplayResult,
   type ImageSearchMetrics,
 } from './ImageSearchResultGrid'
-import ImageSearchIndexFooter from './ImageSearchIndexFooter'
-import RecentManifestBar from './RecentManifestBar'
 import ImageSearchControls from './ImageSearchControls'
 import { sortImageSearchResults, type ImageSearchSortMode } from './imageSearchSort'
 import SearchExperienceModeBar from './SearchExperienceModeBar'
 import SearchSetupProgress from './SearchSetupProgress'
+import SearchReadinessProgress from './SearchReadinessProgress'
+import { searchReadinessProgress } from '../services/searchReadinessProgress'
 import {
   ConfirmWholeDriveBanner,
   ImageSearchToastBanner,
   type ImageSearchToastState,
 } from './ImageSearchBanners'
-import ImageHashSmokeTest from './ImageHashSmokeTest'
 import CollapsibleSearchSection, { SearchControlSectionsToolbar } from './CollapsibleSearchSection'
 import { DEFAULT_IMAGESEARCH_W, DEFAULT_IMAGESEARCH_H } from '../types'
 import { useLinkedMove } from '../hooks/useLinkedMove'
@@ -44,7 +42,6 @@ import type {
   ImageSearchPreparationProgress,
   ImageSearchStatus,
   ImageSearchResult,
-  ImageHashResult,
 } from '../../shared/ipc-contract'
 import type {
   EmbeddingProgress,
@@ -134,8 +131,6 @@ const ImageSearchPanel: React.FC = () => {
   const [subjectSearching, setSubjectSearching] = useState(false)
   const [searching, setSearching] = useState(false)
   const [testImagePath, setTestImagePath] = useState<string | null>(null)
-  const [hashResult, setHashResult] = useState<ImageHashResult | null>(null)
-  const [hashing, setHashing] = useState(false)
   const [queryHash, setQueryHash] = useState<string | null>(null)
   const [searchMetrics, setSearchMetrics] = useState<ImageSearchMetrics | null>(null)
 
@@ -236,7 +231,6 @@ const ImageSearchPanel: React.FC = () => {
   const layeredRequestIdRef = useRef<string | null>(null)
 
   const manifestPath = useStore((s) => s.manifestPath)
-  const recentManifests = useStore((s) => s.recentManifests)
   const setManifestPath = useStore((s) => s.setManifestPath)
   const addRecentManifest = useStore((s) => s.addRecentManifest)
   const scanPaths = useStore((s) => s.imageSearchScanPaths)
@@ -337,7 +331,6 @@ const ImageSearchPanel: React.FC = () => {
 
   // Auto-load manifest when manifestPath changes (e.g. Store restore after restart)
   const lastLoadedManifest = useRef('')
-  const [autoloadState, setAutoloadState] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
   useEffect(() => {
     if (!initialStatusLoaded || !manifestPath || manifestPath === lastLoadedManifest.current) return
     // Path correction: if manifestPath points to a file, correct to parent directory
@@ -363,16 +356,13 @@ const ImageSearchPanel: React.FC = () => {
       status.autoloadSource !== 'none'
     ) {
       lastLoadedManifest.current = rootDir
-      setAutoloadState('ok')
       return
     }
     lastLoadedManifest.current = rootDir
-    setAutoloadState('loading')
     imageSearchBridge
       .loadManifest(rootDir)
       .then((r) => {
         if (r?.ok) {
-          setAutoloadState('ok')
           showToast(
             t('Loaded {records} records, {segments} segment(s)', {
               records: r.recordCount ?? 0,
@@ -381,7 +371,6 @@ const ImageSearchPanel: React.FC = () => {
           )
           fetchStatus()
         } else {
-          setAutoloadState('err')
           showToast(
             t('Autoload failed: {error}', {
               error: r?.error || t('manifest may be empty'),
@@ -391,7 +380,6 @@ const ImageSearchPanel: React.FC = () => {
         }
       })
       .catch(() => {
-        setAutoloadState('err')
         showToast(t('Autoload failed'), 'err')
       })
   }, [
@@ -517,63 +505,6 @@ const ImageSearchPanel: React.FC = () => {
     const s = await imageSearchBridge.stopScan()
     if (s) setStatus(s)
   }, [])
-
-  const handleClearIndex = useCallback(async () => {
-    if (isScanning) await imageSearchBridge.stopScan()
-    await imageSearchBridge.clearIndex()
-    setResults([])
-    setQueryHash(null)
-    fetchStatus()
-  }, [isScanning, fetchStatus])
-
-  const handleReloadIndex = useCallback(async () => {
-    if (!manifestPath) {
-      showToast(t('No manifest loaded'), 'err')
-      return
-    }
-    const r = await imageSearchBridge.loadManifest(manifestPath)
-    if (r?.ok) {
-      const n = r.recordCount || 0
-      showToast(
-        t('Reloaded {records} records, {segments} segment(s)', {
-          records: n,
-          segments: r.segmentCount ?? 1,
-        }),
-      )
-    } else {
-      showToast(t('Reload failed: {error}', { error: r?.error || '' }), 'err')
-    }
-    fetchStatus()
-  }, [fetchStatus, manifestPath, showToast, t])
-
-  const handleLoadRecentManifest = useCallback(
-    async (p: string) => {
-      const r = await imageSearchBridge.loadManifest(p)
-      if (r?.ok) {
-        setManifestPath(p)
-        addRecentManifest(p)
-        showToast(
-          t('Loaded {records} records, {segments} segment(s)', {
-            records: r.recordCount ?? 0,
-            segments: r.segmentCount ?? 1,
-          }),
-        )
-        fetchStatus()
-      } else {
-        showToast(t('Load failed: {error}', { error: r?.error || '' }), 'err')
-      }
-    },
-    [addRecentManifest, fetchStatus, setManifestPath, showToast, t],
-  )
-
-  const handleOpenIndexDir = useCallback(() => {
-    const p = manifestPath || status.segmentPath
-    if (p) {
-      imageSearchBridge.openFolder(p)
-    } else {
-      showToast(t('No index path available'), 'err')
-    }
-  }, [manifestPath, showToast, status.segmentPath, t])
 
   const runImageQuery = useCallback(
     async (imagePath: string) => {
@@ -757,7 +688,6 @@ const ImageSearchPanel: React.FC = () => {
 
   const handleClearQueryImage = useCallback(() => {
     setTestImagePath(null)
-    setHashResult(null)
     setQueryHash(null)
     setResults([])
     setLayeredResults([])
@@ -953,16 +883,15 @@ const ImageSearchPanel: React.FC = () => {
     clearScanPaths()
   }, [clearScanPaths])
 
-  const handleSelectTestImage = useCallback(async () => {
-    const p = await imageSearchBridge.selectImage()
-    if (p) {
-      setTestImagePath(p)
-      setHashing(true)
-      setHashResult(null)
-      const r = await imageSearchBridge.hashImage(p)
-      setHashResult(r)
-      setHashing(false)
+  useEffect(() => {
+    const clearResults = () => {
+      setResults([])
+      setQueryHash(null)
+      setLayeredResults([])
+      setSearchMetrics(null)
     }
+    window.addEventListener('workspace-image-index-cleared', clearResults)
+    return () => window.removeEventListener('workspace-image-index-cleared', clearResults)
   }, [])
 
   // Result actions.
@@ -1437,12 +1366,20 @@ const ImageSearchPanel: React.FC = () => {
                 id="image-search-maintenance-section"
                 step="04"
                 title={t('Search readiness')}
-                description={t('Choose folders, scan changes, and build the searchable library.')}
                 expanded={expandedControlSections.maintenance}
                 onToggle={() => toggleControlSection('maintenance')}
                 tone="maintenance"
                 testId="image-search-maintenance-section"
-                summary={t(status.state)}
+                summary={t(
+                  searchReadinessProgress(setupWorkflow, embeddingProgress, status.state).state,
+                )}
+                collapsedProgress={
+                  <SearchReadinessProgress
+                    workflow={setupWorkflow}
+                    embedding={embeddingProgress}
+                    scanState={status.state}
+                  />
+                }
               >
                 {experienceMode === 'simple' && (
                   <SearchSetupProgress
@@ -1465,12 +1402,6 @@ const ImageSearchPanel: React.FC = () => {
                       setBatchSize={setBatchSize}
                       showToast={showToast}
                     />
-                    <VectorMaintenanceBar
-                      indexedCount={status.indexedCount}
-                      gpuJobs={gpuJobs}
-                      buildDisabled={buildDisabled}
-                      showToast={showToast}
-                    />
                   </>
                 )}
 
@@ -1479,31 +1410,6 @@ const ImageSearchPanel: React.FC = () => {
                   isScanning={isScanning}
                   vectorIndexStatus={vectorIndexStatus}
                 />
-
-                {experienceMode === 'advanced' && (
-                  <>
-                    <RecentManifestBar
-                      manifests={recentManifests}
-                      onLoad={handleLoadRecentManifest}
-                    />
-
-                    <ImageSearchIndexFooter
-                      status={status}
-                      manifestPath={manifestPath}
-                      autoloadState={autoloadState}
-                      onReload={handleReloadIndex}
-                      onClear={handleClearIndex}
-                      onOpenIndexDir={handleOpenIndexDir}
-                    />
-
-                    <ImageHashSmokeTest
-                      testImagePath={testImagePath}
-                      hashing={hashing}
-                      hashResult={hashResult}
-                      onSelectTestImage={handleSelectTestImage}
-                    />
-                  </>
-                )}
               </CollapsibleSearchSection>
             )}
             {!sourcesOnly && (

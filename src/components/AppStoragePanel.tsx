@@ -1,4 +1,3 @@
-import StorageLocationSettings from './StorageLocationSettings'
 import React, { useCallback, useEffect, useState } from 'react'
 import DraggablePanel from './DraggablePanel'
 import ImageSearchDataManager from './ImageSearchDataManager'
@@ -14,12 +13,11 @@ const AppStoragePanel: React.FC = () => {
   const isVisible = useStore((state) => state.showAppStorage && !state.workspaceTaskPageOpen)
   const [message, setMessage] = useState('')
   const [sourcesExpanded, setSourcesExpanded] = useState(false)
-  const [locationExpanded, setLocationExpanded] = useState(false)
   const [automaticExpanded, setAutomaticExpanded] = useState(false)
   const [indexExpanded, setIndexExpanded] = useState(false)
+  const [folderToolsRequest, setFolderToolsRequest] = useState(0)
   const expandAll = (expanded: boolean) => {
     setSourcesExpanded(expanded)
-    setLocationExpanded(expanded)
     setAutomaticExpanded(expanded)
     setIndexExpanded(expanded)
   }
@@ -30,8 +28,16 @@ const AppStoragePanel: React.FC = () => {
         document.getElementById('maintenance-sources-section')?.scrollIntoView({ block: 'start' }),
       )
     }
+    const focusFolderTools = () => {
+      setIndexExpanded(true)
+      setFolderToolsRequest((value) => value + 1)
+    }
+    window.addEventListener('workspace-maintenance-folder-tools', focusFolderTools)
     window.addEventListener('workspace-maintenance-sources-focus', focusSources)
-    return () => window.removeEventListener('workspace-maintenance-sources-focus', focusSources)
+    return () => {
+      window.removeEventListener('workspace-maintenance-sources-focus', focusSources)
+      window.removeEventListener('workspace-maintenance-folder-tools', focusFolderTools)
+    }
   }, [])
   const showToast = useCallback((text: string) => setMessage(text), [])
   return (
@@ -45,12 +51,10 @@ const AppStoragePanel: React.FC = () => {
       defaultH={700}
     >
       <div className="workspace-maintenance-page">
-        <p className="workspace-maintenance-intro">
-          {t('Manage Siftory indexes and generated caches. Original assets are kept.')}
-        </p>
         {message && <p role="status">{message}</p>}
         <SearchControlSectionsToolbar
           panelId="maintenance"
+          showLabel={false}
           onExpandAll={() => expandAll(true)}
           onCollapseAll={() => expandAll(false)}
         />
@@ -58,9 +62,6 @@ const AppStoragePanel: React.FC = () => {
           id="maintenance-sources-section"
           step="01"
           title={t('Data sources and collections')}
-          description={t(
-            'Register storage locations, organize collections, and check connectivity.',
-          )}
           expanded={sourcesExpanded}
           onToggle={() => setSourcesExpanded((expanded) => !expanded)}
           tone="sources"
@@ -69,26 +70,11 @@ const AppStoragePanel: React.FC = () => {
           <DiscoverySourcesSection hostPanel="appStorage" enabled={sourcesExpanded} />
         </CollapsibleSearchSection>
         <CollapsibleSearchSection
-          id="maintenance-location-section"
-          step="02"
-          tone="library"
-          testId="maintenance-location-section"
-          title={t('Application data location')}
-          description={t('Shows the active data directory. Migration is available in Settings.')}
-          expanded={locationExpanded}
-          onToggle={() => setLocationExpanded((expanded) => !expanded)}
-        >
-          <StorageLocationSettings readOnly />
-        </CollapsibleSearchSection>
-        <CollapsibleSearchSection
           id="maintenance-automatic-section"
-          step="03"
+          step="02"
           tone="maintenance"
           testId="maintenance-automatic-section"
           title={t('Automatic maintenance')}
-          description={t(
-            'Checks daily while idle. Missing files are observed for 24 hours. Recovery backups are kept for 7 days.',
-          )}
           expanded={automaticExpanded}
           onToggle={() => setAutomaticExpanded((expanded) => !expanded)}
         >
@@ -99,16 +85,16 @@ const AppStoragePanel: React.FC = () => {
         </CollapsibleSearchSection>
         <CollapsibleSearchSection
           id="maintenance-index-section"
-          step="04"
+          step="03"
           tone="maintenance"
           testId="maintenance-index-section"
           title={t('Image Search Data Overview')}
-          description={t('Review index health, storage, rebuild tools, and diagnostics.')}
           expanded={indexExpanded}
           onToggle={() => setIndexExpanded((expanded) => !expanded)}
         >
           <ImageSearchDataManager
             standalone
+            folderToolsRequest={folderToolsRequest}
             scanPaths={scanPaths}
             showToast={showToast}
             onChanged={() => setMessage(t('Updated'))}

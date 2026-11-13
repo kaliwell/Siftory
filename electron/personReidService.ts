@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 // ── Person Re-Identification Service (user model slot) ─────
 // Embedding: compatible 256x128 ONNX → 512d L2-normalized vector.
 // Used as the fallback signal for person
@@ -47,10 +48,13 @@ async function loadPersonCrop(
   height: number,
   bbox?: SubjectBBox,
 ): Promise<Buffer | null> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   try {
-    let pipeline = sharp(imagePath)
+    let pipeline = sharp(await getSharpSourceSnapshot())
     if (bbox) {
-      const metadata = await sharp(imagePath).metadata()
+      const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
       const imgW = metadata.width ?? 0
       const imgH = metadata.height ?? 0
       const left = Math.max(0, Math.min(imgW - 1, bbox.x))

@@ -11,12 +11,14 @@ import { useTranslation } from '../i18n/useTranslation'
 import { imageSearchBridge } from '../services/imageSearchBridge'
 import { openWorkspacePanel } from '../services/openWorkspace'
 import ImageSearchDataOverview from './ImageSearchDataOverview'
+import ImageIndexMaintenanceTools from './ImageIndexMaintenanceTools'
 import { useStore } from '../stores/useStore'
 
 interface ImageSearchDataManagerProps {
   scanPaths: string[]
   disabled?: boolean
   standalone?: boolean
+  folderToolsRequest?: number
   onChanged: () => void
   showToast: (message: string, type?: 'ok' | 'err') => void
 }
@@ -71,12 +73,25 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
   scanPaths,
   disabled = false,
   standalone = false,
+  folderToolsRequest = 0,
   onChanged,
   showToast,
 }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(standalone)
   const [advancedOpen, setAdvancedOpen] = useState(!standalone)
+  useEffect(() => {
+    if (!folderToolsRequest) return
+    setAdvancedOpen(true)
+    const frame = requestAnimationFrame(() =>
+      document.querySelector('.workspace-advanced-maintenance')?.scrollIntoView({ block: 'start' }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [folderToolsRequest])
+  const [maintenanceToolsMounted, setMaintenanceToolsMounted] = useState(!standalone)
+  useEffect(() => {
+    if (advancedOpen) setMaintenanceToolsMounted(true)
+  }, [advancedOpen])
   const [query, setQuery] = useState('')
   const [records, setRecords] = useState<ImageSearchDataRecord[]>([])
   const [hasMore, setHasMore] = useState(false)
@@ -568,6 +583,7 @@ const ImageSearchDataManager: React.FC<ImageSearchDataManagerProps> = ({
               )}
             </p>
             <div className="workspace-advanced-maintenance__content">
+              {maintenanceToolsMounted && <ImageIndexMaintenanceTools showToast={showToast} />}
               {scanPaths.length > 0 && (
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ fontSize: 12, opacity: 0.62 }}>{t('Source Folders')}:</span>

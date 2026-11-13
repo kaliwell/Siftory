@@ -1,3 +1,4 @@
+import RegisteredSourcePicker from './RegisteredSourcePicker'
 import React from 'react'
 import type { SearchMode } from '../../shared/vectorTypes'
 import type { SearchExperienceMode } from '../services/searchSetupWorkflow'
@@ -137,7 +138,6 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
           id="image-search-library-section"
           step="02"
           title={t('Library preparation')}
-          description={t('Choose folders, scan changes, and build the searchable library.')}
           expanded={libraryExpanded}
           onToggle={onToggleLibrary}
           tone="library"
@@ -168,41 +168,44 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               {t('Stop')}
             </button>
             {experienceMode === 'advanced' && (
-              <>
-                <button
-                  data-testid="image-search-start-scan"
-                  onClick={onStartScan}
-                  disabled={taskBusy || scanPaths.length === 0}
-                  style={{ fontSize: 13, padding: '3px 10px' }}
-                >
-                  {t('Start Scan')}
-                </button>
-                <select
-                  value={scanMode}
-                  onChange={(e) => setScanMode(e.target.value as ScanMode)}
-                  disabled={taskBusy}
-                  style={{ fontSize: 12, padding: '3px 6px' }}
-                  title={t('Scan mode')}
-                >
-                  <option value="addNew">{t('Add New')}</option>
-                  <option value="update">{t('Update')}</option>
-                  <option value="updateAll">{t('Update All')}</option>
-                </select>
-                <label
-                  title={t(
-                    'Reuse the native scan decode to build JPEG thumbnails for new or changed images',
-                  )}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12 }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={buildScanThumbnails}
+              <details className="preparation-advanced-options">
+                <summary>{t('Advanced preparation')}</summary>
+                <div>
+                  <button
+                    data-testid="image-search-start-scan"
+                    onClick={onStartScan}
+                    disabled={taskBusy || scanPaths.length === 0}
+                    style={{ fontSize: 13, padding: '3px 10px' }}
+                  >
+                    {t('Start Scan')}
+                  </button>
+                  <select
+                    value={scanMode}
+                    onChange={(e) => setScanMode(e.target.value as ScanMode)}
                     disabled={taskBusy}
-                    onChange={(event) => setBuildScanThumbnails(event.target.checked)}
-                  />
-                  {t('Native thumbs')}
-                </label>
-              </>
+                    style={{ fontSize: 12, padding: '3px 6px' }}
+                    title={t('Scan mode')}
+                  >
+                    <option value="addNew">{t('Add New')}</option>
+                    <option value="update">{t('Update')}</option>
+                    <option value="updateAll">{t('Update All')}</option>
+                  </select>
+                  <label
+                    title={t(
+                      'Reuse the native scan decode to build JPEG thumbnails for new or changed images',
+                    )}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12 }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={buildScanThumbnails}
+                      disabled={taskBusy}
+                      onChange={(event) => setBuildScanThumbnails(event.target.checked)}
+                    />
+                    {t('Native thumbs')}
+                  </label>
+                </div>
+              </details>
             )}
             <button
               data-testid="image-search-select-folders"
@@ -212,6 +215,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
             >
               + {t('Folders')}
             </button>
+            <RegisteredSourcePicker onPick={onAddDrive} disabled={taskBusy} />
             <div style={{ position: 'relative' }}>
               <button
                 onClick={onToggleDrivePicker}
@@ -330,7 +334,6 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
           id="image-search-query-section"
           step="03"
           title={t('Search input')}
-          description={t('Search with an image, filename filter, or natural-language description.')}
           expanded={true}
           collapsible={false}
           pinned

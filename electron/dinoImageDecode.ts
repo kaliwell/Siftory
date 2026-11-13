@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 import { isRecoverableJpegDecodeWarning } from './jpegDecodeRecovery'
 
 export const MAX_DINO_INPUT_PIXELS = Math.floor((256 * 1024 * 1024) / 3)
@@ -16,8 +17,11 @@ export interface DinoRawImageFactory {
 }
 
 async function decodeDinoRgb(imagePath: string, failOn: 'warning' | 'none') {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   const { default: sharp } = await import('sharp')
-  const { data, info } = await sharp(imagePath, {
+  const { data, info } = await sharp(await getSharpSourceSnapshot(), {
     animated: false,
     failOn,
     limitInputPixels: MAX_DINO_INPUT_PIXELS,
@@ -79,8 +83,11 @@ export async function readDinoTensorPrefetchImage(
   RawImage: DinoRawImageFactory,
   shortestEdge = DINO_PREFETCH_SHORTEST_EDGE,
 ): Promise<DinoRawImageValue> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   const { default: sharp } = await import('sharp')
-  const pipeline = sharp(imagePath, {
+  const pipeline = sharp(await getSharpSourceSnapshot(), {
     animated: false,
     failOn: 'warning',
     limitInputPixels: MAX_DINO_INPUT_PIXELS,

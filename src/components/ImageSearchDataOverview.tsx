@@ -333,12 +333,6 @@ const ImageSearchDataOverview: React.FC<ImageSearchDataOverviewProps> = ({
             {t('Language search ready: {count}', {
               count: hasAnalyzedSnapshot ? overview.clipUniqueCount : '—',
             })}
-            <br />
-            {hasAnalyzedSnapshot
-              ? t(
-                  'Missing semantic indexes mean these searches are not prepared; your original files are unaffected.',
-                )
-              : t('Index statistics have not been analyzed. Existing search data is preserved.')}
           </p>
           {overview.generation && (
             <div

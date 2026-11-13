@@ -746,7 +746,6 @@ const App: React.FC = () => {
       {ready &&
         lazyPanels.map(
           ({ id, boundaryName, visibilityKey, Component, preserveWhenHidden = false }) => {
-            if (id === 'unifiedSearch' || id === 'duplicateFinder') return null
             const panelVisible = {
               showImageSearch,
               showUnifiedSearch,

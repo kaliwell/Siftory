@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 // ── Face Match Service (user-supplied compatible models) ───
 // Detection: compatible face detector ONNX → face boxes + 5 landmarks.
 // Alignment: similarity transform (electron/faceAlign.ts) → 112x112.
@@ -102,6 +103,9 @@ export async function detectFaces(imagePath: string): Promise<{
   error?: string
   reason?: UserModelNegativeReason
 }> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   const session = await getSession('det')
   if (!session) {
     return {
@@ -125,13 +129,13 @@ export async function detectFaces(imagePath: string): Promise<{
     session.inputMetadata.find((metadata) => metadata.name === inputName),
   )
   try {
-    const metadata = await sharp(imagePath).metadata()
+    const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
     width = metadata.width ?? 0
     height = metadata.height ?? 0
     if (width <= 0 || height <= 0)
       return { ok: false, faces: [], error: 'cannot read image dimensions' }
 
-    const out = await sharp(imagePath)
+    const out = await sharp(await getSharpSourceSnapshot())
       .resize(adapterSpec.width, adapterSpec.height, { fit: 'fill' })
       .removeAlpha()
       .raw()
@@ -246,9 +250,12 @@ async function loadAlignedFace(
   landmarks: FacePoint[],
   outputSize: number,
 ): Promise<Buffer | null> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   if (landmarks.length < 5) return null
   try {
-    const metadata = await sharp(imagePath).metadata()
+    const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
     const imgW = metadata.width ?? 0
     const imgH = metadata.height ?? 0
     if (imgW <= 0 || imgH <= 0) return null
@@ -274,7 +281,7 @@ async function loadAlignedFace(
     const height = Math.min(imgH - top, Math.ceil(Math.max(...ys)) - top)
     if (width < 8 || height < 8) return null
 
-    const { data } = await sharp(imagePath)
+    const { data } = await sharp(await getSharpSourceSnapshot())
       .extract({ left, top, width, height })
       .resize(outputSize, outputSize, { fit: 'fill' })
       .removeAlpha()

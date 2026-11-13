@@ -159,7 +159,9 @@ const entries = [
   // keeps BMP/ICO previews working (Chromium's nativeImage rejects BMP buffers and
   // the bundled libvips has no BMP loader). It adds one node, no packages, and no
   // renderer/worker edges.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 324 },
+  // One shared sharpFileSnapshot module guards disappearing input paths across
+  // thumbnail/model callers; it replaces native path reads, not a new service.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 325 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports

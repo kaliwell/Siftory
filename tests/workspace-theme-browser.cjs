@@ -33,20 +33,27 @@ async function main() {
       `http://127.0.0.1:${server.httpServer.address().port}/tests/fixtures/workspace-ui.html`,
     )
     await page.locator('[data-ready="true"]').waitFor()
+    await page.getByTestId('workspace-domain-search').click()
     await page.getByTestId('image-search-query-section').waitFor()
     await page.getByTestId('workspace-domain-settings').click()
     await page.mouse.move(800, 900)
     await page.addStyleTag({
       content: '*,*::before,*::after{transition:none!important;animation:none!important}',
     })
-    await page.locator('#app-theme').waitFor()
+    const selectTheme = async (id) => {
+      const picker = page.locator('.settings-theme-previews')
+      if (!(await picker.evaluate((element) => element.open)))
+        await picker.locator(':scope > summary').click()
+      await picker.locator('button[data-theme-id="' + id + '"]').click()
+    }
+    await page.locator('.settings-theme-previews').waitFor()
     const ids = await page
-      .locator('#app-theme option')
-      .evaluateAll((options) => options.map((o) => o.value))
+      .locator('.theme-style-option')
+      .evaluateAll((options) => options.map((o) => o.dataset.themeId))
     assert.equal(ids.length, 17)
     const checks = []
     for (const id of ids) {
-      await page.locator('#app-theme').selectOption(id)
+      await selectTheme(id)
       for (const mode of ['light', 'dark']) {
         await page.getByTestId('theme-mode').selectOption(mode)
         await page.waitForFunction(
@@ -88,7 +95,7 @@ async function main() {
         checks.push({ id, mode })
       }
     }
-    await page.locator('#app-theme').selectOption('amber-dark')
+    await selectTheme('amber-dark')
     await page.getByTestId('theme-mode').selectOption('system')
     for (const colorScheme of ['dark', 'light']) {
       await page.emulateMedia({ colorScheme })
@@ -111,7 +118,7 @@ async function main() {
     fs.mkdirSync(path.join(root, 'artifacts/theme-fix'), { recursive: true })
     for (const id of ['matrix-dark', 'amber-dark', 'deep-ocean', 'lilac-mist-light']) {
       await page.getByTestId('workspace-domain-settings').click()
-      await page.locator('#app-theme').selectOption(id)
+      await selectTheme(id)
       await page.getByTestId('workspace-domain-search').click()
       await page.screenshot({ path: path.join(root, 'artifacts/theme-fix', id + '.png') })
     }

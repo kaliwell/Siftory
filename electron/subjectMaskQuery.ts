@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 import crypto from 'crypto'
 import path from 'path'
 import sharp from 'sharp'
@@ -33,8 +34,11 @@ export async function createSubjectMaskQueryFiles(
   requestedBBox: SubjectMaskBBox,
   outputDir: string,
 ): Promise<SubjectMaskQueryFiles> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   const [imageMetadata, maskMetadata] = await Promise.all([
-    sharp(imagePath).metadata(),
+    sharp(await getSharpSourceSnapshot()).metadata(),
     sharp(maskPng).metadata(),
   ])
   const oriented = orientedDimensions(
@@ -55,7 +59,7 @@ export async function createSubjectMaskQueryFiles(
     .greyscale()
     .raw()
     .toBuffer()
-  const sourceRgb = await sharp(imagePath)
+  const sourceRgb = await sharp(await getSharpSourceSnapshot())
     .rotate()
     .extract({ left: bbox.x, top: bbox.y, width: bbox.w, height: bbox.h })
     .removeAlpha()
@@ -69,7 +73,7 @@ export async function createSubjectMaskQueryFiles(
     sourceRgb[offset + 2] = Math.round(sourceRgb[offset + 2] * alpha + 127 * (1 - alpha))
   }
 
-  await sharp(imagePath)
+  await sharp(await getSharpSourceSnapshot())
     .rotate()
     .extract({ left: bbox.x, top: bbox.y, width: bbox.w, height: bbox.h })
     .removeAlpha()

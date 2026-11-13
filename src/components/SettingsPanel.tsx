@@ -2,7 +2,7 @@ import StorageLocationSettings from './StorageLocationSettings'
 import GlobalHotkeyEditor from './GlobalHotkeyEditor'
 import React, { useState, useEffect, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import SourceDerivedDataCleanup from './SourceDerivedDataCleanup'
+import DataCleanupCenter from './DataCleanupCenter'
 import ThirdPartyLicensesButton from './ThirdPartyLicensesButton'
 import EndUserTermsButton from './EndUserTermsButton'
 import { useStore } from '../stores/useStore'
@@ -53,7 +53,6 @@ import {
   DEFAULT_BATCH_RENAME_W,
   DEFAULT_BATCH_RENAME_H,
   PANEL_VISIBILITY_DEFAULTS_VERSION,
-  FONT_SCALE_STEPS,
 } from '../types'
 import { createDefaultTabs, createDefaultPromptTabs } from '../config/default'
 import { useLinkedMove } from '../hooks/useLinkedMove'
@@ -535,10 +534,8 @@ const SettingsPanel: React.FC = () => {
   const themeMode = useStore((s) => s.themeMode)
   const setThemeId = useStore((s) => s.setThemeId)
   const setThemeMode = useStore((s) => s.setThemeMode)
-  const showDate = useStore((s) => s.showDate)
   const setShowDate = useStore((s) => s.setShowDate)
   const setTransparency = useStore((s) => s.setTransparency)
-  const fontScaleIdx = useStore((s) => s.fontScaleIdx)
   const setFontScaleIdx = useStore((s) => s.setFontScaleIdx)
   const displayScope = useStore((s) => s.displayScope)
   const setDisplayScope = useStore((s) => s.setDisplayScope)
@@ -690,12 +687,10 @@ const SettingsPanel: React.FC = () => {
   const showImageSearch = useStore((s) => s.showImageSearch)
   const showAppStorage = useStore((s) => s.showAppStorage)
   const showMediaSearch = useStore((s) => s.showMediaSearch)
-  const showAssetLibrary = useStore((s) => s.showAssetLibrary)
   const toggleShowSettings = useStore((s) => s.toggleShowSettings)
   const toggleShowImageSearch = useStore((s) => s.toggleShowImageSearch)
   const toggleShowAppStorage = useStore((s) => s.toggleShowAppStorage)
   const toggleShowMediaSearch = useStore((s) => s.toggleShowMediaSearch)
-  const toggleShowAssetLibrary = useStore((s) => s.toggleShowAssetLibrary)
   const handleMove = useLinkedMove('settings', settingsPos, setSettingsPos, linkedMove)
 
   const handlePanelVisibilityToggle = async (
@@ -946,13 +941,6 @@ const SettingsPanel: React.FC = () => {
       toggle: toggleShowMediaSearch,
       read: () => useStore.getState().showMediaSearch,
     },
-    {
-      key: 'assetLibrary',
-      label: 'Asset Library',
-      show: showAssetLibrary,
-      toggle: toggleShowAssetLibrary,
-      read: () => useStore.getState().showAssetLibrary,
-    },
   ]
 
   const otherPanelVisibilityItems: PanelVisibilityItem[] = [
@@ -1048,9 +1036,6 @@ const SettingsPanel: React.FC = () => {
             expanded={expandedSections.appearance}
             onToggle={() => toggleSection('appearance')}
           >
-            <p className="settings-section-description">
-              {t('Make your workspace comfortable and easy to read.')}
-            </p>
             <div className="settings-row">
               <label htmlFor="app-language">{t('Language')}</label>
               <select
@@ -1083,24 +1068,6 @@ const SettingsPanel: React.FC = () => {
             </div>
 
             <div className="settings-row">
-              <label htmlFor="app-theme">{t('Theme')}</label>
-              <select
-                id="app-theme"
-                value={themeId}
-                onChange={(event) =>
-                  setThemeId(
-                    THEME_PRESETS.find((theme) => theme.id === event.target.value)?.id ?? themeId,
-                  )
-                }
-              >
-                {THEME_PRESETS.map((theme) => (
-                  <option key={theme.id} value={theme.id}>
-                    {theme.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="settings-row">
               <label htmlFor="theme-mode">{t('Mode')}</label>
               <select
                 id="theme-mode"
@@ -1114,7 +1081,9 @@ const SettingsPanel: React.FC = () => {
               </select>
             </div>
             <details className="settings-theme-previews">
-              <summary>{t('Preview theme palettes')}</summary>
+              <summary>
+                {t('Theme')}: {THEME_PRESETS.find((theme) => theme.id === themeId)?.name}
+              </summary>
               <div className="theme-preset-groups" aria-label={t('Window style')}>
                 {THEME_GROUPS.map((group) => (
                   <div key={group} className="theme-preset-group">
@@ -1126,6 +1095,7 @@ const SettingsPanel: React.FC = () => {
                         return (
                           <button
                             key={theme.id}
+                            data-theme-id={theme.id}
                             className={`theme-style-option ${themeId === theme.id ? 'is-active' : ''}`}
                             onClick={() => setThemeId(theme.id)}
                             title={t('{name} window style', { name: theme.name })}
@@ -1148,34 +1118,6 @@ const SettingsPanel: React.FC = () => {
                 ))}
               </div>
             </details>
-
-            <div className="settings-row">
-              <label htmlFor="settings-show-date">{t('Date')}</label>
-              <label className="settings-checkbox">
-                <input
-                  id="settings-show-date"
-                  type="checkbox"
-                  checked={showDate}
-                  onChange={(event) => setShowDate(event.target.checked)}
-                />
-                {t('Show')}
-              </label>
-            </div>
-
-            <div className="settings-row">
-              <label htmlFor="settings-font-scale">{t('Font')}</label>
-              <select
-                id="settings-font-scale"
-                value={fontScaleIdx}
-                onChange={(event) => setFontScaleIdx(Number(event.target.value))}
-              >
-                {FONT_SCALE_STEPS.map((scale, index) => (
-                  <option key={scale} value={index}>
-                    {Math.round(scale * 100)}%
-                  </option>
-                ))}
-              </select>
-            </div>
           </CollapsibleSettingsSection>
 
           <CollapsibleSettingsSection
@@ -1198,11 +1140,6 @@ const SettingsPanel: React.FC = () => {
             expanded={expandedSections.searchModels}
             onToggle={() => toggleSection('searchModels')}
           >
-            <p className="settings-section-description">
-              {t(
-                'Models enable visual and language search. Import a compatible model to unlock these capabilities.',
-              )}
-            </p>
             <div className="settings-category__subheading">{t('Vector / Rerank')}</div>
             <div style={{ padding: '2px 0' }}>
               <VectorSettings />
@@ -1224,46 +1161,10 @@ const SettingsPanel: React.FC = () => {
           >
             <StorageLocationSettings />
             {btn(t('Open App Data Folder'), () => window.electronAPI.openConfigDir())}
-            {btn(t('Reset Sizes'), () => {
-              useStore.setState({
-                clockSize: { w: DEFAULT_CLOCK_W, h: DEFAULT_CLOCK_H },
-                foldersSize: { w: DEFAULT_FOLDERS_W, h: DEFAULT_FOLDERS_H },
-                promptsSize: { w: DEFAULT_PROMPTS_W, h: DEFAULT_PROMPTS_H },
-                settingsSize: { w: DEFAULT_SETTINGS_W, h: DEFAULT_SETTINGS_H },
-                calcSize: { w: DEFAULT_CALC_W, h: DEFAULT_CALC_H },
-                fmSize: { w: DEFAULT_FM_W, h: DEFAULT_FM_H },
-                imageSearchSize: { w: DEFAULT_IMAGESEARCH_W, h: DEFAULT_IMAGESEARCH_H },
-                unifiedSearchSize: { w: DEFAULT_UNIFIED_SEARCH_W, h: DEFAULT_UNIFIED_SEARCH_H },
-                appStorageSize: { w: DEFAULT_APPSTORAGE_W, h: DEFAULT_APPSTORAGE_H },
-                remoteTerminalSize: {
-                  w: DEFAULT_REMOTE_TERMINAL_W,
-                  h: DEFAULT_REMOTE_TERMINAL_H,
-                },
-                dupFinderSize: {
-                  w: DEFAULT_DUPLICATE_FINDER_W,
-                  h: DEFAULT_DUPLICATE_FINDER_H,
-                },
-                mediaSearchSize: { w: DEFAULT_MEDIA_SEARCH_W, h: DEFAULT_MEDIA_SEARCH_H },
-                assetLibrarySize: { w: DEFAULT_ASSET_LIBRARY_W, h: DEFAULT_ASSET_LIBRARY_H },
-                batchRenameSize: { w: DEFAULT_BATCH_RENAME_W, h: DEFAULT_BATCH_RENAME_H },
-              })
-            })}
             {btn(t('Reset Config'), () => setShowReset(true), {
               color: 'rgba(255, 100, 100, 1)',
             })}
-            <button
-              data-testid="clear-processed-image-data"
-              onClick={() => setShowClearData(true)}
-              style={{
-                width: '100%',
-                fontSize: 13,
-                padding: '4px 8px',
-                color: 'rgba(255, 100, 100, 1)',
-              }}
-            >
-              {t('Clear Processed Image Data')}
-            </button>
-            <SourceDerivedDataCleanup />
+            <DataCleanupCenter onClearAll={() => setShowClearData(true)} />
 
             {/* Clear processed image data modal (portal to body to avoid panel overflow clip) */}
             {showClearData &&

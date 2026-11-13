@@ -115,12 +115,13 @@ test('panel defaults use the requested unified large size while preserving compa
   )
 })
 
-test('both settings reset paths include the batch rename panel size', () => {
+test('config reset preserves legacy sizes without exposing a separate size reset', () => {
   const source = fs.readFileSync(
     path.join(__dirname, '..', 'src', 'components', 'SettingsPanel.tsx'),
     'utf8',
   )
-  assert.equal((source.match(/batchRenameSize:\s*\{/g) ?? []).length, 2)
+  assert.equal((source.match(/batchRenameSize:\s*\{/g) ?? []).length, 1)
+  assert.doesNotMatch(source, /t\('Reset Sizes'\)/)
   assert.match(source, /DEFAULT_BATCH_RENAME_W/)
   assert.match(source, /DEFAULT_BATCH_RENAME_H/)
 })
@@ -153,7 +154,7 @@ test('settings layout separates search panels from other panels', () => {
   )
   assert.match(searchGroup, /key:\s*'imageSearch'/)
   assert.match(searchGroup, /key:\s*'mediaSearch'/)
-  assert.match(searchGroup, /key:\s*'assetLibrary'/)
+  assert.doesNotMatch(searchGroup, /key:\s*'assetLibrary'/)
   assert.doesNotMatch(searchGroup, /key:\s*'settings'/)
 })
 

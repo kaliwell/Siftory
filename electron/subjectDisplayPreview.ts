@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 import sharp from 'sharp'
 import { orientedDimensions } from './subjectBoxes'
 
@@ -21,8 +22,11 @@ export async function createSubjectDisplayPreview(
   maxWidth: number,
   maxHeight: number,
 ): Promise<SubjectDisplayPreviewResult> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   try {
-    const metadata = await sharp(imagePath).metadata()
+    const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
     const source = orientedDimensions(
       metadata.width ?? 0,
       metadata.height ?? 0,
@@ -31,7 +35,7 @@ export async function createSubjectDisplayPreview(
     if (source.width <= 0 || source.height <= 0) {
       return { ok: false, error: 'Cannot read original image dimensions' }
     }
-    const { data, info } = await sharp(imagePath)
+    const { data, info } = await sharp(await getSharpSourceSnapshot())
       .rotate()
       .resize(maxWidth, maxHeight, {
         fit: 'inside',

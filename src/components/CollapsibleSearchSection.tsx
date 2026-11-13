@@ -7,12 +7,12 @@ interface CollapsibleSearchSectionProps {
   id: string
   step: string
   title: string
-  description: string
   expanded: boolean
   onToggle?: () => void
   tone: SearchControlSectionTone
   testId: string
   summary?: React.ReactNode
+  collapsedProgress?: React.ReactNode
   collapsible?: boolean
   pinned?: boolean
   children: React.ReactNode
@@ -71,12 +71,12 @@ const CollapsibleSearchSection: React.FC<CollapsibleSearchSectionProps> = ({
   id,
   step,
   title,
-  description,
   expanded,
   onToggle,
   tone,
   testId,
   summary,
+  collapsedProgress,
   collapsible = true,
   pinned = false,
   children,
@@ -120,8 +120,8 @@ const CollapsibleSearchSection: React.FC<CollapsibleSearchSectionProps> = ({
       </span>
       <span className="search-control-section__copy">
         <strong>{title}</strong>
-        <small>{description}</small>
       </span>
+      {!effectiveExpanded && collapsedProgress}
       {summary !== undefined && summary !== null && (
         <span className="search-control-section__summary">{summary}</span>
       )}
@@ -144,6 +144,7 @@ const CollapsibleSearchSection: React.FC<CollapsibleSearchSectionProps> = ({
         <button
           type="button"
           className="search-control-section__header"
+          data-has-collapsed-progress={!effectiveExpanded && collapsedProgress ? true : undefined}
           aria-expanded={effectiveExpanded}
           aria-controls={contentId}
           onClick={onToggle}
@@ -165,6 +166,7 @@ const CollapsibleSearchSection: React.FC<CollapsibleSearchSectionProps> = ({
 interface SearchControlSectionsToolbarProps {
   panelId: string
   leadingControl?: React.ReactNode
+  showLabel?: boolean
   onExpandAll: () => void
   onCollapseAll: () => void
 }
@@ -172,6 +174,7 @@ interface SearchControlSectionsToolbarProps {
 export const SearchControlSectionsToolbar: React.FC<SearchControlSectionsToolbarProps> = ({
   panelId,
   leadingControl,
+  showLabel = false,
   onExpandAll,
   onCollapseAll,
 }) => {
@@ -185,9 +188,9 @@ export const SearchControlSectionsToolbar: React.FC<SearchControlSectionsToolbar
     >
       {leadingControl ? (
         <div className="search-control-sections-toolbar__primary">{leadingControl}</div>
-      ) : (
+      ) : showLabel ? (
         <span className="search-control-sections-toolbar__label">{t('Panel sections')}</span>
-      )}
+      ) : null}
       <button type="button" data-testid={`${panelId}-sections-expand-all`} onClick={onExpandAll}>
         {t('Expand all')}
       </button>

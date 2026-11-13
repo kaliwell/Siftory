@@ -2,7 +2,6 @@ import { PANEL_IDENTITIES, type PanelId, type PanelVisibilityKey } from '../../s
 
 export const WORKSPACE_PANELS = [
   'unifiedSearch',
-  'assetLibrary',
   'imageSearch',
   'mediaSearch',
   'appStorage',
@@ -11,6 +10,7 @@ export const WORKSPACE_PANELS = [
 ] as const satisfies readonly PanelId[]
 export type WorkspacePanel = (typeof WORKSPACE_PANELS)[number]
 export const RETIRED_PANELS = [
+  'assetLibrary',
   'clock',
   'folders',
   'prompts',

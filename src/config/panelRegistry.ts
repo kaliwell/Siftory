@@ -1,19 +1,7 @@
-export type LazyPanelVisibilityKey =
-  | 'showImageSearch'
-  | 'showUnifiedSearch'
-  | 'showAppStorage'
-  | 'showDuplicateFinder'
-  | 'showMediaSearch'
-  | 'showAssetLibrary'
+export type LazyPanelVisibilityKey = 'showImageSearch' | 'showAppStorage' | 'showMediaSearch'
 
 export interface LazyPanelDefinition {
-  id:
-    | 'imageSearch'
-    | 'unifiedSearch'
-    | 'appStorage'
-    | 'duplicateFinder'
-    | 'mediaSearch'
-    | 'assetLibrary'
+  id: 'imageSearch' | 'appStorage' | 'mediaSearch'
   boundaryName: string
   visibilityKey: LazyPanelVisibilityKey
   load: () => Promise<{ default: ComponentType }>
@@ -23,14 +11,6 @@ export interface LazyPanelDefinition {
 }
 
 export const lazyPanelRegistry = [
-  {
-    id: 'unifiedSearch',
-    boundaryName: 'UnifiedSearch',
-    visibilityKey: 'showUnifiedSearch',
-    load: () => import('../components/UnifiedSearchPanel'),
-    preloadOrder: 5,
-    preserveWhenHidden: true,
-  },
   {
     id: 'mediaSearch',
     boundaryName: 'MediaSearch',
@@ -48,27 +28,11 @@ export const lazyPanelRegistry = [
     preserveWhenHidden: true,
   },
   {
-    id: 'assetLibrary',
-    boundaryName: 'NekoSearch',
-    visibilityKey: 'showAssetLibrary',
-    load: () => import('../components/AssetLibraryPanel'),
-    preloadOrder: 25,
-    preserveWhenHidden: true,
-  },
-  {
     id: 'appStorage',
     boundaryName: 'AppStorage',
     visibilityKey: 'showAppStorage',
     load: () => import('../components/AppStoragePanel'),
     preloadOrder: 30,
-    preserveWhenHidden: true,
-  },
-  {
-    id: 'duplicateFinder',
-    boundaryName: 'DuplicateFinder',
-    visibilityKey: 'showDuplicateFinder',
-    load: () => import('../components/DuplicateFinderPanel'),
-    preloadOrder: 40,
     preserveWhenHidden: true,
   },
 ] as const satisfies readonly LazyPanelDefinition[]

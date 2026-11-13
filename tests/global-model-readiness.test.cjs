@@ -139,7 +139,7 @@ test('deep runtime failures override import-time graph inspection and gate depen
   assert.equal(canExecuteGlobalModelTask(snapshot, ['dinov2_vitb14']), true)
 })
 
-test('model management stays reachable from tasks/settings and explicit deep checks use the isolated runtime', () => {
+test('model management stays reachable from Settings and explicit deep checks use the isolated runtime', () => {
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const panel = source('src/components/GlobalModelReadinessPanel.tsx')
   const hook = source('src/hooks/useGlobalModelReadiness.ts')
@@ -150,7 +150,7 @@ test('model management stays reachable from tasks/settings and explicit deep che
   const mediaPanel = source('src/components/MediaSearchPanel.tsx')
   const subjectPicker = source('src/components/SubjectPickerModal.tsx')
 
-  assert.match(navigator, /<ProductReadinessCenter/)
+  assert.doesNotMatch(navigator, /<ProductReadinessCenter/)
   assert.match(navigator, /workspace-open-model-settings/)
   assert.match(source('src/components/ProductReadinessCenter.tsx'), /modelManagerRef/)
   assert.match(source('src/components/SettingsPanel.tsx'), /<VectorSettings/)

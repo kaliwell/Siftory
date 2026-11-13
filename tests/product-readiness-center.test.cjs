@@ -12,11 +12,11 @@ function source(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 }
 
-test('workspace Tasks menu mounts one preparation center backed by main-process status', () => {
+test('legacy preparation center retains its status contract without a Tasks navigation entry', () => {
   const workspace = source('src/components/WorkspaceNavigator.tsx')
   const center = source('src/components/ProductReadinessCenter.tsx')
 
-  assert.match(workspace, /<ProductReadinessCenter\s+onAction=\{onReadinessAction\}\s+pageLayout/)
+  assert.doesNotMatch(workspace, /<ProductReadinessCenter/)
   assert.match(center, /loadProductReadiness\(api, \{ includeStorage \}\)/)
   assert.match(center, /refreshIntervalMs = 5000/)
   assert.match(center, /refreshInFlightRef/)

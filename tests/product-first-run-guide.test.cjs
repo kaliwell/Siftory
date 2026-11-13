@@ -165,7 +165,7 @@ test('persisted guide normalization is bounded and privacy-safe', () => {
   assert.equal(normalizeFirstRunGuideSettings({ schema: 9 }), null)
 })
 
-test('guide UI persists immediately, exposes recovery routing, and records real searches only', () => {
+test('legacy guide persists while the navigator uses direct settings and search routes', () => {
   const guide = source('src/components/FirstRunGuide.tsx')
   const navigator = source('src/components/WorkspaceNavigator.tsx')
   const readiness = source('src/components/ProductReadinessCenter.tsx')
@@ -186,17 +186,17 @@ test('guide UI persists immediately, exposes recovery routing, and records real 
     /Promise\.all\(\[window\.electronAPI\.loadSettings\(\), loadProductReadiness/,
   )
   assert.match(guide, /workspace-open-first-run-guide/)
-  assert.match(navigator, /<WorkspaceTasksPage/)
+  assert.doesNotMatch(navigator, /<WorkspaceTasksPage/)
   assert.match(
     source('src/components/WorkspaceTasksPage.tsx'),
     /data-testid="workspace-first-run-guide"/,
   )
   assert.match(navigator, /workspace-open-model-settings/)
-  assert.match(navigator, /workspace-prepare-library-focus/)
-  assert.match(navigator, /workspace-first-search-focus/)
+  assert.match(image, /workspace-prepare-library-focus/)
+  assert.match(image, /workspace-first-search-focus/)
   assert.match(guide, /source: 'Open source center'/)
   assert.match(guide, /search: 'Open main search'/)
-  assert.match(navigator, /navigate\('imageSearch', 'workspace-first-search-focus', 'search'/)
+  assert.match(navigator, /view: 'search'/)
   assert.match(readiness, /modelManagerRef/)
   assert.match(unified, /announceFirstSearchCompleted\('unified'\)/)
   assert.match(image, /announceFirstSearchCompleted\('image'\)/)

@@ -3,21 +3,11 @@ const path = require('node:path')
 const zlib = require('node:zlib')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
-const EXPECTED_LAZY_PANEL_IDS = [
-  'unifiedSearch',
-  'mediaSearch',
-  'imageSearch',
-  'assetLibrary',
-  'appStorage',
-  'duplicateFinder',
-]
+const EXPECTED_LAZY_PANEL_IDS = ['mediaSearch', 'imageSearch', 'appStorage']
 const LAZY_PANEL_SOURCES = Object.freeze({
-  unifiedSearch: 'src/components/UnifiedSearchPanel.tsx',
   mediaSearch: 'src/components/MediaSearchPanel.tsx',
   imageSearch: 'src/components/ImageSearchPanel.tsx',
-  assetLibrary: 'src/components/AssetLibraryPanel.tsx',
   appStorage: 'src/components/AppStoragePanel.tsx',
-  duplicateFinder: 'src/components/DuplicateFinderPanel.tsx',
 })
 const BUDGETS = Object.freeze({
   rendererMainBytes: 384 * 1024,

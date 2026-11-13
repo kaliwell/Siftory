@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 import fs from 'fs'
 import { isRecoverableJpegDecodeWarning } from './jpegDecodeRecovery'
 
@@ -27,13 +28,17 @@ async function readClipImageFallback(
   RawImage: ClipRawImageFactory,
   tolerateJpegWarnings = false,
 ): Promise<unknown> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () =>
+    (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath, MAX_CLIP_FALLBACK_FILE_BYTES))
+
   const stat = await fs.promises.stat(imagePath)
   if (!stat.isFile()) throw new Error('CLIP image fallback requires a regular file')
   if (stat.size > MAX_CLIP_FALLBACK_FILE_BYTES) {
     throw new Error(`CLIP image fallback file exceeds ${MAX_CLIP_FALLBACK_FILE_BYTES} bytes`)
   }
   const { default: sharp } = await import('sharp')
-  const pipeline = sharp(imagePath, {
+  const pipeline = sharp(await getSharpSourceSnapshot(), {
     limitInputPixels: MAX_CLIP_FALLBACK_PIXELS,
     animated: false,
     failOn: tolerateJpegWarnings ? 'none' : 'warning',
@@ -109,13 +114,17 @@ export async function readClipTensorPrefetchImage(
   imagePath: string,
   RawImage: ClipRawImageFactory,
 ): Promise<unknown> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () =>
+    (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath, MAX_CLIP_FALLBACK_FILE_BYTES))
+
   try {
     const stat = await fs.promises.stat(imagePath)
     if (!stat.isFile() || stat.size > MAX_CLIP_FALLBACK_FILE_BYTES) {
       return readClipImage(imagePath, RawImage)
     }
     const { default: sharp } = await import('sharp')
-    const pipeline = sharp(imagePath, {
+    const pipeline = sharp(await getSharpSourceSnapshot(), {
       limitInputPixels: MAX_CLIP_FALLBACK_PIXELS,
       animated: false,
     })

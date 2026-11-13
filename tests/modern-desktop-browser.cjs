@@ -698,16 +698,10 @@ async function run() {
       window.__workspaceTest.calls.some((call) => call.method === 'imageSearch.queryData'),
     )
     await page.screenshot({ path: path.join(evidence, 'maintenance-advanced.png') })
-    // Data location has one editable owner: the maintenance surface is a
-    // read-only summary and must jump to Settings -> Data & Reset instead of
-    // offering a second migration control.
-    const locationSection = page.getByTestId('maintenance-location-section')
-    if ((await locationSection.getAttribute('data-collapsed')) === 'true')
-      await locationSection.locator('button.search-control-section__header').click()
-    const readOnlyLocation = locationSection.getByTestId('storage-location-settings')
-    await readOnlyLocation.getByTestId('storage-location-current').waitFor()
-    assert.equal(await readOnlyLocation.getByTestId('storage-location-choose').count(), 0)
-    await readOnlyLocation.getByTestId('storage-location-open-settings').click()
+    // Data location is available only in Settings.
+    assert.equal(await page.getByTestId('maintenance-location-section').count(), 0)
+    await page.getByTestId('workspace-domain-settings').click()
+    await page.getByTestId('settings-nav-dataReset').click()
     const editableLocation = page.locator(
       '[data-settings-category="dataReset"] [data-testid="storage-location-settings"]',
     )
@@ -715,7 +709,7 @@ async function run() {
     assert.equal(
       await page.locator('[data-settings-category="dataReset"]:visible').count(),
       1,
-      'jump opens the editable data location in Settings',
+      'Settings owns the editable data location',
     )
     await page.getByTestId('workspace-domain-maintenance').click()
     // Use a genuinely long image source list: moving source management out of

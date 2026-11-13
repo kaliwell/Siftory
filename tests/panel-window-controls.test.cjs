@@ -74,9 +74,9 @@ test('one canonical manifest owns every stable panel identity', () => {
 
 test('live session and scan panels remain mounted after their first display', () => {
   const registry = source('src/config/panelRegistry.ts')
-  assert.match(registry, /id: 'duplicateFinder'[\s\S]*?preserveWhenHidden: true/)
+  assert.doesNotMatch(registry, /id: '(?:duplicateFinder|unifiedSearch|assetLibrary)'/)
   assert.doesNotMatch(registry, /id: 'remoteTerminal'/)
-  for (const panel of ['unifiedSearch', 'assetLibrary', 'appStorage'])
+  for (const panel of ['imageSearch', 'mediaSearch', 'appStorage'])
     assert.match(registry, new RegExp(`id: '${panel}'[\\s\\S]*?preserveWhenHidden: true`))
 
   const duplicateFinder = source('src/components/DuplicateFinderPanel.tsx')
@@ -116,8 +116,8 @@ test('desktop workspace owns its viewport and leaves native window geometry to E
   assert.match(app, /innerWidth/)
   assert.doesNotMatch(app, /scheduleSettledShapeSync|setOverlayShape\(|useMouseTransparency\(/)
   assert.match(app, /window-visibility-state/)
-  assert.match(navigator, /<FirstRunGuide/)
-  assert.match(navigator, /<WorkspaceTasksPage/)
+  assert.doesNotMatch(navigator, /<FirstRunGuide/)
+  assert.doesNotMatch(navigator, /<WorkspaceTasksPage/)
   assert.match(source('src/components/WorkspaceTasksPage.tsx'), /workspace-first-run-guide/)
 })
 

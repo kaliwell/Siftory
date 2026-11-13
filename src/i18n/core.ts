@@ -38,6 +38,13 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Data cleanup': '数据清理',
+  'Drive or folder': '盘符或文件夹',
+  'Folder index layers': '文件夹索引层',
+  'All processed image data': '全部图片派生数据',
+  'Choose folder and index layers': '选择文件夹和索引层',
+  'Registered folders': '已登记目录',
+  'Advanced preparation': '分步骤准备',
   'Stored records including history': '存储记录（含历史版本）',
   'Application data location': '应用数据位置',
   'Move indexes, vectors, library metadata and generated caches together. Original media stays in place.':
@@ -281,8 +288,7 @@ const zhCN: Record<string, string> = {
   'Connect folders and manage your indexed sources.': '连接文件夹，管理素材来源与索引状态。',
   Preferences: '偏好设置',
   'Changes are saved automatically.': '更改会自动保存。',
-  'Make your workspace comfortable and easy to read.':
-    '调整语言、外观和文字大小，让工作台更适合你。',
+  'Make your workspace comfortable and easy to read.': '调整语言、显示器和主题，让工作台更适合你。',
   'Preview theme palettes': '预览主题配色',
   'Find duplicate files': '查找重复文件',
   'Find the right asset across your indexed sources.':

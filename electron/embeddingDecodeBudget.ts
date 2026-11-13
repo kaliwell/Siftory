@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 import fs from 'fs'
 
 export const EMBEDDING_DECODE_RGB_BUDGET_BYTES = 256 * 1024 * 1024
@@ -153,11 +154,17 @@ function validatedEmbeddingImageHeader(
 export async function probeEmbeddingImageHeader(
   imagePath: string,
 ): Promise<EmbeddingImageHeader | null> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   try {
     const fast = await probeFastImageDimensions(imagePath)
     if (fast) return validatedEmbeddingImageHeader(fast.width, fast.height)
     const { default: sharp } = await import('sharp')
-    const metadata = await sharp(imagePath, { animated: false, sequentialRead: true }).metadata()
+    const metadata = await sharp(await getSharpSourceSnapshot(), {
+      animated: false,
+      sequentialRead: true,
+    }).metadata()
     const width = metadata.autoOrient?.width ?? metadata.width
     const height = metadata.autoOrient?.height ?? metadata.height
     return validatedEmbeddingImageHeader(width, height)

@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 import { secureIpcMain } from './ipcAuthorization'
 import { app, nativeImage, shell } from 'electron'
 import fs from 'fs'
@@ -159,10 +160,14 @@ async function generateSharpThumbnailDataUrl(
   dim: number,
   fileBytes: number,
 ): Promise<{ dataUrl: string | null; terminalError?: string }> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () =>
+    (sharpSourceSnapshot ??= readSharpFileSnapshot(filePath, fileBytes))
+
   try {
     const sharpModule = await import('sharp')
     const sharp = sharpModule.default || sharpModule
-    const image = sharp(filePath, {
+    const image = sharp(await getSharpSourceSnapshot(), {
       animated: false,
       limitInputPixels: 80_000_000,
       sequentialRead: true,

@@ -15,7 +15,7 @@ import {
   subscribeSettingsWriteStatus,
 } from '../hooks/settingsWriter'
 
-export const WORKSPACE_DOMAINS = ['Search', 'Library', 'Sources', 'Settings'] as const
+export const WORKSPACE_DOMAINS = ['Search', 'Sources', 'Settings'] as const
 const WorkspaceNavigator: React.FC = () => {
   const { t } = useTranslation()
   const activePanel = useStore((state) =>
@@ -54,7 +54,6 @@ const WorkspaceNavigator: React.FC = () => {
   }
   const entries = [
     { label: 'Search', display: 'Search', panel: 'imageSearch', icon: 'search', view: 'search' },
-    { label: 'Library', display: 'Library', panel: 'assetLibrary', icon: 'library' },
     {
       label: 'Sources',
       display: 'Scan folders',
@@ -97,9 +96,7 @@ const WorkspaceNavigator: React.FC = () => {
                 (
                   entry.label === 'Search'
                     ? activeRoute?.endsWith('search')
-                    : entry.label === 'Sources'
-                      ? activeRoute?.endsWith('sources')
-                      : activePanel === entry.panel
+                    : activeRoute?.endsWith('sources')
                 )
                   ? 'page'
                   : undefined
@@ -160,10 +157,6 @@ const WorkspaceNavigator: React.FC = () => {
           </div>
         )}
         <div className="workspace-sidebar__footer">
-          <span>
-            <i />
-            {t('Local workspace')}
-          </span>
           <details
             className="workspace-alpha-disclosure"
             open={alphaExpanded}

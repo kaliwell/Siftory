@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 // ── Shape Feature Service ──────────────────────────────────
 // Extracts real image proportion and simple structure features
 // for Layer 3 reranking.
@@ -81,12 +82,18 @@ function computeForegroundFromAlpha(
 }
 
 async function extractShapeMeasurements(imagePath: string): Promise<ShapeMeasurements> {
-  const meta = await sharp(imagePath).metadata()
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
+  const meta = await sharp(await getSharpSourceSnapshot()).metadata()
   const sourceWidth = meta.width || 1
   const sourceHeight = meta.height || 1
   const aspectRatio = sourceWidth / Math.max(1, sourceHeight)
 
-  const resized = sharp(imagePath).resize(128, 128, { fit: 'inside', withoutEnlargement: true })
+  const resized = sharp(await getSharpSourceSnapshot()).resize(128, 128, {
+    fit: 'inside',
+    withoutEnlargement: true,
+  })
   const { data: rgba, info: rgbaInfo } = await resized
     .clone()
     .ensureAlpha()

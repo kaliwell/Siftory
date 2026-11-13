@@ -50,7 +50,6 @@ test('closing the last foreground view returns to search instead of a blank work
 })
 test('normalizing an already focused view is stable', () => {
   for (const key of [
-    'showAssetLibrary',
     'showImageSearch',
     'showMediaSearch',
     'showAppStorage',
@@ -80,6 +79,28 @@ test('global hide honors a visible locked content view, matching the native visi
       focusedWorkspaceVisibility({
         globalVisible: false,
         lockedVisibility: { unifiedSearch: true },
+      }),
+    ),
+    [],
+  )
+})
+
+// Saved profiles and legacy IPC may still request the retired library.
+test('retired library layouts recover to search while keeping the current active view', () => {
+  assert.deepEqual(visible(focusedWorkspaceVisibility({ showAssetLibrary: true })), [
+    'showImageSearch',
+  ])
+  const previous = focusedWorkspaceVisibility({ showSettings: true })
+  assert.deepEqual(
+    visible(focusedWorkspaceVisibility({ ...previous, showAssetLibrary: true }, previous)),
+    ['showSettings'],
+  )
+  assert.deepEqual(
+    visible(
+      focusedWorkspaceVisibility({
+        showAssetLibrary: true,
+        globalVisible: false,
+        lockedVisibility: { assetLibrary: true },
       }),
     ),
     [],

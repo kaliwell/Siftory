@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 // ── Color Feature Service ──────────────────────────────────
 // Extracts real HSV color histograms and dominant colors for
 // Layer 3 reranking. Uses sharp to decode and sample pixels.
@@ -40,7 +41,10 @@ function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
 }
 
 async function sampleImagePixels(imagePath: string): Promise<RGBColor[]> {
-  const { data, info } = await sharp(imagePath)
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
+  const { data, info } = await sharp(await getSharpSourceSnapshot())
     .resize(96, 96, { fit: 'inside', withoutEnlargement: true })
     .flatten({ background: '#ffffff' })
     .removeAlpha()
@@ -173,10 +177,13 @@ export async function computeImageColorHist(
   imagePath: string,
   region?: { left: number; top: number; width: number; height: number },
 ): Promise<number[] | null> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   try {
-    let pipeline = sharp(imagePath)
+    let pipeline = sharp(await getSharpSourceSnapshot())
     if (region) {
-      const metadata = await sharp(imagePath).metadata()
+      const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
       const imgW = metadata.width ?? 0
       const imgH = metadata.height ?? 0
       const left = Math.max(0, Math.min(imgW - 1, region.left))

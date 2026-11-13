@@ -246,7 +246,7 @@ test('focused workspace keeps primary domains and retires remote terminal tools'
   const sources = source('src/components/DiscoverySourcesSection.tsx')
   const imagePanel = source('src/components/ImageSearchPanel.tsx')
   const collapsible = source('src/components/CollapsibleSearchSection.tsx')
-  for (const domain of ['Search', 'Sources', 'Library', 'Tasks', 'Settings']) {
+  for (const domain of ['Search', 'Sources', 'Settings']) {
     assert.match(navigator, new RegExp(`['"]${domain}['"]`))
   }
   assert.doesNotMatch(
@@ -254,10 +254,10 @@ test('focused workspace keeps primary domains and retires remote terminal tools'
     /workspace-remote-advanced|showRemoteTerminal|workspace-search-advanced-toggle/,
   )
   assert.match(navigator, /panel: 'imageSearch'/)
-  assert.match(navigator, /panel: 'assetLibrary'/)
+  assert.doesNotMatch(navigator, /panel: 'assetLibrary'/)
   const settings = source('src/components/SettingsPanel.tsx')
   assert.doesNotMatch(settings, /sourceAdvancedToolItems/)
-  assert.match(navigator, /getSchedulerStats\(\)/)
+  assert.doesNotMatch(navigator, /getSchedulerStats\(\)/)
   assert.match(sources, /workspace-sources-focus/)
   const maintenance = source('src/components/AppStoragePanel.tsx')
   assert.doesNotMatch(imagePanel, /testId="image-search-sources-section"/)

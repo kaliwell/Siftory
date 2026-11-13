@@ -1,3 +1,4 @@
+import { readSharpFileSnapshot } from './sharpFileSnapshot'
 // ── SAM-compatible Click Segmentation Service ─────────────
 // Click-to-segment: user clicks a point on the query image, a compatible model
 // produces the subject mask at that location.
@@ -99,6 +100,9 @@ async function encodeImage(imagePath: string): Promise<{
   sourceSize: number
   sourceMtimeMs: number
 } | null> {
+  let sharpSourceSnapshot: Promise<Buffer> | undefined
+  const getSharpSourceSnapshot = () => (sharpSourceSnapshot ??= readSharpFileSnapshot(imagePath))
+
   const enc = await getSession('enc')
   if (!enc) return null
   const profile = getUserModelProfile('segment-encoder')
@@ -121,7 +125,7 @@ async function encodeImage(imagePath: string): Promise<{
   const cached = embedCache.get(key)
   if (cached) return cached
 
-  const metadata = await sharp(imagePath).metadata()
+  const metadata = await sharp(await getSharpSourceSnapshot()).metadata()
   // Display orientation (EXIF applied) — the picker modal shows EXIF-rotated
   // thumbnails, so the mask/bbox coordinate space must match it.
   const { width, height } = orientedDimensions(
@@ -132,7 +136,7 @@ async function encodeImage(imagePath: string): Promise<{
   if (width <= 0 || height <= 0) return null
 
   // Resize/pad and tensor layout follow the selected encoder profile.
-  const resized = await sharp(imagePath)
+  const resized = await sharp(await getSharpSourceSnapshot())
     .rotate()
     .resize(adapterSpec.width, adapterSpec.height, {
       fit: 'inside',

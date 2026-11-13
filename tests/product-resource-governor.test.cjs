@@ -139,15 +139,15 @@ test('resource profile persistence is bounded and corrupt settings fall back saf
   }
 })
 
-test('task center exposes guarded profile selection, pressure state, and cancellation', () => {
+test('retired task UI stays removed while resource control IPC and runtime remain', () => {
   const root = path.resolve(__dirname, '..')
   const ui = fs.readFileSync(path.join(root, 'src', 'components', 'WorkspaceNavigator.tsx'), 'utf8')
   const ipc = fs.readFileSync(path.join(root, 'electron', 'unifiedSearchIpc.ts'), 'utf8')
   const runtime = fs.readFileSync(path.join(root, 'electron', 'unifiedSearchRuntime.ts'), 'utf8')
-  assert.match(ui, /data-testid="resource-governor-profile"/)
-  assert.match(ui, /setResourceProfile\(profile\)/)
-  assert.match(ui, /data-testid="resource-governor-pressure"/)
-  assert.match(ui, /cancelBackgroundTasks\(\)/)
+  assert.doesNotMatch(ui, /data-testid="resource-governor-profile"/)
+  assert.doesNotMatch(ui, /setResourceProfile\(profile\)/)
+  assert.doesNotMatch(ui, /data-testid="resource-governor-pressure"/)
+  assert.doesNotMatch(ui, /cancelBackgroundTasks\(\)/)
   assert.match(ipc, /RESOURCE_PROFILE_SET/)
   assert.match(ipc, /RESOURCE_BACKGROUND_CANCEL/)
   assert.match(runtime, /statfsSync/)
