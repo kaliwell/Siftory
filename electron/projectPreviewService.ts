@@ -17,10 +17,17 @@ import {
 import { loadExternalProjectPreviewProviders } from './projectPreviewExternalProviders'
 
 const FAILED_PREVIEW_RETRY_MS = 5 * 60 * 1000
+const RESOURCE_PREVIEW_RETRY_MS = 30 * 60 * 1000
 const PROJECT_PREVIEW_ENCODING_VERSION = 'jpeg-v2-vector-focus'
 
 function cacheProviderVersion(provider: ProjectPreviewProvider): string {
   return `${provider.version}+${PROJECT_PREVIEW_ENCODING_VERSION}`
+}
+
+export interface ProjectPreviewRequestOptions {
+  isCancelled?: () => boolean
+  forceRetry?: boolean
+  pdfTimeoutMs?: number
 }
 
 export class ProjectPreviewService {
@@ -38,8 +45,14 @@ export class ProjectPreviewService {
     ]
   }
 
-  async getOrCreate(sourcePath: string): Promise<ProjectPreviewManifestEntry> {
+  async getOrCreate(
+    sourcePath: string,
+    options: ProjectPreviewRequestOptions = {},
+  ): Promise<ProjectPreviewManifestEntry> {
     const resolved = path.resolve(sourcePath)
+    // A scan owns its cancellation; do not cancel another caller's shared job.
+    if (options.isCancelled || options.forceRetry || options.pdfTimeoutMs)
+      return this.createOrReuse(resolved, options)
     const existing = this.pending.get(resolved)
     if (existing) return existing
     const task = this.createOrReuse(resolved).finally(() => this.pending.delete(resolved))
@@ -47,7 +60,17 @@ export class ProjectPreviewService {
     return task
   }
 
-  private async createOrReuse(sourcePath: string): Promise<ProjectPreviewManifestEntry> {
+  private async createOrReuse(
+    sourcePath: string,
+    options: ProjectPreviewRequestOptions = {},
+  ): Promise<ProjectPreviewManifestEntry> {
+    const checkCancelled = () => {
+      if (options.isCancelled?.())
+        throw Object.assign(new Error('PROJECT_PREVIEW_CANCELLED'), {
+          code: 'PROJECT_PREVIEW_CANCELLED',
+        })
+    }
+    checkCancelled()
     const classification = classifyProjectFile(sourcePath)
     if (!classification) throw new Error('Unsupported project file type')
     const stat = await fsp.stat(sourcePath)
@@ -85,10 +108,11 @@ export class ProjectPreviewService {
     }
     if (
       sameSource &&
+      !options.forceRetry &&
       previous.status !== 'ready' &&
       previous.provider === 'provider-chain' &&
       previous.providerVersion === chainVersion &&
-      Date.now() - previous.updatedAt < FAILED_PREVIEW_RETRY_MS
+      Date.now() < (previous.retryAfter ?? previous.updatedAt + FAILED_PREVIEW_RETRY_MS)
     ) {
       return previous
     }
@@ -108,6 +132,7 @@ export class ProjectPreviewService {
 
     let decodeFailed = false
     for (const provider of providers) {
+      checkCancelled()
       let previewBytes: Buffer | null = null
       let prepared: { data: Uint8Array; width: number; height: number } | null = null
       try {
@@ -116,16 +141,32 @@ export class ProjectPreviewService {
           BUILTIN_PROJECT_PREVIEW_PROVIDERS.includes(provider) &&
           provider.id !== 'windows-shell-thumbnail'
         ) {
-          prepared = (await runProjectPreviewCompute({
-            kind: 'extractImage',
-            sourcePath,
-            sourceExt: classification.sourceExt,
-            providerId: provider.id,
-          })) as typeof prepared
+          prepared = (await runProjectPreviewCompute(
+            {
+              kind: 'extractImage',
+              sourcePath,
+              sourceExt: classification.sourceExt,
+              providerId: provider.id,
+            },
+            { isCancelled: options.isCancelled, timeoutMs: options.pdfTimeoutMs ?? 120_000 },
+          )) as typeof prepared
         } else previewBytes = await provider.extract(sourcePath)
-      } catch {
+      } catch (error) {
+        checkCancelled()
+        const code = (error as { code?: string }).code
+        if (code?.startsWith('PDF_PREVIEW_')) {
+          console.warn('[ProjectPreview]', provider.id, code)
+          return this.recordFailure(
+            { ...common, provider: 'provider-chain', providerVersion: chainVersion },
+            'error',
+            code,
+            previous,
+            Date.now() + RESOURCE_PREVIEW_RETRY_MS,
+          )
+        }
         decodeFailed = true
       }
+      checkCancelled()
       if (!previewBytes && !prepared) continue
       const entry = await this.createPreviewEntry(
         {
@@ -169,7 +210,7 @@ export class ProjectPreviewService {
         })) as { data: Uint8Array; width: number; height: number })
       const cacheKey = projectPreviewCacheKey(base)
       const previewPath = path.join(this.manifest.previewsDir, `${cacheKey}.jpg`)
-      temporaryPath = `${previewPath}.${process.pid}.${Date.now()}.tmp`
+      temporaryPath = `${previewPath}.${process.pid}.${crypto.randomUUID()}.tmp`
       await fsp.mkdir(this.manifest.previewsDir, { recursive: true })
       await fsp.writeFile(temporaryPath, output.data)
       await fsp.rename(temporaryPath, previewPath)
@@ -201,11 +242,21 @@ export class ProjectPreviewService {
     status: 'unavailable' | 'error',
     errorCode: string,
     previous: ProjectPreviewManifestEntry | null,
+    retryAfter?: number,
   ): Promise<ProjectPreviewManifestEntry> {
     const entry: ProjectPreviewManifestEntry = {
       ...base,
       status,
       errorCode,
+      ...(retryAfter ? { retryAfter } : {}),
+      ...(previous?.previewPath
+        ? {
+            previewPath: previous.previewPath,
+            previewHash: previous.previewHash,
+            width: previous.width,
+            height: previous.height,
+          }
+        : {}),
       updatedAt: Date.now(),
     }
     await this.manifest.upsert(entry)

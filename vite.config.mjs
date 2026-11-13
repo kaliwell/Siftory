@@ -333,6 +333,19 @@ export default defineConfig({
           },
         },
         {
+          entry: 'electron/projectPreviewPdfChild.cjs',
+          vite: {
+            build: {
+              outDir: 'dist-electron',
+              emptyOutDir: false,
+              rollupOptions: {
+                external: [...builtinModules, ...builtinModules.map((name) => `node:${name}`)],
+                output: { entryFileNames: 'projectPreviewPdfChild.js' },
+              },
+            },
+          },
+        },
+        {
           entry: 'electron/imageSearchDataCatalogWorker.ts',
           vite: {
             build: {

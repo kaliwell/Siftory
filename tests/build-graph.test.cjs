@@ -22,6 +22,7 @@ function fixture(t, overrides = {}) {
     'electron/preload.ts': 'export {}',
     'electron/exampleWorker.ts': 'export {}',
     'electron/projectPreviewImageWorker.cjs': "require('node:worker_threads')",
+    'electron/projectPreviewPdfChild.cjs': "require('node:worker_threads')",
     'electron/projectPreviewProviders.ts': 'export {}',
     'electron/endUserTermsPreload.ts':
       "import { contextBridge } from 'electron'; import type { Contract } from '../shared/contract'",

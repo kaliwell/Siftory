@@ -46,7 +46,14 @@ function changedFiles() {
 function testsFor(files) {
   const tests = new Set()
   const rules = [
-    [/projectPreview|projectSearchIndex/, ['tests/project-preview.test.cjs']],
+    [
+      /projectPreview|projectSearchIndex/,
+      [
+        'tests/project-preview.test.cjs',
+        'tests/project-preview-performance.test.cjs',
+        'tests/project-preview-pdf-runtime.test.cjs',
+      ],
+    ],
     [
       /imageSearchService|progressCoalescer/,
       ['tests/image-search-shutdown.test.cjs', 'tests/image-search-sort.test.cjs'],

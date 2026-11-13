@@ -282,3 +282,61 @@ test('an unavailable scan root does not purge its cached project records', async
     fs.rmSync(root, { recursive: true, force: true })
   }
 })
+
+test('fast previews are indexed before PDF work and async upserts finish before success is reported', async () => {
+  const { initProjectSearchIndex, indexProjectPreviews } = loadTsModule(
+    'electron/projectSearchIndexService.ts',
+  )
+  const { getProjectPreviewService } = loadTsModule('electron/projectPreviewService.ts')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-priority-'))
+  const source = path.join(root, 'source'),
+    data = path.join(root, 'data')
+  fs.mkdirSync(source)
+  fs.writeFileSync(
+    path.join(source, 'a.pdf'),
+    require('./fixtures/project-preview-assets.cjs').makePdf(),
+  )
+  fs.writeFileSync(
+    path.join(source, 'z.svg'),
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="blue"/></svg>',
+  )
+  const events = [],
+    requests = []
+  try {
+    await initProjectSearchIndex(data)
+    const service = getProjectPreviewService(data),
+      original = service.getOrCreate.bind(service)
+    service.getOrCreate = async (file, options) => {
+      events.push(path.extname(file))
+      requests.push(options)
+      return original(file, options)
+    }
+    let committed = 0
+    const result = await indexProjectPreviews([source], {
+      hashImageAsync: async () => ({
+        ok: true,
+        width: 32,
+        height: 32,
+        diffHash64: '1'.repeat(16),
+        dctHash64: '2'.repeat(16),
+      }),
+      upsertIndexRecord: async () => {
+        await new Promise((r) => setTimeout(r, 5))
+        committed++
+        return { ok: true }
+      },
+      deleteIndexPath: () => ({ ok: true }),
+      removeSourceVectorData: () => {},
+    })
+    assert.deepEqual(events, ['.svg', '.pdf'])
+    assert.equal(result.indexed, 2)
+    assert.equal(committed, 2)
+    assert.ok(requests.every((request) => request.pdfTimeoutMs === 15000))
+    const { prepareProjectSearchInput } = loadTsModule('electron/projectSearchIndexService.ts')
+    assert.ok(await prepareProjectSearchInput(path.join(source, 'a.pdf')))
+    assert.equal(requests.at(-1).forceRetry, true)
+    assert.equal(requests.at(-1).pdfTimeoutMs, 120000)
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})

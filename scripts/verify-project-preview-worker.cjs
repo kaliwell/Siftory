@@ -3,12 +3,14 @@ const path = require('node:path')
 const { pathToFileURL } = require('node:url')
 const assert = require('node:assert/strict')
 const { Worker } = require('node:worker_threads')
+const { fork } = require('node:child_process')
 const { builtinModules } = require('node:module')
 async function main() {
   const { build } = await import('vite')
   const outDir = 'artifacts/verification/worker-build'
   for (const [entry, fileName] of [
     ['electron/projectPreviewImageWorker.cjs', 'projectPreviewImageWorker.cjs'],
+    ['electron/projectPreviewPdfChild.cjs', 'projectPreviewPdfChild.cjs'],
     ['electron/projectPreviewProviders.ts', 'projectPreviewProvidersWorker.js'],
   ])
     await build({
@@ -94,6 +96,47 @@ async function main() {
       sourceExt: 'pdf',
     })
     assert.ok(pdf?.data.length > 0 && pdf.width > 0)
+    const isolated = await new Promise((resolve, reject) => {
+      const child = fork(path.resolve(outDir, 'projectPreviewPdfChild.cjs'), [], {
+        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        serialization: 'advanced',
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      })
+      let result
+      const timer = setTimeout(() => {
+        child.kill()
+        reject(Error('Built PDF child timeout'))
+      }, 10000)
+      child.once('error', reject)
+      child.on('message', (message) => {
+        if (message.kind === 'result') {
+          result = message
+          child.disconnect()
+        }
+      })
+      child.once('exit', () => {
+        clearTimeout(timer)
+        if (result?.error || !result?.result)
+          reject(Error(result?.error || 'Built PDF child exited without result'))
+        else resolve(result.result)
+      })
+      child.send({
+        workerPath: path.resolve(outDir, 'projectPreviewImageWorker.cjs'),
+        workerData: {
+          sharpPath: require.resolve('sharp'),
+          moduleRoots: require.resolve.paths('@napi-rs/canvas'),
+          pdfModuleUrl: pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.mjs')).href,
+          providersPath: path.resolve(outDir, 'projectPreviewProvidersWorker.js'),
+        },
+        input: {
+          kind: 'extractImage',
+          providerId: 'pdfjs-first-page',
+          sourcePath: pdfPath,
+          sourceExt: 'pdf',
+        },
+      })
+    })
+    assert.deepEqual(Buffer.from(isolated.data), Buffer.from(pdf.data))
     const temporaryPath = path.resolve(outDir, 'snapshot.tmp')
     worker.postMessage({ kind: 'manifestStart' })
     worker.postMessage({ kind: 'manifestChunk', entries: [{ sourcePath: 'a' }] })

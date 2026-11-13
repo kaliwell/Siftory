@@ -107,7 +107,7 @@ const ImageSearchStatusBar: React.FC<ImageSearchStatusBarProps> = ({
               maxWidth: 200,
             }}
           >
-            {t('Warning')}: {status.lastWarning}
+            {t('Warning')}: {t(status.lastWarning)}
           </span>
         )}
       </div>

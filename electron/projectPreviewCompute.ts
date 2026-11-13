@@ -1,40 +1,24 @@
-import fs from 'fs'
-import path from 'path'
 import { Worker } from 'worker_threads'
-import { pathToFileURL } from 'url'
+import { projectPreviewWorkerPaths } from './projectPreviewWorkerPaths'
+import { runPdfPreviewCompute, type PdfPreviewOptions } from './projectPreviewPdfRuntime'
 
 // One bounded execution lane: do not create a decode thread for every file.
 let worker: Worker | undefined
 let chain: Promise<unknown> = Promise.resolve()
 let idleTimer: ReturnType<typeof setTimeout> | undefined
-export function runProjectPreviewCompute(input: unknown): Promise<unknown> {
+export function runProjectPreviewCompute(
+  input: unknown,
+  options: PdfPreviewOptions = {},
+): Promise<unknown> {
+  if ((input as { providerId?: string }).providerId === 'pdfjs-first-page')
+    return runPdfPreviewCompute(input, options)
   const task = chain.then(
     () =>
       new Promise((resolve, reject) => {
         clearTimeout(idleTimer)
         if (!worker) {
-          const local = path.join(__dirname, 'projectPreviewImageWorker.cjs')
-          const built = path.join(__dirname, 'projectPreviewImageWorker.js')
-          worker = new Worker(
-            fs.existsSync(local)
-              ? local
-              : fs.existsSync(built)
-                ? built
-                : path.join(process.resourcesPath, 'projectPreviewImageWorker.js'),
-            {
-              workerData: {
-                sharpPath: require.resolve('sharp'),
-                moduleRoots: require.resolve.paths('@napi-rs/canvas'),
-                pdfModuleUrl: pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.mjs'))
-                  .href,
-                providersPath: fs.existsSync(path.join(__dirname, 'projectPreviewProviders.ts'))
-                  ? path.join(__dirname, 'projectPreviewProviders.ts')
-                  : fs.existsSync(path.join(__dirname, 'projectPreviewProvidersWorker.js'))
-                    ? path.join(__dirname, 'projectPreviewProvidersWorker.js')
-                    : path.join(process.resourcesPath, 'projectPreviewProvidersWorker.js'),
-              },
-            },
-          )
+          const setup = projectPreviewWorkerPaths()
+          worker = new Worker(setup.workerPath, { workerData: setup.workerData })
         }
         const current = worker
         // Keep an error observer while idle; otherwise an idle worker crash can

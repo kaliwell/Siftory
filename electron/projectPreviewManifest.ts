@@ -26,6 +26,7 @@ export interface ProjectPreviewManifestEntry {
   keywords: string[]
   status: ProjectPreviewStatus
   errorCode?: string
+  retryAfter?: number
   updatedAt: number
 }
 

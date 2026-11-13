@@ -119,17 +119,17 @@ test('scan and index state are owned by explicit runtime contexts', () => {
   )
   assert.match(nativeSource, /napi_remove_async_cleanup_hook\(completedHook\)/)
   assert.match(nativeSource, /beginTeardown[\s\S]*?napi_cancel_async_work/)
-  assert.equal(nativeSource.match(/create_registered_async_work\(env,d->registry,/g)?.length, 10)
+  assert.equal(nativeSource.match(/create_registered_async_work\(env,d->registry,/g)?.length, 11)
   assert.equal(
     nativeSource.match(/finish_registered_async_work\(env,d->registry,d->work\)/g)?.length,
-    9,
+    10,
   )
   assert.equal(
     nativeSource.match(/std::shared_ptr<AsyncCancellationToken> cancellation=std::make_shared/g)
       ?.length,
-    5,
+    6,
   )
-  assert.equal(nativeSource.match(/d->work,d->cancellation\)/g)?.length, 7)
+  assert.equal(nativeSource.match(/d->work,d->cancellation\)/g)?.length, 8)
   assert.match(nativeSource, /write_segment_file[\s\S]*?AsyncCancellationToken[\s\S]*?TmpGuard/)
   assert.match(nativeSource, /async_cancellation_checkpoint/)
   assert.match(

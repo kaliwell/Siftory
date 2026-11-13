@@ -80,6 +80,11 @@ async function main() {
       'packaged native addon must load',
     )
     const previewSource = path.join(userData, 'packaged-preview-test.ai')
+    assert.ok(
+      fs.statSync(path.join(path.dirname(executablePath), 'resources', 'projectPreviewPdfChild.js'))
+        .size > 0,
+      'Packaged PDF child resource must exist',
+    )
     fs.writeFileSync(previewSource, require('./fixtures/project-preview-assets.cjs').makePdf())
     const preview = await page.evaluate(
       (filePath) => window.electronAPI.fmGetThumbnail(filePath, 256),
@@ -112,6 +117,7 @@ async function main() {
           rendererReady: true,
           nativeAddonLoaded: true,
           projectPreviewWorkerPassed: true,
+          projectPreviewPdfChildPassed: true,
           pageErrors,
           scope:
             'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',

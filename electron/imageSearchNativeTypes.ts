@@ -338,6 +338,16 @@ export interface NativeAddon {
     diffHash64: string,
     dctHash64: string,
   ): { ok: boolean; path?: string; error?: string }
+  upsertIndexRecordAsync?: (
+    filePath: string,
+    width: number,
+    height: number,
+    fileSize: number,
+    modifiedTime: number,
+    diffHash64: string,
+    dctHash64: string,
+  ) => Promise<{ ok: boolean; path?: string; error?: string }>
+  cancelIndexRecordUpsert?(): { ok: boolean; cancelled: boolean }
   searchByHash(
     hashHex: string,
     threshold: number,

@@ -161,7 +161,10 @@ const entries = [
   // renderer/worker edges.
   // One shared sharpFileSnapshot module guards disappearing input paths across
   // thumbnail/model callers; it replaces native path reads, not a new service.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 327 },
+  // PDF isolation adds two dependency-free boundaries: the supervised child
+  // runtime and shared worker-path resolution. No renderer/preload imports or
+  // external packages are added; retain the other entry and byte budgets.
+  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 329 },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports
@@ -194,6 +197,12 @@ entries.push({
   name: 'worker:projectPreviewImageWorker',
   role: 'worker',
   file: path.join(root, 'electron', 'projectPreviewImageWorker.cjs'),
+  budget: 1,
+})
+entries.push({
+  name: 'worker:projectPreviewPdfChild',
+  role: 'worker',
+  file: path.join(root, 'electron', 'projectPreviewPdfChild.cjs'),
   budget: 1,
 })
 entries.push({

@@ -288,3 +288,75 @@ test('large overlay inserts stay unique and progress statistics skip full health
   )
   t.diagnostic(JSON.stringify({ records: total, insertBlockSize: block, insertBlockMs: timings }))
 })
+
+test('record lookup survives compaction, deletion, resurrection and reload without changing browse order', async (t) => {
+  const f = fixture(t)
+  const paths = Array.from({ length: 80 }, (_, i) => path.join(f.source, `lookup-${i}.jpg`))
+  paths.forEach((p) => upsert(p, 1))
+  upsert(paths[0], 1) // warm the lookup
+  const before = addon.queryIndexRecords('', 0, 100).records.map((r) => r.path)
+  upsert(paths[0], 2)
+  assert.deepEqual(
+    addon.queryIndexRecords('', 0, 100).records.map((r) => r.path),
+    [paths[0], ...before.filter((p) => p !== paths[0])],
+  )
+  assert.equal(addon.deleteIndexPaths([paths[1], paths[3]]).ok, true)
+  upsert(paths[2], 1)
+  upsert(paths[3], 4)
+  assert.equal(addon.queryIndexRecords(paths[2], 0, 10).records[0].modifiedTime, 1)
+  assert.equal(addon.getIndexMode().physicalRecordCount, 79)
+  await addon.saveIndexToManifestAsync(f.index)
+  addon.clearIndex()
+  assert.equal(addon.loadManifest(f.index).ok, true)
+  assert.equal(
+    (
+      await addon.upsertIndexRecordAsync(
+        paths[3],
+        1,
+        1,
+        68,
+        4,
+        '0000000000000000',
+        '0000000000000000',
+      )
+    ).ok,
+    true,
+  )
+  assert.equal(addon.getIndexMode().recordCount, 79)
+})
+
+test('async record upserts use the same semantics and respect precommit cancellation', async (t) => {
+  const f = fixture(t),
+    file = path.join(f.source, 'async.jpg')
+  const args = [file, 1, 1, 68, 1, '0000000000000000', '0000000000000000']
+  assert.equal((await addon.upsertIndexRecordAsync(...args)).ok, true)
+  assert.equal((await addon.upsertIndexRecordAsync(...args)).ok, true)
+  assert.equal(addon.getIndexMode().physicalRecordCount, 1)
+  const prior = process.env.FLOATING_CLOCK_NATIVE_COOPERATIVE_CANCEL_TEST
+  process.env.FLOATING_CLOCK_NATIVE_COOPERATIVE_CANCEL_TEST = '1'
+  try {
+    const pending = addon.upsertIndexRecordAsync(
+      file,
+      1,
+      1,
+      68,
+      2,
+      '1111111111111111',
+      '1111111111111111',
+    )
+    const deadline = Date.now() + 3000
+    while (!addon.getNativeStatus().asyncWorkRunningCount && Date.now() < deadline)
+      await new Promise((r) => setTimeout(r, 1))
+    assert.equal(addon.cancelIndexRecordUpsert().cancelled, true)
+    assert.equal((await pending).ok, false)
+    assert.equal(addon.queryIndexRecords(file, 0, 10).records[0].modifiedTime, 1)
+  } finally {
+    if (prior === undefined) delete process.env.FLOATING_CLOCK_NATIVE_COOPERATIVE_CANCEL_TEST
+    else process.env.FLOATING_CLOCK_NATIVE_COOPERATIVE_CANCEL_TEST = prior
+  }
+  assert.equal(
+    (await addon.upsertIndexRecordAsync(file, 1, 1, 68, 3, '0000000000000000', '0000000000000000'))
+      .ok,
+    true,
+  )
+})

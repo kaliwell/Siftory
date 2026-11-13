@@ -38,6 +38,8 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Some project previews failed. Select the source file to retry.':
+    '部分工程预览失败，可选中源文件重试。',
   'Data cleanup': '数据清理',
   'Drive or folder': '盘符或文件夹',
   'Folder index layers': '文件夹索引层',

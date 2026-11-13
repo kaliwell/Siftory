@@ -924,6 +924,11 @@ struct IndexRuntime{
   std::atomic<int> attachedEnvs{0};
   std::shared_mutex mutex;
   std::vector<ImageRecord> records;
+  // Transient lookup only; never persisted. Bulk edits invalidate this cache.
+  std::vector<PathKey> recordKeys;
+  std::unordered_map<PathKey,size_t,PathKeyHash> recordRows;
+  bool recordRowsValid=false;
+  void invalidateRecordRows(){recordRowsValid=false;recordKeys.clear();recordRows.clear();}
   std::unordered_set<std::string> dedupSet;
   std::atomic<int64_t> nextId{1},indexedCount{0},failedCount{0},totalBytes{0};
   std::atomic<bool> dirty{false};
@@ -1147,6 +1152,7 @@ struct AddonContext{
   std::shared_ptr<ScanRuntime> scan;
   std::shared_ptr<IndexRuntime> index;
   std::shared_ptr<AsyncWorkRegistry> asyncWorks;
+  std::weak_ptr<AsyncCancellationToken> upsertCancellation;
   napi_async_cleanup_hook_handle asyncCleanupHook=nullptr;
   // Accessed only on this environment's JS thread; one join, many waiters.
   StopScanAsyncData* activeStop=nullptr;
@@ -1205,6 +1211,40 @@ static std::string normalize_path(const std::string& p){
 static bool path_matches_prefix(const std::string& normalized,const std::string& prefix){
   return !prefix.empty()&&(normalized==prefix||(normalized.size()>prefix.size()&&
     normalized.compare(0,prefix.size(),prefix)==0&&normalized[prefix.size()]=='\\'));
+}
+// Caller holds the exclusive index lock. Keep physical order unchanged: it is
+// also used for newest-first browsing and equal-distance search tie handling.
+static void ensure_record_rows_locked(IndexRuntime& index){
+  if(index.recordRowsValid&&index.recordKeys.size()==index.records.size())return;
+  index.recordRowsValid=false;index.recordKeys.clear();index.recordRows.clear();
+  index.recordKeys.reserve(index.records.size());index.recordRows.reserve(index.records.size());
+  for(size_t i=0;i<index.records.size();++i){
+    auto key=make_path_key(normalize_path(index.records[i].path));
+    index.recordKeys.push_back(key);index.recordRows[key]=i;
+  }
+  index.recordRowsValid=true;
+}
+static void erase_memory_path_locked(IndexRuntime& index,const std::string& normalizedPath){
+  ensure_record_rows_locked(index);
+  const auto key=make_path_key(normalizedPath);
+  if(!index.recordRows.count(key))return;
+  // Removing versions still preserves vector order, but compares cached keys
+  // instead of normalizing every stored Windows path on every update.
+  size_t write=0;
+  for(size_t read=0;read<index.records.size();++read){
+    const auto current=index.recordKeys[read];
+    if(current==key&&normalize_path(index.records[read].path)==normalizedPath)continue;
+    if(write!=read){index.records[write]=std::move(index.records[read]);index.recordKeys[write]=current;}
+    index.recordRows[current]=write++;
+  }
+  index.records.resize(write);index.recordKeys.resize(write);index.recordRows.erase(key);
+}
+static void append_memory_record_locked(IndexRuntime& index,ImageRecord record,const std::string& normalizedPath){
+  if(index.recordRowsValid){
+    auto key=make_path_key(normalizedPath);
+    index.recordRows[key]=index.records.size();index.recordKeys.push_back(key);
+  }
+  index.records.push_back(std::move(record));
 }
 static bool is_path_hidden(IndexRuntime& index,const std::string& normalizedPath){
   std::shared_lock<std::shared_mutex> lk(index.mutex);
@@ -1696,7 +1736,7 @@ static void scan_worker(ScanRuntime& runtime,IndexRuntime& index,std::string roo
       auto tPush0=std::chrono::high_resolution_clock::now();
       ImageRecord rec;rec.id=index.nextId.fetch_add(1);rec.path=fp;rec.width=w;rec.height=h;rec.channels=ch;
       rec.fileSize=fsz;rec.modifiedTime=mtimeMs;rec.diffHash64=hv;rec.dctHash64=dctv;
-      {std::unique_lock<std::shared_mutex> lk(index.mutex);index.records.push_back(std::move(rec));index.indexedCount.fetch_add(1);index.totalBytes.fetch_add(fsz);}
+      {std::unique_lock<std::shared_mutex> lk(index.mutex);index.invalidateRecordRows();index.records.push_back(std::move(rec));index.indexedCount.fetch_add(1);index.totalBytes.fetch_add(fsz);}
       auto tPush1=std::chrono::high_resolution_clock::now();accPushUs.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(tPush1-tPush0).count());
       se_log_verbose("PUSH_OK "+se_path(fp));index.dirty.store(true);
       if(addNew||update||updateAll){PathIndexEntry pe;pe.fileSize=fsz;pe.modifiedTime=mtimeMs;pe.fromSegment=false;
@@ -2317,7 +2357,7 @@ static napi_value ScanDirectory(napi_env env,napi_callback_info info){
   // Non-incremental scans keep mmap'd segments: unmapping them would drop the persisted
   // segment references and a later manifest save would lose the entire segmented index.
   {std::unique_lock<std::shared_mutex> lk(index.mutex);
-    if(incremental){index.records.clear();index.dedupSet.clear();}
+    if(incremental){index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();}
     index.indexedCount.store(0);index.failedCount.store(0);index.totalBytes.store(0);
     runtime.metrics.reset();
     runtime.queuePending.store(0);runtime.activeWorkers.store(0);runtime.peakWorkers.store(0);
@@ -2596,7 +2636,7 @@ static napi_value ClearIndex(napi_env env,napi_callback_info){
   std::string busyOperation;auto writeLease=try_acquire_index_writer(context.index,"clear",busyOperation);
   if(!writeLease){auto error=index_writer_busy_error(busyOperation);return native_error(env,error.c_str());}
   if(runtime.thread.joinable())runtime.thread.join();finish_scan_stop(runtime);
-  unmap_index(index);{std::unique_lock<std::shared_mutex> lk(index.mutex);index.records.clear();index.dedupSet.clear();index.pathIndexMap.clear();index.failedPathMap.clear();index.replacedPaths.clear();index.deletedPaths.clear();index.indexedCount.store(0);index.failedCount.store(0);index.totalBytes.store(0);}
+  unmap_index(index);{std::unique_lock<std::shared_mutex> lk(index.mutex);index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();index.pathIndexMap.clear();index.failedPathMap.clear();index.replacedPaths.clear();index.deletedPaths.clear();index.indexedCount.store(0);index.failedCount.store(0);index.totalBytes.store(0);}
   index.resetUsnScanStatus();
   runtime.metrics.reset();
   {std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.currentPath.clear();runtime.decodeBackend.clear();}
@@ -2621,8 +2661,10 @@ static bool find_effective_record_locked(IndexRuntime& index,const std::string& 
     out.diffHash64=segment->diffHash[row];out.dctHash64=segment->dctHash?segment->dctHash[row]:0;
     fromSegment=true;return true;
   }
-  for(auto it=index.records.rbegin();it!=index.records.rend();++it){
-    if(normalize_path(it->path)==normalizedPath){out=*it;fromSegment=false;return true;}
+  ensure_record_rows_locked(index);
+  auto row=index.recordRows.find(make_path_key(normalizedPath));
+  if(row!=index.recordRows.end()&&normalize_path(index.records[row->second].path)==normalizedPath){
+    out=index.records[row->second];fromSegment=false;return true;
   }
   return false;
 }
@@ -3083,7 +3125,7 @@ static napi_value DeleteIndexPath(napi_env env,napi_callback_info info){
     std::unique_lock<std::shared_mutex> lk(index.mutex);
     ImageRecord existing;bool fromSegment=false;
     if(!find_effective_record_locked(index,np,existing,fromSegment)){set_bool(env,result,"ok",false);set_string(env,result,"error","Indexed path not found");return result;}
-    index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& rec){return normalize_path(rec.path)==np;}),index.records.end());
+    erase_memory_path_locked(index,np);
     index.deletedPaths.insert(np);index.replacedPaths.erase(np);index.pathIndexMap.erase(make_path_key(np));
     index.dirty.store(true);set_bool(env,result,"ok",true);set_string(env,result,"path",existing.path.c_str());return result;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"deleteIndexPath error");}
@@ -3215,7 +3257,7 @@ static bool apply_batch_delete(
   if(async_cancellation_checkpoint(cancellation,error))return false;
   {
     std::unique_lock<std::shared_mutex> lk(index.mutex);
-    index.records.swap(remainingRecords);index.deletedPaths.swap(nextDeleted);index.replacedPaths.swap(nextReplaced);
+    index.records.swap(remainingRecords);index.invalidateRecordRows();index.deletedPaths.swap(nextDeleted);index.replacedPaths.swap(nextReplaced);
     for(const auto& normalized:found)index.pathIndexMap.erase(make_path_key(normalized));
     if(!result.removedPaths.empty())index.dirty.store(true);
   }
@@ -3357,7 +3399,7 @@ static napi_value PurgeIndexPathPrefix(napi_env env,napi_callback_info info){
     }
     index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& rec){
       return matches(normalize_path(rec.path));
-    }),index.records.end());
+    }),index.records.end());index.invalidateRecordRows();
     for(const auto& np:matched){
       index.deletedPaths.insert(np);index.replacedPaths.erase(np);index.pathIndexMap.erase(make_path_key(np));removed++;
     }
@@ -3394,7 +3436,7 @@ static napi_value PurgeIndexPathSegment(napi_env env,napi_callback_info info){
     }
     index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& rec){
       return matches(normalize_path(rec.path));
-    }),index.records.end());
+    }),index.records.end());index.invalidateRecordRows();
     for(const auto& np:matched){
       index.deletedPaths.insert(np);index.replacedPaths.erase(np);index.pathIndexMap.erase(make_path_key(np));removed++;
     }
@@ -3424,12 +3466,35 @@ static napi_value RepairIndexPath(napi_env env,napi_callback_info info){
     ImageRecord conflict;bool conflictFromSegment=false;
     if(oldNp!=newNp&&find_effective_record_locked(index,newNp,conflict,conflictFromSegment)){set_bool(env,result,"ok",false);set_string(env,result,"error","New path is already indexed");return result;}
     if(existing.fileSize>0&&newMeta.first!=existing.fileSize){set_bool(env,result,"ok",false);set_string(env,result,"error","New file size differs; use Update instead of path repair");return result;}
-    index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& rec){return normalize_path(rec.path)==oldNp;}),index.records.end());
+    erase_memory_path_locked(index,oldNp);
     index.deletedPaths.insert(oldNp);index.replacedPaths.erase(oldNp);index.pathIndexMap.erase(make_path_key(oldNp));
     existing.id=index.nextId.fetch_add(1);existing.path=newPath;existing.fileSize=newMeta.first;existing.modifiedTime=newMeta.second;
-    index.records.push_back(existing);index.pathIndexMap[make_path_key(newNp)]={existing.fileSize,existing.modifiedTime,false};
+    append_memory_record_locked(index,existing,newNp);index.pathIndexMap[make_path_key(newNp)]={existing.fileSize,existing.modifiedTime,false};
     index.dirty.store(true);set_bool(env,result,"ok",true);set_string(env,result,"oldPath",oldPath.c_str());set_string(env,result,"newPath",newPath.c_str());return result;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"repairIndexPath error");}
+}
+
+static bool apply_upsert_record(IndexRuntime& index,ImageRecord rec,std::string& outPath,
+    const std::shared_ptr<AsyncCancellationToken>& cancellation,std::string& error){
+    std::string np=normalize_path(rec.path);
+    std::unique_lock<std::shared_mutex> lk(index.mutex);
+    ImageRecord existing;bool fromSegment=false;
+    bool found=find_effective_record_locked(index,np,existing,fromSegment);
+    if(cancellation)cancellation->markPreCommit();
+    if(async_cancellation_checkpoint(cancellation,error))return false;
+    // Repeating the same upsert must not append another physical version.
+    if(found&&existing.width==rec.width&&existing.height==rec.height&&existing.fileSize==rec.fileSize&&
+       existing.modifiedTime==rec.modifiedTime&&existing.diffHash64==rec.diffHash64&&existing.dctHash64==rec.dctHash64){
+      outPath=existing.path;return true;}
+    // A genuinely new path has no physical overlay version to remove. Scanning
+    // every existing record here made N new preview inserts quadratic on the
+    // Electron thread. Deleted paths still require removal before resurrection.
+    if(found||index.deletedPaths.count(np))
+      erase_memory_path_locked(index,np);
+    if(found&&(fromSegment||index.replacedPaths.count(np)))index.replacedPaths.insert(np);
+    index.deletedPaths.erase(np);rec.id=index.nextId.fetch_add(1);append_memory_record_locked(index,rec,np);
+    index.pathIndexMap[make_path_key(np)]={rec.fileSize,rec.modifiedTime,false};index.dirty.store(true);
+    outPath=rec.path;return true;
 }
 
 static napi_value UpsertIndexRecord(napi_env env,napi_callback_info info){
@@ -3442,24 +3507,67 @@ static napi_value UpsertIndexRecord(napi_env env,napi_callback_info info){
     ImageRecord rec;rec.path=get_string(env,argv[0]);rec.width=get_int32(env,argv[1]);rec.height=get_int32(env,argv[2]);
     rec.fileSize=(int64_t)get_double(env,argv[3]);rec.modifiedTime=(int64_t)get_double(env,argv[4]);
     rec.diffHash64=parse_hex64(get_string(env,argv[5]));rec.dctHash64=parse_hex64(get_string(env,argv[6]));rec.channels=0;
-    std::string np=normalize_path(rec.path);napi_value result;napi_create_object(env,&result);
-    std::unique_lock<std::shared_mutex> lk(index.mutex);
-    ImageRecord existing;bool fromSegment=false;
-    bool found=find_effective_record_locked(index,np,existing,fromSegment);
-    // Repeating the same upsert must not append another physical version.
-    if(found&&existing.width==rec.width&&existing.height==rec.height&&existing.fileSize==rec.fileSize&&
-       existing.modifiedTime==rec.modifiedTime&&existing.diffHash64==rec.diffHash64&&existing.dctHash64==rec.dctHash64){
-      set_bool(env,result,"ok",true);set_string(env,result,"path",existing.path.c_str());return result;}
-    // A genuinely new path has no physical overlay version to remove. Scanning
-    // every existing record here made N new preview inserts quadratic on the
-    // Electron thread. Deleted paths still require removal before resurrection.
-    if(found||index.deletedPaths.count(np))
-      index.records.erase(std::remove_if(index.records.begin(),index.records.end(),[&](const ImageRecord& item){return normalize_path(item.path)==np;}),index.records.end());
-    if(found&&(fromSegment||index.replacedPaths.count(np)))index.replacedPaths.insert(np);
-    index.deletedPaths.erase(np);rec.id=index.nextId.fetch_add(1);index.records.push_back(rec);
-    index.pathIndexMap[make_path_key(np)]={rec.fileSize,rec.modifiedTime,false};index.dirty.store(true);
-    set_bool(env,result,"ok",true);set_string(env,result,"path",rec.path.c_str());return result;
+    napi_value result;napi_create_object(env,&result);
+    std::string outPath,error;
+    if(!apply_upsert_record(index,rec,outPath,nullptr,error))return native_error(env,error.c_str());
+    set_bool(env,result,"ok",true);set_string(env,result,"path",outPath.c_str());return result;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"upsertIndexRecord error");}
+}
+
+struct UpsertRecordAsyncData{
+  std::shared_ptr<IndexRuntime> index;
+  std::shared_ptr<IndexWriteLease> writeLease;
+  std::shared_ptr<AsyncWorkRegistry> registry;
+  std::shared_ptr<AsyncCancellationToken> cancellation=std::make_shared<AsyncCancellationToken>();
+  ImageRecord record;std::string path,error;bool ok=false;
+  napi_async_work work=nullptr;napi_deferred deferred=nullptr;
+};
+static void UpsertRecordExecute(napi_env,void* data){
+  auto* d=static_cast<UpsertRecordAsyncData*>(data);
+  try{
+    d->cancellation->markStarted();
+    wait_at_cooperative_cancel_test_checkpoint(d->cancellation);
+    if(async_cancellation_checkpoint(d->cancellation,d->error))return;
+    d->ok=apply_upsert_record(*d->index,std::move(d->record),d->path,d->cancellation,d->error);
+  }catch(const std::exception& e){d->error=e.what();}catch(...){d->error="Async record update failed";}
+}
+static void UpsertRecordComplete(napi_env env,napi_status status,void* data){
+  auto* d=static_cast<UpsertRecordAsyncData*>(data);
+  napi_value result;napi_create_object(env,&result);set_bool(env,result,"ok",status==napi_ok&&d->ok);
+  if(d->ok&&status==napi_ok)set_string(env,result,"path",d->path.c_str());
+  else set_string(env,result,"error",d->error.empty()?"Record update cancelled":d->error.c_str());
+  // Release the writer before resolving: a chained write may start immediately.
+  d->writeLease.reset();
+  napi_resolve_deferred(env,d->deferred,result);
+  finish_registered_async_work(env,d->registry,d->work);delete d;
+}
+static napi_value UpsertIndexRecordAsync(napi_env env,napi_callback_info info){
+  try{
+    size_t argc=7;napi_value argv[7];napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);
+    if(argc<7)return reject_missing_args(env,"upsertIndexRecordAsync requires 7 arguments");
+    auto& context=get_addon_context(env);auto d=std::make_unique<UpsertRecordAsyncData>();
+    std::string busy;d->writeLease=try_acquire_index_writer(context.index,"edit-upsert-async",busy);
+    if(!d->writeLease)return reject_missing_args(env,index_writer_busy_error(busy).c_str());
+    d->index=context.index;d->registry=context.asyncWorks;
+    context.upsertCancellation=d->cancellation;
+    d->record.path=get_string(env,argv[0]);d->record.width=get_int32(env,argv[1]);d->record.height=get_int32(env,argv[2]);
+    d->record.fileSize=(int64_t)get_double(env,argv[3]);d->record.modifiedTime=(int64_t)get_double(env,argv[4]);
+    d->record.diffHash64=parse_hex64(get_string(env,argv[5]));d->record.dctHash64=parse_hex64(get_string(env,argv[6]));d->record.channels=0;
+    napi_value promise;napi_create_promise(env,&d->deferred,&promise);
+    auto status=create_registered_async_work(env,d->registry,"fast_scanner:upsertIndexRecordAsync",UpsertRecordExecute,UpsertRecordComplete,d.get(),&d->work,d->cancellation);
+    if(status==napi_ok)status=queue_registered_async_work(env,d->registry,&d->work);
+    if(status==napi_ok)d.release();else{
+      napi_value reason;napi_create_string_utf8(env,"Could not queue record update",NAPI_AUTO_LENGTH,&reason);
+      napi_reject_deferred(env,d->deferred,reason);
+    }
+    return promise;
+  }catch(const std::exception& e){return reject_missing_args(env,e.what());}
+}
+
+static napi_value CancelIndexRecordUpsert(napi_env env,napi_callback_info){
+  auto token=get_addon_context(env).upsertCancellation.lock();
+  if(token)token->request();
+  napi_value result;napi_create_object(env,&result);set_bool(env,result,"ok",true);set_bool(env,result,"cancelled",bool(token));return result;
 }
 
 static napi_value SearchByHash(napi_env env,napi_callback_info info){
@@ -3930,7 +4038,7 @@ static void apply_empty_manifest(IndexRuntime& index,const std::string& rootDir)
   unmap_index(index);
   {
     std::unique_lock<std::shared_mutex> lock(index.mutex);
-    index.records.clear();index.dedupSet.clear();index.pathIndexMap.clear();index.failedPathMap.clear();
+    index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();index.pathIndexMap.clear();index.failedPathMap.clear();
     index.replacedPaths.clear();index.deletedPaths.clear();
     index.mode="segment_mmap";index.type="prefix16";index.manifestPath=rootDir;
     index.indexedCount.store(0);index.failedCount.store(0);index.totalBytes.store(0);
@@ -4309,7 +4417,7 @@ static napi_value SaveIndexToManifest(napi_env env,napi_callback_info info){
      }}
     unmap_index(index);
     {std::unique_lock<std::shared_mutex> lk(index.mutex);
-     index.records.clear();index.dedupSet.clear();index.pathIndexMap.clear();
+     index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();index.pathIndexMap.clear();
      // Preserve replaced/deleted overlay across reload
      auto savedReplaced=std::move(index.replacedPaths);
      auto savedDeleted=std::move(index.deletedPaths);
@@ -4404,7 +4512,7 @@ static napi_value LoadManifest(napi_env env,napi_callback_info info){
   }
   {std::unique_lock<std::shared_mutex> lk(index.mutex);
    unmap_gd(index);index.segments=std::move(newSegments);index.pathIndexMap=std::move(newPathMap);
-   index.records.clear();index.dedupSet.clear();index.replacedPaths.clear();index.deletedPaths.clear();
+   index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();index.replacedPaths.clear();index.deletedPaths.clear();
    index.indexedCount=totalRecords;index.failedCount.store(0);index.totalBytes.store(0);
    index.mode="segment_mmap";index.type="prefix16";index.manifestPath=rootDir;}
   // Load USN state for this manifest
@@ -4467,7 +4575,7 @@ static napi_value LoadIndexFromSegment(napi_env env,napi_callback_info info){
    unmap_index(index);index.pathIndexMap.clear();
    for(auto& entry:entries)index.pathIndexMap.insert(std::move(entry));
    index.segments.push_back(std::move(seg));index.mode="segment_mmap";index.type="prefix16";index.manifestPath.clear();
-   index.records.clear();index.dedupSet.clear();index.replacedPaths.clear();index.deletedPaths.clear();index.indexedCount=n;index.failedCount.store(0);index.totalBytes.store(0);}
+   index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();index.replacedPaths.clear();index.deletedPaths.clear();index.indexedCount=n;index.failedCount.store(0);index.totalBytes.store(0);}
   set_bool(env,r,"ok",true);set_int64(env,r,"recordCount",(int64_t)index.pathIndexMap.size());return r;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"load error");}
 }
@@ -4755,7 +4863,7 @@ static void LoadManifestAsyncComplete(napi_env env,napi_status status,void* data
     unmap_index(index);
     {std::unique_lock<std::shared_mutex> lk(index.mutex);
      index.segments=std::move(d->segments);
-     index.records.clear();index.dedupSet.clear();
+     index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();
      index.indexedCount=d->recordCount;index.failedCount.store(0);index.totalBytes.store(0);
      index.mode="segment_mmap";index.type="prefix16";index.manifestPath=d->rootDir;
      index.pathIndexMap=std::move(d->pathIndexMap);
@@ -4979,7 +5087,7 @@ static void SaveManifestAsyncComplete(napi_env env,napi_status status,void* data
      index.deletedPaths=std::move(savedDeleted);
      for(const auto& deletedPath:index.deletedPaths)index.pathIndexMap.erase(make_path_key(deletedPath));
      index.mode="segment_mmap";index.type="prefix16";index.manifestPath=d->rootDir;
-     index.records.clear();index.dedupSet.clear();
+     index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();
      int64_t totalRec=0;for(auto& seg:index.segments)totalRec+=seg->recordCount;
      index.indexedCount.store(totalRec);index.failedCount.store(0);index.totalBytes.store(0);
     }
@@ -5321,7 +5429,7 @@ static void CompactAsyncComplete(napi_env env,napi_status status,void* data){
     }
     // Reload segments on main thread
     {std::unique_lock<std::shared_mutex> lk(index.mutex);
-     index.records.clear();index.dedupSet.clear();index.pathIndexMap.clear();
+     index.records.clear();index.invalidateRecordRows();index.dedupSet.clear();index.pathIndexMap.clear();
      index.replacedPaths.clear();index.deletedPaths.clear();
      for(const auto& segPath:reloadSegmentPaths){
        std::vector<std::pair<PathKey,PathIndexEntry>> entries;
@@ -5660,6 +5768,8 @@ static napi_value Init(napi_env env,napi_value exports){
   xfn("purgeIndexPathPrefix",PurgeIndexPathPrefix);xfn("getIndexPathStats",GetIndexPathStats);
   xfn("getIndexPathSegmentStats",GetIndexPathSegmentStats);xfn("purgeIndexPathSegment",PurgeIndexPathSegment);
   xfn("repairIndexPath",RepairIndexPath);xfn("upsertIndexRecord",UpsertIndexRecord);
+  xfn("upsertIndexRecordAsync",UpsertIndexRecordAsync);
+  xfn("cancelIndexRecordUpsert",CancelIndexRecordUpsert);
   xfn("searchByImage",SearchByImage);xfn("saveIndexToSegment",SaveIndexToSegment);
   xfn("loadIndexFromSegment",LoadIndexFromSegment);xfn("getIndexMode",GetIndexMode);
   xfn("saveIndexToManifest",SaveIndexToManifest);xfn("loadManifest",LoadManifest);

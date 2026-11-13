@@ -1,4 +1,5 @@
 import { createProgressCoalescer } from './progressCoalescer'
+import { stopPdfPreviewCompute } from './projectPreviewPdfRuntime'
 import path from 'path'
 import fs from 'fs'
 import type {
@@ -492,7 +493,8 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
     {
       hasIndexPath: (filePath) => addon.hasIndexPath(filePath),
       hashImageAsync: (filePath) => addon.hashImageAsync(filePath),
-      upsertIndexRecord: (...args) => addon.upsertIndexRecord(...args),
+      upsertIndexRecord: (...args) =>
+        addon.upsertIndexRecordAsync?.(...args) ?? addon.upsertIndexRecord(...args),
       deleteIndexPath: (filePath) => addon.deleteIndexPath(filePath),
       removeSourceVectorData: (sourcePath) => removeImageData(sourcePath),
     },
@@ -520,9 +522,12 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
     projectUnavailable: result.unavailable,
     projectFailed: result.failed,
     projectRemoved: result.removed,
-    lastWarning: result.truncated
-      ? 'Project file enumeration reached its safety limit.'
-      : status.lastWarning,
+    lastWarning:
+      result.failed > 0
+        ? 'Some project previews failed. Select the source file to retry.'
+        : result.truncated
+          ? 'Project file enumeration reached its safety limit.'
+          : status.lastWarning,
   }
   _cachedIndexMode = null
   emit()
@@ -997,6 +1002,7 @@ export function failActiveImageSearchScan(error: unknown): boolean {
 
 export async function stopImageSearchScan(): Promise<ImageSearchStatus> {
   scanGeneration += 1
+  nativeAddon?.cancelIndexRecordUpsert?.()
   pendingProjectScan = null
   clearPollTimer()
   status = {
@@ -1075,6 +1081,7 @@ export function shutdownImageSearchForQuit(): Promise<void> {
     } catch (error) {
       console.warn('[ImageSearch] stopImageSearchScan during shutdown failed:', error)
     }
+    await stopPdfPreviewCompute()
     if (autosavePromise) {
       await autosavePromise.catch(() => undefined)
     }

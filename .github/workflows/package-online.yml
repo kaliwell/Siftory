@@ -1,6 +1,7 @@
 name: Windows online installer
 on:
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 concurrency:
@@ -23,6 +24,14 @@ jobs:
           cache: npm
       - run: npm install --global npm@11.19.1
       - run: npm ci
+      - name: Verify preview and native mutation regressions
+        run: |
+          npm run build:native
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test tests/native-incremental-index.test.cjs tests/native-exact-bulk-delete.test.cjs tests/native-scan.test.cjs tests/native-search-correctness.test.cjs tests/native-segment-v3.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:project-preview
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Fetch the pinned online font
         run: npm run resources:fetch -- --profile=online --component=adobe-source-han-sans-cn-vf-2-005 --cache-dir=.runtime-cache
       - name: Restore hash-pinned covered-source archive from Alpha 22
@@ -70,7 +79,7 @@ jobs:
       - name: Verify packaged preview worker resources
         shell: pwsh
         run: |
-          foreach ($name in @('projectPreviewImageWorker.js', 'projectPreviewProvidersWorker.js')) {
+          foreach ($name in @('projectPreviewImageWorker.js', 'projectPreviewProvidersWorker.js', 'projectPreviewPdfChild.js')) {
             $file = Join-Path 'release/win-unpacked/resources' $name
             if (!(Test-Path $file) -or (Get-Item $file).Length -eq 0) { throw "Missing worker: $name" }
           }
@@ -93,7 +102,7 @@ jobs:
           Copy-Item resources/runtime-manifest.json artifacts/online-installer/runtime-manifest.json
           Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
           Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
-          Copy-Item docs/current/2026-11-13-alpha27-release.md artifacts/online-installer/RELEASE_NOTES.md
+          Copy-Item docs/current/2026-11-13-alpha28-release.md artifacts/online-installer/RELEASE_NOTES.md
           @{ startupPassed = $true; archivePassed = $true; fullUiOutcome = '${{ steps.full_ui.outcome }}'; upgradeVerified = $false } | ConvertTo-Json | Set-Content artifacts/online-installer/validation-status.json
       - uses: actions/upload-artifact@v4
         with:

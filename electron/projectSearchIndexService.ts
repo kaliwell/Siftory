@@ -94,7 +94,7 @@ export interface ProjectIndexAdapter {
     modifiedTime: number,
     diffHash64: string,
     dctHash64: string,
-  ): { ok: boolean; error?: string }
+  ): { ok: boolean; error?: string } | Promise<{ ok: boolean; error?: string }>
   deleteIndexPath(filePath: string): { ok: boolean; error?: string }
   removeSourceVectorData(sourcePath: string): void
 }
@@ -494,7 +494,12 @@ export async function prepareProjectSearchInput(filePath: string): Promise<strin
   if (!classification) return filePath
   if (!PROJECT_INDEX_EXTENSIONS.has(classification.sourceExt) || !configuredUserDataPath)
     return null
-  const entry = await getProjectPreviewService(configuredUserDataPath).getOrCreate(filePath)
+  // An explicit source search/update may retry a previously deferred preview;
+  // retain the original long budget outside automatic batch preparation.
+  const entry = await getProjectPreviewService(configuredUserDataPath).getOrCreate(filePath, {
+    forceRetry: true,
+    pdfTimeoutMs: 120_000,
+  })
   await refreshProjectSearchIndex()
   return entry.status === 'ready' && entry.previewPath ? entry.previewPath : null
 }
@@ -619,7 +624,13 @@ export async function indexProjectPreviews(
 
   service.manifest.beginBatch()
   try {
-    for (const sourcePath of sources) {
+    // Do not let a PDF encountered first delay all embedded PSD previews.
+    // Heavy files are still attempted and included in completed/error counts.
+    const orderedSources = [
+      ...sources.filter((source) => !/\.(?:pdf|ai)$/i.test(source)),
+      ...sources.filter((source) => /\.(?:pdf|ai)$/i.test(source)),
+    ]
+    for (const sourcePath of orderedSources) {
       if (isCancelled()) break
       options.onProgress?.({
         phase: 'rendering',
@@ -642,7 +653,11 @@ export async function indexProjectPreviews(
           state.completed += 1
           continue
         }
-        const current = await service.getOrCreate(sourcePath)
+        const current = await service.getOrCreate(sourcePath, {
+          isCancelled,
+          forceRetry: options.scanMode === 'updateAll',
+          pdfTimeoutMs: 15_000,
+        })
         if (isCancelled()) break
         if (options.scanMode !== 'updateAll' && knownPreview && current === previous) {
           state.skipped += 1
@@ -654,7 +669,8 @@ export async function indexProjectPreviews(
           adapter.removeSourceVectorData(sourcePath)
         }
         if (current.status !== 'ready' || !current.previewPath) {
-          state.unavailable += 1
+          if (current.status === 'error') state.failed += 1
+          else state.unavailable += 1
         } else {
           adapter.deleteIndexPath(sourcePath)
           const hashed = await adapter.hashImageAsync(current.previewPath)
@@ -662,7 +678,7 @@ export async function indexProjectPreviews(
           if (!hashed.ok || !hashed.diffHash64 || !hashed.dctHash64) {
             state.failed += 1
           } else {
-            const upserted = adapter.upsertIndexRecord(
+            const upserted = await adapter.upsertIndexRecord(
               current.previewPath,
               hashed.width || current.width || 0,
               hashed.height || current.height || 0,
@@ -682,6 +698,7 @@ export async function indexProjectPreviews(
           }
         }
       } catch {
+        if (isCancelled()) break
         state.failed += 1
       }
       state.completed += 1
