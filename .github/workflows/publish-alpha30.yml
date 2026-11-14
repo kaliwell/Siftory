@@ -1,0 +1,55 @@
+name: Publish verified Alpha30 Shell isolation installer
+on:
+  push:
+    branches: [release/alpha30]
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful Windows online installer run
+        required: true
+        default: '43552472814'
+      source_sha:
+        description: Exact installer source commit
+        required: true
+        default: 4e19a39341484881304c25468415dab838eec2cf
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-alpha30
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN_ID: ${{ inputs.build_run_id || '43552472814' }}
+      SOURCE_SHA: ${{ inputs.source_sha || '4e19a39341484881304c25468415dab838eec2cf' }}
+    steps:
+      - name: Verify the source build succeeded
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN_ID" > build-run.json
+          jq -e --arg sha "$SOURCE_SHA" '.head_sha == $sha and .status == "completed" and .conclusion == "success" and .path == ".github/workflows/package-online.yml"' build-run.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-online-installer
+          path: installer
+          run-id: ${{ env.BUILD_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Verify and publish the matching diagnostic installer
+        working-directory: installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS.txt
+          jq -e '.passed == true and .packaged == true and .nativeAddonLoaded == true and .projectPreviewWorkerPassed == true and .projectPreviewPdfChildPassed == true and .rendererReady == true and .performanceDiagnosticsPassed == true and .performanceExportPassed == true and .shellPreviewIsolationPassed == true and .version == "1.0.1-alpha.30"' startup-check.json
+          jq -e '.startupPassed == true and .archivePassed == true' validation-status.json
+          jq -e --arg sha "$SOURCE_SHA" '.sourceCommit == $sha' native-build.json
+          test -s Siftory-1.0.1-alpha.30-Windows-x64-Setup.exe
+          gh release create v1.0.1-alpha.30 ./* --target "$SOURCE_SHA" --title 'Siftory 1.0.1-alpha.30 — 卡顿优化测试版 Windows x64' --prerelease --notes-file RELEASE_NOTES.md
