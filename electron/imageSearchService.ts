@@ -1,3 +1,4 @@
+import { performanceSession, captureLinkedPreviewWindow } from './performanceDiagnostics'
 import { ScanResponsiveness } from './scanResponsiveness'
 import { getSearchDiagnostics } from './searchDiagnostics'
 import { createProgressCoalescer } from './progressCoalescer'
@@ -338,6 +339,7 @@ function emit(): void {
 }
 
 function emitNow(): void {
+  performanceSession.phase(status.state, status.indexedCount)
   if (onStatusChange || statusListeners.size > 0) {
     const m = nativeAddon
       ? getIndexModeCached()
@@ -481,7 +483,9 @@ function autosaveDirtyIndex(): void {
 
 let activePreviewDiagnostics: ScanResponsiveness | undefined
 export function reportScanResponsiveness(metrics: unknown): { ok: boolean } {
-  return { ok: activePreviewDiagnostics?.renderer(metrics) ?? false }
+  return {
+    ok: (performanceSession.recorder ?? activePreviewDiagnostics)?.renderer(metrics) ?? false,
+  }
 }
 
 async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): Promise<void> {
@@ -495,9 +499,13 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
   }
   emit()
   const addon = nativeAddon
-  const diagnostics = new ScanResponsiveness((id, event, detail) =>
-    getSearchDiagnostics().append(id, event, detail),
-  )
+  const ownedDiagnostics = !performanceSession.recorder
+  const diagnostics =
+    performanceSession.recorder ??
+    new ScanResponsiveness((id, event, detail) => {
+      getSearchDiagnostics().append(id, event, detail)
+      captureLinkedPreviewWindow(id, event, detail)
+    })
   activePreviewDiagnostics = diagnostics
   const result = await (async () => {
     try {
@@ -526,7 +534,7 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
         },
       )
     } finally {
-      diagnostics.close()
+      if (ownedDiagnostics) diagnostics.close()
       if (activePreviewDiagnostics === diagnostics) activePreviewDiagnostics = undefined
     }
   })()

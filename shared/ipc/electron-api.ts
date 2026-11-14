@@ -382,6 +382,14 @@ export interface ElectronAPI {
       longTaskCount: number
       longTaskMaxMs: number
     }) => Promise<{ ok: boolean }>
+    performanceDiagnostics: (action: 'start' | 'stop' | 'status' | 'mark' | 'export') => Promise<{
+      ok: boolean
+      enabled?: boolean
+      traceId?: string
+      dropped?: number
+      error?: string
+      cancelled?: boolean
+    }>
     getSearchDiagnosticStatus: () => Promise<{ sessionId: string; dropped: number; error?: string }>
     exportSearchDiagnostics: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>
     clearSearchDiagnostics: () => Promise<{ ok: boolean; error?: string }>

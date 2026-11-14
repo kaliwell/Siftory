@@ -241,6 +241,20 @@ const zhCN: Record<string, string> = {
   'All tasks': '全部任务',
   'No tasks in this view': '此视图暂无任务',
   'Search diagnostics': '搜索诊断',
+  'Stutter diagnostics': '卡顿检测',
+  Recording: '正在记录',
+  'Start recording': '开始记录',
+  'Mark stutter': '标记卡顿',
+  'Stop and export': '停止并导出',
+  'Export recorded logs': '导出已有日志',
+  'Recording started; reproduce the stutter now': '已开始记录，现在可以操作软件复现卡顿',
+  'Stutter marked': '已标记此次卡顿',
+  'Recording stopped; logs remain saved locally': '已停止记录，日志仍保存在本机',
+  'Start recording, reproduce the stutter, then stop and export. Logs stay local and contain no images or source paths. Recording continues when switching pages.':
+    '开始记录后，正常操作软件复现卡顿，再停止并导出。日志仅保存在本机，不含图片和素材路径，切换页面也会继续记录。',
+  'Logs rotate at 20 MiB and expire after 14 days. If the app stops responding, logs already written remain on disk; the stall duration is recorded after it recovers.':
+    '日志上限 20 MiB，保留 14 天。若软件完全无响应，已写入的日志仍保存在磁盘，恢复响应后才会记下完整停顿时长。',
+
   'Basic diagnostics do not copy images. Logs stay local, rotate at 20 MiB and expire after 14 days.':
     '基础诊断默认不复制图片，仅保存在本机。日志上限 20 MiB，保留 14 天。',
   'These results are incorrect': '结果不对，标记本次查询',

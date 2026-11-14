@@ -259,6 +259,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('imageSearch:saveSearchQueryCopy', traceId),
     reportScanResponsiveness: (metrics) =>
       ipcRenderer.invoke('imageSearch:reportScanResponsiveness', metrics),
+    performanceDiagnostics: (action) =>
+      ipcRenderer.invoke('imageSearch:performanceDiagnostics', action),
     getSearchDiagnosticStatus: () => ipcRenderer.invoke('imageSearch:getSearchDiagnosticStatus'),
     exportSearchDiagnostics: () => ipcRenderer.invoke('imageSearch:exportSearchDiagnostics'),
     clearSearchDiagnostics: () => ipcRenderer.invoke('imageSearch:clearSearchDiagnostics'),

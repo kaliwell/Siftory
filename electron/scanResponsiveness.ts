@@ -102,6 +102,8 @@ export class ScanResponsiveness {
     if (now - this.lastRendererAt < 1000) return false
     this.lastRendererAt = now
     this.write('preview-renderer-window', Object.fromEntries(keys.map((key) => [key, input[key]])))
+    if ((input.maxTimerLagMs as number) >= 100 || (input.longTaskMaxMs as number) >= 100)
+      this.write('stall-detected', { thread: 'renderer', ...input })
     return true
   }
 
@@ -113,11 +115,23 @@ export class ScanResponsiveness {
     }
   }
 
+  checkpoint(): void {
+    if (!this.closed) this.flush()
+  }
+
   private flush(): void {
     const now = performance.now()
+    const maxTimerLagMs = Math.max(this.maxLagMs, now - this.lastTick - 200, 0)
+    if (maxTimerLagMs >= 100)
+      this.write('stall-detected', {
+        thread: 'main',
+        maxTimerLagMs,
+        source: this.context,
+        pendingStages: [...this.pending.values()],
+      })
     this.write('preview-main-window', {
       elapsedMs: now - this.lastFlush,
-      maxTimerLagMs: Math.max(this.maxLagMs, now - this.lastTick - 200, 0),
+      maxTimerLagMs,
       pendingStages: [...this.pending.values()],
       source: this.context,
       stages: Object.fromEntries(this.stages),

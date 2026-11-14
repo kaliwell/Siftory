@@ -1,4 +1,9 @@
 import {
+  performanceSession,
+  performanceDiagnosticStatus,
+  exportPerformanceSnapshot,
+} from './performanceDiagnostics'
+import {
   beginSearchDiagnostic,
   getSearchDiagnostics,
   saveSearchQueryCopy,
@@ -225,6 +230,38 @@ export function registerImageSearchIpc(
   secureIpcMain.handle('imageSearch:reportScanResponsiveness', (_event, metrics: unknown) =>
     reportScanResponsiveness(metrics),
   )
+  secureIpcMain.handle('imageSearch:performanceDiagnostics', async (_event, action: unknown) => {
+    if (
+      typeof action !== 'string' ||
+      !['start', 'stop', 'status', 'mark', 'export'].includes(action)
+    )
+      return { ok: false }
+    try {
+      if (action === 'start') performanceSession.start()
+      if (action === 'stop') performanceSession.stop()
+      if (action === 'mark' && !performanceSession.mark())
+        return { ...performanceDiagnosticStatus(), ok: false }
+      if (action === 'export') {
+        const window = getMainWindow()
+        if (!window || window.isDestroyed()) return { ok: false }
+        const selected = await dialog.showSaveDialog(window, {
+          defaultPath: `Siftory-performance-${Date.now()}.json`,
+          filters: [{ name: 'JSON', extensions: ['json'] }],
+        })
+        if (selected.canceled || !selected.filePath)
+          return { ...performanceDiagnosticStatus(), cancelled: true }
+        performanceSession.recorder?.checkpoint()
+        await fs.promises.writeFile(
+          selected.filePath,
+          JSON.stringify(await exportPerformanceSnapshot(), null, 2),
+          { mode: 0o600 },
+        )
+      }
+      return performanceDiagnosticStatus()
+    } catch {
+      return { ...performanceDiagnosticStatus(), ok: false, error: 'Diagnostic operation failed' }
+    }
+  })
   secureIpcMain.handle('imageSearch:getSearchDiagnosticStatus', async () => {
     const store = getSearchDiagnostics()
     return { sessionId: store.sessionId, dropped: store.dropped, error: store.error }

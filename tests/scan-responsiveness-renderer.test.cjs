@@ -79,6 +79,7 @@ function fixture(active = true) {
     frame: () => frame?.(now),
     task: (duration) => observe?.({ getEntries: () => [{ startTime: now, duration }] }),
     close: () => cleanup?.(),
+    manual: (enabled) => context.exports.setManualPerformanceSampling(enabled),
     resources: () => [timer, frame, observe].filter(Boolean).length,
   }
 }
@@ -122,4 +123,17 @@ test('hidden windows do not produce false frame stalls and inactive scans alloca
   assert.equal(f.calls[0].maxFrameGapMs, 16)
   assert.equal(f.calls[0].longTaskCount, 0)
   assert.equal(f.calls[0].elapsedMs, 16)
+})
+
+test('manual sampling survives page unmount and shares the automatic sampler', () => {
+  const f = fixture()
+  f.manual(true)
+  f.close()
+  assert.equal(f.resources(), 3)
+  f.advance(5000)
+  f.tick()
+  assert.equal(f.calls.length, 1)
+  f.manual(false)
+  assert.equal(f.resources(), 0)
+  assert.equal(f.listeners.size, 0)
 })

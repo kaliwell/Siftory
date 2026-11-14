@@ -1,3 +1,4 @@
+import PerformanceDiagnosticsControls from './PerformanceDiagnosticsControls'
 import { useScanResponsiveness } from '../hooks/useScanResponsiveness'
 import WorkspacePreparationLink from './WorkspacePreparationLink'
 import SearchDiagnosticsControls from './SearchDiagnosticsControls'
@@ -1258,6 +1259,7 @@ const ImageSearchPanel: React.FC = () => {
             onDrop={sourcesOnly ? undefined : handleDrop}
           >
             <ImageSearchToastBanner toast={toast} />
+            <PerformanceDiagnosticsControls />
             <SearchDiagnosticsControls traceId={sourcesOnly ? undefined : diagnosticId} />
             {searchWarning && (
               <div className="search-degradation-notice" role="status">
