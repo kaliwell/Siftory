@@ -51,5 +51,6 @@ jobs:
           jq -e '.passed == true and .packaged == true and .nativeAddonLoaded == true and .projectPreviewWorkerPassed == true and .projectPreviewPdfChildPassed == true and .rendererReady == true and .performanceDiagnosticsPassed == true and .performanceExportPassed == true and .shellPreviewIsolationPassed == true and .scanErrorDiagnosticsPassed == true and .psdCompositePreviewPassed == true and .version == "1.0.1-alpha.32"' startup-check.json
           jq -e '.startupPassed == true and .archivePassed == true' validation-status.json
           jq -e --arg sha "$SOURCE_SHA" '.sourceCommit == $sha' native-build.json
+          test "$(gh api "repos/$GH_REPO/git/ref/tags/v1.0.1-alpha.32" --jq '.object.sha')" = "$SOURCE_SHA"
           test -s Siftory-1.0.1-alpha.32-Windows-x64-Setup.exe
-          gh release create v1.0.1-alpha.32 ./* --target "$SOURCE_SHA" --title 'Siftory 1.0.1-alpha.32 — 高位深 PSD 预览测试版 Windows x64' --prerelease --notes-file RELEASE_NOTES.md
+          gh release create v1.0.1-alpha.32 ./* --verify-tag --title 'Siftory 1.0.1-alpha.32 — 高位深 PSD 预览测试版 Windows x64' --prerelease --notes-file RELEASE_NOTES.md
