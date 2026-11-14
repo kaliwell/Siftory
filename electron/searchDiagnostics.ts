@@ -53,6 +53,21 @@ export function beginSearchDiagnostic(inputPath: string, parameters: unknown) {
     parameters,
     inputOrigin: path.basename(inputPath).startsWith('clipboard-') ? 'clipboard' : 'file-or-drop',
   })
+  recorder.track(
+    Promise.all([
+      recorder.identity(app.getPath('userData').toLowerCase()),
+      recorder.identity(
+        path.join(app.getPath('userData'), 'vector-db', 'embedding-cache').toLowerCase(),
+      ),
+    ])
+      .then(([dataLocationId, cacheLocationId]) =>
+        recorder.append(id, 'search-storage', {
+          dataLocationId,
+          cacheLocationId,
+        }),
+      )
+      .catch(() => recorder.append(id, 'search-storage-unavailable')),
+  )
   const fingerprint = recorder.fingerprint(inputPath)
   recentInputs.set(id, { path: inputPath, fingerprint })
   if (recentInputs.size > 32) recentInputs.delete(recentInputs.keys().next().value!)

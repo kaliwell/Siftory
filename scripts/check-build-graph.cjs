@@ -176,7 +176,10 @@ const entries = [
       fs.existsSync(path.join(root, 'electron/mainBootstrap.ts')) ? 'mainBootstrap.ts' : 'main.ts',
     ),
     // One bounded merged-PSD decoder; no new packages or application services.
-    budget: 340,
+    // Browser image import adds one bounded downloader and two shared modules:
+    // browser-image IPC and searchProgress. No new packages or renderer/worker
+    // edges; retain all other entry and byte budgets.
+    budget: 343,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },

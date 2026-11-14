@@ -1,4 +1,6 @@
 import { initializeScanErrorDiagnostics, scanErrorSnapshot } from './scanErrorDiagnostics'
+import { importBrowserQueryImage } from './browserQueryImage'
+import { BROWSER_IMAGE_IPC, type BrowserImageImportSource } from '../shared/ipc/browser-image'
 import { scanErrorRecorder } from './scanErrorLog'
 import {
   performanceSession,
@@ -535,6 +537,21 @@ export function registerImageSearchIpc(
       return { ok: false, error: errorMessage(error) }
     }
   })
+
+  secureIpcMain.handle(
+    BROWSER_IMAGE_IPC.IMPORT,
+    async (_event, source: BrowserImageImportSource) => {
+      try {
+        return { ok: true, path: await importBrowserQueryImage(source, app.getPath('userData')) }
+      } catch {
+        return {
+          ok: false,
+          error:
+            'Unable to import the browser image. Try copying and pasting the image, or save it locally first.',
+        }
+      }
+    },
+  )
 
   secureIpcMain.handle('imageSearch:openFile', async (_event, rawPath: unknown) => {
     return openSafeShellPath(shell, rawPath, { requireExists: true })

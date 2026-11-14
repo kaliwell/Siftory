@@ -172,6 +172,7 @@ export async function rerankCategoryCandidatesWithDino(
       if (index % 32 === 0 || index + 1 === candidates.length) {
         options.onProgress?.({
           phase: 'loading',
+          unit: 'records',
           current: index + 1,
           total: candidates.length,
           percent: Math.round(((index + 1) / candidates.length) * 100),

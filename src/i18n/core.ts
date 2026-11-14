@@ -38,6 +38,26 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Preparing browser image...': '正在读取网页图片…',
+  'Unable to import the browser image. Try copying and pasting the image, or save it locally first.':
+    '无法读取网页图片，请尝试复制图片后粘贴，或先保存到本地再拖入。',
+  'Drop an image anywhere in this window to search': '将图片拖入窗口任意位置，即可搜索',
+  'Loading search model': '正在加载搜索模型',
+  'Analyzing query image': '正在分析查询图片',
+  'Checking search cache': '正在校验搜索缓存',
+  'Building search cache': '正在构建搜索缓存',
+  'Compacting search cache': '正在压实搜索缓存',
+  'Reading search index': '正在读取搜索索引',
+  'Building search index': '正在构建搜索索引',
+  'Searching vectors': '正在检索向量',
+  'Checking vector records': '正在校验向量记录',
+  'Searching vector records': '正在检索向量记录',
+  'Loading vector records': '正在加载向量记录',
+  '{rate} records/s': '{rate} 条/s',
+  '{rate} MiB/s': '{rate} MiB/s',
+  'Searching images...': '正在搜索图片…',
+  'Preparing search data or searching. Results will appear when the search finishes.':
+    '正在准备搜索数据或检索，完成后将显示搜索结果。',
   'Some project previews failed. Select the source file to retry.':
     '部分工程预览失败，可选中源文件重试。',
   'Data cleanup': '数据清理',

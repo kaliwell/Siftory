@@ -1,5 +1,5 @@
 import RegisteredSourcePicker from './RegisteredSourcePicker'
-import React from 'react'
+import React, { useId, useState } from 'react'
 import type { SearchMode } from '../../shared/vectorTypes'
 import type { SearchExperienceMode } from '../services/searchSetupWorkflow'
 import { productSearchCoreActionIds } from '../services/productInformationArchitecture'
@@ -125,6 +125,8 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   onToggleLibrary,
 }) => {
   const { t } = useTranslation()
+  const [advancedPreparationOpen, setAdvancedPreparationOpen] = useState(false)
+  const advancedPreparationId = useId()
   const taskBusy = isScanning || workflowRunning
   return (
     <div
@@ -168,44 +170,16 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               {t('Stop')}
             </button>
             {experienceMode === 'advanced' && (
-              <details className="preparation-advanced-options">
-                <summary>{t('Advanced preparation')}</summary>
-                <div>
-                  <button
-                    data-testid="image-search-start-scan"
-                    onClick={onStartScan}
-                    disabled={taskBusy || scanPaths.length === 0}
-                    style={{ fontSize: 13, padding: '3px 10px' }}
-                  >
-                    {t('Start Scan')}
-                  </button>
-                  <select
-                    value={scanMode}
-                    onChange={(e) => setScanMode(e.target.value as ScanMode)}
-                    disabled={taskBusy}
-                    style={{ fontSize: 12, padding: '3px 6px' }}
-                    title={t('Scan mode')}
-                  >
-                    <option value="addNew">{t('Add New')}</option>
-                    <option value="update">{t('Update')}</option>
-                    <option value="updateAll">{t('Update All')}</option>
-                  </select>
-                  <label
-                    title={t(
-                      'Reuse the native scan decode to build JPEG thumbnails for new or changed images',
-                    )}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12 }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={buildScanThumbnails}
-                      disabled={taskBusy}
-                      onChange={(event) => setBuildScanThumbnails(event.target.checked)}
-                    />
-                    {t('Native thumbs')}
-                  </label>
-                </div>
-              </details>
+              <button
+                type="button"
+                className="image-search-preparation-toggle"
+                aria-expanded={advancedPreparationOpen}
+                aria-controls={advancedPreparationId}
+                onClick={() => setAdvancedPreparationOpen((open) => !open)}
+              >
+                <span aria-hidden="true">{advancedPreparationOpen ? '▾' : '▸'}</span>
+                {t('Advanced preparation')}
+              </button>
             )}
             <button
               data-testid="image-search-select-folders"
@@ -325,6 +299,45 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 </button>
               </span>
             ))}
+          </div>
+          <div
+            id={advancedPreparationId}
+            className="image-search-advanced-controls"
+            hidden={experienceMode !== 'advanced' || !advancedPreparationOpen}
+          >
+            <button
+              data-testid="image-search-start-scan"
+              onClick={onStartScan}
+              disabled={taskBusy || scanPaths.length === 0}
+              style={{ fontSize: 13, padding: '3px 10px' }}
+            >
+              {t('Start Scan')}
+            </button>
+            <select
+              value={scanMode}
+              onChange={(e) => setScanMode(e.target.value as ScanMode)}
+              disabled={taskBusy}
+              style={{ fontSize: 12, padding: '3px 6px' }}
+              title={t('Scan mode')}
+            >
+              <option value="addNew">{t('Add New')}</option>
+              <option value="update">{t('Update')}</option>
+              <option value="updateAll">{t('Update All')}</option>
+            </select>
+            <label
+              title={t(
+                'Reuse the native scan decode to build JPEG thumbnails for new or changed images',
+              )}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12 }}
+            >
+              <input
+                type="checkbox"
+                checked={buildScanThumbnails}
+                disabled={taskBusy}
+                onChange={(event) => setBuildScanThumbnails(event.target.checked)}
+              />
+              {t('Native thumbs')}
+            </label>
           </div>
         </CollapsibleSearchSection>
       )}

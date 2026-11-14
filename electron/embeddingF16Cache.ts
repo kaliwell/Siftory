@@ -95,6 +95,7 @@ export interface EmbeddingF16CacheHandle {
 }
 
 export interface EmbeddingF16CacheProgress {
+  unit: 'bytes' | 'records'
   phase: 'building' | 'compacting' | 'loading'
   current: number
   total: number
@@ -124,6 +125,7 @@ export interface EmbeddingF16SearchResult {
 }
 
 export interface EnsureEmbeddingF16CacheOptions {
+  onDiagnostic?: (name: string, detail: Record<string, unknown>) => void
   cacheDir: string
   modelName: string
   embeddingType?: string
@@ -276,15 +278,22 @@ function readCache(
   options: EnsureEmbeddingF16CacheOptions,
   requireFreshSources: boolean,
 ): EmbeddingF16CacheHandle | null {
+  const miss = (reason: string): null => {
+    options.onDiagnostic?.('f16-cache-probe', { kind: 'derived', outcome: 'miss', reason })
+    return null
+  }
   const embeddingType = options.embeddingType || 'global'
   if (invalidatedCacheKeys.has(cacheBuildKey(options.cacheDir, options.modelName, embeddingType))) {
-    return null
+    return miss('invalidated')
   }
   const files = cachePaths(options.cacheDir, options.modelName, embeddingType)
   const sources = requireFreshSources ? sourceFiles(options.sourcePaths) : null
-  if (requireFreshSources && !sources) return null
+  if (requireFreshSources && !sources) return miss('source-unavailable')
   try {
     const meta = JSON.parse(fs.readFileSync(files.meta, 'utf8')) as EmbeddingF16CacheMeta
+    if (meta.version !== EMBEDDING_F16_CACHE_VERSION) return miss('format-version-mismatch')
+    if (requireFreshSources && !sameSources(meta.sourceFiles, sources!))
+      return miss('source-changed')
     if (
       meta.version !== EMBEDDING_F16_CACHE_VERSION ||
       meta.modelName !== options.modelName ||
@@ -296,12 +305,12 @@ function readCache(
       !isValidCacheIntegrityMeta(meta.integrity) ||
       (requireFreshSources && !sameSources(meta.sourceFiles, sources!))
     ) {
-      return null
+      return miss('invalid-metadata')
     }
     const vectorStat = fs.statSync(files.vectors)
     const pathStat = fs.statSync(files.paths)
-    if (vectorStat.size !== meta.count * meta.dim * 2) return null
-    if (meta.count > 0 && pathStat.size <= 0) return null
+    if (vectorStat.size !== meta.count * meta.dim * 2) return miss('vector-size-mismatch')
+    if (meta.count > 0 && pathStat.size <= 0) return miss('empty-record-map')
     const integrity: EmbeddingF16CacheIntegrity = {
       vectors: { size: vectorStat.size, sha256: meta.integrity.vectorsSha256 },
       paths: { size: pathStat.size, sha256: meta.integrity.pathsSha256 },
@@ -314,11 +323,15 @@ function readCache(
         'derived-read',
         `derived F16 cache failed its content proof (${files.vectors})`,
       )
-      return null
+      return miss('integrity-check-failed')
     }
     return { meta, vectorPath: files.vectors, pathIndexPath: files.paths, integrity }
-  } catch {
-    return null
+  } catch (error) {
+    return miss(
+      (error as NodeJS.ErrnoException).code === 'ENOENT'
+        ? 'missing'
+        : 'unreadable-metadata-or-files',
+    )
   }
 }
 
@@ -342,6 +355,7 @@ function openVerifiedAuthoritative(
   embeddingType: string,
   dim: number,
   expectedSourcePaths?: string[],
+  onReject?: (reason: string) => void,
 ): (AuthoritativeVectorStoreHandle & { integrity: EmbeddingF16CacheIntegrity }) | null {
   const handle = openAuthoritativeVectorStore(
     storeRoot,
@@ -350,6 +364,7 @@ function openVerifiedAuthoritative(
     dim,
     false,
     expectedSourcePaths,
+    onReject,
   )
   if (!handle) return null
   const integrity: EmbeddingF16CacheIntegrity = {
@@ -364,6 +379,7 @@ function openVerifiedAuthoritative(
       'authoritative-read',
       `authoritative generation ${handle.meta.generation} failed its content proof (${handle.vectorPath})`,
     )
+    onReject?.('integrity-check-failed')
     return null
   }
   return { ...handle, integrity }
@@ -462,6 +478,8 @@ function readAuthoritativeCache(
     options.embeddingType || 'global',
     options.dim,
     options.sourcePaths,
+    (reason) =>
+      options.onDiagnostic?.('f16-cache-probe', { kind: 'authoritative', outcome: 'miss', reason }),
   )
 }
 
@@ -595,12 +613,20 @@ export function readExistingEmbeddingF16Cache(
   options: EnsureEmbeddingF16CacheOptions,
 ): EmbeddingF16CacheHandle | null {
   const authoritative = readAuthoritativeCache(options)
-  if (authoritative) return authoritative
+  if (authoritative) {
+    options.onDiagnostic?.('f16-cache-probe', { kind: 'authoritative', outcome: 'hit' })
+    return authoritative
+  }
   // A "JSONL ahead of increment" composite snapshot is still the newest
   // complete view a stale-tolerant reader may serve.
   const composite = readCompositeCache(options, false)
-  if (composite) return composite
-  return readCache(options, false)
+  if (composite) {
+    options.onDiagnostic?.('f16-cache-probe', { kind: 'composite', outcome: 'hit' })
+    return composite
+  }
+  const derived = readCache(options, false)
+  if (derived) options.onDiagnostic?.('f16-cache-probe', { kind: 'derived', outcome: 'hit' })
+  return derived
 }
 
 export function float32ToFloat16(value: number): number {
@@ -681,6 +707,14 @@ async function buildCache(
   const metaTmp = `${files.meta}${suffix}`
   const latestRows = new Map<string, { path: string; row: number }>()
   const totalBytes = sources.reduce((sum, item) => sum + item.size, 0)
+  options.onProgress?.({
+    phase: 'building',
+    unit: 'bytes',
+    current: 0,
+    total: totalBytes,
+    percent: 0,
+    message: 'Building search cache',
+  })
   let bytesRead = 0
   let sourceRecordCount = 0
   const rawFd = fs.openSync(rawPath, 'w')
@@ -727,6 +761,7 @@ async function buildCache(
             totalBytes > 0 ? Math.min(90, Math.round((bytesRead / totalBytes) * 90)) : 0
           options.onProgress?.({
             phase: 'building',
+            unit: 'bytes',
             current: bytesRead,
             total: totalBytes,
             percent,
@@ -743,6 +778,14 @@ async function buildCache(
   }
 
   const latest = [...latestRows.values()].sort((left, right) => left.row - right.row)
+  options.onProgress?.({
+    phase: 'compacting',
+    unit: 'records',
+    current: 0,
+    total: latest.length,
+    percent: 90,
+    message: 'Compacting search cache',
+  })
   const sourceFd = fs.openSync(rawPath, 'r')
   const vectorFd = fs.openSync(vectorTmp, 'w')
   const pathStream = fs.createWriteStream(pathTmp, { encoding: 'utf8' })
@@ -764,6 +807,7 @@ async function buildCache(
       if ((index + 1) % 1000 === 0 || index + 1 === latest.length) {
         options.onProgress?.({
           phase: 'compacting',
+          unit: 'records',
           current: index + 1,
           total: latest.length,
           percent: 90 + Math.round(((index + 1) / Math.max(1, latest.length)) * 9),
@@ -808,6 +852,7 @@ async function buildCache(
   }
   options.onProgress?.({
     phase: 'compacting',
+    unit: 'records',
     current: latest.length,
     total: latest.length,
     percent: 100,
@@ -1027,6 +1072,7 @@ export async function extendEmbeddingF16Cache(
         if (newMatched % 1000 === 0) {
           options.onProgress?.({
             phase: 'building',
+            unit: 'records',
             current: newMatched,
             total: newMatched,
             percent: 0,
@@ -1140,6 +1186,7 @@ export async function extendEmbeddingF16Cache(
     temporaryPaths.length = 0
     options.onProgress?.({
       phase: 'compacting',
+      unit: 'records',
       current: outRow,
       total: outRow,
       percent: 100,
@@ -1271,6 +1318,7 @@ async function readEmbeddingF16CacheLatestPathRows(
         if (scanned % 20_000 === 0) {
           options.onProgress?.({
             phase: 'loading',
+            unit: 'records',
             current: Math.min(scanned, cache.meta.count),
             total: cache.meta.count,
             percent: Math.min(49, Math.round((scanned / Math.max(1, cache.meta.count)) * 49)),
@@ -1342,6 +1390,7 @@ export async function streamEmbeddingF16Cache(
       if (scanned % 1000 === 0 || scanned === currentRows.length) {
         options.onProgress?.({
           phase: 'loading',
+          unit: 'records',
           current: scanned,
           total: currentRows.length,
           percent: Math.min(100, Math.round((scanned / Math.max(1, currentRows.length)) * 100)),
@@ -1508,6 +1557,7 @@ export async function readEmbeddingF16VectorsForPaths(
   }
   options.onProgress?.({
     phase: 'loading',
+    unit: 'records',
     current: result.size,
     total: requested.size,
     percent: 100,

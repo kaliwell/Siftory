@@ -408,6 +408,9 @@ export interface ElectronAPI {
     hashImage: (filePath: string) => Promise<ImageHashResult>
     selectImage: () => Promise<string | null>
     pasteClipboardImage: () => Promise<{ ok: boolean; path?: string; error?: string }>
+    importBrowserImage: (
+      source: import('./browser-image').BrowserImageImportSource,
+    ) => Promise<{ ok: boolean; path?: string; error?: string }>
     openFile: (filePath: string) => Promise<void>
     openFolder: (filePath: string) => Promise<void>
     clearIndex: () => Promise<{ ok: boolean }>

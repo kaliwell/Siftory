@@ -1,5 +1,10 @@
 import React from 'react'
 import type { LayeredSearchProgress, SemanticSearchProgress } from '../../shared/vectorTypes'
+import {
+  SEARCH_STAGE_LABELS,
+  formatSearchThroughput,
+  type SearchProgressUnit,
+} from '../../shared/searchProgress'
 import { useTranslation } from '../i18n/useTranslation'
 
 type QueryKind = 'image' | 'semantic' | null
@@ -30,10 +35,12 @@ function formatDuration(ms?: number): string {
 
 interface ProgressLineProps {
   label: string
-  percent: number
+  percent?: number
   message?: string
   elapsedMs?: number
   itemsPerSecond?: number
+  throughputPerSecond?: number
+  unit?: SearchProgressUnit
   etaMs?: number
   onStop?: () => void
 }
@@ -44,10 +51,13 @@ const ProgressLine: React.FC<ProgressLineProps> = ({
   message,
   elapsedMs,
   itemsPerSecond,
+  throughputPerSecond,
+  unit,
   etaMs,
   onStop,
 }) => {
   const { t } = useTranslation()
+  const speed = formatSearchThroughput(throughputPerSecond ?? itemsPerSecond, unit)
   return (
     <div
       title={message}
@@ -74,16 +84,21 @@ const ProgressLine: React.FC<ProgressLineProps> = ({
       >
         <div
           style={{
-            width: `${percent}%`,
+            width: percent == null ? '30%' : `${percent}%`,
+            opacity: percent == null ? 0.45 : 1,
             height: '100%',
             background: 'rgb(80,180,255)',
             transition: 'width 120ms linear',
           }}
         />
       </div>
-      <span style={{ flexShrink: 0 }}>{percent}%</span>
-      {itemsPerSecond != null && itemsPerSecond > 0 && (
-        <span style={{ flexShrink: 0 }}>{itemsPerSecond.toFixed(2)}/s</span>
+      {percent != null && <span style={{ flexShrink: 0 }}>{percent}%</span>}
+      {speed && (
+        <span style={{ flexShrink: 0 }}>
+          {t(speed.endsWith('records/s') ? '{rate} records/s' : '{rate} MiB/s', {
+            rate: speed.split(' ')[0],
+          })}
+        </span>
       )}
       {elapsedMs != null && (
         <span style={{ flexShrink: 0, opacity: 0.8 }}>T+ {formatDuration(elapsedMs)}</span>
@@ -150,6 +165,7 @@ const SearchProgressBar: React.FC<SearchProgressBarProps> = ({
         message={message}
         elapsedMs={semanticProgress.elapsedMs}
         itemsPerSecond={semanticProgress.itemsPerSecond}
+        unit="records"
         etaMs={semanticProgress.etaMs}
       />
     )
@@ -158,15 +174,24 @@ const SearchProgressBar: React.FC<SearchProgressBarProps> = ({
   if (lastQueryKind === 'image' && layeredProgress) {
     const percent = clampPercent(layeredProgress.percent)
     const message =
+      (layeredProgress.workStage && t(SEARCH_STAGE_LABELS[layeredProgress.workStage])) ||
       layeredProgress.message ||
       `${layeredProgress.phase} ${layeredProgress.scanned.toLocaleString()}`
     return (
       <ProgressLine
         label={layeredProgress.mode}
-        percent={percent}
+        percent={
+          layeredProgress.workStage
+            ? layeredProgress.total && layeredProgress.total > 0
+              ? Math.floor(clampPercent((layeredProgress.scanned / layeredProgress.total) * 100))
+              : undefined
+            : percent
+        }
         message={message}
         elapsedMs={layeredProgress.elapsedMs}
         itemsPerSecond={layeredProgress.itemsPerSecond}
+        throughputPerSecond={layeredProgress.throughputPerSecond}
+        unit={layeredProgress.unit}
         etaMs={layeredProgress.etaMs}
         onStop={onStop}
       />

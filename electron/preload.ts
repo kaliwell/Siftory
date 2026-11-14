@@ -291,6 +291,8 @@ const api: ElectronAPI = {
     hashImage: (filePath) => ipcRenderer.invoke('imageSearch:hashImage', filePath),
     selectImage: () => ipcRenderer.invoke('imageSearch:selectImage'),
     pasteClipboardImage: () => ipcRenderer.invoke('imageSearch:pasteClipboardImage'),
+    importBrowserImage: (source: import('../shared/ipc/browser-image').BrowserImageImportSource) =>
+      ipcRenderer.invoke(BROWSER_IMAGE_IPC.IMPORT, source),
     openFile: (filePath) => ipcRenderer.invoke('imageSearch:openFile', filePath),
     openFolder: (filePath) => ipcRenderer.invoke('imageSearch:openFolder', filePath),
     clearIndex: () => ipcRenderer.invoke('imageSearch:clearIndex'),
@@ -722,3 +724,4 @@ const api: ElectronAPI = {
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)
+import { BROWSER_IMAGE_IPC } from '../shared/ipc/browser-image'

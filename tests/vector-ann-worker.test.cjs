@@ -192,6 +192,7 @@ test('ANN worker rebuilds a missing or corrupt derived index', async (context) =
     const first = await search(cache)
     assert.equal(first.built, true)
     assert.equal(first.buildMode, 'full')
+    assert.ok(first.rebuildReasons.includes('signature-sidecar-missing'))
     assert.deepEqual(Object.keys(first.timings).sort(), [
       'candidateMs',
       'pathMappingMs',
@@ -206,6 +207,7 @@ test('ANN worker rebuilds a missing or corrupt derived index', async (context) =
     const rebuilt = await search(cache)
     assert.equal(rebuilt.built, true)
     assert.equal(rebuilt.buildMode, 'full')
+    assert.ok(rebuilt.rebuildReasons.includes('signature-sidecar-invalid'))
     assert.equal(fs.statSync(signaturePath).size, cache.meta.count * 8)
     assert.equal(rebuilt.results[0].path, 'C:\\synthetic\\image-0.png')
   } finally {
@@ -227,6 +229,7 @@ test('ANN worker cold restart reuses proven Q8/signature sidecars without a full
     const second = await search(cache)
     assert.equal(second.snapshotLoadMode, 'sidecar-only')
     assert.equal(second.vectorBytesRead, 0)
+    assert.deepEqual(second.rebuildReasons, [])
     assert.deepEqual(second.results, first.results)
   } finally {
     fs.rmSync(directory, { recursive: true, force: true })

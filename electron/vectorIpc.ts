@@ -909,7 +909,11 @@ export function registerVectorIpc(
             backend: savedSettings.backend === 'gpu' ? 'gpu' : 'cpu',
           },
           (progress) => {
-            diagnostic.phase(progress.phase, { scanned: progress.scanned, total: progress.total })
+            diagnostic.phase(progress.workStage || progress.phase, {
+              scanned: progress.scanned,
+              total: progress.total,
+              unit: progress.unit,
+            })
             sendToRenderer(getMainWindow, 'vector:onLayeredSearchProgress', progress)
           },
           diagnostic,

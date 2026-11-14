@@ -1,5 +1,9 @@
 import './styles/focused-workspace.css'
 import { focusedWorkspaceVisibility } from './services/focusedWorkspace'
+import { openWorkspaceRoute } from './services/openWorkspace'
+import { requestWorkspaceImageSearch } from './services/workspaceImageSearch'
+import { isPotentialImageDrag, readBrowserImageDrop } from './services/browserImageDrop'
+import { useTranslation } from './i18n/useTranslation'
 import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { normalizeImageSearchScanPaths, useStore } from './stores/useStore'
 import { useFMStore } from './stores/useFMStore'
@@ -91,6 +95,11 @@ function safeSize(value: unknown): PanelSize | undefined {
 }
 
 const App: React.FC = () => {
+  const { t } = useTranslation()
+  const [imageDragOver, setImageDragOver] = useState(false)
+  const [imageImportStatus, setImageImportStatus] = useState<'loading' | 'error' | null>(null)
+  const imageImportBusy = useRef(false)
+  const imageImportGeneration = useRef(0)
   const themeIdx = useStore((s) => s.themeIdx)
   const themeId = useStore((s) => s.themeId)
   const themeMode = useStore((s) => s.themeMode)
@@ -111,6 +120,95 @@ const App: React.FC = () => {
   const loaded = useRef(false)
   const mountedLazyPanelIds = useRef(new Set<(typeof lazyPanels)[number]['id']>())
   const visibilityGenerationRef = useRef(0)
+
+  useEffect(() => {
+    if (!ready) return
+    let dragDepth = 0
+    const isFileDrag = (event: DragEvent) => isPotentialImageDrag(event.dataTransfer)
+    const reset = () => {
+      dragDepth = 0
+      setImageDragOver(false)
+    }
+    const enter = (event: DragEvent) => {
+      if (!isFileDrag(event)) return
+      event.preventDefault()
+      dragDepth++
+      setImageDragOver(true)
+    }
+    const over = (event: DragEvent) => {
+      if (!isFileDrag(event)) return
+      event.preventDefault()
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+    }
+    const leave = () => {
+      dragDepth = Math.max(0, dragDepth - 1)
+      if (!dragDepth) setImageDragOver(false)
+    }
+    const drop = (event: DragEvent) => {
+      reset()
+      if (!isFileDrag(event)) return
+      const file = event.dataTransfer?.files[0]
+      let imagePath = ''
+      try {
+        if (file) imagePath = window.electronAPI.getPathForFile(file)
+      } catch {
+        // Browser images may carry pixels or a URL without a local file path.
+      }
+      if (imagePath) {
+        imageImportGeneration.current++
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        setImageImportStatus(null)
+        openWorkspaceRoute('image-search')
+        requestWorkspaceImageSearch(imagePath)
+        return
+      }
+      if (!event.dataTransfer) return
+      // Keep ordinary text drags working in editable fields.
+      if (
+        event.dataTransfer.types.every((type) => type === 'text/plain') &&
+        !/^(?:https?:\/\/|data:image\/)/i.test(event.dataTransfer.getData('text/plain').trim())
+      )
+        return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      if (imageImportBusy.current) return
+      const generation = ++imageImportGeneration.current
+      const source = readBrowserImageDrop(event.dataTransfer)
+      imageImportBusy.current = true
+      setImageImportStatus('loading')
+      void source
+        .then(async (input) => {
+          if (!input) throw new Error('No browser image in drag data')
+          const result = await window.electronAPI.imageSearch.importBrowserImage(input)
+          if (generation !== imageImportGeneration.current) return
+          if (!result.ok || !result.path) throw new Error('Browser image import failed')
+          setImageImportStatus(null)
+          openWorkspaceRoute('image-search')
+          requestWorkspaceImageSearch(result.path)
+        })
+        .catch(() => {
+          if (generation === imageImportGeneration.current) setImageImportStatus('error')
+        })
+        .finally(() => {
+          imageImportBusy.current = false
+        })
+    }
+    window.addEventListener('dragenter', enter, true)
+    window.addEventListener('dragover', over, true)
+    window.addEventListener('dragleave', leave, true)
+    window.addEventListener('drop', drop, true)
+    window.addEventListener('dragend', reset, true)
+    window.addEventListener('blur', reset)
+    return () => {
+      window.removeEventListener('dragenter', enter, true)
+      window.removeEventListener('dragover', over, true)
+      window.removeEventListener('dragleave', leave, true)
+      window.removeEventListener('drop', drop, true)
+      window.removeEventListener('dragend', reset, true)
+      window.removeEventListener('blur', reset)
+    }
+  }, [ready])
 
   useEffect(() => {
     if (!ready) return
@@ -724,6 +822,30 @@ const App: React.FC = () => {
       data-presentation="desktop"
       data-workspace-view="panel"
     >
+      {imageDragOver && (
+        <div className="workspace-image-drop-overlay" role="status">
+          <span>{t('Drop an image anywhere in this window to search')}</span>
+        </div>
+      )}
+      {imageImportStatus && (
+        <div
+          className="workspace-image-import-status"
+          role={imageImportStatus === 'error' ? 'alert' : 'status'}
+        >
+          <span>
+            {t(
+              imageImportStatus === 'loading'
+                ? 'Preparing browser image...'
+                : 'Unable to import the browser image. Try copying and pasting the image, or save it locally first.',
+            )}
+          </span>
+          {imageImportStatus === 'error' && (
+            <button type="button" onClick={() => setImageImportStatus(null)}>
+              {t('Close')}
+            </button>
+          )}
+        </div>
+      )}
       {legacyOverlay && (
         <Suspense fallback={null}>
           <LegacyOverlayDiagnostics visibilityGenerationRef={visibilityGenerationRef} />

@@ -8,6 +8,7 @@ import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
 import { app } from 'electron'
+import type { SearchProgressUnit, SearchWorkStage } from '../shared/searchProgress'
 import type {
   VectorIndexManifest,
   VectorSearchResult,
@@ -31,6 +32,17 @@ import {
 } from './embeddingVectorValidation'
 
 // ── Types ──────────────────────────────────────────────────
+
+export interface VectorSearchProgress {
+  scanned: number
+  total?: number
+  /** Legacy field, populated only for byte counters. */
+  totalBytes?: number
+  percent?: number
+  workStage: SearchWorkStage
+  unit?: SearchProgressUnit
+}
+type VectorDiagnostic = (name: string, detail: Record<string, unknown>) => void
 
 export interface VectorIndexProvider {
   build(entries: EmbeddingEntry[]): Promise<void>
@@ -509,7 +521,8 @@ async function searchF16Embeddings(
   embeddingType: EmbeddingType,
   sourcePaths: string[],
   manifest: VectorIndexManifest | null,
-  onProgress?: (progress: { scanned: number; totalBytes?: number; percent?: number }) => void,
+  onProgress?: (progress: VectorSearchProgress) => void,
+  onDiagnostic?: VectorDiagnostic,
 ): Promise<VectorSearchResult[] | null> {
   const dim = expectedModelDim(
     modelName,
@@ -525,30 +538,71 @@ async function searchF16Embeddings(
     dim,
     sourcePaths,
     isCancelled: req.isCancelled,
+    onDiagnostic,
     onProgress: (progress: EmbeddingF16CacheProgress) =>
       onProgress?.({
         scanned: progress.current,
-        totalBytes: progress.total,
+        total: progress.total,
+        unit: progress.unit,
+        workStage: progress.phase === 'building' ? 'cache_building' : 'cache_compacting',
         percent: progress.percent,
       }),
   }
-  const cache =
-    readExistingEmbeddingF16Cache(cacheOptions) ?? (await ensureEmbeddingF16Cache(cacheOptions))
+  onProgress?.({ workStage: 'cache_validation', scanned: 0 })
+  let cache = readExistingEmbeddingF16Cache(cacheOptions)
+  onDiagnostic?.('f16-cache-selection', { outcome: cache ? 'hit' : 'miss' })
+  if (!cache) {
+    onProgress?.({ workStage: 'cache_building', unit: 'bytes', scanned: 0 })
+    cache = await ensureEmbeddingF16Cache(cacheOptions)
+  }
+  onDiagnostic?.('f16-cache-ready', {
+    available: Boolean(cache),
+    count: cache?.meta.count,
+    formatVersion: cache?.meta.version,
+    generation: cache?.meta.generation,
+    composite: Boolean(cache?.delta),
+    sourceCount: cache?.meta.sourceFiles.length,
+    sourceBytes: cache?.meta.sourceFiles.reduce((sum, source) => sum + source.size, 0),
+    updatedAt: cache?.meta.updatedAt,
+  })
   if (!cache || cache.meta.count <= 0) return null
 
   const topK = requireVectorSearchTopK(req.topK)
   if (process.env.FLOATING_CLOCK_DISABLE_VECTOR_ANN !== '1') {
     try {
       const annTopK = Math.min(5000, Math.max(topK * 4, topK + 100))
+      onProgress?.({ workStage: 'ann_loading', scanned: 0 })
       const ann = await searchVectorAnn(cache, queryVector, annTopK, {
         isCancelled: req.isCancelled,
         acceptPathKeys: req.acceptPathKeys,
         onProgress: (progress) =>
           onProgress?.({
             scanned: progress.current,
-            totalBytes: progress.total,
+            total: progress.total,
+            unit: progress.phase === 'building' ? 'records' : undefined,
+            workStage:
+              progress.phase === 'building'
+                ? 'ann_building'
+                : progress.phase === 'searching'
+                  ? 'vector_search'
+                  : 'ann_loading',
             percent: progress.percent,
           }),
+      })
+      onDiagnostic?.('ann-search-summary', {
+        built: ann.built,
+        buildMode: ann.buildMode,
+        snapshotLoadMode: ann.snapshotLoadMode,
+        loadMs: ann.loadMs,
+        searchMs: ann.searchMs,
+        retrievalMs: Math.max(0, ann.searchMs - ann.loadMs),
+        timings: ann.timings,
+        vectorBytesRead: ann.vectorBytesRead,
+        pathBytesRead: ann.pathBytesRead,
+        reusedVectorBytes: ann.reusedVectorBytes,
+        candidateCount: ann.candidateCount,
+        rebuildReasons: ann.rebuildReasons,
+        indexedCount: ann.indexedCount,
       })
       const activeMatches = req.acceptPath
         ? ann.results.filter((match) => req.acceptPath!(match.path))
@@ -556,7 +610,7 @@ async function searchF16Embeddings(
       if (activeMatches.length >= topK) {
         onProgress?.({
           scanned: ann.candidateCount,
-          totalBytes: ann.indexedCount,
+          workStage: 'vector_search',
           percent: 100,
         })
         return activeMatches.slice(0, topK).map((match) => ({
@@ -567,12 +621,18 @@ async function searchF16Embeddings(
           embeddingType,
         }))
       }
+      onDiagnostic?.('vector-search-fallback', {
+        reason: 'insufficient-ann-results',
+        count: activeMatches.length,
+      })
     } catch (error) {
       if (req.isCancelled?.()) throw error
+      onDiagnostic?.('vector-search-fallback', { reason: 'ann-error', error: String(error) })
       // ANN is a disposable acceleration layer. Corruption, version mismatch,
       // worker failure, or insufficient results falls back to exact Float16.
     }
-  }
+  } else onDiagnostic?.('vector-search-fallback', { reason: 'ann-disabled' })
+  onProgress?.({ workStage: 'vector_search', unit: 'records', scanned: 0, total: cache.meta.count })
   const matches = await searchEmbeddingF16Cache(cache, {
     queryVector,
     topK,
@@ -581,7 +641,9 @@ async function searchF16Embeddings(
     onProgress: (progress) =>
       onProgress?.({
         scanned: progress.current,
-        totalBytes: cache.meta.count,
+        total: progress.total,
+        unit: 'records',
+        workStage: 'vector_search',
         percent: progress.percent,
       }),
   })
@@ -597,7 +659,7 @@ async function searchF16Embeddings(
 async function streamSearchEmbeddings(
   req: VectorSearchRequest,
   manifest: VectorIndexManifest | null,
-  onProgress?: (progress: { scanned: number; totalBytes?: number; percent?: number }) => void,
+  onProgress?: (progress: VectorSearchProgress) => void,
 ): Promise<VectorSearchResult[]> {
   const modelName = req.modelName || manifest?.modelName
   const embeddingType = req.embeddingType || manifest?.embeddingType || 'global'
@@ -611,6 +673,9 @@ async function streamSearchEmbeddings(
   const totalBytes = getTotalEmbeddingBytes(filePaths)
   const latestSequenceByKey = new Map<string, number>()
   let relevantSequence = 0
+  let validatedBytes = 0
+  let validationReportedAt = 0
+  onProgress?.({ workStage: 'stream_validation', unit: 'bytes', scanned: 0, total: totalBytes })
 
   // First pass records only the latest revision number and validity. A
   // negative value is a latest invalid tombstone; the second pass scores only
@@ -622,6 +687,17 @@ async function streamSearchEmbeddings(
     })
     for await (const line of reader) {
       if (req.isCancelled?.()) throw new Error('Vector search cancelled')
+      validatedBytes += Buffer.byteLength(line, 'utf8') + 1
+      if (Date.now() - validationReportedAt > 350) {
+        validationReportedAt = Date.now()
+        onProgress?.({
+          workStage: 'stream_validation',
+          unit: 'bytes',
+          scanned: Math.min(validatedBytes, totalBytes),
+          total: totalBytes,
+          percent: totalBytes ? Math.min(100, (validatedBytes / totalBytes) * 100) : 0,
+        })
+      }
       if (!line) continue
       try {
         const entry = JSON.parse(line) as Partial<EmbeddingEntry>
@@ -647,6 +723,7 @@ async function streamSearchEmbeddings(
   let scanned = 0
   let lastProgressAt = 0
   relevantSequence = 0
+  onProgress?.({ workStage: 'stream_search', unit: 'bytes', scanned: 0, total: totalBytes })
 
   for (const filePath of filePaths) {
     const rl = readline.createInterface({
@@ -666,8 +743,11 @@ async function streamSearchEmbeddings(
       if (onProgress && (now - lastProgressAt > 350 || scanned === 1)) {
         lastProgressAt = now
         onProgress({
-          scanned,
+          scanned: Math.min(approxBytes, totalBytes),
+          total: totalBytes,
           totalBytes,
+          unit: 'bytes',
+          workStage: 'stream_search',
           percent: totalBytes > 0 ? Math.min(100, Math.round((approxBytes / totalBytes) * 100)) : 0,
         })
       }
@@ -707,13 +787,52 @@ async function streamSearchEmbeddings(
   }
 
   top.sort((a, b) => b.vectorScore - a.vectorScore)
-  onProgress?.({ scanned, totalBytes, percent: 100 })
+  onProgress?.({
+    scanned: totalBytes,
+    total: totalBytes,
+    totalBytes,
+    unit: 'bytes',
+    workStage: 'stream_search',
+    percent: 100,
+  })
   return top
 }
 
 export async function searchVectorIndex(
   req: VectorSearchRequest,
-  onProgress?: (progress: { scanned: number; totalBytes?: number; percent?: number }) => void,
+  onProgress?: (progress: VectorSearchProgress) => void,
+  onDiagnostic?: VectorDiagnostic,
+): Promise<VectorSearchResult[]> {
+  let stage: SearchWorkStage | undefined
+  let startedAt = Date.now()
+  let outcome = 'error'
+  try {
+    const result = await searchVectorIndexImpl(
+      req,
+      (progress) => {
+        if (stage !== progress.workStage) {
+          const at = Date.now()
+          if (stage) onDiagnostic?.('vector-stage-end', { stage, durationMs: at - startedAt })
+          stage = progress.workStage
+          startedAt = at
+          onDiagnostic?.('vector-stage-start', { stage })
+        }
+        onProgress?.(progress)
+      },
+      onDiagnostic,
+    )
+    outcome = 'complete'
+    return result
+  } finally {
+    if (stage)
+      onDiagnostic?.('vector-stage-end', { stage, durationMs: Date.now() - startedAt, outcome })
+  }
+}
+
+async function searchVectorIndexImpl(
+  req: VectorSearchRequest,
+  onProgress?: (progress: VectorSearchProgress) => void,
+  onDiagnostic?: VectorDiagnostic,
 ): Promise<VectorSearchResult[]> {
   requireVectorSearchTopK(req.topK)
   const searchEpoch = vectorIndexLifecycleEpoch
@@ -732,6 +851,7 @@ export async function searchVectorIndex(
           sourcePaths,
           manifest,
           onProgress,
+          onDiagnostic,
         )
         if (cached) return searchEpoch === vectorIndexLifecycleEpoch ? cached : []
       }
@@ -739,6 +859,7 @@ export async function searchVectorIndex(
       return searchEpoch === vectorIndexLifecycleEpoch ? streamed : []
     }
     if (manifest) {
+      onProgress?.({ workStage: 'memory_loading', scanned: 0 })
       const expectedDim = expectedModelDim(manifest.modelName, manifest.dim)
       const entries = latestValidEntries(
         getEmbeddingsByModel(manifest.modelName, manifest.embeddingType),
@@ -756,6 +877,8 @@ export async function searchVectorIndex(
     }
   }
   if (!index) return []
+  onDiagnostic?.('vector-search-route', { route: 'memory', count: index.count() })
+  onProgress?.({ workStage: 'vector_search', scanned: 0 })
   return index.search(req)
 }
 

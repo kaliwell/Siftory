@@ -2,6 +2,7 @@ import ScanErrorDiagnosticsControls from './ScanErrorDiagnosticsControls'
 import PerformanceDiagnosticsControls from './PerformanceDiagnosticsControls'
 import { useScanResponsiveness } from '../hooks/useScanResponsiveness'
 import WorkspacePreparationLink from './WorkspacePreparationLink'
+import { subscribeWorkspaceImageSearch } from '../services/workspaceImageSearch'
 import SearchDiagnosticsControls from './SearchDiagnosticsControls'
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../stores/useStore'
@@ -204,7 +205,6 @@ const ImageSearchPanel: React.FC = () => {
   const wholeDriveActionRef = useRef<'scan' | 'simple'>('scan')
   const [toast, setToast] = useState<ImageSearchToastState | null>(null)
   const toastTimerRef = useRef(0)
-  const [dragOver, setDragOver] = useState(false)
 
   // Vector / Rerank state
   const [embeddingProgress, setEmbeddingProgress] = useState<EmbeddingProgress>({
@@ -915,12 +915,8 @@ const ImageSearchPanel: React.FC = () => {
 
   // doQuery removed
 
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault()
-      setDragOver(false)
-      const file = e.dataTransfer.files?.[0]
-      const fp = file ? window.electronAPI.getPathForFile(file) : ''
+  const handleDroppedImage = useCallback(
+    async (fp: string) => {
       if (!fp) {
         showToast(t('Unable to read the dropped file path'), 'err')
         return
@@ -933,6 +929,14 @@ const ImageSearchPanel: React.FC = () => {
       await runImageQuery(fp)
     },
     [runImageQuery, showToast, t],
+  )
+
+  useEffect(
+    () =>
+      subscribeWorkspaceImageSearch((imagePath) => {
+        void handleDroppedImage(imagePath)
+      }),
+    [handleDroppedImage],
   )
 
   const handleCopyPath = useCallback(async (path: string) => {
@@ -1248,17 +1252,7 @@ const ImageSearchPanel: React.FC = () => {
         }}
       >
         <div className={`image-search-workspace is-${experienceMode}`}>
-          <aside
-            className="image-search-control-pane"
-            aria-label={t('Search controls')}
-            onDragOver={(event) => {
-              if (sourcesOnly) return
-              event.preventDefault()
-              setDragOver(true)
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={sourcesOnly ? undefined : handleDrop}
-          >
+          <aside className="image-search-control-pane" aria-label={t('Search controls')}>
             <ImageSearchToastBanner toast={toast} />
             <ScanErrorDiagnosticsControls />
             <PerformanceDiagnosticsControls />
@@ -1328,7 +1322,7 @@ const ImageSearchPanel: React.FC = () => {
               semanticQuery={semanticQuery}
               setSemanticQuery={setSemanticQuery}
               testImagePath={testImagePath}
-              dragOver={dragOver}
+              dragOver={false}
               threshold={threshold}
               setThreshold={setThreshold}
               topK={topK}
@@ -1447,6 +1441,7 @@ const ImageSearchPanel: React.FC = () => {
               />
 
               <ImageSearchResultGrid
+                searching={searching || subjectSearching}
                 results={sortedResults}
                 rawResultCount={sortedResults.length}
                 indexedCount={status.indexedCount}
