@@ -20,7 +20,8 @@ test('production launcher uses spawn with IPC and strips forced Node mode', asyn
     process: {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
       execPath: process.execPath,
-      platform: process.platform,
+      platform: 'win32',
+      versions: {},
       once: () => {},
     },
     require: (name) => {
@@ -49,6 +50,8 @@ test('production launcher uses spawn with IPC and strips forced Node mode', asyn
     }).outputText,
     context,
   )
+  assert.equal(await context.exports.runShellPreviewCompute('normal'), null)
+  assert.equal(spawns.length, 0, 'Plain Node has no desktop Shell API')
   const runtime = new context.exports.ShellPreviewRuntime()
   try {
     assert.equal((await runtime.run('normal')).toString(), 'unchanged-thumbnail')

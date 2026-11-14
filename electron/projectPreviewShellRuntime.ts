@@ -278,5 +278,7 @@ export class ShellPreviewRuntime {
 const runtime = new ShellPreviewRuntime()
 process.once('exit', () => runtime.terminateOwnedProcesses())
 export const runShellPreviewCompute = (source: string, options?: ShellPreviewOptions) =>
-  process.platform === 'win32' ? runtime.run(source, options) : Promise.resolve(null)
+  process.platform === 'win32' && process.versions.electron && process.type === 'browser'
+    ? runtime.run(source, options)
+    : Promise.resolve(null)
 export const stopShellPreviewCompute = () => runtime.stop()
