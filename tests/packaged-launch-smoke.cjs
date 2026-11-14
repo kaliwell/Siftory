@@ -102,6 +102,72 @@ async function main() {
           entry.status === 'ready',
       ),
     )
+    // Exercise the actual packaged controls, IPC, disk store and export endpoint.
+    await page.getByTestId('workspace-domain-sources').click()
+    const diagnostics = page.getByTestId('performance-diagnostics')
+    await diagnostics.locator('summary').click()
+    await diagnostics.getByRole('button', { name: /Start recording|开始记录/, exact: true }).click()
+    await diagnostics.getByRole('button', { name: /Mark stutter|标记卡顿/, exact: true }).click()
+    await page.evaluate(() => {
+      setTimeout(() => {
+        const until = performance.now() + 220
+        while (performance.now() < until) {
+          /* Deliberate test-only Renderer long task. */
+        }
+      }, 50)
+    })
+    const logFile = path.join(userData, 'diagnostics', 'performance', 'search-0.jsonl')
+    const readLog = () => {
+      if (!fs.existsSync(logFile)) return []
+      return fs
+        .readFileSync(logFile, 'utf8')
+        .split('\n')
+        .flatMap((line) => {
+          try {
+            return [JSON.parse(line)]
+          } catch {
+            return []
+          }
+        })
+    }
+    const diagnosticDeadline = Date.now() + 20000
+    while (
+      !readLog().some(
+        (r) => r.event === 'preview-renderer-window' && r.detail.longTaskMaxMs >= 200,
+      ) &&
+      Date.now() < diagnosticDeadline
+    )
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    assert.ok(
+      readLog().some((r) => r.event === 'preview-renderer-window' && r.detail.longTaskMaxMs >= 200),
+      'Packaged recording must capture a real Renderer long task',
+    )
+    const performanceExport = path.join(userData, 'performance-export.json')
+    // Replace only the OS save picker in this isolated smoke process.
+    await application.evaluate(({ dialog }, target) => {
+      global.__siftorySavePicker = dialog.showSaveDialog
+      dialog.showSaveDialog = async () => ({ canceled: false, filePath: target })
+    }, performanceExport)
+    await diagnostics
+      .getByRole('button', { name: /Stop and export|停止并导出/, exact: true })
+      .click()
+    const exportDeadline = Date.now() + 15000
+    while (!fs.existsSync(performanceExport) && Date.now() < exportDeadline)
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    await diagnostics
+      .getByText(/Diagnostic operation complete|诊断操作已完成/, { exact: true })
+      .waitFor()
+    const performanceReport = JSON.parse(fs.readFileSync(performanceExport, 'utf8'))
+    assert.equal(performanceReport.containsImageBytes, false)
+    assert.equal(performanceReport.recording, false)
+    assert.equal(performanceReport.version, provenance.version)
+    assert.ok(performanceReport.summary.longTaskMaxMs >= 200)
+    assert.ok(performanceReport.summary.markers >= 1)
+    assert.ok(performanceReport.records.some((r) => r.event === 'process-resources'))
+    await application.evaluate(({ dialog }) => {
+      dialog.showSaveDialog = global.__siftorySavePicker
+      delete global.__siftorySavePicker
+    })
     assert.deepEqual(pageErrors, [])
     fs.mkdirSync(output, { recursive: true })
     await page.screenshot({ path: path.join(output, 'startup.png') })
@@ -118,6 +184,8 @@ async function main() {
           nativeAddonLoaded: true,
           projectPreviewWorkerPassed: true,
           projectPreviewPdfChildPassed: true,
+          performanceDiagnosticsPassed: true,
+          performanceExportPassed: true,
           pageErrors,
           scope:
             'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',
