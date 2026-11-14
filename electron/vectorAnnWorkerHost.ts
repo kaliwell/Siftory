@@ -11,7 +11,7 @@ import { requireNormalizedEmbeddingVector } from './embeddingVectorValidation'
 import { createRuntimeMemoryChildRunId, emitRuntimeMemoryTrace } from './runtimeMemoryTrace'
 
 export interface VectorAnnSearchProgress {
-  phase: 'building'
+  phase: 'building' | 'loading' | 'searching'
   current: number
   total: number
   percent: number
@@ -19,6 +19,7 @@ export interface VectorAnnSearchProgress {
 }
 
 export interface VectorAnnSearchResult {
+  rebuildReasons?: string[]
   results: Array<{ path: string; row: number; score: number }>
   /** Present only for a multi-center request; scope/index loading is shared. */
   queryResults?: Array<{

@@ -54,6 +54,7 @@ interface ImageSearchResultGridProps {
   rawResultCount: number
   indexedCount?: number
   hasSearched?: boolean
+  searching?: boolean
   queryHash: string | null
   statusState: string
   searchQuery: string
@@ -79,6 +80,7 @@ const ImageSearchResultGrid: React.FC<ImageSearchResultGridProps> = ({
   rawResultCount,
   indexedCount = 0,
   hasSearched = false,
+  searching = false,
   queryHash,
   statusState,
   searchQuery,
@@ -123,8 +125,14 @@ const ImageSearchResultGrid: React.FC<ImageSearchResultGridProps> = ({
     resetToken: filteredResults,
   })
   const visibleResults = filteredResults.slice(startIndex, endIndex)
-  const emptyState =
-    rawResultCount > 0 && searchQuery.trim()
+  const emptyState = searching
+    ? {
+        title: t('Searching images...'),
+        description: t(
+          'Preparing search data or searching. Results will appear when the search finishes.',
+        ),
+      }
+    : rawResultCount > 0 && searchQuery.trim()
       ? {
           title: t('No visible image results'),
           description: t('Clear or change the name filter to show matching indexed images.'),

@@ -34,6 +34,7 @@ function writeChildMessage(header: Record<string, unknown>, vector?: readonly nu
 }
 
 interface DinoTask {
+  reportQueryStages?: boolean
   id: number
   imageId: string
   imagePath: string
@@ -355,11 +356,15 @@ async function processTask(
   startedAt = performance.now()
   let runtime: Awaited<ReturnType<typeof getExtractor>>
   try {
+    if (task.reportQueryStages)
+      writeChildMessage({ type: 'query-stage', id: task.id, stage: 'model_loading' })
     runtime = await getExtractor(task.modelPath, task.backend === 'cuda' ? 'gpu' : task.backend)
   } finally {
     timings.runtimeLoadMs += performance.now() - startedAt
   }
   reportProviderSelection(providerRequestedBackend, runtime)
+  if (task.reportQueryStages)
+    writeChildMessage({ type: 'query-stage', id: task.id, stage: 'query_inference' })
   startedAt = performance.now()
   let output: Awaited<ReturnType<ImageFeatureExtractor>>
   try {
@@ -654,7 +659,16 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
     for (let index = 0; index < tasks.length; index += 1) {
       const task = tasks[index]
       const outcome = outcomes.get(task.id)!
-      const resultMetrics = index === 0 ? metrics : undefined
+      const resultMetrics = task.reportQueryStages
+        ? {
+            runtimeLoadMs: timings.runtimeLoadMs,
+            decodeNormalizeMs: timings.decodeNormalizeMs,
+            inferenceMs: timings.inferenceMs,
+            postprocessMs: timings.postprocessMs,
+          }
+        : index === 0
+          ? metrics
+          : undefined
       if (outcome.vector) writeSuccess(task, outcome.vector, resultMetrics)
       else writeFailure(task, outcome.error || 'DINO batch failed', resultMetrics)
     }

@@ -354,6 +354,10 @@ export interface SemanticSearchProgress {
 }
 
 export interface LayeredSearchProgress {
+  workStage?: import('./searchProgress').SearchWorkStage
+  unit?: import('./searchProgress').SearchProgressUnit
+  phaseElapsedMs?: number
+  throughputPerSecond?: number
   requestId?: string
   mode: SearchMode
   phase:

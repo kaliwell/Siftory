@@ -11,6 +11,64 @@ function row(imageId, vector, modelName = 'dinov2_vitb14') {
   return JSON.stringify({ modelName, embeddingType: 'global', imageId, dim: vector.length, vector })
 }
 
+test('persisted search cache survives a new process and reports rejection reasons without changing valid data', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'siftory-f16-diagnostic-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const source = path.join(root, 'source.jsonl')
+  fs.writeFileSync(source, row('C:/fixture/a.jpg', [1, 0, 0]) + '\n')
+  const options = {
+    cacheDir: path.join(root, 'cache'),
+    modelName: 'dinov2_vitb14',
+    dim: 3,
+    sourcePaths: [source],
+    preferAuthoritative: false,
+  }
+  const events = []
+  const progress = []
+  const observed = {
+    ...options,
+    onDiagnostic: (name, detail) => events.push({ name, ...detail }),
+    onProgress: (p) => progress.push(p),
+  }
+  assert.equal(cacheApi.readExistingEmbeddingF16Cache(observed), null)
+  assert.ok(events.some((e) => e.reason === 'missing'))
+  const first = await cacheApi.ensureEmbeddingF16Cache(observed)
+  assert.ok(progress.some((p) => p.phase === 'building' && p.unit === 'bytes'))
+  assert.ok(progress.some((p) => p.phase === 'compacting' && p.unit === 'records'))
+  const before = fs.statSync(first.vectorPath).mtimeMs
+  const reopened = require('node:child_process').execFileSync(
+    process.execPath,
+    [
+      '-e',
+      `
+    const { loadTsModule } = require('./tests/guard-utils.cjs');
+    const cache = loadTsModule('electron/embeddingF16Cache.ts');
+    const events = [];
+    const handle = cache.readExistingEmbeddingF16Cache({ ...JSON.parse(process.argv[1]), onDiagnostic: (name, detail) => events.push(detail) });
+    process.stdout.write(JSON.stringify({ count: handle?.meta.count, events }));
+  `,
+      JSON.stringify(options),
+    ],
+    { cwd: path.resolve(__dirname, '..'), encoding: 'utf8' },
+  )
+  assert.equal(JSON.parse(reopened).count, 1)
+  assert.ok(JSON.parse(reopened).events.some((e) => e.outcome === 'hit'))
+  assert.equal(fs.statSync(first.vectorPath).mtimeMs, before)
+  const bytes = fs.readFileSync(first.vectorPath)
+  bytes[0] ^= 1
+  fs.writeFileSync(first.vectorPath, bytes)
+  fs.utimesSync(first.vectorPath, new Date(), new Date(before + 5000))
+  assert.equal(cacheApi.readExistingEmbeddingF16Cache(observed), null)
+  assert.ok(events.some((e) => e.reason === 'integrity-check-failed'))
+  const metaFile = fs.readdirSync(options.cacheDir).find((name) => name.endsWith('.f16.json'))
+  assert.ok(metaFile)
+  const metaPath = path.join(options.cacheDir, metaFile)
+  const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'))
+  fs.writeFileSync(metaPath, JSON.stringify({ ...meta, version: 0 }))
+  assert.equal(cacheApi.readExistingEmbeddingF16Cache(observed), null)
+  assert.ok(events.some((e) => e.reason === 'format-version-mismatch'))
+})
+
 test('Float16 conversion preserves representative values', () => {
   for (const value of [0, 1, -1, 0.5, -0.125, 0.0001, 10, 65504]) {
     const restored = cacheApi.float16ToFloat32(cacheApi.float32ToFloat16(value))

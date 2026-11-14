@@ -513,6 +513,25 @@
 .preparation-advanced-options {
   min-width: 0;
 }
+.image-search-preparation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.image-search-preparation-toggle > span {
+  width: 10px;
+  flex-shrink: 0;
+}
+.image-search-advanced-controls:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ui-border);
+}
 .preparation-advanced-options > summary {
   cursor: pointer;
   padding: 8px;

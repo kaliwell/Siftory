@@ -83,11 +83,41 @@ const root = path.resolve(__dirname, '..')
         .getState()
         .setImageSearchUiPreferences({ experienceMode: 'advanced' }),
     )
-    const advanced = page.locator('.preparation-advanced-options')
+    const advanced = page.locator('.image-search-preparation-toggle')
     await advanced.waitFor()
     assert.equal(await page.getByTestId('image-search-start-scan').isVisible(), false)
-    await advanced.locator('summary').click()
-    assert.equal(await page.getByTestId('image-search-start-scan').isVisible(), true)
+    const stableControls = [
+      advanced,
+      page.getByTestId('search-prepare-library'),
+      page.getByTestId('image-search-select-folders'),
+      page.getByTestId('image-search-manual-path'),
+      page.locator('.registered-source-picker'),
+      page.locator('.image-search-scan-paths'),
+    ]
+    const evidence = path.join(root, 'artifacts/preparation-layout')
+    require('node:fs').mkdirSync(evidence, { recursive: true })
+    await page.evaluate(() => window.__workspaceTest.store.getState().setLanguage('zh-CN'))
+    for (const width of [1124, 760, 1320]) {
+      await page.setViewportSize({ width, height: 916 })
+      const before = await Promise.all(stableControls.map((control) => control.boundingBox()))
+      if (width === 1124) await page.screenshot({ path: path.join(evidence, 'collapsed.png') })
+      await advanced.click()
+      assert.equal(await advanced.getAttribute('aria-expanded'), 'true')
+      assert.equal(await page.getByTestId('image-search-start-scan').isVisible(), true)
+      const after = await Promise.all(stableControls.map((control) => control.boundingBox()))
+      for (let i = 0; i < before.length; i++) {
+        assert.ok(before[i] && after[i])
+        for (const axis of ['x', 'y', 'width', 'height'])
+          assert.ok(
+            Math.abs(before[i][axis] - after[i][axis]) < 1,
+            `control ${i} ${axis} moved at ${width}px`,
+          )
+      }
+      if (width === 1124) await page.screenshot({ path: path.join(evidence, 'expanded.png') })
+      await advanced.click()
+      assert.equal(await page.getByTestId('image-search-start-scan').isVisible(), false)
+    }
+    await page.evaluate(() => window.__workspaceTest.store.getState().setLanguage('en'))
     await page.getByTestId('workspace-domain-settings').click()
     await page.getByTestId('settings-nav-appearance').click()
     assert.equal(await page.locator('#app-theme').count(), 0)

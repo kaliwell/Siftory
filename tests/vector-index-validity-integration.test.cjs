@@ -231,9 +231,11 @@ test('streaming fallback applies the same latest-row and strict query rules', as
     })
 
     const progress = []
+    const diagnostics = []
     const results = await vectorIndex.searchVectorIndex(
       searchRequest(modelName, basis(dim, 3)),
       (event) => progress.push(event),
+      (name, detail) => diagnostics.push({ name, ...detail }),
     )
     assert.deepEqual(
       new Set(results.map((result) => result.imageId)),
@@ -241,6 +243,18 @@ test('streaming fallback applies the same latest-row and strict query rules', as
     )
     assert.equal(results[0].imageId, 'C:/STREAM/REPAIR.JPG')
     assert.ok(progress.some((event) => event.percent === 100))
+    const stream = progress.filter((event) => event.workStage.startsWith('stream_'))
+    assert.ok(stream.some((event) => event.workStage === 'stream_validation'))
+    assert.ok(stream.some((event) => event.workStage === 'stream_search'))
+    assert.ok(stream.every((event) => event.unit === 'bytes' && event.scanned <= event.total))
+    assert.ok(
+      diagnostics.some(
+        (event) =>
+          event.name === 'vector-stage-end' &&
+          event.stage === 'stream_search' &&
+          event.outcome === 'complete',
+      ),
+    )
     assert.ok(
       rejectedCacheSourceStats > 0,
       'the F16 cache must be unavailable to reach JSONL streaming',

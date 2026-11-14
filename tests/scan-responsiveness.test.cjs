@@ -12,7 +12,9 @@ test('scan telemetry distinguishes synchronous blocking from awaited work withou
     recorder.source(7, '.psd')
     const value = recorder.measure('blocking', () => {
       const until = performance.now() + 15
-      while (performance.now() < until) {}
+      while (performance.now() < until) {
+        /* Deliberately block to measure timer lag. */
+      }
       return 42
     })
     assert.equal(value, 42)
@@ -89,7 +91,9 @@ test('diagnostic storage failure does not fail scans and synchronous stalls appe
   assert.equal(
     recorder.measure('native', () => {
       const until = performance.now() + 250
-      while (performance.now() < until) {}
+      while (performance.now() < until) {
+        /* Deliberately block to exercise native stall reporting. */
+      }
       return true
     }),
     true,

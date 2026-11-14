@@ -343,7 +343,12 @@ export function openAuthoritativeVectorStore(
   dim: number,
   verifyFileChecksums = false,
   expectedSourcePaths?: string[],
+  onReject?: (reason: string) => void,
 ): AuthoritativeVectorStoreHandle | null {
+  const reject = (reason: string): null => {
+    onReject?.(reason)
+    return null
+  }
   const manifest = readCurrentAuthoritativeManifest(storeRoot, verifyFileChecksums)
   const entry = manifest?.entries.find(
     (candidate) =>
@@ -351,7 +356,8 @@ export function openAuthoritativeVectorStore(
       candidate.embeddingType === embeddingType &&
       candidate.dim === dim,
   )
-  if (!manifest || !entry) return null
+  if (!manifest) return reject('manifest-unavailable-or-invalid')
+  if (!entry) return reject('model-entry-missing')
   if (expectedSourcePaths) {
     for (const sourcePath of expectedSourcePaths) {
       try {
@@ -369,10 +375,10 @@ export function openAuthoritativeVectorStore(
           (imported.chunkIntegrity !== undefined &&
             !verifyFileChunkIntegritySync(sourcePath, imported.size, imported.chunkIntegrity))
         ) {
-          return null
+          return reject('source-identity-changed')
         }
       } catch (error: unknown) {
-        if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') return null
+        if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') return reject('source-read-error')
         /* Removed import copies do not invalidate the authoritative generation. */
       }
     }

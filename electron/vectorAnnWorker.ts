@@ -137,6 +137,7 @@ interface LoadedAnnIndex {
 }
 
 interface VectorAnnLoadStats {
+  rebuildReasons?: string[]
   snapshotLoadMode: VectorAnnSnapshotLoadMode
   vectorBytesRead: number
   pathBytesRead: number
@@ -886,6 +887,18 @@ function ensureLoaded(
     count: cache.meta.count,
     dim: cache.meta.dim,
   })
+  const rebuildReasons = [
+    ...(!fresh
+      ? [
+          !stored
+            ? fs.existsSync(files.meta) && fs.existsSync(files.signatures)
+              ? 'signature-sidecar-invalid'
+              : 'signature-sidecar-missing'
+            : 'signature-source-identity-changed',
+        ]
+      : []),
+    ...(!storedProjection ? ['projection-sidecar-missing-or-incompatible'] : []),
+  ]
   let vectors: Buffer | null = null
   if (!fresh || !storedProjection) {
     // A composite handle stores committed delta rows separately. Full bytes are
@@ -951,6 +964,7 @@ function ensureLoaded(
     loadMs: Date.now() - startedAt,
     loadStats: {
       snapshotLoadMode: vectors ? 'full' : 'sidecar-only',
+      rebuildReasons,
       vectorBytesRead: vectors?.length ?? 0,
       pathBytesRead: pathSnapshot.bytesRead,
       reusedVectorBytes: 0,
@@ -1038,7 +1052,23 @@ async function search(request: VectorAnnWorkerSearchRequest): Promise<void> {
   const isCancelled = () => Atomics.load(stopView, 0) === 1
   const startedAt = Date.now()
   try {
+    parentPort?.postMessage({
+      type: 'progress',
+      requestId: request.requestId,
+      phase: 'loading',
+      current: 0,
+      total: 0,
+      percent: 0,
+    })
     const ensured = ensureLoaded(request.requestId, request.cache, isCancelled)
+    parentPort?.postMessage({
+      type: 'progress',
+      requestId: request.requestId,
+      phase: 'searching',
+      current: 0,
+      total: 0,
+      percent: 0,
+    })
     const scopeStartedAt = performance.now()
     const activeRows = collectActiveRows(ensured.index, request.acceptPathKeys, isCancelled)
     const scopeMs = performance.now() - scopeStartedAt

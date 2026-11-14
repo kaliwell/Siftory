@@ -1,6 +1,8 @@
 # 扫描卡顿优化与前后对比
 
-> 状态：源码优化及定向回归完成；未发布安装包，问题 PDF 的成功渲染仍未解决
+> 状态：历史快照
+
+记录时状态：源码优化及定向回归完成；未发布安装包，问题 PDF 的成功渲染仍未解决。
 
 基线为 `deac80b`（Alpha27 源码），工作分支为 `fix/scan-preview-responsiveness-20261113`。使用用户指定的真实 Alpha 素材目录；源文件和生产索引不作写入。实现依据为[优化方案](2026-11-13-scan-stutter-optimization-plan.md)，基线范围见[诊断记录](2026-11-13-real-alpha-bundle-stutter-diagnosis.md)。
 

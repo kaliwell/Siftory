@@ -131,6 +131,7 @@ export function getIpcCapabilityDeclaration(channel: string): IpcCapabilityDecla
     if (/(?:connect|credential|profile)/i.test(channel)) capabilities.add('SECRET')
   }
   if (channel === 'catalog:remoteDownload/create') capabilities.add('NET')
+  if (channel === 'imageSearch:importBrowserImage') capabilities.add('NET')
   if (channel === 'catalog:remoteVideo/prepare') {
     capabilities.add('W')
     capabilities.add('NET')

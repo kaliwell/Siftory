@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { createSearchProgressMetrics, SEARCH_STAGE_LABELS } from '../shared/searchProgress'
 // ── Rerank Service ─────────────────────────────────────────
 // Layer 3 candidate rescoring pipeline.
 // Combines Hash TopK + Vector TopK, then applies colorScore,
@@ -139,28 +140,6 @@ export async function waitForVectorSearch(
   }
 }
 
-function applyLayeredMetrics(
-  progress: LayeredSearchProgress,
-  startedAt: number,
-): LayeredSearchProgress {
-  const elapsedMs = Math.max(0, Date.now() - startedAt)
-  const seconds = elapsedMs / 1000
-  const itemsPerSecond = seconds > 0 ? progress.scanned / seconds : 0
-  const percent = typeof progress.percent === 'number' ? progress.percent : undefined
-  return {
-    ...progress,
-    startedAt,
-    elapsedMs,
-    itemsPerSecond: Number.isFinite(itemsPerSecond) ? itemsPerSecond : 0,
-    etaMs:
-      typeof percent === 'number' && percent > 0 && percent < 100
-        ? Math.max(0, Math.round((elapsedMs * (100 - percent)) / percent))
-        : progress.phase === 'done'
-          ? 0
-          : progress.etaMs,
-  }
-}
-
 // ── Scoring ────────────────────────────────────────────────
 
 function normalizeWeights(
@@ -257,12 +236,14 @@ async function generateQueryVector(
   modelStatus: ModelStatus,
   backend: 'cpu' | 'gpu' = 'cpu',
   isCancelled?: () => boolean,
+  onStage?: (stage: 'model_loading' | 'query_inference') => void,
+  onMetrics?: (detail: Record<string, unknown>) => void,
 ): Promise<number[]> {
   const modelPath = modelStatus.installedPath || ''
   if (!modelPath || !fs.existsSync(modelPath)) {
     throw new Error('DINOv2 ONNX model file is not installed')
   }
-  return runDinoChildOnce(imagePath, modelPath, 768, backend, isCancelled)
+  return runDinoChildOnce(imagePath, modelPath, 768, backend, isCancelled, onStage, onMetrics)
 }
 
 function getDinoChildPath(): string {
@@ -281,6 +262,9 @@ function getDinoChildPath(): string {
 }
 
 interface DinoQueryPending {
+  onReady?: () => void
+  onStage?: (stage: 'model_loading' | 'query_inference') => void
+  onMetrics?: (detail: Record<string, unknown>) => void
   resolve: (vector: number[]) => void
   reject: (error: Error) => void
   timeout: ReturnType<typeof setTimeout>
@@ -392,12 +376,20 @@ function ensureDinoQueryWorker(modelPath: string, backend: 'cpu' | 'gpu'): DinoQ
         }
       } else if (message.type === 'ready') {
         worker.ready = true
+        for (const pending of worker.pending.values()) pending.onReady?.()
         for (const task of worker.queuedTasks) child.stdin.write(task)
         worker.queuedTasks = []
       } else if (Number.isInteger(message.id)) {
         const id = message.id as number
         const pending = worker.pending.get(id)
         if (!pending) continue
+        if (message.type === 'query-stage') {
+          if (message.stage === 'model_loading' || message.stage === 'query_inference')
+            pending.onStage?.(message.stage)
+          continue
+        }
+        if (message.metrics && typeof message.metrics === 'object')
+          pending.onMetrics?.(message.metrics as Record<string, unknown>)
         if (message.ok !== true) {
           finishDinoQuery(
             worker,
@@ -448,8 +440,11 @@ function runDinoChildOnce(
   dim: number,
   backend: 'cpu' | 'gpu',
   isCancelled?: () => boolean,
+  onStage?: (stage: 'model_loading' | 'query_inference') => void,
+  onMetrics?: (detail: Record<string, unknown>) => void,
 ): Promise<number[]> {
   return new Promise((resolve, reject) => {
+    onStage?.('model_loading')
     const worker = ensureDinoQueryWorker(modelPath, backend)
     const id = worker.nextId++
     const timeout = setTimeout(() => {
@@ -462,7 +457,16 @@ function runDinoChildOnce(
       if (dinoQueryWorker === worker) stopDinoQueryWorker(new Error('DINO query cancelled'))
     }, 50)
     cancelPoll.unref()
-    worker.pending.set(id, { resolve, reject, timeout, cancelPoll, dim })
+    worker.pending.set(id, {
+      resolve,
+      reject,
+      timeout,
+      cancelPoll,
+      dim,
+      onReady: () => onStage?.('query_inference'),
+      onStage,
+      onMetrics,
+    })
     const task = `${JSON.stringify({
       id,
       imageId: imagePath,
@@ -471,9 +475,12 @@ function runDinoChildOnce(
       dim,
       backend,
       batchSize: 1,
+      reportQueryStages: true,
     })}\n`
-    if (worker.ready) worker.child.stdin.write(task)
-    else worker.queuedTasks.push(task)
+    if (worker.ready) {
+      onStage?.('query_inference')
+      worker.child.stdin.write(task)
+    } else worker.queuedTasks.push(task)
   })
 }
 
@@ -495,18 +502,32 @@ function makeProgressEmitter(
   req: LayeredSearchRequest,
   cb?: LayeredProgressCallback,
   startedAt = Date.now(),
+  diagnostic?: ReturnType<typeof import('./searchDiagnostics').beginSearchDiagnostic>,
 ): (patch: Omit<LayeredSearchProgress, 'requestId' | 'mode'>) => void {
+  const metrics = createSearchProgressMetrics()
+  let activeStage = ''
+  let stageStartedAt = startedAt
   return (patch) => {
-    cb?.(
-      applyLayeredMetrics(
-        {
-          requestId: req.requestId,
-          mode: req.mode,
-          ...patch,
-        },
-        startedAt,
-      ),
-    )
+    const stage = patch.workStage || patch.phase
+    if (stage !== activeStage) {
+      const at = Date.now()
+      if (activeStage)
+        diagnostic?.event('search-stage-end', {
+          stage: activeStage,
+          durationMs: at - stageStartedAt,
+        })
+      activeStage = stage
+      stageStartedAt = at
+      if (stage !== 'done' && stage !== 'error') diagnostic?.event('search-stage-start', { stage })
+    }
+    cb?.({
+      requestId: req.requestId,
+      mode: req.mode,
+      ...patch,
+      ...metrics(patch),
+      startedAt,
+      elapsedMs: Math.max(0, Date.now() - startedAt),
+    })
   }
 }
 
@@ -519,7 +540,7 @@ export async function searchLayered(
   let timedOut = false
   const isCancelled = () => timedOut || searchSequence !== layeredSearchSequence
   const t0 = Date.now()
-  const emitProgress = makeProgressEmitter(req, onProgress, t0)
+  const emitProgress = makeProgressEmitter(req, onProgress, t0, diagnostic)
   emitProgress({ phase: 'preparing', scanned: 0, percent: 0, message: 'Preparing image search...' })
   const modelStatus = getModelStatus('dinov2_vitb14')
   const degradationReasons: string[] = []
@@ -568,6 +589,13 @@ export async function searchLayered(
     if (modelStatus.state === 'downloaded' || modelStatus.state === 'loaded') {
       const tVec = Date.now()
       try {
+        diagnostic?.event('query-runtime', {
+          workerReused: Boolean(
+            dinoQueryWorker?.ready &&
+            dinoQueryWorker.key === `${req.backend || 'cpu'}:${modelStatus.installedPath || ''}`,
+          ),
+          backend: req.backend || 'cpu',
+        })
         emitProgress({
           phase: 'vector_embedding',
           scanned: 0,
@@ -579,6 +607,15 @@ export async function searchLayered(
           modelStatus,
           req.backend || 'cpu',
           isCancelled,
+          (workStage) =>
+            emitProgress({
+              phase: 'vector_embedding',
+              workStage,
+              scanned: 0,
+              percent: 30,
+              message: SEARCH_STAGE_LABELS[workStage],
+            }),
+          (detail) => diagnostic?.event('query-inference-timings', detail),
         )
         diagnostic?.event('query-vector', {
           dim: queryVector.length,
@@ -614,11 +651,14 @@ export async function searchLayered(
             emitProgress({
               phase: 'vector_search',
               scanned: progress.scanned,
-              total: progress.totalBytes,
+              total: progress.total,
+              unit: progress.unit,
+              workStage: progress.workStage,
               percent: 40 + Math.round(inner * 0.35),
-              message: `Vector search: ${inner}%`,
+              message: SEARCH_STAGE_LABELS[progress.workStage],
             })
           },
+          (name, detail) => diagnostic?.event(name, detail),
         )
         vectorResults = await waitForVectorSearch(vectorPromise, req.timeoutMs, () => {
           timedOut = true

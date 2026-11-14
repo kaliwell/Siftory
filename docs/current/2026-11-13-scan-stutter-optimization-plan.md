@@ -1,6 +1,8 @@
 # 真实素材扫描卡顿：优化实施方案
 
-> 状态：源码优化与定向测试已实施，详见[对比报告](2026-11-13-scan-stutter-optimization-report.md)。以下预算与指标保留为设计目标；未宣称所有场景完成验收。
+> 状态：历史快照
+
+记录时状态：源码优化与定向测试已实施，详见[对比报告](2026-11-13-scan-stutter-optimization-report.md)。以下预算与指标保留为设计目标；未宣称所有场景完成验收。
 
 依据：[真实素材诊断](2026-11-13-real-alpha-bundle-stutter-diagnosis.md)。以 `deac80b` 的 Alpha27 源码为基线，保留 Electron、React、搜索算法、图片质量和现有索引格式。正在打开的 Alpha25 不作为优化后的验收对象。
 

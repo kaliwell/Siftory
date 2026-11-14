@@ -3,16 +3,16 @@
   "status": "open-source",
   "title": "Siftory Open Source License",
   "version": "Apache-2.0",
-  "publisher": "Siftory authors and contributors",
+  "publisher": "kaliwell",
   "effectiveDate": "2026-10-24",
   "documents": [
     {
       "path": "OPEN_SOURCE.md",
-      "sha256": "011c171ef54922df91c3d09ed7c0cf172316b3d04a4d72ea980945a1fd13d8f0"
+      "sha256": "f62ac9a315d082fc4eee40dd9d60fa391e153b6fc6c431a07484971601096015"
     },
     {
       "path": "LICENSE.txt",
-      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      "sha256": "3a482ad98c8614284c9e1251b41825b5a7f4da5497f8fdb1fb14cc4efc0ab54c"
     }
   ]
 }

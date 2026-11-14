@@ -415,6 +415,9 @@ const api = (prefix = ''): any => {
       key === 'then' ? undefined : api(prefix ? prefix + '.' + String(key) : String(key)),
     apply: (_, __, args) => {
       const name = prefix.split('.').at(-1)!
+      if (prefix === 'getPathForFile') {
+        return handlers[prefix] ? handlers[prefix](...args) : `C:/fixtures/${args[0]?.name || ''}`
+      }
       if (name.startsWith('on')) {
         if (typeof args[0] !== 'function') return () => {}
         const listeners = bridgeListeners.get(prefix) ?? new Set()
