@@ -113,7 +113,7 @@ jobs:
           Copy-Item resources/runtime-manifest.json artifacts/online-installer/runtime-manifest.json
           Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
           Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
-          Copy-Item docs/current/2026-11-14-alpha31-error-diagnostics.md artifacts/online-installer/RELEASE_NOTES.md
+          Copy-Item docs/current/2026-11-14-alpha32-psd-composite-preview.md artifacts/online-installer/RELEASE_NOTES.md
           @{ startupPassed = $true; archivePassed = $true; fullUiOutcome = '${{ steps.full_ui.outcome }}'; upgradeVerified = $false } | ConvertTo-Json | Set-Content artifacts/online-installer/validation-status.json
       - uses: actions/upload-artifact@v4
         with:

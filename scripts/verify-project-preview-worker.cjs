@@ -86,6 +86,29 @@ async function main() {
     })
     assert.ok(image.width > 0 && image.width === image.height)
     assert.ok(image.data.length > 0)
+    const psdPath = path.resolve(outDir, 'grayscale-16.psd')
+    const psdHeader = Buffer.alloc(26)
+    psdHeader.write('8BPS')
+    psdHeader.writeUInt16BE(1, 4)
+    psdHeader.writeUInt16BE(1, 12)
+    psdHeader.writeUInt32BE(1, 14)
+    psdHeader.writeUInt32BE(3, 18)
+    psdHeader.writeUInt16BE(16, 22)
+    psdHeader.writeUInt16BE(1, 24)
+    fs.writeFileSync(
+      psdPath,
+      Buffer.concat([psdHeader, Buffer.alloc(14), Buffer.from('00008000ffff', 'hex')]),
+    )
+    const psd = await ask({
+      kind: 'extractImage',
+      providerId: 'psd-composite-raster',
+      sourcePath: psdPath,
+      sourceExt: 'psd',
+    })
+    assert.equal(psd?.width, 3)
+    assert.equal(psd?.height, 1)
+    const psdPixels = await require('sharp')(Buffer.from(psd.data)).removeAlpha().raw().toBuffer()
+    assert.ok(psdPixels[0] < 5 && psdPixels[3] > 120 && psdPixels[6] > 250)
     const { makePdf } = require('../tests/fixtures/project-preview-assets.cjs')
     const pdfPath = path.resolve(outDir, 'synthetic.pdf')
     fs.writeFileSync(pdfPath, makePdf())

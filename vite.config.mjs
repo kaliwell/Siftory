@@ -307,6 +307,7 @@ export default defineConfig({
                 external: [
                   ...builtinModules,
                   ...builtinModules.map((name) => `node:${name}`),
+                  'sharp',
                   '@napi-rs/canvas',
                   'pdfjs-dist/legacy/build/pdf.mjs',
                   'electron',

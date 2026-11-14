@@ -102,6 +102,41 @@ async function main() {
           entry.status === 'ready',
       ),
     )
+    // Exercise both high-depth composite paths in the actual packaged Worker.
+    for (const depth of [16, 32]) {
+      const psdSource = path.join(userData, `packaged-composite-${depth}.psd`)
+      const header = Buffer.alloc(26)
+      header.write('8BPS')
+      header.writeUInt16BE(1, 4)
+      header.writeUInt16BE(1, 12)
+      header.writeUInt32BE(1, 14)
+      header.writeUInt32BE(3, 18)
+      header.writeUInt16BE(depth, 22)
+      header.writeUInt16BE(1, 24)
+      const method = Buffer.alloc(2)
+      method.writeUInt16BE(depth === 32 ? 2 : 0)
+      const pixels =
+        depth === 32
+          ? require('node:zlib').deflateSync(Buffer.from('000000003f0000003f800000', 'hex'))
+          : Buffer.from('00008000ffff', 'hex')
+      fs.writeFileSync(psdSource, Buffer.concat([header, Buffer.alloc(12), method, pixels]))
+      const psdPreview = await page.evaluate(
+        (filePath) => window.electronAPI.fmGetThumbnail(filePath, 256),
+        psdSource,
+      )
+      assert.ok(psdPreview?.dataUrl, `Packaged ${depth}-bit PSD must produce a preview`)
+      const manifest = JSON.parse(
+        fs.readFileSync(path.join(userData, 'project-previews/v1/manifest.json'), 'utf8'),
+      )
+      assert.ok(
+        manifest.entries.some(
+          (entry) =>
+            entry.sourcePath === psdSource &&
+            entry.provider === 'psd-composite-raster' &&
+            entry.status === 'ready',
+        ),
+      )
+    }
     // Exercise the actual packaged controls, IPC, disk store and export endpoint.
     await page.getByTestId('workspace-domain-sources').click()
     const diagnostics = page.getByTestId('performance-diagnostics')
@@ -270,6 +305,7 @@ async function main() {
           nativeAddonLoaded: true,
           projectPreviewWorkerPassed: true,
           projectPreviewPdfChildPassed: true,
+          psdCompositePreviewPassed: true,
           performanceDiagnosticsPassed: true,
           performanceExportPassed: true,
           shellPreviewIsolationPassed: true,

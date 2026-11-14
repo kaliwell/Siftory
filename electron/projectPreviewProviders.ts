@@ -1,6 +1,7 @@
 import fsp from 'fs/promises'
 import zlib from 'zlib'
 import { createCanvas } from '@napi-rs/canvas'
+import { extractPsdCompositePreview } from './psdCompositePreview.cjs'
 import type { ProjectSourceExt } from '../shared/projectFileTypes'
 
 const PSD_MAX_RESOURCE_BYTES = 32 * 1024 * 1024
@@ -287,6 +288,12 @@ export const BUILTIN_PROJECT_PREVIEW_PROVIDERS: readonly ProjectPreviewProvider[
     version: '1',
     extensions: ['psd', 'psb'],
     extract: extractPsdEmbeddedPreview,
+  },
+  {
+    id: 'psd-composite-raster',
+    version: '1',
+    extensions: ['psd', 'psb'],
+    extract: extractPsdCompositePreview,
   },
   {
     id: 'kra-merged-png',

@@ -62,7 +62,7 @@ function resolveModule(spec, fromFile) {
   ]
   for (const candidate of candidates) {
     if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-      return /\.(tsx?|d\.ts)$/.test(candidate) ? candidate : 'asset'
+      return /\.(tsx?|[cm]?js)$/.test(candidate) ? candidate : 'asset'
     }
   }
   return 'unresolved'
@@ -175,7 +175,8 @@ const entries = [
       'electron',
       fs.existsSync(path.join(root, 'electron/mainBootstrap.ts')) ? 'mainBootstrap.ts' : 'main.ts',
     ),
-    budget: 339,
+    // One bounded merged-PSD decoder; no new packages or application services.
+    budget: 340,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
@@ -221,7 +222,7 @@ entries.push({
   name: 'worker:projectPreviewProviders',
   role: 'worker',
   file: path.join(root, 'electron', 'projectPreviewProviders.ts'),
-  budget: 3,
+  budget: 4,
 })
 const violations = []
 const counts = []

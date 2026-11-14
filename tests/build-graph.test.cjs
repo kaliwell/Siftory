@@ -86,6 +86,14 @@ for (const [name, overrides, diagnostic] of [
     /terms-preload reaches electron\/modelService.ts/,
   ],
   [
+    'CJS helpers cannot hide service imports from standalone workers',
+    {
+      'electron/exampleWorker.ts': "import './helper.cjs'",
+      'electron/helper.cjs': "require('./endUserTermsPreload.ts')",
+    },
+    /worker:exampleWorker reaches electron\/endUserTermsPreload.ts/,
+  ],
+  [
     'terms preload cannot reach a service through shared require',
     {
       'shared/contract.ts': "require('../electron/modelService')",
