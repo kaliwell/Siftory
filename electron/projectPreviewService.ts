@@ -1,3 +1,4 @@
+import { runShellPreviewCompute } from './projectPreviewShellRuntime'
 import type { ScanResponsiveness } from './scanResponsiveness'
 import crypto from 'crypto'
 import fsp from 'fs/promises'
@@ -142,6 +143,19 @@ export class ProjectPreviewService {
       try {
         if (
           this.offloadProviders &&
+          provider.id === 'windows-shell-thumbnail' &&
+          BUILTIN_PROJECT_PREVIEW_PROVIDERS.includes(provider)
+        ) {
+          previewBytes = await measure(`provider:${provider.id}`, () =>
+            runShellPreviewCompute(sourcePath, {
+              isCancelled: options.isCancelled,
+              onMetrics: options.diagnostics
+                ? (metrics) => options.diagnostics!.event('shell-preview', metrics)
+                : undefined,
+            }),
+          )
+        } else if (
+          this.offloadProviders &&
           BUILTIN_PROJECT_PREVIEW_PROVIDERS.includes(provider) &&
           provider.id !== 'windows-shell-thumbnail'
         ) {
@@ -163,7 +177,7 @@ export class ProjectPreviewService {
       } catch (error) {
         checkCancelled()
         const code = (error as { code?: string }).code
-        if (code?.startsWith('PDF_PREVIEW_')) {
+        if (code?.startsWith('PDF_PREVIEW_') || code?.startsWith('SHELL_PREVIEW_')) {
           console.warn('[ProjectPreview]', provider.id, code)
           return this.recordFailure(
             { ...common, provider: 'provider-chain', providerVersion: chainVersion },

@@ -1,3 +1,4 @@
+import { stopShellPreviewCompute } from './projectPreviewShellRuntime'
 import { performanceSession, captureLinkedPreviewWindow } from './performanceDiagnostics'
 import { ScanResponsiveness } from './scanResponsiveness'
 import { getSearchDiagnostics } from './searchDiagnostics'
@@ -1108,7 +1109,7 @@ export function shutdownImageSearchForQuit(): Promise<void> {
     } catch (error) {
       console.warn('[ImageSearch] stopImageSearchScan during shutdown failed:', error)
     }
-    await stopPdfPreviewCompute()
+    await Promise.all([stopPdfPreviewCompute(), stopShellPreviewCompute()])
     if (autosavePromise) {
       await autosavePromise.catch(() => undefined)
     }

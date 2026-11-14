@@ -55,6 +55,8 @@ function testsFor(files) {
         'tests/scan-responsiveness-renderer.test.cjs',
         'tests/performance-diagnostics.test.cjs',
         'tests/project-preview-pdf-runtime.test.cjs',
+        'tests/project-preview-shell-runtime.test.cjs',
+        'tests/project-preview-shell-extract.test.cjs',
       ],
     ],
     [

@@ -45,7 +45,7 @@ function withSecureElectronStartup(entries) {
         ...(entry.vite?.plugins || []),
         bundleProvenance({
           rootDir: __dirname,
-          buildId: `electron-${basename(entry.entry, '.ts')}`,
+          buildId: `electron-${entry.entry === 'electron/mainBootstrap.ts' ? 'main' : basename(entry.entry, '.ts')}`,
         }),
       ],
     },
@@ -108,7 +108,7 @@ export default defineConfig({
     electron(
       withSecureElectronStartup([
         {
-          entry: 'electron/main.ts',
+          entry: 'electron/mainBootstrap.ts',
           vite: {
             build: {
               outDir: 'dist-electron',
@@ -117,6 +117,7 @@ export default defineConfig({
               // preload.js and the worker bundles after they were written.
               emptyOutDir: false,
               rollupOptions: {
+                output: { entryFileNames: 'main.js' },
                 external: [
                   'electron',
                   'ssh2',

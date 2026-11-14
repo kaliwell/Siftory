@@ -115,6 +115,10 @@ export class ScanResponsiveness {
     }
   }
 
+  event(name: string, detail: unknown): void {
+    if (!this.closed) this.write(name, { source: this.context, detail })
+  }
+
   checkpoint(): void {
     if (!this.closed) this.flush()
   }

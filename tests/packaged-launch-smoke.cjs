@@ -108,6 +108,12 @@ async function main() {
     await diagnostics.locator('summary').click()
     await diagnostics.getByRole('button', { name: /Start recording|开始记录/, exact: true }).click()
     await diagnostics.getByRole('button', { name: /Mark stutter|标记卡顿/, exact: true }).click()
+    const shellSource = path.join(userData, 'packaged-shell-fallback.psd')
+    // A JPEG named .psd has no PSD embedded resource: it must take Shell fallback.
+    const readyPreview = previewManifest.entries.find((entry) => entry.sourcePath === previewSource)
+    fs.copyFileSync(readyPreview.previewPath, shellSource)
+    await page.evaluate((source) => window.electronAPI.fmGetThumbnail(source, 256), shellSource)
+
     await page.evaluate(() => {
       setTimeout(() => {
         const until = performance.now() + 220
@@ -164,6 +170,16 @@ async function main() {
     assert.ok(performanceReport.summary.longTaskMaxMs >= 200)
     assert.ok(performanceReport.summary.markers >= 1)
     assert.ok(performanceReport.records.some((r) => r.event === 'process-resources'))
+    const shellResult = performanceReport.records.find((r) => r.event === 'shell-preview')?.detail
+      ?.detail
+    assert.ok(
+      shellResult?.childPid && shellResult.childPid !== application.process().pid,
+      'Packaged Shell fallback must run in a separate process',
+    )
+    assert.equal(shellResult.errorCode, undefined, 'Packaged helper must complete its IPC protocol')
+    assert.ok(Number.isFinite(shellResult.durations.stat))
+    assert.ok(Number.isFinite(shellResult.durations.thumbnail))
+
     await application.evaluate(({ dialog }) => {
       dialog.showSaveDialog = global.__siftorySavePicker
       delete global.__siftorySavePicker
@@ -186,6 +202,7 @@ async function main() {
           projectPreviewPdfChildPassed: true,
           performanceDiagnosticsPassed: true,
           performanceExportPassed: true,
+          shellPreviewIsolationPassed: true,
           pageErrors,
           scope:
             'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',

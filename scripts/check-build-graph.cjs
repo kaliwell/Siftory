@@ -164,7 +164,18 @@ const entries = [
   // PDF isolation adds two dependency-free boundaries: the supervised child
   // runtime and shared worker-path resolution. No renderer/preload imports or
   // external packages are added; retain the other entry and byte budgets.
-  { name: 'main', role: 'main', file: path.join(root, 'electron', 'main.ts'), budget: 329 },
+  // Manual diagnostics and the isolated Shell bootstrap add bounded nodes;
+  // the bootstrap is the actual entry and the Shell child never reaches app services.
+  {
+    name: 'main',
+    role: 'main',
+    file: path.join(
+      root,
+      'electron',
+      fs.existsSync(path.join(root, 'electron/mainBootstrap.ts')) ? 'mainBootstrap.ts' : 'main.ts',
+    ),
+    budget: 337,
+  },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },
   // These are loaded through BrowserWindow paths / terms.html, not imports
@@ -209,7 +220,7 @@ entries.push({
   name: 'worker:projectPreviewProviders',
   role: 'worker',
   file: path.join(root, 'electron', 'projectPreviewProviders.ts'),
-  budget: 2,
+  budget: 3,
 })
 const violations = []
 const counts = []
@@ -247,7 +258,10 @@ for (const entry of entries) {
     }
     if (
       entry.role === 'worker' &&
-      (r === 'electron/main.ts' || preloadFiles.has(r) || r.startsWith('src/'))
+      (r === 'electron/main.ts' ||
+        r === 'electron/mainBootstrap.ts' ||
+        preloadFiles.has(r) ||
+        r.startsWith('src/'))
     ) {
       violations.push(`${entry.name} reaches ${r}`)
     }

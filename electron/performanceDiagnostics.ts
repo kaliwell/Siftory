@@ -1,3 +1,4 @@
+import { setShellPreviewDiagnosticSink } from './projectPreviewShellRuntime'
 import { app } from 'electron'
 import os from 'node:os'
 import path from 'node:path'
@@ -48,6 +49,10 @@ export const performanceSession = new PerformanceDiagnosticSession(
     logicalCpus: os.availableParallelism(),
     systemMemoryBytes: os.totalmem(),
   }),
+)
+
+setShellPreviewDiagnosticSink((metrics) =>
+  performanceSession.recorder?.event('shell-preview', metrics),
 )
 
 export function performanceDiagnosticStatus() {

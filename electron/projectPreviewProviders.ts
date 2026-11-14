@@ -12,12 +12,6 @@ const PDF_MAX_SOURCE_BYTES = 256 * 1024 * 1024
 const PDF_MAX_DIMENSION = 2048
 const PDF_MAX_CANVAS_PIXELS = 16_000_000
 const TIFF_MAX_SOURCE_BYTES = 300 * 1024 * 1024
-const SHELL_MAX_SOURCE_BYTES = 4 * 1024 * 1024 * 1024
-const SHELL_THUMBNAIL_DIMENSION = 1024
-const SHELL_THUMBNAIL_TIMEOUT_MS = 15_000
-const SHELL_ICON_COMPARE_DIMENSION = 64
-const SHELL_ICON_SIMILARITY_THRESHOLD = 0.035
-
 const UNSAFE_SVG_MARKUP =
   /<!doctype|<!entity|<script\b|<foreignObject\b|\son[a-z]+\s*=|(?:href|src)\s*=\s*["']\s*(?:https?:|file:|ftp:|data:|\\\\|\/\/)/i
 
@@ -26,23 +20,6 @@ export interface ProjectPreviewProvider {
   version: string
   extensions: readonly ProjectSourceExt[]
   extract(sourcePath: string): Promise<Buffer | null>
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), timeoutMs)
-    timer.unref?.()
-    promise.then(
-      (value) => {
-        clearTimeout(timer)
-        resolve(value)
-      },
-      () => {
-        clearTimeout(timer)
-        resolve(null)
-      },
-    )
-  })
 }
 
 async function readRange(
@@ -229,50 +206,12 @@ export function projectPreviewBitmapDifference(left: Buffer, right: Buffer): num
   return difference / (left.length * 255)
 }
 
+// Keep this providers module loadable directly by Node's source Worker loader.
+// The Shell supervisor is loaded only by a caller requesting the Shell fallback.
 export async function extractWindowsShellThumbnail(sourcePath: string): Promise<Buffer | null> {
   if (process.platform !== 'win32') return null
-  try {
-    const stat = await fsp.stat(sourcePath)
-    if (!stat.isFile() || stat.size <= 0 || stat.size > SHELL_MAX_SOURCE_BYTES) return null
-    const electron = await import('electron')
-    if (
-      !electron.app?.isReady() ||
-      typeof electron.nativeImage?.createThumbnailFromPath !== 'function'
-    ) {
-      return null
-    }
-    const thumbnail = await withTimeout(
-      electron.nativeImage.createThumbnailFromPath(sourcePath, {
-        width: SHELL_THUMBNAIL_DIMENSION,
-        height: SHELL_THUMBNAIL_DIMENSION,
-      }),
-      SHELL_THUMBNAIL_TIMEOUT_MS,
-    )
-    if (!thumbnail || thumbnail.isEmpty()) return null
-
-    const fileIcon = await withTimeout(
-      electron.app.getFileIcon(sourcePath, { size: 'large' }),
-      SHELL_THUMBNAIL_TIMEOUT_MS,
-    )
-    if (fileIcon && !fileIcon.isEmpty()) {
-      const comparisonSize = {
-        width: SHELL_ICON_COMPARE_DIMENSION,
-        height: SHELL_ICON_COMPARE_DIMENSION,
-      }
-      const thumbnailBitmap = thumbnail.resize(comparisonSize).toBitmap()
-      const iconBitmap = fileIcon.resize(comparisonSize).toBitmap()
-      if (
-        projectPreviewBitmapDifference(Buffer.from(thumbnailBitmap), Buffer.from(iconBitmap)) <=
-        SHELL_ICON_SIMILARITY_THRESHOLD
-      ) {
-        return null
-      }
-    }
-    const png = thumbnail.toPNG()
-    return png.length > 0 ? Buffer.from(png) : null
-  } catch {
-    return null
-  }
+  const { runShellPreviewCompute } = await import('./projectPreviewShellRuntime')
+  return runShellPreviewCompute(sourcePath)
 }
 
 export async function extractPdfFirstPage(

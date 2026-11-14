@@ -83,6 +83,8 @@ jobs:
       - run: node scripts/generate-third-party-components.cjs
       - run: npm run licenses:gate
       - run: npm run build:online
+      - name: Verify real Windows Shell helper and content pixels
+        run: npm run test:project-preview:shell:electron
       - run: npm run smoke:packaged:resources -- --profile=online
       - run: npm run smoke:installer:archive -- --profile=online
       - name: Verify packaged preview worker resources
@@ -111,7 +113,7 @@ jobs:
           Copy-Item resources/runtime-manifest.json artifacts/online-installer/runtime-manifest.json
           Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
           Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
-          Copy-Item docs/current/2026-11-14-alpha29-release.md artifacts/online-installer/RELEASE_NOTES.md
+          Copy-Item docs/current/2026-11-14-alpha30-shell-isolation.md artifacts/online-installer/RELEASE_NOTES.md
           @{ startupPassed = $true; archivePassed = $true; fullUiOutcome = '${{ steps.full_ui.outcome }}'; upgradeVerified = $false } | ConvertTo-Json | Set-Content artifacts/online-installer/validation-status.json
       - uses: actions/upload-artifact@v4
         with:
