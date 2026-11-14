@@ -1,8 +1,66 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const { fork } = require('node:child_process')
+const fs = require('node:fs')
+const vm = require('node:vm')
+const ts = require('typescript')
 const { loadTsModule } = require('./guard-utils.cjs')
 const { ShellPreviewRuntime } = loadTsModule('electron/projectPreviewShellRuntime.ts')
+
+test('production launcher uses spawn with IPC and strips forced Node mode', async () => {
+  const spawns = []
+  const context = {
+    exports: {},
+    Buffer,
+    performance,
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
+    process: {
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      execPath: process.execPath,
+      platform: process.platform,
+      once: () => {},
+    },
+    require: (name) => {
+      if (name === 'electron')
+        return { app: { getAppPath: () => require.resolve('./fixtures/shell-preview-child.cjs') } }
+      if (name === 'node:child_process')
+        return {
+          fork: () => {
+            throw Error('Electron fork forces Node mode')
+          },
+          spawn: (executable, args, options) => {
+            spawns.push(options)
+            return require('node:child_process').spawn(executable, args, options)
+          },
+        }
+      return require(name)
+    },
+  }
+  vm.runInNewContext(
+    ts.transpileModule(fs.readFileSync('electron/projectPreviewShellRuntime.ts', 'utf8'), {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        esModuleInterop: true,
+      },
+    }).outputText,
+    context,
+  )
+  const runtime = new context.exports.ShellPreviewRuntime()
+  try {
+    assert.equal((await runtime.run('normal')).toString(), 'unchanged-thumbnail')
+    assert.equal(spawns.length, 1)
+    assert.equal(spawns[0].env.ELECTRON_RUN_AS_NODE, undefined)
+    assert.ok(spawns[0].stdio.includes('ipc'))
+    assert.ok(fs.existsSync(spawns[0].env.SIFTORY_SHELL_PREVIEW_PROFILE))
+  } finally {
+    await runtime.stop()
+  }
+  assert.equal(fs.existsSync(spawns[0].env.SIFTORY_SHELL_PREVIEW_PROFILE), false)
+})
 
 function fixture(t) {
   const f = { launches: 0, cleaned: 0 }

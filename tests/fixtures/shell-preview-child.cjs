@@ -1,4 +1,4 @@
-const nonce = process.argv[2]
+const nonce = process.env.SIFTORY_SHELL_PREVIEW_NONCE || process.argv[2]
 process.on('message', (request) => {
   process.send({ kind: 'step', nonce, requestId: request.requestId, name: 'thumbnail' })
   if (request.source === 'crash') process.exit(2)

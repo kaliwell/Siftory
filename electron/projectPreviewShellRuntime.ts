@@ -1,4 +1,4 @@
-import { fork, type ChildProcess } from 'node:child_process'
+import { spawn, type ChildProcess } from 'node:child_process'
 import crypto from 'node:crypto'
 import fsp from 'node:fs/promises'
 import os from 'node:os'
@@ -41,9 +41,9 @@ async function launchShellChild(nonce: string): Promise<OwnedChild> {
   }
   delete env.ELECTRON_RUN_AS_NODE
   try {
-    const child = fork(app.getAppPath(), [`--siftory-shell-preview=${nonce}`], {
-      execPath: process.execPath,
-      execArgv: [],
+    // Electron patches fork() to force ELECTRON_RUN_AS_NODE=1. Shell APIs
+    // require a real Electron browser process, so use spawn with an IPC fd.
+    const child = spawn(process.execPath, [app.getAppPath(), `--siftory-shell-preview=${nonce}`], {
       env,
       serialization: 'advanced',
       stdio: ['ignore', 'ignore', 'ignore', 'ipc'],

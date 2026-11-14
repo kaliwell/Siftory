@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
-const { fork } = require('node:child_process')
+const { spawn } = require('node:child_process')
 const sharp = require('sharp')
 const { loadTsModule } = require('./guard-utils.cjs')
 const { ShellPreviewRuntime } = loadTsModule('electron/projectPreviewShellRuntime.ts')
@@ -20,14 +20,16 @@ async function main() {
       SIFTORY_SHELL_PREVIEW_PROFILE: profile,
     }
     delete env.ELECTRON_RUN_AS_NODE
-    const child = fork(path.resolve(__dirname, '..'), [`--siftory-shell-preview=${nonce}`], {
-      execPath: require('electron'),
-      execArgv: [],
-      env,
-      serialization: 'advanced',
-      windowsHide: true,
-      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
-    })
+    const child = spawn(
+      require('electron'),
+      [path.resolve(__dirname, '..'), `--siftory-shell-preview=${nonce}`],
+      {
+        env,
+        serialization: 'advanced',
+        windowsHide: true,
+        stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+      },
+    )
     child.stderr.on('data', (bytes) => {
       helperLog = (helperLog + bytes.toString()).slice(-16000)
     })
