@@ -1,3 +1,4 @@
+import ScanErrorDiagnosticsControls from './ScanErrorDiagnosticsControls'
 import PerformanceDiagnosticsControls from './PerformanceDiagnosticsControls'
 import { useScanResponsiveness } from '../hooks/useScanResponsiveness'
 import WorkspacePreparationLink from './WorkspacePreparationLink'
@@ -1259,6 +1260,7 @@ const ImageSearchPanel: React.FC = () => {
             onDrop={sourcesOnly ? undefined : handleDrop}
           >
             <ImageSearchToastBanner toast={toast} />
+            <ScanErrorDiagnosticsControls />
             <PerformanceDiagnosticsControls />
             <SearchDiagnosticsControls traceId={sourcesOnly ? undefined : diagnosticId} />
             {searchWarning && (
@@ -1396,7 +1398,9 @@ const ImageSearchPanel: React.FC = () => {
                   />
                 }
               >
-                {experienceMode === 'simple' && (
+                {(experienceMode === 'simple' ||
+                  setupWorkflow.state === 'error' ||
+                  (setupWorkflow.state === 'idle' && embeddingProgress?.state === 'error')) && (
                   <SearchSetupProgress
                     workflow={setupWorkflow}
                     embeddingProgress={embeddingProgress}

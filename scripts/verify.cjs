@@ -47,13 +47,14 @@ function testsFor(files) {
   const tests = new Set()
   const rules = [
     [
-      /projectPreview|projectSearchIndex|scanResponsiveness|useScanResponsiveness|performanceDiagnostic|PerformanceDiagnostics/,
+      /projectPreview|projectSearchIndex|scanResponsiveness|useScanResponsiveness|performanceDiagnostic|PerformanceDiagnostics|scanError|ScanError/,
       [
         'tests/project-preview.test.cjs',
         'tests/project-preview-performance.test.cjs',
         'tests/scan-responsiveness.test.cjs',
         'tests/scan-responsiveness-renderer.test.cjs',
         'tests/performance-diagnostics.test.cjs',
+        'tests/scan-error-log.test.cjs',
         'tests/project-preview-pdf-runtime.test.cjs',
         'tests/project-preview-shell-runtime.test.cjs',
         'tests/project-preview-shell-extract.test.cjs',

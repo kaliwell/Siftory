@@ -1,3 +1,5 @@
+import { initializeScanErrorDiagnostics, scanErrorSnapshot } from './scanErrorDiagnostics'
+import { scanErrorRecorder } from './scanErrorLog'
 import {
   performanceSession,
   performanceDiagnosticStatus,
@@ -227,6 +229,43 @@ export function registerImageSearchIpc(
     stopImageLibraryPreparation(typeof taskId === 'string' ? taskId : undefined),
   )
 
+  initializeScanErrorDiagnostics()
+  secureIpcMain.handle(
+    'imageSearch:scanErrorDiagnostics',
+    async (_event, action: unknown, includePaths: unknown = false) => {
+      if (
+        typeof action !== 'string' ||
+        !['status', 'export'].includes(action) ||
+        typeof includePaths !== 'boolean'
+      )
+        return { ok: false }
+      const store = initializeScanErrorDiagnostics()
+      if (action === 'export') {
+        const window = getMainWindow()
+        if (!window || window.isDestroyed()) return { ok: false }
+        const target = await dialog.showSaveDialog(window, {
+          defaultPath: `Siftory-errors-${Date.now()}.json`,
+          filters: [{ name: 'JSON', extensions: ['json'] }],
+        })
+        if (target.canceled || !target.filePath) return { ok: false, cancelled: true }
+        try {
+          await fs.promises.writeFile(
+            target.filePath,
+            JSON.stringify(await scanErrorSnapshot(includePaths), null, 2),
+            { mode: 0o600 },
+          )
+        } catch {
+          return { ok: false, error: 'Diagnostic operation failed' }
+        }
+      }
+      return {
+        ok: true,
+        capturedThisSession: scanErrorRecorder.status().capturedThisSession,
+        dropped: store.dropped,
+        error: store.error,
+      }
+    },
+  )
   secureIpcMain.handle('imageSearch:reportScanResponsiveness', (_event, metrics: unknown) =>
     reportScanResponsiveness(metrics),
   )

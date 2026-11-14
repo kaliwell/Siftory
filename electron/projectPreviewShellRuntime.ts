@@ -19,6 +19,9 @@ export interface ShellPreviewMetrics {
   errorCode?: string
   activeStep?: string
   activeStepMs?: number
+  failureCode?: string
+  reason?: string
+  sourceInfo?: Record<string, string | number>
 }
 export interface ShellPreviewOptions {
   isCancelled?: () => boolean
@@ -29,6 +32,9 @@ const failure = (code: string) => Object.assign(new Error(code), { code })
 let diagnosticSink: ((metrics: ShellPreviewMetrics) => void) | undefined
 export function setShellPreviewDiagnosticSink(sink: (metrics: ShellPreviewMetrics) => void): void {
   diagnosticSink = sink
+}
+export function reportShellPreviewDiagnostic(metrics: ShellPreviewMetrics): void {
+  diagnosticSink?.(metrics)
 }
 
 async function launchShellChild(nonce: string): Promise<OwnedChild> {
@@ -208,6 +214,9 @@ export class ShellPreviewRuntime {
             durations?: Record<string, unknown>
             outcome?: string
             name?: string
+            failureCode?: string
+            reason?: string
+            sourceInfo?: Record<string, unknown>
           }
           if (m?.nonce !== nonce) return
           if (
@@ -237,6 +246,27 @@ export class ShellPreviewRuntime {
           )
             ? m.outcome!
             : 'error'
+          if (typeof m.failureCode === 'string' && /^[A-Z0-9_]{1,80}$/.test(m.failureCode))
+            metrics.failureCode = m.failureCode
+          if (typeof m.reason === 'string') metrics.reason = m.reason.slice(0, 512)
+          metrics.sourceInfo = {}
+          for (const key of [
+            'sizeBytes',
+            'version',
+            'channels',
+            'height',
+            'width',
+            'depth',
+            'colorMode',
+          ]) {
+            const value = m.sourceInfo?.[key]
+            if (typeof value === 'number' && Number.isFinite(value) && value >= 0)
+              metrics.sourceInfo[key] = value
+          }
+          if (
+            ['PSD', 'not-psd-header', 'header-unavailable'].includes(String(m.sourceInfo?.format))
+          )
+            metrics.sourceInfo.format = String(m.sourceInfo!.format)
           for (const name of ['stat', 'thumbnail', 'icon', 'compare', 'encode']) {
             const value = m.durations?.[name]
             if (typeof value === 'number' && Number.isFinite(value) && value >= 0)

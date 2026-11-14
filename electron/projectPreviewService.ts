@@ -1,4 +1,5 @@
-import { runShellPreviewCompute } from './projectPreviewShellRuntime'
+import { scanErrorRecorder } from './scanErrorLog'
+import { runShellPreviewCompute, reportShellPreviewDiagnostic } from './projectPreviewShellRuntime'
 import type { ScanResponsiveness } from './scanResponsiveness'
 import crypto from 'crypto'
 import fsp from 'fs/promises'
@@ -149,9 +150,29 @@ export class ProjectPreviewService {
           previewBytes = await measure(`provider:${provider.id}`, () =>
             runShellPreviewCompute(sourcePath, {
               isCancelled: options.isCancelled,
-              onMetrics: options.diagnostics
-                ? (metrics) => options.diagnostics!.event('shell-preview', metrics)
-                : undefined,
+              onMetrics: (metrics) => {
+                if (options.diagnostics) options.diagnostics.event('shell-preview', metrics)
+                else reportShellPreviewDiagnostic(metrics)
+                if (metrics.outcome !== 'ready')
+                  scanErrorRecorder.record(
+                    'windows-shell',
+                    metrics.errorCode ??
+                      metrics.failureCode ??
+                      (metrics.outcome === 'source-limit'
+                        ? 'SHELL_SOURCE_LIMIT'
+                        : metrics.outcome === 'icon-only'
+                          ? 'SHELL_ICON_ONLY'
+                          : 'SHELL_NO_PREVIEW'),
+                    sourcePath,
+                    metrics.reason,
+                    metrics.outcome === 'error' ? 'error' : 'warning',
+                    {
+                      step: metrics.activeStep,
+                      durationMs: metrics.durationMs,
+                      sourceInfo: metrics.sourceInfo,
+                    },
+                  )
+              },
             }),
           )
         } else if (
@@ -255,7 +276,8 @@ export class ProjectPreviewService {
       await this.manifest.upsert(entry)
       await this.removeReplacedPreview(previous, entry)
       return entry
-    } catch {
+    } catch (error) {
+      scanErrorRecorder.record('preview-output', 'PREVIEW_OUTPUT_FAILED', base.sourcePath, error)
       return null
     } finally {
       if (temporaryPath) await fsp.unlink(temporaryPath).catch(() => {})

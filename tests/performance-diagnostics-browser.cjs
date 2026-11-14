@@ -89,6 +89,47 @@ async function main() {
     const result = await page.evaluate(() => window.performanceTest)
     assert.ok(result.actions.includes('mark'))
     assert.ok(result.actions.indexOf('stop') < result.actions.indexOf('export'))
+    await page.evaluate(() => {
+      window.errorLogRequests = []
+      window.__workspaceTest.setHandler(
+        'imageSearch.scanErrorDiagnostics',
+        (action, includePaths) => {
+          window.errorLogRequests.push({ action, includePaths })
+          return { ok: true, capturedThisSession: 7 }
+        },
+      )
+    })
+    const errorPanel = page.getByTestId('scan-error-diagnostics')
+    await errorPanel.locator('summary').click()
+    await errorPanel
+      .getByRole('button', { name: /Export error logs|导出错误日志/, exact: true })
+      .click()
+    await errorPanel.getByRole('checkbox').check()
+    await errorPanel
+      .getByRole('button', { name: /Export error logs|导出错误日志/, exact: true })
+      .click()
+    const errorRequests = await page.evaluate(() =>
+      window.errorLogRequests.filter((r) => r.action === 'export'),
+    )
+    assert.deepEqual(
+      errorRequests.map((r) => r.includePaths),
+      [false, true],
+    )
+    await page.getByTestId('search-mode-advanced').click()
+    await page.evaluate(() =>
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'failed-test',
+        state: 'error',
+        phase: 'embedding-dino',
+        percentage: 30,
+        error: 'MODEL_RUNTIME_FAILURE_TEST',
+        scanComplete: true,
+      }),
+    )
+    const maintenance = page.getByTestId('image-search-maintenance-section')
+    const toggle = maintenance.locator('button').first()
+    if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+    await page.getByText('MODEL_RUNTIME_FAILURE_TEST', { exact: true }).first().waitFor()
     assert.deepEqual(errors, [])
     console.log(
       JSON.stringify({

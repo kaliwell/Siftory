@@ -233,6 +233,7 @@ export interface NativeAddon {
     error?: string
   }
   stopNativeThumbnailRebuild?(): { ok: boolean }
+  getScanFailures?(cursor: number, limit: number): import('./scanErrorLog').NativeFailurePage
   getScanProgress(): NativeScanProgress
   stopScan(): { ok: boolean; error?: string }
   stopScanAsync?(): Promise<{ ok: boolean; error?: string }>

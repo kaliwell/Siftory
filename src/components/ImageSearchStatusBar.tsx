@@ -77,7 +77,7 @@ const ImageSearchStatusBar: React.FC<ImageSearchStatusBarProps> = ({
             style={{ color: 'rgb(255,200,100)', opacity: 0.75 }}
             title={t('Files that could not be read or decoded')}
           >
-            {t('Unreadable')}: {status.skippedCount.toLocaleString()}
+            {t('Skipped files')}: {status.skippedCount.toLocaleString()}
           </span>
         )}
         {status.signatureRejectedCount != null && status.signatureRejectedCount > 0 && (

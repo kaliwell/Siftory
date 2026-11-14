@@ -19,6 +19,9 @@ export class SearchDiagnosticStore {
   private observations = new Set<Promise<unknown>>()
   dropped = 0
   error?: string
+  get pendingRecords(): number {
+    return this.queued
+  }
 
   constructor(
     private directory: string,

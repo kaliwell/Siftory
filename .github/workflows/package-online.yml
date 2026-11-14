@@ -35,7 +35,7 @@ jobs:
           if ([IO.Path]::GetPathRoot($env:TEMP) -ne [IO.Path]::GetPathRoot($env:GITHUB_WORKSPACE)) { throw 'Native fixture temp must share the workspace drive' }
           npm run build:native
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --test tests/native-incremental-index.test.cjs tests/native-exact-bulk-delete.test.cjs tests/native-scan.test.cjs tests/native-search-correctness.test.cjs tests/native-segment-v3.test.cjs
+          node --test tests/native-incremental-index.test.cjs tests/native-exact-bulk-delete.test.cjs tests/native-scan.test.cjs tests/native-search-correctness.test.cjs tests/native-segment-v3.test.cjs tests/native-scan-failures.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test tests/performance-diagnostics.test.cjs tests/scan-responsiveness.test.cjs tests/scan-responsiveness-renderer.test.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -113,7 +113,7 @@ jobs:
           Copy-Item resources/runtime-manifest.json artifacts/online-installer/runtime-manifest.json
           Copy-Item THIRD_PARTY_COMPONENTS.md artifacts/online-installer/THIRD_PARTY_COMPONENTS.md
           Copy-Item BACKUP_SAFETY.md artifacts/online-installer/BACKUP_SAFETY.md
-          Copy-Item docs/current/2026-11-14-alpha30-shell-isolation.md artifacts/online-installer/RELEASE_NOTES.md
+          Copy-Item docs/current/2026-11-14-alpha31-error-diagnostics.md artifacts/online-installer/RELEASE_NOTES.md
           @{ startupPassed = $true; archivePassed = $true; fullUiOutcome = '${{ steps.full_ui.outcome }}'; upgradeVerified = $false } | ConvertTo-Json | Set-Content artifacts/online-installer/validation-status.json
       - uses: actions/upload-artifact@v4
         with:

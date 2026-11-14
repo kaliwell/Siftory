@@ -180,6 +180,76 @@ async function main() {
     assert.ok(Number.isFinite(shellResult.durations.stat))
     assert.ok(Number.isFinite(shellResult.durations.thumbnail))
 
+    const errorRoot = path.join(userData, 'error-fixtures')
+    fs.mkdirSync(errorRoot)
+    const brokenImage = path.join(errorRoot, 'broken-test-image.png')
+    fs.writeFileSync(brokenImage, 'not an image')
+    await page.evaluate(
+      (root) =>
+        window.electronAPI.imageSearch.startScan({
+          paths: [root],
+          scanMode: 'updateAll',
+          buildThumbnails: false,
+        }),
+      errorRoot,
+    )
+    const errorLog = path.join(userData, 'diagnostics', 'scan-errors', 'search-0.jsonl')
+    const readErrors = () => {
+      if (!fs.existsSync(errorLog)) return []
+      return fs
+        .readFileSync(errorLog, 'utf8')
+        .split('\n')
+        .flatMap((line) => {
+          try {
+            return [JSON.parse(line)]
+          } catch {
+            return []
+          }
+        })
+    }
+    const failureDeadline = Date.now() + 30000
+    while (
+      !readErrors().some((r) => r.detail?.items?.some((i) => i.stage === 'native-scan')) &&
+      Date.now() < failureDeadline
+    )
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    assert.ok(
+      readErrors().some((r) => r.detail?.items?.some((i) => i.stage === 'native-scan')),
+      'Native failures must reach persisted error diagnostics',
+    )
+    const errorPanel = page.getByTestId('scan-error-diagnostics')
+    await errorPanel.locator('summary').click()
+    for (const includePaths of [false, true]) {
+      const reportFile = path.join(
+        userData,
+        includePaths ? 'errors-with-paths.json' : 'errors-redacted.json',
+      )
+      await application.evaluate(({ dialog }, target) => {
+        dialog.showSaveDialog = async () => ({ canceled: false, filePath: target })
+      }, reportFile)
+      await errorPanel.getByRole('checkbox').setChecked(includePaths)
+      await errorPanel
+        .getByRole('button', { name: /Export error logs|导出错误日志/, exact: true })
+        .click()
+      await errorPanel
+        .getByText(/Diagnostic operation complete|诊断操作已完成/, { exact: true })
+        .waitFor()
+      // The success label may already exist from the previous export.
+      const saveDeadline = Date.now() + 10000
+      while (!fs.existsSync(reportFile) && Date.now() < saveDeadline)
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      const errorReport = JSON.parse(fs.readFileSync(reportFile, 'utf8'))
+      assert.equal(errorReport.includesFilePaths, includePaths)
+      assert.equal(errorReport.containsImageBytes, false)
+      assert.ok(errorReport.records.every((r) => r.traceId === errorReport.runId))
+      if (includePaths)
+        assert.ok(
+          Object.values(errorReport.sessionFilePaths).some((value) =>
+            value.endsWith('broken-test-image.png'),
+          ),
+        )
+      else assert.ok(!JSON.stringify(errorReport).includes('broken-test-image.png'))
+    }
     await application.evaluate(({ dialog }) => {
       dialog.showSaveDialog = global.__siftorySavePicker
       delete global.__siftorySavePicker
@@ -203,6 +273,7 @@ async function main() {
           performanceDiagnosticsPassed: true,
           performanceExportPassed: true,
           shellPreviewIsolationPassed: true,
+          scanErrorDiagnosticsPassed: true,
           pageErrors,
           scope:
             'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',

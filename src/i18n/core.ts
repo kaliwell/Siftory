@@ -241,6 +241,16 @@ const zhCN: Record<string, string> = {
   'All tasks': '全部任务',
   'No tasks in this view': '此视图暂无任务',
   'Search diagnostics': '搜索诊断',
+  'Skipped files': '跳过文件',
+  'Scan and preview error logs': '扫描与预览错误日志',
+  'Errors and skipped files are collected automatically. Export after library preparation finishes or fails; no separate recording step is needed.':
+    '自动收集错误和跳过的文件，素材库准备完成或失败后直接导出，无需另行开始记录。',
+  'Include file paths from this app session': '包含本次软件会话的文件路径',
+  'Default export hides paths and includes the latest scan only. Path mapping is available until the app exits. No images are included.':
+    '默认隐去文件路径，仅导出最近一轮扫描。路径映射保留到退出软件，不包含图片内容。',
+  'Export error logs': '导出错误日志',
+  'Captured {count} error and skip records': '本次软件会话已采集 {count} 条错误和跳过记录',
+
   'Stutter diagnostics': '卡顿检测',
   Recording: '正在记录',
   'Start recording': '开始记录',

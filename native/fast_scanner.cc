@@ -14,6 +14,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdint>
+#include <cerrno>
 #include <cmath>
 #include <cwctype>
 #include <cstdlib>
@@ -623,12 +624,17 @@ static bool has_supported_scan_image_signature(const uint8_t* data,size_t len){
 }
 
 static ScanCandidateReadStatus read_scan_image_candidate(const std::string& path,
-    std::vector<uint8_t>& out,int64_t& fileSize){
-  out.clear();fileSize=0;
+    std::vector<uint8_t>& out,int64_t& fileSize,std::string* failureReason=nullptr){
+  const auto fail=[failureReason](const char* stage){
+    const DWORD win32=GetLastError();const int crt=errno;
+    if(failureReason)*failureReason=std::string(stage)+" errno="+std::to_string(crt)+" win32="+std::to_string(win32);
+    return ScanCandidateReadStatus::READ_FAIL;
+  };
+  out.clear();fileSize=0;errno=0;SetLastError(ERROR_SUCCESS);
   std::ifstream f(path_from_utf8(path),std::ios::binary|std::ios::ate);
-  if(!f)return ScanCandidateReadStatus::READ_FAIL;
+  if(!f)return fail("open");
   auto end=f.tellg();
-  if(end<0)return ScanCandidateReadStatus::READ_FAIL;
+  if(end<0)return fail("size");
   const auto size=static_cast<size_t>(end);fileSize=static_cast<int64_t>(size);
   if(size>MAX_SCAN_IMAGE_BYTES)return ScanCandidateReadStatus::OVERSIZED;
   f.seekg(0);
@@ -636,7 +642,7 @@ static ScanCandidateReadStatus read_scan_image_candidate(const std::string& path
   const auto headerSize=std::min(size,SCAN_IMAGE_SIGNATURE_BYTES);
   if(headerSize>0){
     f.read(reinterpret_cast<char*>(header),static_cast<std::streamsize>(headerSize));
-    if(static_cast<size_t>(f.gcount())!=headerSize)return ScanCandidateReadStatus::READ_FAIL;
+    if(static_cast<size_t>(f.gcount())!=headerSize)return fail("header-read");
   }
   if(!has_supported_scan_image_signature(header,headerSize))return ScanCandidateReadStatus::SIGNATURE_REJECTED;
   out.resize(size);
@@ -644,7 +650,7 @@ static ScanCandidateReadStatus read_scan_image_candidate(const std::string& path
   const auto remaining=size-headerSize;
   if(remaining>0){
     f.read(reinterpret_cast<char*>(out.data()+headerSize),static_cast<std::streamsize>(remaining));
-    if(static_cast<size_t>(f.gcount())!=remaining){out.clear();return ScanCandidateReadStatus::READ_FAIL;}
+    if(static_cast<size_t>(f.gcount())!=remaining){const auto status=fail("data-read");out.clear();return status;}
   }
   return ScanCandidateReadStatus::OK;
 }
@@ -724,6 +730,7 @@ struct ScanMetrics{
 
 struct IndexWriteLease;
 struct AsyncCancellationToken;
+struct ScanFailure { std::string code,source,message; };
 struct ScanRuntime{
   std::thread thread;
   std::atomic<bool> stop{false},running{false},paused{false},stopInProgress{false};
@@ -752,6 +759,11 @@ struct ScanRuntime{
   size_t commitFeedMaxEntries=4096,commitFeedPendingBytes=0;
   uint64_t commitFeedDropped=0;
   ScanMetrics metrics;
+  std::mutex failureMutex;
+  std::vector<ScanFailure> failures;
+  std::unordered_map<std::string,uint64_t> failureCounts;
+  size_t failureBytes=0;
+  uint64_t failureTotal=0;
 };
 
 static constexpr size_t kMinScanCommitFeedEntries=16;
@@ -1369,8 +1381,18 @@ static void se_log_verbose(const std::string& msg){
   static const bool enabled=[](){const char* v=getenv("IMAGESEARCH_VERBOSE_LOG");return v&&std::string(v)=="1";}();
   if(enabled)se_log(msg);
 }
-static void se_log_file_error(ScanRuntime* runtime,const std::string& msg){
+static void se_log_file_error(ScanRuntime* runtime,const std::string& msg,const std::string& source){
+  try { if(runtime){
+    const auto code=msg.substr(0,msg.find(' '));
+    std::lock_guard<std::mutex> lock(runtime->failureMutex);
+    runtime->failureTotal++;runtime->failureCounts[code]++;
+    const size_t bytes=code.size()+source.size()+msg.size();
+    if(runtime->failures.size()<4096&&bytes<=8*1024*1024-runtime->failureBytes){
+      runtime->failures.push_back({code,source,msg.substr(0,2048)});runtime->failureBytes+=bytes;
+    }
+  }
   if(!runtime||runtime->metrics.fileErrorLogCount.fetch_add(1)<200)se_log(msg);
+  } catch(...) { /* Failure diagnostics must not terminate a decoder worker. */ }
 }
 
 // ===== SEH-safe raw decode (leaf function, no C++ objects) =====
@@ -1384,17 +1406,17 @@ static bool seh_decode_call(const uint8_t* data, int len, RawDecodeResult& out){
 
 // ===== SEH-safe decode wrapper =====
 static bool safe_decode_and_hash(const uint8_t* data, size_t len, int& w, int& h, int& ch, uint64_t& oh, const std::string& fp,ScanRuntime* runtime=nullptr){
-  if(len>MAX_SCAN_IMAGE_BYTES){se_log_file_error(runtime,"DECODE_SKIP oversized "+se_path(fp));return false;}
+  if(len>MAX_SCAN_IMAGE_BYTES){se_log_file_error(runtime,"DECODE_SKIP oversized "+se_path(fp),fp);return false;}
   int inspectedW=0,inspectedH=0,inspectedChannels=0;
   if(!inspect_stb_decode_budget(data,len,inspectedW,inspectedH,inspectedChannels)){
-    se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason);return false;
+    se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason,fp);return false;
   }
   auto tDec0=std::chrono::high_resolution_clock::now();
   RawDecodeResult raw={};
-  if(!seh_decode_call(data,(int)len,raw)){se_log_file_error(runtime,"DECODE_AV_CRASH "+se_path(fp)+" SEH caught");return false;}
-  if(!raw.img){se_log_file_error(runtime,"DECODE_FAIL "+se_path(fp)+" "+std::string(decode_failure_reason()));return false;}
+  if(!seh_decode_call(data,(int)len,raw)){se_log_file_error(runtime,"DECODE_AV_CRASH "+se_path(fp)+" SEH caught",fp);return false;}
+  if(!raw.img){se_log_file_error(runtime,"DECODE_FAIL "+se_path(fp)+" "+std::string(decode_failure_reason()),fp);return false;}
   const auto validation=image_decode_limits::validate((uint64_t)raw.w,(uint64_t)raw.h,(uint64_t)raw.c,true);
-  if(!validation.ok){g_decodeFailureReason=validation.reason;stbi_image_free(raw.img);se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason);return false;}
+  if(!validation.ok){g_decodeFailureReason=validation.reason;stbi_image_free(raw.img);se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason,fp);return false;}
   size_t npixels=validation.pixels;
   w=raw.w;h=raw.h;ch=raw.c;
   std::vector<uint8_t> gray(npixels);
@@ -1418,17 +1440,17 @@ static bool safe_decode_and_hash(const uint8_t* data, size_t len, int& w, int& h
 // ── P1-D: SEH-safe dual hash decode ─────────────────────
 // Same SEH protection as safe_decode_and_hash, but also computes dctHash64.
 static bool safe_decode_and_hash_dual(const uint8_t* data, size_t len, int& w, int& h, int& ch, uint64_t& diffHash64, uint64_t& dctHash64, const std::string& fp,ScanRuntime* runtime=nullptr){
-  if(len>MAX_SCAN_IMAGE_BYTES){se_log_file_error(runtime,"DECODE_SKIP oversized "+se_path(fp));return false;}
+  if(len>MAX_SCAN_IMAGE_BYTES){se_log_file_error(runtime,"DECODE_SKIP oversized "+se_path(fp),fp);return false;}
   int inspectedW=0,inspectedH=0,inspectedChannels=0;
   if(!inspect_stb_decode_budget(data,len,inspectedW,inspectedH,inspectedChannels)){
-    se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason);return false;
+    se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason,fp);return false;
   }
   auto tDec0=std::chrono::high_resolution_clock::now();
   RawDecodeResult raw={};
-  if(!seh_decode_call(data,(int)len,raw)){se_log_file_error(runtime,"DECODE_AV_CRASH "+se_path(fp)+" SEH caught");return false;}
-  if(!raw.img){se_log_file_error(runtime,"DECODE_FAIL "+se_path(fp)+" "+std::string(decode_failure_reason()));return false;}
+  if(!seh_decode_call(data,(int)len,raw)){se_log_file_error(runtime,"DECODE_AV_CRASH "+se_path(fp)+" SEH caught",fp);return false;}
+  if(!raw.img){se_log_file_error(runtime,"DECODE_FAIL "+se_path(fp)+" "+std::string(decode_failure_reason()),fp);return false;}
   const auto validation=image_decode_limits::validate((uint64_t)raw.w,(uint64_t)raw.h,(uint64_t)raw.c,true);
-  if(!validation.ok){g_decodeFailureReason=validation.reason;stbi_image_free(raw.img);se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason);return false;}
+  if(!validation.ok){g_decodeFailureReason=validation.reason;stbi_image_free(raw.img);se_log_file_error(runtime,"DECODE_LIMIT "+se_path(fp)+" "+g_decodeFailureReason,fp);return false;}
   size_t npixels=validation.pixels;
   w=raw.w;h=raw.h;ch=raw.c;
   std::vector<uint8_t> gray(npixels);
@@ -1715,12 +1737,12 @@ static void scan_worker(ScanRuntime& runtime,IndexRuntime& index,std::string roo
       int64_t fsz=0;
       const bool detailedMetrics=runtime.detailedMetrics.load();
       const auto tRead0=detailedMetrics?std::chrono::high_resolution_clock::now():std::chrono::high_resolution_clock::time_point{};
-      const auto candidateStatus=read_scan_image_candidate(fp,fb,fsz);
+      std::string readFailure;const auto candidateStatus=read_scan_image_candidate(fp,fb,fsz,&readFailure);
       if(detailedMetrics){runtime.metrics.readUs.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-tRead0).count());
         runtime.metrics.readFileCount.fetch_add(1);if(candidateStatus==ScanCandidateReadStatus::OK)runtime.metrics.readBytes.fetch_add(fsz);}
-      if(candidateStatus==ScanCandidateReadStatus::READ_FAIL){runtime.metrics.skipped.fetch_add(1);remember_failed_path(index,np,fp);{std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Read fail: "+fp;}se_log_file_error(&runtime,"READ_FAIL "+se_path(fp));return;}
-      if(candidateStatus==ScanCandidateReadStatus::OVERSIZED){runtime.metrics.skipped.fetch_add(1);remember_failed_path(index,np,fp);{std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Oversized: "+fp;}se_log_file_error(&runtime,"SCAN_SKIP_OVERSIZED "+se_path(fp));return;}
-      if(candidateStatus==ScanCandidateReadStatus::SIGNATURE_REJECTED){runtime.metrics.skipped.fetch_add(1);runtime.metrics.signatureRejected.fetch_add(1);remember_failed_path(index,np,fp);{std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Signature rejected: "+fp;}se_log_file_error(&runtime,"SCAN_SIGNATURE_REJECTED "+se_path(fp));return;}
+      if(candidateStatus==ScanCandidateReadStatus::READ_FAIL){runtime.metrics.skipped.fetch_add(1);remember_failed_path(index,np,fp);{std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Read fail: "+fp;}se_log_file_error(&runtime,"READ_FAIL "+se_path(fp)+" "+readFailure,fp);return;}
+      if(candidateStatus==ScanCandidateReadStatus::OVERSIZED){runtime.metrics.skipped.fetch_add(1);remember_failed_path(index,np,fp);{std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Oversized: "+fp;}se_log_file_error(&runtime,"SCAN_SKIP_OVERSIZED "+se_path(fp),fp);return;}
+      if(candidateStatus==ScanCandidateReadStatus::SIGNATURE_REJECTED){runtime.metrics.skipped.fetch_add(1);runtime.metrics.signatureRejected.fetch_add(1);remember_failed_path(index,np,fp);{std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Signature rejected: "+fp;}se_log_file_error(&runtime,"SCAN_SIGNATURE_REJECTED "+se_path(fp),fp);return;}
       se_log_verbose("DECODE_BEGIN "+se_path(fp)+" size="+std::to_string(fsz));
       int w=0,h=0,ch=0;uint64_t hv=0,dctv=0;
       auto tDec0=std::chrono::high_resolution_clock::now();
@@ -1758,10 +1780,12 @@ static void scan_worker(ScanRuntime& runtime,IndexRuntime& index,std::string roo
       try{processFile(fp);}catch(const std::exception& e){
         runtime.metrics.skipped.fetch_add(1);
         {std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning=std::string("File error: ")+e.what();}
+        se_log_file_error(&runtime,std::string("FILE_ERROR ")+e.what(),fp);
         crash_log(std::string("File exception: ")+e.what());
       }catch(...){
         runtime.metrics.skipped.fetch_add(1);
         {std::lock_guard<std::mutex> lk(runtime.progressMutex);runtime.lastWarning="Unknown file skip";}
+        se_log_file_error(&runtime,"FILE_ERROR Unknown file exception",fp);
         crash_log("Unknown file exception");
       }
     };
@@ -2364,6 +2388,7 @@ static napi_value ScanDirectory(napi_env env,napi_callback_info info){
     index.resetUsnScanStatus();
     }
   reset_scan_commit_feed(runtime);
+  {std::lock_guard<std::mutex> lock(runtime.failureMutex);runtime.failures.clear();runtime.failureCounts.clear();runtime.failureBytes=0;runtime.failureTotal=0;}
   {std::lock_guard<std::mutex> lock(runtime.exportOwnershipMutex);
     runtime.scanWriterGeneration=runtime.commitFeedGeneration.load();runtime.scanWriterToken=writeLease->token;
     runtime.scanWriterLease=writeLease;runtime.scanExports.clear();}
@@ -2411,6 +2436,30 @@ static napi_value DrainScanCommittedPaths(napi_env env,napi_callback_info info){
     set_int64(env,result,"generation",(int64_t)generation);set_int64(env,result,"pending",(int64_t)pending);
     set_int64(env,result,"dropped",(int64_t)dropped);set_bool(env,result,"enabled",enabled);return result;
   }catch(const std::exception& e){return native_error(env,e.what());}catch(...){return native_error(env,"drain scan commit feed error");}
+}
+
+static napi_value GetScanFailures(napi_env env,napi_callback_info info){
+  size_t argc=2;napi_value argv[2];napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);
+  const double raw=argc>0?get_double(env,argv[0]):0;
+  const size_t after=std::isfinite(raw)&&raw>=0?(size_t)std::min(raw,4096.0):0;
+  const size_t limit=argc>1?(size_t)std::clamp(get_int32(env,argv[1]),1,128):128;
+  auto& runtime=*get_addon_context(env).scan;
+  std::vector<ScanFailure> entries;std::unordered_map<std::string,uint64_t> counts;
+  uint64_t total=0,generation=0;size_t retained=0;
+  {std::lock_guard<std::mutex> lock(runtime.failureMutex);
+    total=runtime.failureTotal;retained=runtime.failures.size();counts=runtime.failureCounts;generation=runtime.commitFeedGeneration.load();
+    const size_t end=std::min(retained,after+limit);
+    for(size_t i=after;i<end;i++)entries.push_back(runtime.failures[i]);
+  }
+  napi_value result,array,summary;napi_create_object(env,&result);napi_create_array(env,&array);napi_create_object(env,&summary);
+  for(size_t i=0;i<entries.size();i++){
+    napi_value item;napi_create_object(env,&item);
+    set_string(env,item,"code",entries[i].code.c_str());set_string(env,item,"source",entries[i].source.c_str());set_string(env,item,"message",entries[i].message.c_str());napi_set_element(env,array,(uint32_t)i,item);
+  }
+  for(const auto& item:counts)set_int64(env,summary,item.first.c_str(),(int64_t)item.second);
+  napi_set_named_property(env,result,"entries",array);napi_set_named_property(env,result,"counts",summary);
+  set_int64(env,result,"generation",(int64_t)generation);set_int64(env,result,"cursor",(int64_t)std::min(retained,after+entries.size()));
+  set_int64(env,result,"total",(int64_t)total);set_int64(env,result,"retained",(int64_t)retained);set_int64(env,result,"omitted",(int64_t)(total-retained));return result;
 }
 
 static napi_value GetScanProgress(napi_env env,napi_callback_info){
@@ -5759,7 +5808,7 @@ static napi_value Init(napi_env env,napi_value exports){
   xfn("startNativeThumbnailRebuild",StartNativeThumbnailRebuild);
   xfn("getNativeThumbnailRebuildProgress",GetNativeThumbnailRebuildProgress);
   xfn("stopNativeThumbnailRebuild",StopNativeThumbnailRebuild);
-  xfn("scanDirectory",ScanDirectory);xfn("getScanProgress",GetScanProgress);xfn("stopScan",StopScan);xfn("stopScanAsync",StopScanAsync);
+  xfn("scanDirectory",ScanDirectory);xfn("getScanProgress",GetScanProgress);xfn("getScanFailures",GetScanFailures);xfn("stopScan",StopScan);xfn("stopScanAsync",StopScanAsync);
   xfn("stopScanGenerationAsync",StopScanGenerationAsync);
   xfn("snapshotScanRecordsAsync",SnapshotScanRecordsAsync);xfn("readScanExportPage",ReadScanExportPage);
   xfn("pauseScan",PauseScan);xfn("resumeScan",ResumeScan);xfn("isScanPaused",IsScanPaused);

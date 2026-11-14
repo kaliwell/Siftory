@@ -164,6 +164,7 @@ const entries = [
   // PDF isolation adds two dependency-free boundaries: the supervised child
   // runtime and shared worker-path resolution. No renderer/preload imports or
   // external packages are added; retain the other entry and byte budgets.
+  // Two bounded scan-error recorder/adapter nodes extend the existing diagnostics.
   // Manual diagnostics and the isolated Shell bootstrap add bounded nodes;
   // the bootstrap is the actual entry and the Shell child never reaches app services.
   {
@@ -174,7 +175,7 @@ const entries = [
       'electron',
       fs.existsSync(path.join(root, 'electron/mainBootstrap.ts')) ? 'mainBootstrap.ts' : 'main.ts',
     ),
-    budget: 337,
+    budget: 339,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },

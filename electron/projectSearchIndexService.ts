@@ -1,3 +1,4 @@
+import { scanErrorRecorder } from './scanErrorLog'
 import type { ScanResponsiveness } from './scanResponsiveness'
 import { resolveStoredDataPath, storedDataPathCandidates } from './storagePathResolver'
 import fs from 'fs'
@@ -525,7 +526,8 @@ async function enumerateProjectSources(
     let entries: fs.Dir
     try {
       entries = await fsp.opendir(directory, { bufferSize: 64 })
-    } catch {
+    } catch (error) {
+      scanErrorRecorder.record('enumeration', 'DIRECTORY_READ_FAILED', directory, error, 'warning')
       continue
     }
     scannedDirectories += 1
@@ -689,6 +691,14 @@ export async function indexProjectPreviews(
           adapter.removeSourceVectorData(sourcePath)
         }
         if (current.status !== 'ready' || !current.previewPath) {
+          scanErrorRecorder.record(
+            'project-preview',
+            current.errorCode ?? 'NO_CONTENT_PREVIEW',
+            sourcePath,
+            current.errorCode,
+            current.status === 'error' ? 'error' : 'warning',
+            { provider: current.provider },
+          )
           if (current.status === 'error') state.failed += 1
           else state.unavailable += 1
         } else {
@@ -696,6 +706,7 @@ export async function indexProjectPreviews(
           const hashed = await adapter.hashImageAsync(current.previewPath)
           if (isCancelled()) break
           if (!hashed.ok || !hashed.diffHash64 || !hashed.dctHash64) {
+            scanErrorRecorder.record('preview-hash', 'HASH_FAILED', sourcePath, hashed.error)
             state.failed += 1
           } else {
             const upserted = await adapter.upsertIndexRecord(
@@ -714,11 +725,20 @@ export async function indexProjectPreviews(
                 dctHash64: hashed.dctHash64,
               })
               state.indexed += 1
-            } else state.failed += 1
+            } else {
+              scanErrorRecorder.record(
+                'preview-index',
+                'INDEX_WRITE_FAILED',
+                sourcePath,
+                upserted.error,
+              )
+              state.failed += 1
+            }
           }
         }
-      } catch {
+      } catch (error) {
         if (isCancelled()) break
+        scanErrorRecorder.record('project-preview', 'PREVIEW_EXCEPTION', sourcePath, error)
         state.failed += 1
       }
       state.completed += 1
@@ -781,6 +801,7 @@ export async function indexProjectPreviews(
   }
 
   await measure('search-index-refresh', () => refreshProjectSearchIndex())
+  scanErrorRecorder.flush()
   options.onProgress?.({ phase: 'complete', ...state })
   return {
     ...state,

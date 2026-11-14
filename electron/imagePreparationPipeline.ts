@@ -1,3 +1,4 @@
+import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
 import crypto from 'crypto'
 import fs from 'fs'
@@ -802,6 +803,12 @@ export function startImageLibraryPreparation(
     .catch((error: unknown) => {
       if (activeProgress.taskId !== taskId || activeProgress.state === 'stopped') return
       const stopped = cancelRequested || (error instanceof Error && error.name === 'AbortError')
+      if (!stopped) {
+        scanErrorRecorder.record('preparation', 'PREPARATION_FAILED', undefined, error, 'error', {
+          phase: activeProgress.phase,
+        })
+        scanErrorRecorder.flush()
+      }
       emitProgress({
         ...activeProgress,
         state: stopped ? 'stopped' : 'error',

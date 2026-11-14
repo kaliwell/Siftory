@@ -1,3 +1,4 @@
+import { scanErrorRecorder } from './scanErrorLog'
 import { stopShellPreviewCompute } from './projectPreviewShellRuntime'
 import { performanceSession, captureLinkedPreviewWindow } from './performanceDiagnostics'
 import { ScanResponsiveness } from './scanResponsiveness'
@@ -567,6 +568,21 @@ function startPollingScan(): void {
   pollTimer = setInterval(() => {
     if (!nativeAddon) return
     const prog = nativeAddon.getScanProgress()
+    if (prog.state === 'error') {
+      scanErrorRecorder.record(
+        'native-scan',
+        'SCAN_FAILED',
+        undefined,
+        prog.lastError || prog.error,
+      )
+      scanErrorRecorder.flush()
+    }
+    if (nativeAddon.getScanFailures) {
+      const readFailures = nativeAddon.getScanFailures.bind(nativeAddon)
+      if (prog.state === 'scanning' || prog.state === 'paused')
+        scanErrorRecorder.collect(readFailures)
+      else void scanErrorRecorder.drain(readFailures)
+    }
     status = {
       ...status,
       state:
@@ -993,6 +1009,7 @@ export function startImageSearchScan(
     return { ...status }
   }
 
+  scanErrorRecorder.begin(nativeAddon.getScanFailures?.bind(nativeAddon))
   scanGeneration += 1
   pendingProjectScan = { generation: scanGeneration, paths, scanMode }
   autosaveState = 'idle'

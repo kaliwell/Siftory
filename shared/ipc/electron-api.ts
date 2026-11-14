@@ -375,21 +375,16 @@ export interface ElectronAPI {
   }
   imageSearch: {
     saveSearchQueryCopy: (traceId: string) => Promise<{ ok: boolean }>
-    reportScanResponsiveness: (metrics: {
-      elapsedMs: number
-      maxTimerLagMs: number
-      maxFrameGapMs: number
-      longTaskCount: number
-      longTaskMaxMs: number
-    }) => Promise<{ ok: boolean }>
-    performanceDiagnostics: (action: 'start' | 'stop' | 'status' | 'mark' | 'export') => Promise<{
-      ok: boolean
-      enabled?: boolean
-      traceId?: string
-      dropped?: number
-      error?: string
-      cancelled?: boolean
-    }>
+    reportScanResponsiveness: (
+      metrics: import('./search-diagnostics').ResponsivenessMetrics,
+    ) => Promise<{ ok: boolean }>
+    scanErrorDiagnostics: (
+      action: 'status' | 'export',
+      includePaths?: boolean,
+    ) => Promise<import('./search-diagnostics').DiagnosticActionResult>
+    performanceDiagnostics: (
+      action: 'start' | 'stop' | 'status' | 'mark' | 'export',
+    ) => Promise<import('./search-diagnostics').DiagnosticActionResult>
     getSearchDiagnosticStatus: () => Promise<{ sessionId: string; dropped: number; error?: string }>
     exportSearchDiagnostics: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>
     clearSearchDiagnostics: () => Promise<{ ok: boolean; error?: string }>
