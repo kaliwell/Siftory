@@ -154,6 +154,37 @@ test('ZIP prediction resets at each 16-bit scanline', async (t) => {
   )
 })
 
+test('ZIP extraction in a Worker keeps file handle ownership intact', async (t) => {
+  const sourcePath = await fixture(t, { compression: 2 })
+  const { Worker } = require('node:worker_threads')
+  const { projectPreviewWorkerPaths } = loadTsModule('electron/projectPreviewWorkerPaths.ts')
+  const setup = projectPreviewWorkerPaths()
+  const worker = new Worker(setup.workerPath, { workerData: setup.workerData, stderr: true })
+  let stderr = ''
+  worker.stderr.on('data', (chunk) => {
+    stderr += chunk.toString()
+  })
+  t.after(() => worker.terminate())
+  for (let i = 0; i < 8; i++) {
+    const result = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(Error('ZIP Worker timed out')), 10000)
+      worker.once('message', (message) => {
+        clearTimeout(timer)
+        resolve(message.result)
+      })
+      worker.postMessage({
+        kind: 'extractImage',
+        sourcePath,
+        sourceExt: 'psd',
+        providerId: 'psd-composite-raster',
+      })
+    })
+    assert.ok(result?.data.length)
+  }
+  await worker.terminate()
+  assert.doesNotMatch(stderr, /File descriptor.*closed|EBADF|unmanaged mode/)
+})
+
 test('PackBits repeated runs are decoded without treating no-op bytes as pixels', async (t) => {
   const source = await fixture(t, {
     depth: 8,

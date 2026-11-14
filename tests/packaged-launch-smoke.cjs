@@ -25,6 +25,7 @@ async function main() {
   const output = path.join(repo, 'artifacts/online-installer')
   const nonce = createSmokeSessionMarker(userData, 'packaged')
   let application
+  let scanFixtureRoot
   let stdout = ''
   let stderr = ''
   try {
@@ -215,18 +216,25 @@ async function main() {
     assert.ok(Number.isFinite(shellResult.durations.stat))
     assert.ok(Number.isFinite(shellResult.durations.thumbnail))
 
-    const errorRoot = path.join(userData, 'error-fixtures')
-    fs.mkdirSync(errorRoot)
+    // Use a relative directory on the app's drive. Absolute drive roots select
+    // volume-wide USN enumeration, which this one-file diagnostic check does
+    // not intend to benchmark. Keep the real scanner, IPC and store in use.
+    const errorRoot = fs.mkdtempSync(path.join(path.dirname(executablePath), 'error-fixtures-'))
+    scanFixtureRoot = errorRoot
     const brokenImage = path.join(errorRoot, 'broken-test-image.png')
     fs.writeFileSync(brokenImage, 'not an image')
-    await page.evaluate(
+    const scanStart = await page.evaluate(
       (root) =>
         window.electronAPI.imageSearch.startScan({
           paths: [root],
           scanMode: 'updateAll',
           buildThumbnails: false,
         }),
-      errorRoot,
+      path.relative(path.dirname(executablePath), errorRoot),
+    )
+    assert.ok(
+      ['queued', 'scanning'].includes(scanStart.state),
+      `Diagnostic scan must start: ${JSON.stringify(scanStart)}`,
     )
     const errorLog = path.join(userData, 'diagnostics', 'scan-errors', 'search-0.jsonl')
     const readErrors = () => {
@@ -290,6 +298,7 @@ async function main() {
       delete global.__siftorySavePicker
     })
     assert.deepEqual(pageErrors, [])
+    assert.doesNotMatch(stderr, /File descriptor \d+ closed but not opened in unmanaged mode/)
     fs.mkdirSync(output, { recursive: true })
     await page.screenshot({ path: path.join(output, 'startup.png') })
     fs.writeFileSync(
@@ -327,6 +336,8 @@ async function main() {
     throw error
   } finally {
     await application?.close()
+    if (scanFixtureRoot)
+      fs.rmSync(scanFixtureRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
     assertTemporaryDirectory(userData)
     fs.rmSync(userData, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
   }

@@ -1,6 +1,5 @@
 'use strict'
 
-const fs = require('node:fs')
 const fsp = require('node:fs/promises')
 const zlib = require('node:zlib')
 
@@ -189,9 +188,9 @@ async function extractPsdCompositePreview(sourcePath) {
       }
     } else {
       if (stat.size - offset > MAX_ZIP_BYTES || offset >= stat.size) return null
-      input = fs.createReadStream(sourcePath, {
-        fd: handle.fd,
-        autoClose: false,
+      // Keep ownership with FileHandle: a raw numeric fd stream can close the
+      // descriptor behind it and a second close can hit another worker's file.
+      input = handle.createReadStream({
         start: offset,
         end: stat.size - 1,
       })
