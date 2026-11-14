@@ -3,6 +3,7 @@
   "version": "1.0.1-alpha.33",
   "private": true,
   "license": "Apache-2.0",
+  "author": "kaliwell",
   "description": "Siftory Alpha: local-first AI media search and asset management for Windows",
   "engines": {
     "node": "24.22.1",
