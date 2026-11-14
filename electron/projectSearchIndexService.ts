@@ -1,3 +1,4 @@
+import type { ScanResponsiveness } from './scanResponsiveness'
 import { resolveStoredDataPath, storedDataPathCandidates } from './storagePathResolver'
 import fs from 'fs'
 import fsp from 'fs/promises'
@@ -578,12 +579,29 @@ export async function indexProjectPreviews(
   adapter: ProjectIndexAdapter,
   options: {
     scanMode?: 'addNew' | 'update' | 'updateAll' | 'full'
+    diagnostics?: ScanResponsiveness
     isCancelled?: () => boolean
     onProgress?: (progress: ProjectIndexProgress) => void
   } = {},
 ): Promise<ProjectIndexResult> {
   // A migrated library can still have immutable segments with old cache paths.
   // Reuse those entries and remove all aliases when a preview actually changes.
+  const diagnostics = options.diagnostics
+  const measure = <T>(name: string, operation: () => T): T =>
+    diagnostics ? diagnostics.measure(name, operation) : operation()
+  const original = adapter
+  adapter = {
+    hasIndexPath: original.hasIndexPath
+      ? (filePath) => measure('native-lookup', () => original.hasIndexPath!(filePath))
+      : undefined,
+    hashImageAsync: (filePath) => measure('native-hash', () => original.hashImageAsync(filePath)),
+    upsertIndexRecord: (...args) =>
+      measure('native-upsert', () => original.upsertIndexRecord(...args)),
+    deleteIndexPath: (filePath) =>
+      measure('native-delete', () => original.deleteIndexPath(filePath)),
+    removeSourceVectorData: (filePath) =>
+      measure('vector-remove', () => original.removeSourceVectorData(filePath)),
+  }
   const nativeAdapter = adapter
   if (nativeAdapter.hasIndexPath) {
     adapter = {
@@ -607,10 +625,8 @@ export async function indexProjectPreviews(
   const isCancelled = options.isCancelled ?? (() => false)
   const resolvedRoots = roots.map((root) => path.resolve(root))
   const service = getProjectPreviewService(configuredUserDataPath)
-  const { sources, truncated } = await enumerateProjectSources(
-    resolvedRoots,
-    isCancelled,
-    options.onProgress,
+  const { sources, truncated } = await measure('enumerate', () =>
+    enumerateProjectSources(resolvedRoots, isCancelled, options.onProgress),
   )
   const state = {
     discovered: sources.length,
@@ -637,7 +653,8 @@ export async function indexProjectPreviews(
         currentPath: sourcePath,
         ...state,
       })
-      const previous = await service.manifest.get(sourcePath)
+      diagnostics?.source(state.completed + 1, path.extname(sourcePath).toLowerCase())
+      const previous = await measure('manifest-get', () => service.manifest.get(sourcePath))
       try {
         const knownPreview =
           previous?.status === 'ready' &&
@@ -653,11 +670,14 @@ export async function indexProjectPreviews(
           state.completed += 1
           continue
         }
-        const current = await service.getOrCreate(sourcePath, {
-          isCancelled,
-          forceRetry: options.scanMode === 'updateAll',
-          pdfTimeoutMs: 15_000,
-        })
+        const current = await measure('preview-generate', () =>
+          service.getOrCreate(sourcePath, {
+            isCancelled,
+            forceRetry: options.scanMode === 'updateAll',
+            pdfTimeoutMs: 15_000,
+            diagnostics,
+          }),
+        )
         if (isCancelled()) break
         if (options.scanMode !== 'updateAll' && knownPreview && current === previous) {
           state.skipped += 1
@@ -757,10 +777,10 @@ export async function indexProjectPreviews(
         state.removed = await service.manifest.removeMany(removedSources)
     }
   } finally {
-    await service.manifest.endBatch()
+    await measure('manifest-flush', () => service.manifest.endBatch())
   }
 
-  await refreshProjectSearchIndex()
+  await measure('search-index-refresh', () => refreshProjectSearchIndex())
   options.onProgress?.({ phase: 'complete', ...state })
   return {
     ...state,

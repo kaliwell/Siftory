@@ -1,3 +1,5 @@
+import { ScanResponsiveness } from './scanResponsiveness'
+import { getSearchDiagnostics } from './searchDiagnostics'
 import { createProgressCoalescer } from './progressCoalescer'
 import { stopPdfPreviewCompute } from './projectPreviewPdfRuntime'
 import path from 'path'
@@ -477,6 +479,11 @@ function autosaveDirtyIndex(): void {
   emit()
 }
 
+let activePreviewDiagnostics: ScanResponsiveness | undefined
+export function reportScanResponsiveness(metrics: unknown): { ok: boolean } {
+  return { ok: activePreviewDiagnostics?.renderer(metrics) ?? false }
+}
+
 async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): Promise<void> {
   const { generation, paths: roots, scanMode } = scan
   if (!nativeAddon || generation !== scanGeneration) return
@@ -488,29 +495,41 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
   }
   emit()
   const addon = nativeAddon
-  const result = await indexProjectPreviews(
-    roots,
-    {
-      hasIndexPath: (filePath) => addon.hasIndexPath(filePath),
-      hashImageAsync: (filePath) => addon.hashImageAsync(filePath),
-      upsertIndexRecord: (...args) =>
-        addon.upsertIndexRecordAsync?.(...args) ?? addon.upsertIndexRecord(...args),
-      deleteIndexPath: (filePath) => addon.deleteIndexPath(filePath),
-      removeSourceVectorData: (sourcePath) => removeImageData(sourcePath),
-    },
-    {
-      scanMode,
-      isCancelled: () => generation !== scanGeneration,
-      onProgress: (projectProgress) => {
-        if (generation !== scanGeneration) return
-        status = {
-          ...status,
-          ...projectIndexStatusPatch(projectProgress),
-        }
-        emit()
-      },
-    },
+  const diagnostics = new ScanResponsiveness((id, event, detail) =>
+    getSearchDiagnostics().append(id, event, detail),
   )
+  activePreviewDiagnostics = diagnostics
+  const result = await (async () => {
+    try {
+      return await indexProjectPreviews(
+        roots,
+        {
+          hasIndexPath: (filePath) => addon.hasIndexPath(filePath),
+          hashImageAsync: (filePath) => addon.hashImageAsync(filePath),
+          upsertIndexRecord: (...args) =>
+            addon.upsertIndexRecordAsync?.(...args) ?? addon.upsertIndexRecord(...args),
+          deleteIndexPath: (filePath) => addon.deleteIndexPath(filePath),
+          removeSourceVectorData: (sourcePath) => removeImageData(sourcePath),
+        },
+        {
+          diagnostics,
+          scanMode,
+          isCancelled: () => generation !== scanGeneration,
+          onProgress: (projectProgress) => {
+            if (generation !== scanGeneration) return
+            status = {
+              ...status,
+              ...projectIndexStatusPatch(projectProgress),
+            }
+            emit()
+          },
+        },
+      )
+    } finally {
+      diagnostics.close()
+      if (activePreviewDiagnostics === diagnostics) activePreviewDiagnostics = undefined
+    }
+  })()
   if (generation !== scanGeneration || result.cancelled) return
   status = {
     ...status,

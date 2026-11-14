@@ -8,6 +8,7 @@ import { app, clipboard, dialog, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import {
+  reportScanResponsiveness,
   captureImageSearchLoadedIndexIdentity,
   clearImageIndex,
   deleteImageSearchData,
@@ -221,6 +222,9 @@ export function registerImageSearchIpc(
     stopImageLibraryPreparation(typeof taskId === 'string' ? taskId : undefined),
   )
 
+  secureIpcMain.handle('imageSearch:reportScanResponsiveness', (_event, metrics: unknown) =>
+    reportScanResponsiveness(metrics),
+  )
   secureIpcMain.handle('imageSearch:getSearchDiagnosticStatus', async () => {
     const store = getSearchDiagnostics()
     return { sessionId: store.sessionId, dropped: store.dropped, error: store.error }

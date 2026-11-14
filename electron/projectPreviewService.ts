@@ -1,3 +1,4 @@
+import type { ScanResponsiveness } from './scanResponsiveness'
 import crypto from 'crypto'
 import fsp from 'fs/promises'
 import path from 'path'
@@ -25,6 +26,7 @@ function cacheProviderVersion(provider: ProjectPreviewProvider): string {
 }
 
 export interface ProjectPreviewRequestOptions {
+  diagnostics?: ScanResponsiveness
   isCancelled?: () => boolean
   forceRetry?: boolean
   pdfTimeoutMs?: number
@@ -64,6 +66,8 @@ export class ProjectPreviewService {
     sourcePath: string,
     options: ProjectPreviewRequestOptions = {},
   ): Promise<ProjectPreviewManifestEntry> {
+    const measure = <T>(name: string, operation: () => T): T =>
+      options.diagnostics ? options.diagnostics.measure(name, operation) : operation()
     const checkCancelled = () => {
       if (options.isCancelled?.())
         throw Object.assign(new Error('PROJECT_PREVIEW_CANCELLED'), {
@@ -141,16 +145,21 @@ export class ProjectPreviewService {
           BUILTIN_PROJECT_PREVIEW_PROVIDERS.includes(provider) &&
           provider.id !== 'windows-shell-thumbnail'
         ) {
-          prepared = (await runProjectPreviewCompute(
-            {
-              kind: 'extractImage',
-              sourcePath,
-              sourceExt: classification.sourceExt,
-              providerId: provider.id,
-            },
-            { isCancelled: options.isCancelled, timeoutMs: options.pdfTimeoutMs ?? 120_000 },
+          prepared = (await measure(`provider:${provider.id}`, () =>
+            runProjectPreviewCompute(
+              {
+                kind: 'extractImage',
+                sourcePath,
+                sourceExt: classification.sourceExt,
+                providerId: provider.id,
+              },
+              { isCancelled: options.isCancelled, timeoutMs: options.pdfTimeoutMs ?? 120_000 },
+            ),
           )) as typeof prepared
-        } else previewBytes = await provider.extract(sourcePath)
+        } else
+          previewBytes = await measure(`provider:${provider.id}`, () =>
+            provider.extract(sourcePath),
+          )
       } catch (error) {
         checkCancelled()
         const code = (error as { code?: string }).code
@@ -168,15 +177,17 @@ export class ProjectPreviewService {
       }
       checkCancelled()
       if (!previewBytes && !prepared) continue
-      const entry = await this.createPreviewEntry(
-        {
-          ...common,
-          provider: provider.id,
-          providerVersion: cacheProviderVersion(provider),
-        },
-        previewBytes,
-        previous,
-        prepared,
+      const entry = await measure('preview-save', () =>
+        this.createPreviewEntry(
+          {
+            ...common,
+            provider: provider.id,
+            providerVersion: cacheProviderVersion(provider),
+          },
+          previewBytes,
+          previous,
+          prepared,
+        ),
       )
       if (entry) return entry
       decodeFailed = true

@@ -1,3 +1,4 @@
+import { useScanResponsiveness } from '../hooks/useScanResponsiveness'
 import WorkspacePreparationLink from './WorkspacePreparationLink'
 import SearchDiagnosticsControls from './SearchDiagnosticsControls'
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
@@ -120,6 +121,7 @@ const ImageSearchPanel: React.FC = () => {
     pendingCount: 0,
     message: 'Ready',
   })
+  useScanResponsiveness(status.state === 'indexing')
   const [initialStatusLoaded, setInitialStatusLoaded] = useState(false)
   const [manualPath, setManualPath] = useState('')
   const [showDrivePicker, setShowDrivePicker] = useState(false)
@@ -1256,7 +1258,7 @@ const ImageSearchPanel: React.FC = () => {
             onDrop={sourcesOnly ? undefined : handleDrop}
           >
             <ImageSearchToastBanner toast={toast} />
-            {!sourcesOnly && <SearchDiagnosticsControls traceId={diagnosticId} />}
+            <SearchDiagnosticsControls traceId={sourcesOnly ? undefined : diagnosticId} />
             {searchWarning && (
               <div className="search-degradation-notice" role="status">
                 {searchWarning}

@@ -90,6 +90,11 @@ test('cancelled project indexing flushes the completed preview and its native ha
       '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="red"/></svg>',
     )
   let cancelled = false
+  const telemetry = []
+  const { ScanResponsiveness } = loadTsModule('electron/scanResponsiveness.ts')
+  const diagnostics = new ScanResponsiveness((_id, event, detail) =>
+    telemetry.push({ event, detail }),
+  )
   try {
     await initProjectSearchIndex(data)
     const result = await indexProjectPreviews(
@@ -109,7 +114,7 @@ test('cancelled project indexing flushes the completed preview and its native ha
         deleteIndexPath: () => ({ ok: true }),
         removeSourceVectorData: () => {},
       },
-      { isCancelled: () => cancelled },
+      { isCancelled: () => cancelled, diagnostics },
     )
     assert.equal(result.cancelled, true)
     assert.equal(result.indexed, 1)
@@ -117,7 +122,18 @@ test('cancelled project indexing flushes the completed preview and its native ha
     assert.equal(entries.length, 1)
     assert.equal(entries[0].diffHash64, '1'.repeat(16))
     assert.ok(fs.existsSync(entries[0].previewPath))
+    diagnostics.close()
+    const recorded = telemetry.find((r) => r.event === 'preview-main-window').detail.stages
+    for (const stage of [
+      'enumerate',
+      'preview-generate',
+      'native-hash',
+      'native-upsert',
+      'manifest-flush',
+    ])
+      assert.ok(recorded[stage], stage)
   } finally {
+    diagnostics.close()
     fs.rmSync(root, { recursive: true, force: true })
   }
 })

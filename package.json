@@ -336,7 +336,7 @@
     "verify:release": "node scripts/verify.cjs release",
     "test:project-preview:worker": "node scripts/verify-project-preview-worker.cjs",
     "test:indexing-ui:browser": "node tests/indexing-ui-browser.cjs",
-    "test:indexing-ui:regression": "node --test tests/project-preview-performance.test.cjs tests/progress-coalescer.test.cjs tests/image-search-shutdown.test.cjs"
+    "test:indexing-ui:regression": "node --test tests/project-preview-performance.test.cjs tests/progress-coalescer.test.cjs tests/image-search-shutdown.test.cjs tests/scan-responsiveness.test.cjs tests/scan-responsiveness-renderer.test.cjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
