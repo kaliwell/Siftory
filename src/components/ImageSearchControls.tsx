@@ -354,20 +354,27 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
           testId="image-search-query-section"
           summary={searching ? t('Searching...') : t('Ready')}
         >
+          {workflowRunning && (
+            <div role="status">
+              {t(
+                'Library preparation continues. Image queries use fast matching on indexed materials; vector and semantic search will resume after preparation.',
+              )}
+            </div>
+          )}
           <div className="search-input-group">
             <span className="search-group-label">{t('Reference image')}</span>
             <div className="image-search-query-controls search-reference-controls">
               <button
                 data-testid="image-search-query-image"
                 onClick={onQueryImage}
-                disabled={searching || workflowRunning}
+                disabled={searching}
               >
                 {t('Query')}
               </button>
-              <button onClick={onPasteClipboardImage} disabled={searching || workflowRunning}>
+              <button onClick={onPasteClipboardImage} disabled={searching}>
                 {t('Paste')}
               </button>
-              <button onClick={onRefreshSearch} disabled={searching || workflowRunning}>
+              <button onClick={onRefreshSearch} disabled={searching}>
                 {t('Refresh')}
               </button>
               <div className="search-reference-path">
@@ -383,7 +390,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                   title={testImagePath || undefined}
                 />
                 {testImagePath && (
-                  <button onClick={onClearQueryImage} disabled={searching || workflowRunning}>
+                  <button onClick={onClearQueryImage} disabled={searching}>
                     {t('Clear')}
                   </button>
                 )}

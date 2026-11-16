@@ -1665,15 +1665,7 @@ export async function searchImagesAsync(
     }
   }
   activeImageSearchQueries += 1
-  status = {
-    ...status,
-    state: 'searching',
-    message: 'Searching...',
-    nativeConnected,
-    nativeVersion,
-  }
-  emit()
-  let terminalStatus: ImageSearchStatus | null = null
+  let terminalStatus: ImageSearchStatus
   try {
     const sm = normalizeSearchMode(args?.searchMode)
     const requestedImagePath = normalizeFsPath(args?.imagePath)
@@ -1709,7 +1701,10 @@ export async function searchImagesAsync(
         nativeConnected,
         nativeVersion,
       }
-      return { results: [], status: { ...terminalStatus } }
+      return {
+        results: [],
+        status: { ...terminalStatus },
+      }
     }
     const mergedHits = mergeProjectSearchHashFallback(
       raw.results || [],
@@ -1750,17 +1745,13 @@ export async function searchImagesAsync(
       nativeConnected,
       nativeVersion,
     }
-    return { results: [], status: { ...terminalStatus } }
+    return {
+      results: [],
+      status: { ...terminalStatus },
+    }
   } finally {
     activeImageSearchQueries = Math.max(0, activeImageSearchQueries - 1)
-    status =
-      activeImageSearchQueries === 0
-        ? terminalStatus || { ...status, state: 'idle' }
-        : {
-            ...status,
-            state: 'searching',
-            message: `Searching (${activeImageSearchQueries} active)...`,
-          }
-    emit()
+    // Search has its own Renderer lifecycle. Never overwrite scanning/indexing
+    // with searching/idle, including when a scan starts while this query waits.
   }
 }

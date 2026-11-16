@@ -518,13 +518,17 @@ const ImageSearchPanel: React.FC = () => {
 
   const runImageQuery = useCallback(
     async (imagePath: string) => {
-      if (searchBusyRef.current || setupRunning) return
+      if (searchBusyRef.current) return
       searchBusyRef.current = true
       const queryGeneration = ++queryGenerationRef.current
       semanticRequestIdRef.current = null
       setSearchWarning('')
       setDiagnosticId(undefined)
-      const effectiveSearchMode = experienceMode === 'simple' ? 'standard' : searchMode
+      const effectiveSearchMode = setupRunning
+        ? 'fast'
+        : experienceMode === 'simple'
+          ? 'standard'
+          : searchMode
       setTestImagePath(imagePath)
       setLastQueryKind('image')
       setSearching(true)
@@ -586,7 +590,14 @@ const ImageSearchPanel: React.FC = () => {
               message: 'Image search complete',
             })
             setResults(res.results)
-            setStatus(res.status)
+            // Keep the live scan state; query responses can contain older snapshots.
+            if (res.status?.state === 'error') {
+              setSearchWarning(
+                t('Search failed: {reason}', {
+                  reason: res.status.lastError || res.status.message || t('Error'),
+                }),
+              )
+            }
             setQueryHash(res.queryHash ?? null)
             setSearchMetrics(
               res.scannedCount != null

@@ -410,6 +410,57 @@ async function main() {
       { kind: 'url', url: 'https://images.example/image?id=42' },
     )
     assert.equal(await imageCalls(), beforeBrowserDrops + 2)
+    // Preparation does not disable image queries in simple mode. They use
+    // hash matching without entering the model/maintenance lane.
+    await page.evaluate(() => {
+      const fixture = window.__workspaceTest
+      fixture.setHandler('imageSearch.selectImage', () => 'C:/fixtures/during-build.jpg')
+      fixture.setHandler('imageSearch.search', () => ({
+        results: [],
+        status: { state: 'idle', indexedCount: 100 },
+        scannedCount: 100,
+      }))
+      fixture.emit('imageSearch.onPreparationProgress', {
+        taskId: 'concurrent-prepare',
+        state: 'running',
+        phase: 'embedding-dino',
+        percentage: 30,
+        scanComplete: true,
+        message: 'CONCURRENT_PREPARATION_TEST',
+      })
+    })
+    await page.getByText(/素材准备仍在继续|Library preparation continues/).waitFor()
+    assert.equal(await query.isEnabled(), true)
+    const fastCallsBefore = await page.evaluate(
+      () => window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.search').length,
+    )
+    await query.click()
+    await page.waitForFunction(
+      (before) =>
+        window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.search').length >
+        before,
+      fastCallsBefore,
+    )
+    await page.waitForFunction(
+      () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
+    )
+    assert.equal(await page.getByTestId('image-search-semantic-query').isDisabled(), true)
+    await page.evaluate(() =>
+      window.__workspaceTest.setHandler('imageSearch.search', () => ({
+        results: [],
+        status: { state: 'error', lastError: 'QUERY_FAILURE_DURING_BUILD' },
+      })),
+    )
+    await query.click()
+    await page
+      .getByText(/QUERY_FAILURE_DURING_BUILD/)
+      .first()
+      .waitFor()
+    await page.getByTestId('workspace-domain-sources').click()
+    const card = page.getByTestId('image-search-maintenance-section')
+    const expansion = card.locator('button').first()
+    if ((await expansion.getAttribute('aria-expanded')) === 'false') await expansion.click()
+    await card.getByText('CONCURRENT_PREPARATION_TEST', { exact: true }).waitFor()
     assert.deepEqual(errors, [])
     const report = {
       passed: true,
@@ -427,6 +478,8 @@ async function main() {
       browserImageHtmlUrl: true,
       browserImagePixels: true,
       browserImageFailureFeedback: true,
+      searchDuringPreparation: true,
+      preparationSurvivesSearch: true,
       rendererErrors: [],
     }
     const evidence = path.join(root, 'artifacts/search-request-lifecycle')
