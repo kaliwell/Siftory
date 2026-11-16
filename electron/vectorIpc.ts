@@ -228,6 +228,7 @@ function normalizeExistingDirectoryList(input: unknown): string[] | undefined {
 
 let vectorSettings: VectorSettings | null = null
 let activeVectorSearches = 0
+let semanticSearchCancellationEpoch = 0
 
 const SOURCE_FILE_SYNC_BUSY_MESSAGE = 'Source file synchronization is running'
 const ASSET_LIBRARY_RECOVERY_RETRY_DELAYS_MS = [5_000, 10_000, 30_000, 60_000, 120_000, 300_000]
@@ -969,6 +970,7 @@ export function registerVectorIpc(
   })
 
   secureIpcMain.handle('vector:stopLayeredSearch', async () => {
+    semanticSearchCancellationEpoch++
     stopLayeredSearch()
     return { ok: true }
   })
@@ -1022,11 +1024,14 @@ export function registerVectorIpc(
         searchMode: 'semantic' as const,
       }
     }
+    const cancellationEpoch = semanticSearchCancellationEpoch
     activeVectorSearches += 1
     try {
       const response = await searchSemanticImages(
         {
           text,
+          isCancelled: () =>
+            semanticSearchCancellationEpoch !== cancellationEpoch || event.sender.isDestroyed(),
           topK: typeof r?.topK === 'number' ? r.topK : undefined,
           requestId: typeof r?.requestId === 'string' ? r.requestId : undefined,
           feedbackMode:

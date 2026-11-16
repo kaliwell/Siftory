@@ -25,3 +25,19 @@ export function invalidatePreparedSearches(): void {
 export function getPreparationSearchRevision(): number {
   return revision
 }
+
+let mutations = 0
+export function isPreparedSearchMutationActive(): boolean {
+  return mutations > 0
+}
+export function beginPreparedSearchMutation(): () => void {
+  mutations++
+  invalidatePreparedSearches()
+  let released = false
+  return () => {
+    if (released) return
+    released = true
+    invalidatePreparedSearches()
+    mutations--
+  }
+}

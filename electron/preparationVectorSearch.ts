@@ -1,4 +1,7 @@
-import { getPreparationSearchRevision } from './preparationSearchState'
+import {
+  getPreparationSearchRevision,
+  isPreparedSearchMutationActive,
+} from './preparationSearchState'
 import fs from 'node:fs'
 import path from 'node:path'
 import { Worker } from 'node:worker_threads'
@@ -15,6 +18,7 @@ export async function searchPreparedVectorSnapshot(
   scope?: readonly string[],
 ): Promise<{ candidates: SemanticClipCandidate[]; scanned: number }> {
   if (isCancelled?.()) throw Error('Vector search cancelled')
+  if (isPreparedSearchMutationActive()) throw Error('Indexed materials are updating; please retry')
   const revision = getPreparationSearchRevision()
   const sources = getEmbeddingStorePaths(model, 'global').map((file) => {
     const stat = fs.statSync(file)

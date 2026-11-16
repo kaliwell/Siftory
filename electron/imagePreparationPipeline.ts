@@ -1,4 +1,4 @@
-import { beginSearchablePreparation, invalidatePreparedSearches } from './preparationSearchState'
+import { beginSearchablePreparation, beginPreparedSearchMutation } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
 import crypto from 'crypto'
@@ -607,8 +607,12 @@ export function createImagePreparationPipeline(
           }
           const freshPaths = pendingStreamInputs.add(candidatePaths)
           if (freshPaths.length > 0) {
-            invalidatePreparedSearches()
-            await dependencies.invalidateCommittedInputs(freshPaths)
+            const releaseMutation = beginPreparedSearchMutation()
+            try {
+              await dependencies.invalidateCommittedInputs(freshPaths)
+            } finally {
+              releaseMutation()
+            }
             committedImages += freshPaths.length
             invalidatedImages += freshPaths.length
             if (dinoModelReady && !scanFinished) {

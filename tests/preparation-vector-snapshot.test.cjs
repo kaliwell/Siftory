@@ -110,3 +110,15 @@ test('snapshot scores retain the normal search cosine-to-score scale', async (t)
     ],
   )
 })
+
+test('an invalidation fences queries for its entire persistence window', () => {
+  const mode = loadTsModule('electron/preparationSearchState.ts')
+  const before = mode.getPreparationSearchRevision()
+  const release = mode.beginPreparedSearchMutation()
+  assert.equal(mode.isPreparedSearchMutationActive(), true)
+  assert.equal(mode.getPreparationSearchRevision(), before + 1)
+  release()
+  release()
+  assert.equal(mode.isPreparedSearchMutationActive(), false)
+  assert.equal(mode.getPreparationSearchRevision(), before + 2)
+})
