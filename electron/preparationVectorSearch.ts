@@ -28,7 +28,9 @@ export async function searchPreparedVectorSnapshot(
   const stop = new SharedArrayBuffer(4)
   const workerFile = app.isPackaged
     ? path.join(process.resourcesPath, 'preparationVectorWorker.js')
-    : path.join(__dirname, 'preparationVectorWorker.js')
+    : fs.existsSync(path.join(__dirname, 'preparationVectorWorker.js'))
+      ? path.join(__dirname, 'preparationVectorWorker.js')
+      : path.join(__dirname, '..', 'dist-electron', 'preparationVectorWorker.js')
   const worker = new Worker(workerFile, {
     workerData: { sources, model, dim, query: [...query], topK, stop, scope },
   })

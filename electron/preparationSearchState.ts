@@ -1,14 +1,17 @@
 let active = false
+let snapshotRequired = false
 let preparations = 0
 export function setVectorPreparationActive(value: boolean): void {
   active = value
+  if (value) snapshotRequired = true
 }
 export function isVectorPreparationActive(): boolean {
-  return active || preparations > 0
+  return active || preparations > 0 || snapshotRequired
 }
 
 export function beginSearchablePreparation(): () => void {
   preparations++
+  snapshotRequired = true
   let released = false
   return () => {
     if (!released) {
@@ -40,4 +43,8 @@ export function beginPreparedSearchMutation(): () => void {
     invalidatePreparedSearches()
     mutations--
   }
+}
+
+export function markPreparedSearchCommitted(): void {
+  snapshotRequired = false
 }

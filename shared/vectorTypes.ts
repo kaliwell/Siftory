@@ -156,6 +156,7 @@ export interface EmbeddingProviderTelemetry {
 // ── Vector Index ──────────────────────────────────────────
 
 export interface VectorIndexManifest {
+  sourceFingerprint?: string
   version: number
   modelName: string
   modelVersion: string

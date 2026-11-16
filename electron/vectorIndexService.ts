@@ -1,4 +1,4 @@
-import { isVectorPreparationActive } from './preparationSearchState'
+import { isVectorPreparationActive, markPreparedSearchCommitted } from './preparationSearchState'
 import { searchPreparedVectorSnapshot } from './preparationVectorSearch'
 // ── Vector Index Service ───────────────────────────────────
 // Lightweight in-memory vector index with cosine similarity.
@@ -339,6 +339,15 @@ function isLargeEmbeddingFile(
   )
 }
 
+function vectorSourcesFingerprint(modelName: string, embeddingType: EmbeddingType): string {
+  return JSON.stringify(
+    getEmbeddingFilePaths(modelName, embeddingType).map((file) => {
+      const stat = fs.statSync(file)
+      return { file, size: stat.size, mtimeMs: stat.mtimeMs }
+    }),
+  )
+}
+
 function loadManifest(): VectorIndexManifest | null {
   try {
     const p = getManifestPath()
@@ -434,7 +443,9 @@ export async function buildVectorIndex(
         createdAt: previous?.createdAt || Date.now(),
         updatedAt: Date.now(),
       }
+      currentManifest.sourceFingerprint = vectorSourcesFingerprint(modelName, embeddingType)
       saveManifest(currentManifest)
+      markPreparedSearchCommitted()
       return {
         ok: true,
         warning:
@@ -471,7 +482,9 @@ export async function buildVectorIndex(
       createdAt: Date.now(),
       updatedAt: Date.now(),
     }
+    currentManifest.sourceFingerprint = vectorSourcesFingerprint(modelName, embeddingType)
     saveManifest(currentManifest)
+    markPreparedSearchCommitted()
 
     return { ok: true }
   } finally {
@@ -838,7 +851,21 @@ async function searchVectorIndexImpl(
 ): Promise<VectorSearchResult[]> {
   requireVectorSearchTopK(req.topK)
   const searchEpoch = vectorIndexLifecycleEpoch
-  if (isVectorPreparationActive() && req.modelName) {
+  const published = loadManifest()
+  const sourceChanged =
+    req.modelName &&
+    (published?.modelName !== req.modelName ||
+      (published.sourceFingerprint
+        ? published.sourceFingerprint !==
+          vectorSourcesFingerprint(req.modelName, req.embeddingType || 'global')
+        : getEmbeddingFilePaths(req.modelName, req.embeddingType || 'global').some(
+            (file) => fs.statSync(file).mtimeMs > published.updatedAt,
+          )))
+  if (
+    (isVectorPreparationActive() || sourceChanged) &&
+    req.modelName &&
+    (req.embeddingType || 'global') === 'global'
+  ) {
     const found = await searchPreparedVectorSnapshot(
       req.modelName,
       expectedModelDim(req.modelName),

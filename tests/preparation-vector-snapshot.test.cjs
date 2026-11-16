@@ -92,6 +92,8 @@ test('preparation mode spans model-stage gaps and releases exactly once', () => 
   assert.equal(mode.getPreparationSearchRevision(), revision + 1)
   release()
   release()
+  assert.equal(mode.isVectorPreparationActive(), true)
+  mode.markPreparedSearchCommitted()
   assert.equal(mode.isVectorPreparationActive(), false)
 })
 

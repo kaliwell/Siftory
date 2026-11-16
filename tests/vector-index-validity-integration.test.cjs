@@ -267,3 +267,23 @@ test('streaming fallback applies the same latest-row and strict query rules', as
     else process.env.FLOATING_CLOCK_DISABLE_VECTOR_ANN = originalDisableAnn
   }
 })
+
+test('cancelled preparation keeps new rows searchable; stale published index is bypassed after mode reset', async () => {
+  const model = 'dinov2_vitb14',
+    dim = 768
+  const stores = writeStores(model, [], [embeddingRow(model, 'C:/old.jpg', basis(dim, 0))])
+  assert.equal((await vectorIndex.buildVectorIndex(model)).ok, true)
+  const mode = loadTsModule('electron/preparationSearchState.ts')
+  const release = mode.beginSearchablePreparation()
+  fs.appendFileSync(stores.shardPath, embeddingRow(model, 'C:/new.jpg', basis(dim, 1)) + '\n')
+  release()
+  assert.equal(
+    (await vectorIndex.searchVectorIndex(searchRequest(model, basis(dim, 1))))[0].path,
+    'C:/new.jpg',
+  )
+  mode.markPreparedSearchCommitted() // Simulate a fresh process's empty mode flags.
+  assert.equal(
+    (await vectorIndex.searchVectorIndex(searchRequest(model, basis(dim, 1))))[0].path,
+    'C:/new.jpg',
+  )
+})

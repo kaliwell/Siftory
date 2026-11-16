@@ -88,7 +88,7 @@ jobs:
       - run: npm run licenses:gate
       - run: npm run build:online
       - name: Verify compiled preparation snapshot worker
-        run: node --test tests/compiled-preparation-worker.test.cjs
+        run: node --test tests/compiled-preparation-worker.test.cjs tests/vector-index-validity-integration.test.cjs
       - name: Verify real Windows Shell helper and content pixels
         run: npm run test:project-preview:shell:electron
       - run: npm run smoke:packaged:resources -- --profile=online
