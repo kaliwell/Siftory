@@ -42,3 +42,11 @@ GPU、ONNX/模型、推理、Tensor、进程、内存耗尽和向量写盘错误
 - `validation-status.json`：`startupPassed: true`、`archivePassed: true`、`fullUiOutcome: failure`、`upgradeVerified: false`。旧完整中文 UI 回归在 120 秒后未生成报告；英文步骤未执行。完整主进程类型检查的既有环境/Worker Host 问题未在此次宣称解决。
 - 发布包已重新下载，大小 176,195,368 字节，SHA256 校验通过：`967f2f85e0db7fde1941bdfad4fe6a79162b3c9e9aef9c534b609cf6220d880d`。
 - 下载：https://github.com/kaliwell/Siftory/releases/tag/v1.0.1-alpha.34 。真实 101 个源文件、GPU 建库及已有安装升级仍需本地复测；原生跳过计数和历史日志不会被清零。
+
+## Alpha34 用户复测后的跟进（尚未打入已发布安装包）
+
+用户 2026-11-16 13:33 左右的报告确认 91 项归为跳过：68 项不支持输入、6 项解码拒绝、17 项像素超限。DINO 最终仍有 10 项失败，不能宣称本问题完全解决。与上一轮文件清单比对，未进入跳过明细的候选为六份同名贴图和四个 JPEG 测试样本；其中六份贴图在本轮原生扫描中也报告像素超限。本轮逐项向量失败仍需最新 `embedding_failures.jsonl` 确认，不能仅凭历史原因推断本轮根因。
+
+此次发现统一扫描报告只导出了跳过明细和最终失败总数，未包含复核未通过项的逐项错误。源码已补充：`logEmbeddingFailure` 同时写入统一报告的 `embedding:EMBEDDING_FAILED`，保留源 ID、原始原因、模型和解码阶段标记，沿用路径脱敏及可选映射。正常跳过项不写作错误，真实故障与未能确认的输入失败均保留。
+
+对应核心测试现为 43 项，通过；新增用例确认复核不确定时逐项明细也会导出。这是源码跟进，已发布 Alpha34 安装包仍为上文固定源码 `0ccb1ae`，不包含此日志补丁；剩余十项的处理方式尚未变更。

@@ -141,10 +141,36 @@ test('unmarked unknown and GPU failures are retained as failures in the real ser
   assert.equal(h.progress().failed, 2)
   assert.equal(h.progress().skipped, 0)
   assert.equal(h.failures.length, 2)
+  const rows = h.records.flatMap((r) => r.detail.items || [])
+  assert.equal(rows.length, 2)
+  assert.ok(
+    rows.every(
+      (r) => r.stage === 'embedding' && r.code === 'EMBEDDING_FAILED' && r.severity === 'error',
+    ),
+  )
   assert.deepEqual(
     h.snapshots.at(-1).map((job) => job.status),
     ['failed', 'failed'],
   )
+})
+
+test('an inconclusive input review exports the per-file failure instead of only a final count', async (t) => {
+  const h = harness(t)
+  const header = fs.readFileSync(h.source)
+  header[6] = 8
+  fs.writeFileSync(h.source, header)
+  const [task] = h.start(1, 'inconclusive-input')
+  h.handle({ ...task, inputPath: h.source })
+  await done(h)
+  assert.equal(h.progress().failed, 1)
+  assert.equal(h.progress().skipped, 0)
+  const rows = h.records.flatMap((r) => r.detail.items || [])
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].reason, 'Unknown error')
+  assert.equal(rows[0].details.inputDecodeFailure, true)
+  assert.equal(rows[0].details.model, 'dinov2_vitb14')
+  assert.ok(rows[0].sourceId)
+  assert.equal(h.failures.length, 1)
 })
 
 test('vector persistence failures cannot be reclassified as unsupported images', async (t) => {

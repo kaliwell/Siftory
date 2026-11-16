@@ -323,6 +323,15 @@ function getFailureLogPath(): string {
 }
 
 function logEmbeddingFailure(result: WorkerResult): void {
+  scanErrorRecorder.record(
+    'embedding',
+    'EMBEDDING_FAILED',
+    result.imageId,
+    result.error || 'Unknown embedding error',
+    'error',
+    { model: result.modelName, inputDecodeFailure: result.inputFailure === true },
+  )
+  scanErrorRecorder.flush()
   appendEmbeddingFailure(getFailureLogPath(), {
     time: new Date().toISOString(),
     imageId: result.imageId,
