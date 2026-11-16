@@ -274,12 +274,23 @@ test('cancelled preparation keeps new rows searchable; stale published index is 
   const stores = writeStores(model, [], [embeddingRow(model, 'C:/old.jpg', basis(dim, 0))])
   assert.equal((await vectorIndex.buildVectorIndex(model)).ok, true)
   const mode = loadTsModule('electron/preparationSearchState.ts')
+  const prepared = loadTsModule('electron/preparationVectorSearch.ts')
+  const known = await prepared.collectPreparedInputPaths()
+  const initialRevision = mode.getPreparationSearchRevision()
+  await prepared.invalidatePreparedVectorPaths(['C:/new.jpg'], known)
+  assert.equal(mode.getPreparationSearchRevision(), initialRevision)
   const release = mode.beginSearchablePreparation()
   fs.appendFileSync(stores.shardPath, embeddingRow(model, 'C:/new.jpg', basis(dim, 1)) + '\n')
   release()
   assert.equal(
     (await vectorIndex.searchVectorIndex(searchRequest(model, basis(dim, 1))))[0].path,
     'C:/new.jpg',
+  )
+  await prepared.invalidatePreparedVectorPaths(['C:/old.jpg'], known)
+  const afterRemoval = await vectorIndex.searchVectorIndex(searchRequest(model, basis(dim, 0)))
+  assert.equal(
+    afterRemoval.some((row) => row.path === 'C:/old.jpg'),
+    false,
   )
   mode.markPreparedSearchCommitted() // Simulate a fresh process's empty mode flags.
   assert.equal(

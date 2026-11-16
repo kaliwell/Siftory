@@ -48,3 +48,24 @@ export function beginPreparedSearchMutation(): () => void {
 export function markPreparedSearchCommitted(): void {
   snapshotRequired = false
 }
+
+export async function invalidatePreparedInputs(
+  remove: () => number,
+  flush: () => Promise<unknown>,
+): Promise<void> {
+  let removed: number
+  try {
+    removed = remove()
+  } catch (error) {
+    invalidatePreparedSearches()
+    throw error
+  }
+  // New paths have no old vectors to invalidate. Do not fence unrelated reads
+  // merely because the scan discovered another file.
+  const release = removed > 0 ? beginPreparedSearchMutation() : () => {}
+  try {
+    await flush()
+  } finally {
+    release()
+  }
+}

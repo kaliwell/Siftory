@@ -124,3 +124,45 @@ test('an invalidation fences queries for its entire persistence window', () => {
   assert.equal(mode.isPreparedSearchMutationActive(), false)
   assert.equal(mode.getPreparationSearchRevision(), before + 2)
 })
+
+test('new-only scan commits do not invalidate concurrent readers', async () => {
+  const mode = loadTsModule('electron/preparationSearchState.ts')
+  const before = mode.getPreparationSearchRevision()
+  await mode.invalidatePreparedInputs(
+    () => 0,
+    async () => {
+      assert.equal(mode.isPreparedSearchMutationActive(), false)
+      assert.equal(mode.getPreparationSearchRevision(), before)
+    },
+  )
+  assert.equal(mode.getPreparationSearchRevision(), before)
+})
+test('replacement holds the fence until persistence settles, including failure', async () => {
+  const mode = loadTsModule('electron/preparationSearchState.ts')
+  const before = mode.getPreparationSearchRevision()
+  await assert.rejects(
+    mode.invalidatePreparedInputs(
+      () => 1,
+      async () => {
+        assert.equal(mode.isPreparedSearchMutationActive(), true)
+        throw Error('write failure')
+      },
+    ),
+    /write failure/,
+  )
+  assert.equal(mode.isPreparedSearchMutationActive(), false)
+  assert.equal(mode.getPreparationSearchRevision(), before + 2)
+})
+
+test('mixed slash spellings share a latest vector identity', async (t) => {
+  const f = await fixture(
+    t,
+    row(
+      'C:' + String.fromCharCode(92) + 'Pictures' + String.fromCharCode(92) + 'same.JPG',
+      [1, 0],
+    ) + row('c:/pictures/same.jpg', [0, 1]),
+  )
+  const found = await scanPreparedVectors(await f.input())
+  assert.equal(found.scanned, 1)
+  assert.equal(found.candidates[0].score, 0.5)
+})

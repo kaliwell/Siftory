@@ -1,4 +1,5 @@
-import { beginSearchablePreparation, beginPreparedSearchMutation } from './preparationSearchState'
+import { collectPreparedInputPaths, invalidatePreparedVectorPaths } from './preparationVectorSearch'
+import { beginSearchablePreparation } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
 import crypto from 'crypto'
@@ -37,7 +38,6 @@ import {
 import { cancelQueuedImageSearchScan, queueImageSearchScan } from './imageSearchTaskScheduling'
 import { cancelDownload, downloadModel, getModelStatus } from './modelService'
 import { buildVectorIndex } from './vectorIndexService'
-import { flushVectorDatabaseWrites, removeImageDataBatch } from './vectorDatabaseService'
 import type { UnifiedTaskSubmitter } from './unifiedTaskSubmission'
 import { PreparationInputSpool } from './preparationInputSpool'
 
@@ -115,7 +115,11 @@ export interface ImagePreparationPipelineDependencies {
     sessionId: string,
     maxConcurrency: number,
   ) => import('../shared/runtimeErrors').RuntimeOperationResult
-  invalidateCommittedInputs: (paths: readonly string[]) => Promise<void>
+  getExistingInputPaths?: (isCancelled: () => boolean) => Promise<ReadonlySet<string>>
+  invalidateCommittedInputs: (
+    paths: readonly string[],
+    known?: ReadonlySet<string>,
+  ) => Promise<void>
   buildVectorIndex: typeof buildVectorIndex
 }
 
@@ -184,10 +188,8 @@ const DEFAULT_DEPENDENCIES: ImagePreparationPipelineDependencies = {
   appendStreamingEmbeddingInputs,
   closeStreamingEmbedding: closeStreamingEmbeddingBuild,
   scaleStreamingEmbedding: scaleStreamingEmbeddingBuild,
-  invalidateCommittedInputs: async (paths) => {
-    removeImageDataBatch(paths)
-    await flushVectorDatabaseWrites()
-  },
+  getExistingInputPaths: collectPreparedInputPaths,
+  invalidateCommittedInputs: invalidatePreparedVectorPaths,
   buildVectorIndex,
 }
 
@@ -550,6 +552,19 @@ export function createImagePreparationPipeline(
     options.registerCancellation?.(cancelOwnedWork)
 
     const feedConfigured = dependencies.configureCommitFeed(true, 4096).ok
+    report('scanning', 'Checking existing searchable materials...', 0)
+    let existingInputs: ReadonlySet<string> | undefined
+    try {
+      existingInputs = await dependencies.getExistingInputPaths?.(cancelled)
+      throwIfCancelled()
+    } catch (error) {
+      await cancelOwnedWork()
+      await Promise.allSettled([dinoModelPromise, clipModelPromise])
+      dependencies.configureCommitFeed(false, 4096)
+      options.registerCancellation?.(null)
+      pendingStreamInputs.dispose()
+      throw error
+    }
     report('scanning', 'Starting image scan and model preparation...', 0)
     const startedScan = dependencies.startScan(
       {
@@ -607,12 +622,7 @@ export function createImagePreparationPipeline(
           }
           const freshPaths = pendingStreamInputs.add(candidatePaths)
           if (freshPaths.length > 0) {
-            const releaseMutation = beginPreparedSearchMutation()
-            try {
-              await dependencies.invalidateCommittedInputs(freshPaths)
-            } finally {
-              releaseMutation()
-            }
+            await dependencies.invalidateCommittedInputs(freshPaths, existingInputs)
             committedImages += freshPaths.length
             invalidatedImages += freshPaths.length
             if (dinoModelReady && !scanFinished) {

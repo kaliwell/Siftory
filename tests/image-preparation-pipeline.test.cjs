@@ -79,6 +79,7 @@ function createPipelineHarness(root, options = {}) {
     { paths: [], generation: 2, pending: 0, dropped: 0 },
   ]
   const dependencies = {
+    getExistingInputPaths: async () => new Set(),
     configureCommitFeed: (enabled, maxEntries) => {
       calls.configured.push({ enabled, maxEntries })
       return { ok: true }

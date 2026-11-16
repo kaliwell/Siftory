@@ -263,6 +263,7 @@ const zhCN: Record<string, string> = {
   'No match in completed materials yet': '当前已完成的素材中暂无匹配',
   'Library preparation is continuing. New completed materials will be included when you search again.':
     '素材准备仍在继续，新完成的素材会在下次搜索时加入检索范围。',
+  'Checking existing searchable materials...': '正在检查已有可搜索素材…',
   'Skipped {count}': '跳过 {count}',
   'Remaining {count}': '剩余 {count}',
   'Save query copy for reproduction': '保存本次查询副本用于复现',

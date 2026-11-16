@@ -1,3 +1,4 @@
+import { getPreparationSearchRevision } from './preparationSearchState'
 import { beginSearchDiagnostic, getSearchDiagnostics } from './searchDiagnostics'
 import { secureIpcMain } from './ipcAuthorization'
 import { BrowserWindow, powerMonitor } from 'electron'
@@ -863,6 +864,7 @@ export function registerVectorIpc(
           searchMode: 'fast' as const,
         }
       }
+      const preparationRevision = getPreparationSearchRevision()
       const searchEpoch = getSourceFileSyncMutationEpoch()
       const releaseSearch = tryAcquireVectorSearchReservation()
       if (!releaseSearch) {
@@ -919,7 +921,11 @@ export function registerVectorIpc(
           },
           diagnostic,
         )
-        if (isSourceFileSyncRunning() || searchEpoch !== getSourceFileSyncMutationEpoch()) {
+        if (
+          isSourceFileSyncRunning() ||
+          searchEpoch !== getSourceFileSyncMutationEpoch() ||
+          preparationRevision !== getPreparationSearchRevision()
+        ) {
           return {
             results: [],
             mode,
@@ -1011,6 +1017,7 @@ export function registerVectorIpc(
         searchMode: 'semantic' as const,
       }
     }
+    const preparationRevision = getPreparationSearchRevision()
     const searchEpoch = getSourceFileSyncMutationEpoch()
     const releaseSearch = tryAcquireVectorSearchReservation()
     if (!releaseSearch) {
@@ -1041,7 +1048,11 @@ export function registerVectorIpc(
           sendToRenderer(getMainWindow, 'vector:onSemanticSearchProgress', progress)
         },
       )
-      if (isSourceFileSyncRunning() || searchEpoch !== getSourceFileSyncMutationEpoch()) {
+      if (
+        isSourceFileSyncRunning() ||
+        searchEpoch !== getSourceFileSyncMutationEpoch() ||
+        preparationRevision !== getPreparationSearchRevision()
+      ) {
         return {
           results: [],
           query: text,

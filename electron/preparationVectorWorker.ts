@@ -1,3 +1,5 @@
+import { embeddingCachePathKey } from './embeddingF16Cache'
+import { collectExistingEmbeddingIds } from './embeddingExistingIndex'
 import fs from 'node:fs'
 import readline from 'node:readline'
 import { parentPort, workerData } from 'node:worker_threads'
@@ -17,6 +19,8 @@ interface PreparedSnapshotRequest {
   topK: number
   stop?: SharedArrayBuffer
   scope?: string[]
+  inventory?: boolean
+  vectorDbDir?: string
 }
 export async function scanPreparedVectors(input: PreparedSnapshotRequest) {
   const latest = new Map<string, number>()
@@ -25,8 +29,20 @@ export async function scanPreparedVectors(input: PreparedSnapshotRequest) {
   const cancelled = () => {
     if (stop && Atomics.load(stop, 0)) throw Error('Vector search cancelled')
   }
-  const key = (p: string) => p.replace(/\\/g, '/').toLowerCase()
+  const key = embeddingCachePathKey
   const allowed = input.scope && new Set<string>(input.scope.map(key))
+  if (input.inventory) {
+    const paths = await collectExistingEmbeddingIds({
+      vectorDbDir: input.vectorDbDir!,
+      modelName: input.model,
+      embeddingType: 'global',
+      dim: input.dim,
+      sourcePaths: input.sources.map((source) => source.path),
+      isCancelled: () => Boolean(stop && Atomics.load(stop, 0)),
+    })
+    cancelled()
+    return { candidates: [], scanned: paths.size, paths: [...paths].map(key) }
+  }
   const query = requireNormalizedEmbeddingVector(input.query, input.dim)
   const heap = new BoundedSemanticCandidateHeap(input.topK)
   let rows = 0
