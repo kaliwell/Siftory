@@ -1,3 +1,5 @@
+import { isVectorPreparationActive } from './preparationSearchState'
+import { searchPreparedVectorSnapshot } from './preparationVectorSearch'
 import fs from 'fs'
 import path from 'path'
 import {
@@ -1163,6 +1165,24 @@ async function searchClipEmbeddingIndex(
   )
   if (isCancelled?.()) throw new Error('Semantic search cancelled')
   const textEncoderDiagnostic = getLastQueryTextEncoderDiagnostic()
+
+  if (isVectorPreparationActive()) {
+    const snapshot = await searchPreparedVectorSnapshot(
+      CLIP_EMBEDDING_MODEL,
+      CLIP_EMBEDDING_DIM,
+      query,
+      topK,
+      isCancelled,
+      acceptPathKeys ? [...acceptPathKeys] : undefined,
+    )
+    return {
+      results: snapshot.candidates,
+      scanned: snapshot.scanned,
+      feedbackApplied: false,
+      feedbackMs: 0,
+      textEncoderDiagnostic,
+    }
+  }
   const cache = await ensureClipEmbeddingCache(embeddingPaths, onProgress, requestId, startedAt)
   if (!cache || cache.meta.count <= 0) {
     return { results: [], scanned: 0, feedbackApplied: false, feedbackMs: 0 }
@@ -1652,6 +1672,23 @@ export async function searchSemanticImages(
     degradationReasons.push(`CLIP embedding semantic search unavailable: ${errorMessage(err)}`)
   }
 
+  if (isVectorPreparationActive()) {
+    return {
+      results: [],
+      query: text,
+      totalCandidates: candidates.length,
+      matchedCandidates: 0,
+      returnedCount: 0,
+      fallbackCount: 0,
+      totalMs: Date.now() - t0,
+      degraded: true,
+      degradationReasons: [
+        ...degradationReasons,
+        'Semantic search is waiting for completed CLIP materials.',
+      ],
+      searchMode: 'semantic',
+    }
+  }
   if (req.isCancelled?.()) throw new Error('Semantic search cancelled')
 
   const matched = candidates

@@ -524,11 +524,7 @@ const ImageSearchPanel: React.FC = () => {
       semanticRequestIdRef.current = null
       setSearchWarning('')
       setDiagnosticId(undefined)
-      const effectiveSearchMode = setupRunning
-        ? 'fast'
-        : experienceMode === 'simple'
-          ? 'standard'
-          : searchMode
+      const effectiveSearchMode = experienceMode === 'simple' ? 'standard' : searchMode
       setTestImagePath(imagePath)
       setLastQueryKind('image')
       setSearching(true)
@@ -689,7 +685,7 @@ const ImageSearchPanel: React.FC = () => {
         }
       }
     },
-    [experienceMode, hammingThreshold, topK, searchMode, setupRunning, showToast, t],
+    [experienceMode, hammingThreshold, topK, searchMode, showToast, t],
   )
 
   const handleQueryImage = useCallback(async () => {
@@ -718,7 +714,7 @@ const ImageSearchPanel: React.FC = () => {
   }, [])
 
   const handleSemanticSearch = useCallback(async () => {
-    if (searchBusyRef.current || setupRunning) return
+    if (searchBusyRef.current) return
     const text = semanticQuery.trim()
     if (!text) {
       showToast(t('Enter semantic text first'), 'err')
@@ -803,7 +799,7 @@ const ImageSearchPanel: React.FC = () => {
         setSearching(false)
       }
     }
-  }, [refreshManagedModels, semanticQuery, setupRunning, showToast, t, topK])
+  }, [refreshManagedModels, semanticQuery, showToast, t, topK])
 
   const handleRefreshSearch = useCallback(async () => {
     if (searching) return
@@ -970,7 +966,7 @@ const ImageSearchPanel: React.FC = () => {
 
   const runSubjectSearch = useCallback(
     async (path: string, subject?: SubjectBBox, segmentationSessionId?: string) => {
-      if (searchBusyRef.current || setupRunning) return
+      if (searchBusyRef.current) return
       searchBusyRef.current = true
       const queryGeneration = ++queryGenerationRef.current
       setSubjectSearching(true)
@@ -1020,7 +1016,7 @@ const ImageSearchPanel: React.FC = () => {
         }
       }
     },
-    [setupRunning, showToast, t, topK],
+    [showToast, t, topK],
   )
 
   // Stop the in-flight layered search (image or subject). The main process

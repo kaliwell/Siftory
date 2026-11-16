@@ -31,6 +31,7 @@ function harness(t, options = {}) {
     flush: async () => {},
   }
   const mocks = {
+    './preparationSearchState': { setVectorPreparationActive: () => {} },
     './interactiveSearchPriority': {
       isInteractiveSearchActive: () => false,
       onInteractiveSearchIdle: () => () => {},

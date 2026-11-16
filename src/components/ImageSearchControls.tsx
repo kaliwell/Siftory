@@ -357,7 +357,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
           {workflowRunning && (
             <div role="status">
               {t(
-                'Library preparation continues. Image queries use fast matching on indexed materials; vector and semantic search will resume after preparation.',
+                'Library preparation continues. Search covers completed materials; newly prepared materials appear in subsequent queries.',
               )}
             </div>
           )}
@@ -409,7 +409,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
             <div className="image-search-semantic-controls search-text-controls">
               <input
                 value={semanticQuery}
-                disabled={searching || workflowRunning}
+                disabled={searching}
                 onChange={(e) => setSemanticQuery(e.target.value)}
                 aria-label={t('Semantic')}
                 onKeyDown={(e) => {
@@ -417,7 +417,6 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                     e.key === 'Enter' &&
                     !e.nativeEvent.isComposing &&
                     !searching &&
-                    !workflowRunning &&
                     semanticModelReady
                   )
                     onSemanticSearch()
@@ -427,7 +426,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               <button
                 data-testid="image-search-semantic-query"
                 onClick={onSemanticSearch}
-                disabled={searching || workflowRunning || !semanticModelReady}
+                disabled={searching || !semanticModelReady}
                 title={!semanticModelReady ? t('The selected model is not ready.') : undefined}
               >
                 {t('Semantic')}

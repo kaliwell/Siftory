@@ -257,6 +257,8 @@ const zhCN: Record<string, string> = {
   'Succeeded {count}': '成功 {count}',
   'Library preparation continues. Image queries use fast matching on indexed materials; vector and semantic search will resume after preparation.':
     '素材准备仍在继续。图片查询暂用已建立索引素材的快速匹配；向量与语义搜索将在准备结束后恢复。',
+  'Library preparation continues. Search covers completed materials; newly prepared materials appear in subsequent queries.':
+    '素材准备仍在继续。搜索范围为已完成的素材，新准备好的素材将在后续查询中出现。',
   'Skipped {count}': '跳过 {count}',
   'Remaining {count}': '剩余 {count}',
   'Save query copy for reproduction': '保存本次查询副本用于复现',

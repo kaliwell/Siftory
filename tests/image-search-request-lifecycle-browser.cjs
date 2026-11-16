@@ -410,18 +410,26 @@ async function main() {
       { kind: 'url', url: 'https://images.example/image?id=42' },
     )
     assert.equal(await imageCalls(), beforeBrowserDrops + 2)
-    // Preparation does not disable image queries in simple mode. They use
-    // hash matching without entering the model/maintenance lane.
     await page.evaluate(() => {
-      const fixture = window.__workspaceTest
-      fixture.setHandler('imageSearch.selectImage', () => 'C:/fixtures/during-build.jpg')
-      fixture.setHandler('imageSearch.search', () => ({
+      const f = window.__workspaceTest
+      f.setHandler('imageSearch.selectImage', () => 'C:/fixtures/during-build.jpg')
+      f.setHandler('vector.searchLayered', (request) => ({
         results: [],
-        status: { state: 'idle', indexedCount: 100 },
-        scannedCount: 100,
+        mode: request.mode,
+        searchMode: request.mode,
+        degraded: false,
+        degradationReasons: [],
+        totalMs: 1,
       }))
-      fixture.emit('imageSearch.onPreparationProgress', {
-        taskId: 'concurrent-prepare',
+      f.setHandler('vector.searchSemantic', () => ({
+        results: [],
+        degraded: false,
+        degradationReasons: [],
+        totalMs: 1,
+        totalCandidates: 0,
+      }))
+      f.emit('imageSearch.onPreparationProgress', {
+        taskId: 'concurrent',
         state: 'running',
         phase: 'embedding-dino',
         percentage: 30,
@@ -430,32 +438,29 @@ async function main() {
       })
     })
     await page.getByText(/素材准备仍在继续|Library preparation continues/).waitFor()
-    assert.equal(await query.isEnabled(), true)
-    const fastCallsBefore = await page.evaluate(
-      () => window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.search').length,
+    const before = await page.evaluate(
+      () => window.__workspaceTest.calls.filter((c) => c.method === 'vector.searchLayered').length,
     )
     await query.click()
     await page.waitForFunction(
-      (before) =>
-        window.__workspaceTest.calls.filter((c) => c.method === 'imageSearch.search').length >
-        before,
-      fastCallsBefore,
+      (n) =>
+        window.__workspaceTest.calls.filter((c) => c.method === 'vector.searchLayered').length > n,
+      before,
     )
     await page.waitForFunction(
       () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
     )
-    assert.equal(await page.getByTestId('image-search-semantic-query').isDisabled(), true)
-    await page.evaluate(() =>
-      window.__workspaceTest.setHandler('imageSearch.search', () => ({
-        results: [],
-        status: { state: 'error', lastError: 'QUERY_FAILURE_DURING_BUILD' },
-      })),
+    const beforeSemantic = await semanticCalls()
+    await text.fill('a searchable material during preparation')
+    await page.getByTestId('image-search-semantic-query').click()
+    await page.waitForFunction(
+      (n) =>
+        window.__workspaceTest.calls.filter((c) => c.method === 'vector.searchSemantic').length > n,
+      beforeSemantic,
     )
-    await query.click()
-    await page
-      .getByText(/QUERY_FAILURE_DURING_BUILD/)
-      .first()
-      .waitFor()
+    await page.waitForFunction(
+      () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
+    )
     await page.getByTestId('workspace-domain-sources').click()
     const card = page.getByTestId('image-search-maintenance-section')
     const expansion = card.locator('button').first()

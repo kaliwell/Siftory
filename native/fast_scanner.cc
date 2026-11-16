@@ -1269,6 +1269,7 @@ static bool is_segment_path_hidden(IndexRuntime& index,const std::string& normal
   if(current!=index.pathIndexMap.end()&&current->second.fromSegment&&current->second.owner){
     return current->second.owner!=index.segments[(size_t)segmentId].get()||current->second.ownerRow!=rowIndex;
   }
+  if(index.replacedPaths.count(normalizedPath))return true;
   // Live overlay mutations are persisted before the application admits a query.
   // A missing ownership entry is left searchable instead of hiding unknown data.
   return false;
@@ -5558,11 +5559,30 @@ static void SearchByImageAsyncExecute(napi_env env,void* data){
       d->error=qhr.decodeKind==DecodeKind::UNSUPPORTED?"Unsupported image format":decode_failure_reason();return;
     }
     d->queryHash=qhr.diffHash64;d->queryDctHash=qhr.dctHash64;
+    auto& index=*d->index;
+    // The query owns a snapshot; matching never runs in the N-API callback.
     auto t0=std::chrono::high_resolution_clock::now();
-    // Search must happen on the main thread — defer to Complete.
-    // Store params for Complete to use
+    std::string sm=d->searchMode;
+    bool dctMode=(sm=="dct");
+    if(sm=="recall")search_linear_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
+    else if(sm=="balanced")search_balanced_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
+    else if(sm=="dct")search_linear_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,true);
+    else search_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
+    if(index.mode=="segment_mmap"&&!index.records.empty()){
+      std::vector<SearchHit> delta;SearchMetrics dm{};
+      search_memory(index,d->queryHash,d->threshold,d->topK,delta,dm);
+      if(dctMode)re_rank_dct(delta,d->queryDctHash);
+      std::unordered_set<std::string> deltaPaths;
+      for(auto& h:delta)deltaPaths.insert(normalize_path(h.path));
+      d->hits.erase(std::remove_if(d->hits.begin(),d->hits.end(),[&](const SearchHit& h){return deltaPaths.count(normalize_path(h.path))>0;}),d->hits.end());
+      d->hits.insert(d->hits.end(),delta.begin(),delta.end());
+      std::stable_sort(d->hits.begin(),d->hits.end(),[](const SearchHit& a,const SearchHit& b){return a.score>b.score;});
+      if(d->hits.size()>(size_t)d->topK)d->hits.resize(d->topK);
+      d->metrics.scanned+=dm.scanned;d->metrics.candidates+=dm.candidates;
+    }
     auto t1=std::chrono::high_resolution_clock::now();
-    d->searchMs=std::chrono::duration<double,std::milli>(t1-t0).count();
+    d->searchMs+=std::chrono::duration<double,std::milli>(t1-t0).count();
+
     d->ok=true;
   }catch(const std::exception& e){d->error=e.what();}catch(...){d->error="searchByImage async error";}
 }
@@ -5574,17 +5594,6 @@ static void SearchByImageAsyncComplete(napi_env env,napi_status status,void* dat
     napi_reject_deferred(env,d->deferred,err);
   }else{
     auto& index=*d->index;
-    // Run search on main thread against the context-provided index.
-    auto t0=std::chrono::high_resolution_clock::now();
-    std::string sm=d->searchMode;
-    bool dctMode=(sm=="dct");
-    if(sm=="recall")search_linear_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
-    else if(sm=="balanced")search_balanced_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
-    else if(sm=="dct")search_linear_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,true);
-    else search_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
-    auto t1=std::chrono::high_resolution_clock::now();
-    d->searchMs+=std::chrono::duration<double,std::milli>(t1-t0).count();
-
     napi_value result;napi_create_object(env,&result);
     set_bool(env,result,"ok",true);
     set_string(env,result,"queryHash",hex64(d->queryHash).c_str());
@@ -5623,7 +5632,20 @@ static napi_value SearchByImageAsync(napi_env env,napi_callback_info info){
   if(argc<2)return reject_missing_args(env,"searchByImageAsync requires filePath and threshold");
   auto* d=new SearchByImageAsyncData();
   auto& context=get_addon_context(env);
-  d->registry=context.asyncWorks;d->index=context.index;
+  d->registry=context.asyncWorks;
+  // Segments retain their mappings through shared ownership. Metadata and the
+  // small in-memory increment are copied while holding the live index lock.
+  // Do not alias the global directory mapping, which can be replaced on save.
+  d->index=std::make_shared<IndexRuntime>();
+  {
+    std::shared_lock<std::shared_mutex> lk(context.index->mutex);
+    d->index->segments=context.index->segments;
+    d->index->records=context.index->records;
+    d->index->pathIndexMap=context.index->pathIndexMap;
+    d->index->deletedPaths=context.index->deletedPaths;
+    d->index->replacedPaths=context.index->replacedPaths;
+    d->index->mode=context.index->mode;d->index->type=context.index->type;
+  }
   d->filePath=get_string(env,argv[0]);
   d->threshold=std::clamp(get_int32(env,argv[1]),0,64);
   // Match the sync searchByImage default: a missing/non-positive topK must not reach

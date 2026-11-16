@@ -1,3 +1,5 @@
+import { isVectorPreparationActive } from './preparationSearchState'
+import { searchPreparedVectorSnapshot } from './preparationVectorSearch'
 // ── Vector Index Service ───────────────────────────────────
 // Lightweight in-memory vector index with cosine similarity.
 // Interface abstracted as VectorIndexProvider for future
@@ -836,6 +838,26 @@ async function searchVectorIndexImpl(
 ): Promise<VectorSearchResult[]> {
   requireVectorSearchTopK(req.topK)
   const searchEpoch = vectorIndexLifecycleEpoch
+  if (isVectorPreparationActive() && req.modelName) {
+    const found = await searchPreparedVectorSnapshot(
+      req.modelName,
+      expectedModelDim(req.modelName),
+      req.queryVector,
+      req.topK,
+      req.isCancelled,
+      req.acceptPathKeys,
+    )
+    return found.candidates
+      .filter((c) => !req.acceptPath || req.acceptPath(c.path))
+      .map((c) => ({
+        imageId: c.path,
+        path: c.path,
+        vectorScore: c.score,
+        modelName: req.modelName!,
+        embeddingType: req.embeddingType || 'global',
+      }))
+  }
+
   if (!index) {
     // Try to load from manifest
     const manifest = loadManifest()

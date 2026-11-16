@@ -1,3 +1,4 @@
+import { beginSearchablePreparation } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
 import crypto from 'crypto'
@@ -583,6 +584,7 @@ export function createImagePreparationPipeline(
       })
     void scanPromise.catch(() => undefined)
 
+    const releaseSearchablePreparation = beginSearchablePreparation()
     try {
       if (feedConfigured) {
         for (;;) {
@@ -694,6 +696,7 @@ export function createImagePreparationPipeline(
       await Promise.allSettled([scanPromise, dinoModelPromise, clipModelPromise])
       throw error
     } finally {
+      releaseSearchablePreparation()
       dependencies.configureCommitFeed(false, 4096)
       options.registerCancellation?.(null)
       pendingStreamInputs.dispose()

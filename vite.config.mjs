@@ -270,6 +270,20 @@ export default defineConfig({
           },
         },
         {
+          entry: 'electron/preparationVectorWorker.ts',
+          vite: {
+            build: {
+              outDir: 'dist-electron',
+              emptyOutDir: false,
+              rollupOptions: {
+                output: {
+                  entryFileNames: 'preparationVectorWorker.js',
+                },
+              },
+            },
+          },
+        },
+        {
           entry: 'electron/semanticVectorSearchWorker.ts',
           vite: {
             build: {

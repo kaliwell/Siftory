@@ -1,3 +1,4 @@
+import { setVectorPreparationActive } from './preparationSearchState'
 import { isInteractiveSearchActive, onInteractiveSearchIdle } from './interactiveSearchPriority'
 // Orchestrates isolated embedding workers and persists results through vectorDatabaseService.
 
@@ -308,6 +309,9 @@ function emitProgress(): void {
 }
 
 function updateProgress(patch: Partial<EmbeddingProgress>): void {
+  setVectorPreparationActive(
+    ['queued', 'running', 'paused', 'stopping'].includes(patch.state || progress.state),
+  )
   progress = nextEmbeddingProgress(progress, patch, {
     inferenceStartedAt,
     inferencePausedAt,

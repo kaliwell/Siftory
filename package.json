@@ -1,6 +1,6 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.35",
+  "version": "1.0.1-alpha.36",
   "private": true,
   "license": "Apache-2.0",
   "author": "kaliwell",
@@ -340,7 +340,7 @@
     "test:performance-diagnostics:browser": "node tests/performance-diagnostics-browser.cjs",
     "test:indexing-ui:browser": "node tests/indexing-ui-browser.cjs",
     "test:indexing-ui:regression": "node --test tests/project-preview-performance.test.cjs tests/progress-coalescer.test.cjs tests/image-search-shutdown.test.cjs tests/scan-responsiveness.test.cjs tests/scan-responsiveness-renderer.test.cjs tests/performance-diagnostics.test.cjs",
-    "test:embedding-input-review": "node --test tests/interactive-search-priority.test.cjs tests/vector-maintenance-coordinator.test.cjs tests/embedding-input-failure-review.test.cjs tests/embedding-input-postcheck-service.test.cjs tests/image-preparation-pipeline.test.cjs tests/embedding-worker-lifecycle.test.cjs tests/scan-error-log.test.cjs"
+    "test:embedding-input-review": "node --test tests/preparation-vector-snapshot.test.cjs tests/interactive-search-priority.test.cjs tests/vector-maintenance-coordinator.test.cjs tests/embedding-input-failure-review.test.cjs tests/embedding-input-postcheck-service.test.cjs tests/image-preparation-pipeline.test.cjs tests/embedding-worker-lifecycle.test.cjs tests/scan-error-log.test.cjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
@@ -400,6 +400,10 @@
       {
         "from": "dist-electron/vectorAnnWorker.js",
         "to": "vectorAnnWorker.js"
+      },
+      {
+        "from": "dist-electron/preparationVectorWorker.js",
+        "to": "preparationVectorWorker.js"
       },
       {
         "from": "dist-electron/semanticVectorSearchWorker.js",

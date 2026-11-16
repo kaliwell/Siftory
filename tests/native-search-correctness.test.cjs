@@ -166,7 +166,10 @@ test('FS-07P: async entries reject missing arguments instead of crashing', async
 // 1..1000; threshold is a 64-bit hamming distance and is clamped to 0..64 ──
 
 function writeAllMatchingSegment(filePath, hash, count) {
-  return writeV2Segment(filePath, Array.from({ length: count }, () => hash))
+  return writeV2Segment(
+    filePath,
+    Array.from({ length: count }, () => hash),
+  )
 }
 
 test('FS-07Q: searchByHash defaults topK to 20 for zero/negative values', () => {
@@ -232,6 +235,37 @@ test('FS-07Q: sync and async image search apply identical topK clamping', async 
       asyncResult.results.map((entry) => entry.path.toLowerCase()).sort(),
       syncResult.results.map((entry) => entry.path.toLowerCase()).sort(),
     )
+  } finally {
+    addon.clearIndex()
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('async matching retains its segment snapshot when the live index is cleared', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'native-query-snapshot-'))
+  try {
+    const image = path.join(root, 'query.png')
+    fs.writeFileSync(
+      image,
+      Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+    )
+    const hash = addon.hashImage(image)
+    assert.equal(hash.ok, true)
+    const segment = path.join(root, 'index.idx')
+    writeAllMatchingSegment(segment, BigInt('0x' + hash.diffHash64), 100)
+    assert.equal(addon.loadIndexFromSegment(segment).ok, true)
+    const expected = addon
+      .searchByImage(image, 64, 20, 'balanced')
+      .results.map((r) => r.path)
+      .sort()
+    const pending = addon.searchByImageAsync(image, 64, 20, 'balanced')
+    addon.clearIndex()
+    const result = await pending
+    assert.deepEqual(result.results.map((r) => r.path).sort(), expected)
+    assert.equal((await addon.searchByImageAsync(image, 64, 20, 'balanced')).resultCount, 0)
   } finally {
     addon.clearIndex()
     fs.rmSync(root, { recursive: true, force: true })
