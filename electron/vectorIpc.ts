@@ -938,8 +938,9 @@ export function registerVectorIpc(
           ...response,
           results: authorizeFileDragResults(
             event.sender.id,
-            mapProjectLayeredResults(
-              filterPreparedSearchResults(response.results, preparationRevision),
+            filterPreparedSearchResults(
+              mapProjectLayeredResults(response.results),
+              preparationRevision,
             ),
             (result) => result.path,
           ),
@@ -1064,8 +1065,9 @@ export function registerVectorIpc(
         ...response,
         results: authorizeFileDragResults(
           event.sender.id,
-          mapProjectLayeredResults(
-            filterPreparedSearchResults(response.results, preparationRevision),
+          filterPreparedSearchResults(
+            mapProjectLayeredResults(response.results),
+            preparationRevision,
           ),
           (result) => result.path,
         ),
