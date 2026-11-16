@@ -116,6 +116,121 @@ async function main() {
       [false, true],
     )
     await page.getByTestId('search-mode-advanced').click()
+    // Default search type is Fast: preparation telemetry must not depend on
+    // the manual embedding build controls, which Fast intentionally hides.
+    const maintenance = page.getByTestId('image-search-maintenance-section')
+    const toggle = maintenance.locator('button').first()
+    if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+    await page.evaluate(() => {
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'running-test',
+        state: 'running',
+        phase: 'embedding-dino',
+        percentage: 42,
+        scanComplete: true,
+        message: 'Preparing model inputs',
+      })
+      window.__workspaceTest.emit('vector.onEmbeddingProgress', {
+        modelName: 'dinov2_vitb14',
+        state: 'running',
+        total: 100,
+        completed: 40,
+        skipped: 2,
+        failed: 1,
+        running: 3,
+        pending: 54,
+        elapsedMs: 12000,
+        itemsPerSecond: 3.5,
+        currentPath: 'C:\\Samples\\current-image.png',
+      })
+    })
+    const preparation = maintenance.getByTestId('search-setup-progress')
+    await preparation.getByText('Preparing model inputs', { exact: true }).waitFor()
+    await preparation
+      .getByTestId('preparation-model-progress')
+      .getByText('DINO: 43/100 (43%)', { exact: true })
+      .waitFor()
+    await preparation.getByTestId('preparation-current-path').waitFor()
+    assert.equal(await preparation.getAttribute('data-detailed'), 'true')
+    assert.equal(await page.getByTestId('search-mode-simple').isDisabled(), true)
+    // Mode changes are intentionally disabled during preparation. Complete this
+    // run, switch mode normally, then verify the next run is still visible.
+    await page.evaluate(() => {
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'running-test',
+        state: 'done',
+        phase: 'done',
+        percentage: 100,
+        scanComplete: true,
+        vectorIndexComplete: true,
+      })
+      window.__workspaceTest.emit('vector.onEmbeddingProgress', {
+        modelName: 'dinov2_vitb14',
+        state: 'done',
+        total: 100,
+        completed: 97,
+        skipped: 2,
+        failed: 1,
+        running: 0,
+        pending: 0,
+      })
+    })
+    await page.getByTestId('search-mode-simple').click()
+    await page.evaluate(() =>
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'simple-running-test',
+        state: 'running',
+        phase: 'embedding-dino',
+        percentage: 42,
+        scanComplete: true,
+        message: 'Preparing model inputs',
+      }),
+    )
+    await preparation.getByText('Preparing model inputs', { exact: true }).waitFor()
+    assert.equal(await preparation.getAttribute('data-detailed'), 'false')
+    await page.evaluate(() =>
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'simple-running-test',
+        state: 'done',
+        phase: 'done',
+        percentage: 100,
+        scanComplete: true,
+        vectorIndexComplete: true,
+      }),
+    )
+    await page.getByTestId('search-mode-advanced').click()
+    // The last DINO counters must disappear immediately when CLIP starts.
+    await page.evaluate(() =>
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'running-test',
+        state: 'running',
+        phase: 'embedding-clip',
+        percentage: 60,
+        scanComplete: true,
+        message: 'Preparing semantic inputs',
+      }),
+    )
+    await preparation.getByText('Preparing semantic inputs', { exact: true }).waitFor()
+    assert.equal(await preparation.getByTestId('preparation-model-progress').count(), 0)
+    await page.evaluate(() =>
+      window.__workspaceTest.emit('vector.onEmbeddingProgress', {
+        modelName: 'clip_vit_base_patch32',
+        state: 'running',
+        total: 100,
+        completed: 20,
+        skipped: 0,
+        failed: 0,
+        running: 2,
+        pending: 78,
+        elapsedMs: 6000,
+        currentPath: 'C:\\Samples\\semantic-image.png',
+      }),
+    )
+    await preparation
+      .getByTestId('preparation-model-progress')
+      .getByText('CLIP: 20/100 (20%)', { exact: true })
+      .waitFor()
+
     await page.evaluate(() =>
       window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
         taskId: 'failed-test',
@@ -126,9 +241,6 @@ async function main() {
         scanComplete: true,
       }),
     )
-    const maintenance = page.getByTestId('image-search-maintenance-section')
-    const toggle = maintenance.locator('button').first()
-    if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
     await page.getByText('MODEL_RUNTIME_FAILURE_TEST', { exact: true }).first().waitFor()
     await page.evaluate(() =>
       window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
@@ -159,6 +271,9 @@ async function main() {
         survivesNavigation: true,
         cancelledExportPreservesStoppedState: true,
         verifiedInputSkipsDisplayed: true,
+        advancedPreparationProgressVisible: true,
+        bothModesShowPreparationProgress: true,
+        staleModelCountersHidden: true,
         scope: 'React controls and Renderer sampling only; no Windows/native scan acceptance',
       }),
     )
