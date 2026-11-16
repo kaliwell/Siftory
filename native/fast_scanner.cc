@@ -5568,7 +5568,7 @@ static void SearchByImageAsyncExecute(napi_env env,void* data){
     else if(sm=="balanced")search_balanced_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
     else if(sm=="dct")search_linear_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,true);
     else search_by_hash(index,d->queryHash,d->threshold,d->topK,d->hits,d->metrics,d->queryDctHash,false);
-    if(index.mode=="segment_mmap"&&!index.records.empty()){
+    if(index.mode=="segment_mmap"&&!index.segments.empty()&&!index.records.empty()){
       std::vector<SearchHit> delta;SearchMetrics dm{};
       search_memory(index,d->queryHash,d->threshold,d->topK,delta,dm);
       if(dctMode)re_rank_dct(delta,d->queryDctHash);

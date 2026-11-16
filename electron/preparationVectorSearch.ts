@@ -1,3 +1,4 @@
+import { getPreparationSearchRevision } from './preparationSearchState'
 import fs from 'node:fs'
 import path from 'node:path'
 import { Worker } from 'node:worker_threads'
@@ -13,6 +14,7 @@ export async function searchPreparedVectorSnapshot(
   isCancelled?: () => boolean,
   scope?: readonly string[],
 ): Promise<{ candidates: SemanticClipCandidate[]; scanned: number }> {
+  const revision = getPreparationSearchRevision()
   const sources = getEmbeddingStorePaths(model, 'global').map((file) => {
     const stat = fs.statSync(file)
     return { path: file, size: stat.size, ino: stat.ino, dev: stat.dev }
@@ -27,21 +29,26 @@ export async function searchPreparedVectorSnapshot(
   })
   let timer: ReturnType<typeof setInterval> | undefined
   try {
-    return await new Promise((resolve, reject) => {
-      worker.once('message', (message) =>
-        message.error ? reject(Error(message.error)) : resolve(message.result),
-      )
-      worker.once('error', reject)
-      worker.once('exit', () =>
-        reject(Error('Prepared vector worker exited before returning results')),
-      )
-      timer = setInterval(() => {
-        if (isCancelled?.()) {
-          Atomics.store(new Int32Array(stop), 0, 1)
-          reject(Error('Vector search cancelled'))
-        }
-      }, 50)
-    })
+    const result = await new Promise<{ candidates: SemanticClipCandidate[]; scanned: number }>(
+      (resolve, reject) => {
+        worker.once('message', (message) =>
+          message.error ? reject(Error(message.error)) : resolve(message.result),
+        )
+        worker.once('error', reject)
+        worker.once('exit', () =>
+          reject(Error('Prepared vector worker exited before returning results')),
+        )
+        timer = setInterval(() => {
+          if (isCancelled?.()) {
+            Atomics.store(new Int32Array(stop), 0, 1)
+            reject(Error('Vector search cancelled'))
+          }
+        }, 50)
+      },
+    )
+    if (getPreparationSearchRevision() !== revision)
+      throw Error('Indexed materials changed during search; please retry')
+    return result
   } finally {
     clearInterval(timer)
     await worker.terminate()

@@ -17,3 +17,11 @@ export function beginSearchablePreparation(): () => void {
     }
   }
 }
+
+let revision = 0
+export function invalidatePreparedSearches(): void {
+  revision++
+}
+export function getPreparationSearchRevision(): number {
+  return revision
+}

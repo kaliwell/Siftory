@@ -1,4 +1,4 @@
-import { beginSearchablePreparation } from './preparationSearchState'
+import { beginSearchablePreparation, invalidatePreparedSearches } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
 import crypto from 'crypto'
@@ -607,6 +607,7 @@ export function createImagePreparationPipeline(
           }
           const freshPaths = pendingStreamInputs.add(candidatePaths)
           if (freshPaths.length > 0) {
+            invalidatePreparedSearches()
             await dependencies.invalidateCommittedInputs(freshPaths)
             committedImages += freshPaths.length
             invalidatedImages += freshPaths.length

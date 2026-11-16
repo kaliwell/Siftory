@@ -450,6 +450,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector('[data-testid="image-search-query-image"]').disabled,
     )
+    await page.getByText(/当前已完成的素材中暂无匹配|正在准备首批可搜索素材/).waitFor()
     const beforeSemantic = await semanticCalls()
     await text.fill('a searchable material during preparation')
     await page.getByTestId('image-search-semantic-query').click()

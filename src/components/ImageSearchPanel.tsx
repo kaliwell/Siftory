@@ -1445,6 +1445,7 @@ const ImageSearchPanel: React.FC = () => {
               />
 
               <ImageSearchResultGrid
+                preparingLibrary={setupRunning}
                 searching={searching || subjectSearching}
                 results={sortedResults}
                 rawResultCount={sortedResults.length}

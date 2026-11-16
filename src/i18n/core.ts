@@ -259,6 +259,10 @@ const zhCN: Record<string, string> = {
     '素材准备仍在继续。图片查询暂用已建立索引素材的快速匹配；向量与语义搜索将在准备结束后恢复。',
   'Library preparation continues. Search covers completed materials; newly prepared materials appear in subsequent queries.':
     '素材准备仍在继续。搜索范围为已完成的素材，新准备好的素材将在后续查询中出现。',
+  'Preparing the first searchable materials': '正在准备首批可搜索素材',
+  'No match in completed materials yet': '当前已完成的素材中暂无匹配',
+  'Library preparation is continuing. New completed materials will be included when you search again.':
+    '素材准备仍在继续，新完成的素材会在下次搜索时加入检索范围。',
   'Skipped {count}': '跳过 {count}',
   'Remaining {count}': '剩余 {count}',
   'Save query copy for reproduction': '保存本次查询副本用于复现',

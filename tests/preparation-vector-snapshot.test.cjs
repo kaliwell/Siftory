@@ -80,3 +80,17 @@ test('cancellation and changed source identity fail closed', async (t) => {
   await fs.writeFile(f.file, '')
   await assert.rejects(scanPreparedVectors(input), /source changed/)
 })
+
+test('preparation mode spans model-stage gaps and releases exactly once', () => {
+  const mode = loadTsModule('electron/preparationSearchState.ts')
+  const release = mode.beginSearchablePreparation()
+  mode.setVectorPreparationActive(true)
+  mode.setVectorPreparationActive(false)
+  assert.equal(mode.isVectorPreparationActive(), true)
+  const revision = mode.getPreparationSearchRevision()
+  mode.invalidatePreparedSearches()
+  assert.equal(mode.getPreparationSearchRevision(), revision + 1)
+  release()
+  release()
+  assert.equal(mode.isVectorPreparationActive(), false)
+})

@@ -55,6 +55,7 @@ interface ImageSearchResultGridProps {
   indexedCount?: number
   hasSearched?: boolean
   searching?: boolean
+  preparingLibrary?: boolean
   queryHash: string | null
   statusState: string
   searchQuery: string
@@ -81,6 +82,7 @@ const ImageSearchResultGrid: React.FC<ImageSearchResultGridProps> = ({
   indexedCount = 0,
   hasSearched = false,
   searching = false,
+  preparingLibrary = false,
   queryHash,
   statusState,
   searchQuery,
@@ -132,27 +134,38 @@ const ImageSearchResultGrid: React.FC<ImageSearchResultGridProps> = ({
           'Preparing search data or searching. Results will appear when the search finishes.',
         ),
       }
-    : rawResultCount > 0 && searchQuery.trim()
+    : preparingLibrary && rawResultCount === 0
       ? {
-          title: t('No visible image results'),
-          description: t('Clear or change the name filter to show matching indexed images.'),
+          title: t(
+            indexedCount === 0
+              ? 'Preparing the first searchable materials'
+              : 'No match in completed materials yet',
+          ),
+          description: t(
+            'Library preparation is continuing. New completed materials will be included when you search again.',
+          ),
         }
-      : rawResultCount === 0 && (queryHash || hasSearched)
+      : rawResultCount > 0 && searchQuery.trim()
         ? {
-            title: t('No similar images found'),
-            description: t('Try another query image or lower the similarity threshold.'),
+            title: t('No visible image results'),
+            description: t('Clear or change the name filter to show matching indexed images.'),
           }
-        : statusState === 'idle' && !queryHash && indexedCount === 0
+        : rawResultCount === 0 && (queryHash || hasSearched)
           ? {
-              title: t('Prepare image search'),
-              description: t(
-                'Choose a folder, prepare the library, then search with an image or natural language.',
-              ),
+              title: t('No similar images found'),
+              description: t('Try another query image or lower the similarity threshold.'),
             }
-          : {
-              title: t('No image results yet'),
-              description: t('Run an image or natural-language query to see results here.'),
-            }
+          : statusState === 'idle' && !queryHash && indexedCount === 0
+            ? {
+                title: t('Prepare image search'),
+                description: t(
+                  'Choose a folder, prepare the library, then search with an image or natural language.',
+                ),
+              }
+            : {
+                title: t('No image results yet'),
+                description: t('Run an image or natural-language query to see results here.'),
+              }
 
   return (
     <div
