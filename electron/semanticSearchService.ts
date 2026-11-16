@@ -1167,6 +1167,18 @@ async function searchClipEmbeddingIndex(
   const textEncoderDiagnostic = getLastQueryTextEncoderDiagnostic()
 
   if (isVectorPreparationActive()) {
+    onProgress?.(
+      applySemanticMetrics(
+        {
+          requestId,
+          phase: 'scanning',
+          scanned: 0,
+          percent: 0,
+          message: 'Searching completed materials...',
+        },
+        startedAt,
+      ),
+    )
     const snapshot = await searchPreparedVectorSnapshot(
       CLIP_EMBEDDING_MODEL,
       CLIP_EMBEDDING_DIM,
@@ -1174,6 +1186,19 @@ async function searchClipEmbeddingIndex(
       topK,
       isCancelled,
       acceptPathKeys ? [...acceptPathKeys] : undefined,
+    )
+    onProgress?.(
+      applySemanticMetrics(
+        {
+          requestId,
+          phase: 'done',
+          scanned: snapshot.scanned,
+          total: snapshot.scanned,
+          percent: 100,
+          message: 'Search complete',
+        },
+        startedAt,
+      ),
     )
     return {
       results: snapshot.candidates,

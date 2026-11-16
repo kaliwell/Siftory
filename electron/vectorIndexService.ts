@@ -866,6 +866,7 @@ async function searchVectorIndexImpl(
     req.modelName &&
     (req.embeddingType || 'global') === 'global'
   ) {
+    onProgress?.({ workStage: 'vector_search', scanned: 0 })
     const found = await searchPreparedVectorSnapshot(
       req.modelName,
       expectedModelDim(req.modelName),
@@ -874,6 +875,12 @@ async function searchVectorIndexImpl(
       req.isCancelled,
       req.acceptPathKeys,
     )
+    onProgress?.({
+      workStage: 'vector_search',
+      scanned: found.scanned,
+      total: found.scanned,
+      percent: 100,
+    })
     return found.candidates
       .filter((c) => !req.acceptPath || req.acceptPath(c.path))
       .map((c) => ({

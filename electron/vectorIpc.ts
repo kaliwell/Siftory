@@ -1,3 +1,4 @@
+import { filterPreparedSearchResults } from './preparationVectorSearch'
 import { getPreparationSearchRevision } from './preparationSearchState'
 import { beginSearchDiagnostic, getSearchDiagnostics } from './searchDiagnostics'
 import { secureIpcMain } from './ipcAuthorization'
@@ -921,11 +922,7 @@ export function registerVectorIpc(
           },
           diagnostic,
         )
-        if (
-          isSourceFileSyncRunning() ||
-          searchEpoch !== getSourceFileSyncMutationEpoch() ||
-          preparationRevision !== getPreparationSearchRevision()
-        ) {
+        if (isSourceFileSyncRunning() || searchEpoch !== getSourceFileSyncMutationEpoch()) {
           return {
             results: [],
             mode,
@@ -941,7 +938,9 @@ export function registerVectorIpc(
           ...response,
           results: authorizeFileDragResults(
             event.sender.id,
-            mapProjectLayeredResults(response.results),
+            mapProjectLayeredResults(
+              filterPreparedSearchResults(response.results, preparationRevision),
+            ),
             (result) => result.path,
           ),
         }
@@ -1048,11 +1047,7 @@ export function registerVectorIpc(
           sendToRenderer(getMainWindow, 'vector:onSemanticSearchProgress', progress)
         },
       )
-      if (
-        isSourceFileSyncRunning() ||
-        searchEpoch !== getSourceFileSyncMutationEpoch() ||
-        preparationRevision !== getPreparationSearchRevision()
-      ) {
+      if (isSourceFileSyncRunning() || searchEpoch !== getSourceFileSyncMutationEpoch()) {
         return {
           results: [],
           query: text,
@@ -1069,7 +1064,9 @@ export function registerVectorIpc(
         ...response,
         results: authorizeFileDragResults(
           event.sender.id,
-          mapProjectLayeredResults(response.results),
+          mapProjectLayeredResults(
+            filterPreparedSearchResults(response.results, preparationRevision),
+          ),
           (result) => result.path,
         ),
       }

@@ -166,3 +166,21 @@ test('mixed slash spellings share a latest vector identity', async (t) => {
   assert.equal(found.scanned, 1)
   assert.equal(found.candidates[0].score, 0.5)
 })
+
+test('updates to one path preserve unrelated completed results during a query', () => {
+  const mode = loadTsModule('electron/preparationSearchState.ts')
+  const before = mode.getPreparationSearchRevision()
+  const release = mode.beginPreparedSearchMutation(['old'])
+  const filter = loadTsModule('electron/preparationVectorSearch.ts').filterPreparedSearchResults
+  assert.deepEqual(filter([{ path: 'old' }, { path: 'unrelated' }], before), [
+    { path: 'unrelated' },
+  ])
+  let changed = mode.changedPreparedPathsSince(before)
+  assert.equal(changed.reset, false)
+  assert.deepEqual([...changed.keys], ['old'])
+  release()
+  changed = mode.changedPreparedPathsSince(before)
+  assert.equal(changed.reset, false)
+  assert.deepEqual([...changed.keys], ['old'])
+  assert.equal(mode.changedPreparedPathsSince(mode.getPreparationSearchRevision()).keys.size, 0)
+})

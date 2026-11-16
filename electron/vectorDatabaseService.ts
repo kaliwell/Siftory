@@ -1085,7 +1085,10 @@ export function removeImageData(imageId: string): void {
 }
 
 /** Remove a committed scan chunk with one rewrite per store instead of one rewrite per image. */
-export function removeImageDataBatch(imageIds: readonly string[]): number {
+export function removeImageDataBatch(
+  imageIds: readonly string[],
+  options: { preserveEmbeddingRows?: boolean } = {},
+): number {
   const selected = new Set(
     imageIds
       .filter(
@@ -1098,7 +1101,9 @@ export function removeImageDataBatch(imageIds: readonly string[]): number {
   const matches = (candidate: unknown) =>
     typeof candidate === 'string' && selected.has(embeddingTombstonePathKey(candidate))
   return (
-    embeddingStore.deleteWhere((entry) => matches(entry.imageId)) +
+    (options.preserveEmbeddingRows
+      ? 0
+      : embeddingStore.deleteWhere((entry) => matches(entry.imageId))) +
     jobStore.deleteWhere((entry) => matches(entry.imageId) || matches(entry.path)) +
     cropStore.deleteWhere((entry) => matches(entry.imageId)) +
     colorFeatureStore.deleteWhere((entry) => matches(entry.imageId)) +

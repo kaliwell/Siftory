@@ -1,8 +1,5 @@
 import { embeddingCachePathKey } from './embeddingF16Cache'
-import {
-  getPreparationSearchRevision,
-  isPreparedSearchMutationActive,
-} from './preparationSearchState'
+import { getPreparationSearchRevision, changedPreparedPathsSince } from './preparationSearchState'
 import fs from 'node:fs'
 import path from 'node:path'
 import { Worker } from 'node:worker_threads'
@@ -26,7 +23,6 @@ export async function searchPreparedVectorSnapshot(
   inventory = false,
 ): Promise<{ candidates: SemanticClipCandidate[]; scanned: number; paths?: string[] }> {
   if (isCancelled?.()) throw Error('Vector search cancelled')
-  if (isPreparedSearchMutationActive()) throw Error('Indexed materials are updating; please retry')
   const revision = getPreparationSearchRevision()
   const sources = getEmbeddingStorePaths(model, 'global').map((file) => {
     const stat = fs.statSync(file)
@@ -45,7 +41,7 @@ export async function searchPreparedVectorSnapshot(
       model,
       dim,
       query: [...query],
-      topK,
+      topK: Math.min(5000, topK * 4),
       stop,
       scope,
       inventory,
@@ -74,9 +70,10 @@ export async function searchPreparedVectorSnapshot(
       }, 50)
     })
     if (isCancelled?.()) throw Error('Vector search cancelled')
-    if (getPreparationSearchRevision() !== revision)
-      throw Error('Indexed materials changed during search; please retry')
-    return result
+    return {
+      ...result,
+      candidates: filterPreparedSearchResults(result.candidates, revision).slice(0, topK),
+    }
   } finally {
     clearInterval(timer)
     await worker.terminate()
@@ -109,12 +106,24 @@ export async function invalidatePreparedVectorPaths(
     : [...paths]
   await invalidatePreparedInputs(
     () => {
-      removeImageDataBatch(paths)
+      removeImageDataBatch(paths, { preserveEmbeddingRows: true })
       return previous.length
     },
     async () => {
       if (previous.length) await appendGlobalEmbeddingInvalidationTombstonesAsync(previous)
       await flushVectorDatabaseWrites()
     },
+    previous.map(embeddingCachePathKey),
   )
+}
+
+export function filterPreparedSearchResults<T extends { path: string }>(
+  results: T[],
+  revision: number,
+): T[] {
+  const changed = changedPreparedPathsSince(revision)
+  if (changed.reset) throw Error('Indexed materials changed during search; please retry')
+  return changed.keys.size
+    ? results.filter((row) => !changed.keys.has(embeddingCachePathKey(row.path)))
+    : results
 }
