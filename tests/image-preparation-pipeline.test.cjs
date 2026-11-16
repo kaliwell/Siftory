@@ -58,6 +58,7 @@ function createPipelineHarness(root, options = {}) {
       total: completed + skipped,
       completed,
       skipped,
+      ...options.embeddingOverrides?.[request.modelName],
     })
     for (const listener of embeddingListeners) listener(embeddingState)
   }
@@ -159,6 +160,50 @@ function createPipelineHarness(root, options = {}) {
   }
   return { calls, dependencies, finishScan }
 }
+
+test('verified input skips allow both model stages and vector commit to finish with an explicit notice', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-input-skips-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const harness = createPipelineHarness(root, {
+    embeddingOverrides: {
+      dinov2_vitb14: { inputSkipped: 2 },
+      clip_vit_base_patch32: { inputSkipped: 1 },
+    },
+  })
+  const snapshots = []
+  const result = await createImagePreparationPipeline(harness.dependencies)({
+    paths: [root],
+    backend: 'cpu',
+    maxConcurrentEmbeddings: 1,
+    onProgress: (p) => snapshots.push(p),
+    batchSize: 2,
+  })
+  assert.equal(result.hasInputSkips, true)
+  assert.equal(harness.calls.indexes, 1)
+  assert.ok(harness.calls.builds.some((r) => r.modelName === 'clip_vit_base_patch32'))
+  assert.equal(snapshots.at(-1).phase, 'done')
+  assert.equal(snapshots.at(-1).hasInputSkips, true)
+  assert.match(snapshots.at(-1).message, /files were skipped/)
+})
+
+test('unverified per-file and runtime failures still prevent ready state', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-real-error-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  for (const failure of [{ failed: 1 }, { state: 'error', error: 'ONNX session failed' }]) {
+    const harness = createPipelineHarness(root, { embeddingOverrides: { dinov2_vitb14: failure } })
+    await assert.rejects(
+      createImagePreparationPipeline(harness.dependencies)({
+        paths: [root],
+        backend: 'cpu',
+        maxConcurrentEmbeddings: 1,
+        batchSize: 2,
+      }),
+      /failed/,
+    )
+    assert.equal(harness.calls.indexes, 0)
+    assert.ok(!harness.calls.builds.some((r) => r.modelName === 'clip_vit_base_patch32'))
+  }
+})
 
 test('image preparation overlaps committed scan chunks with DINO and gates ready on final coverage', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-overlap-'))

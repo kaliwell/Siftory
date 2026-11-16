@@ -24,7 +24,7 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
   if (displayedWorkflow.state === 'idle') return null
   const displayMessage = displayedWorkflow.runtimeError
     ? translateRuntimeError(displayedWorkflow.runtimeError, t)
-    : displayedWorkflow.error || displayedWorkflow.message || displayedWorkflow.stepLabel
+    : displayedWorkflow.error || t(displayedWorkflow.message || displayedWorkflow.stepLabel || '')
   const tone =
     displayedWorkflow.state === 'error'
       ? 'rgb(255,95,95)'

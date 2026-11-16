@@ -297,6 +297,36 @@ async function main() {
       dialog.showSaveDialog = global.__siftorySavePicker
       delete global.__siftorySavePicker
     })
+    // UI-only replay through the real main -> preload -> Renderer channel.
+    // Header classification and generation fences are tested separately in
+    // test:embedding-input-review; no model/GPU inference is simulated here.
+    await page.getByTestId('search-mode-advanced').click()
+    await application.evaluate(({ BrowserWindow }) => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send('imageSearch:onPreparationProgress', {
+          taskId: 'packaged-input-skip-notice',
+          state: 'done',
+          phase: 'done',
+          percentage: 100,
+          hasInputSkips: true,
+          scanComplete: true,
+          dinoEmbeddingComplete: true,
+          clipEmbeddingComplete: true,
+          vectorIndexComplete: true,
+          message: 'Image library ready. Some input files were skipped; see the scan error log.',
+        })
+      }
+    })
+    const maintenance = page.getByTestId('image-search-maintenance-section')
+    const maintenanceToggle = maintenance.locator('button').first()
+    if ((await maintenanceToggle.getAttribute('aria-expanded')) === 'false')
+      await maintenanceToggle.click()
+    await page
+      .getByText(
+        /素材库准备完成，部分文件已跳过|Image library ready\. Some input files were skipped/,
+      )
+      .first()
+      .waitFor()
     assert.deepEqual(pageErrors, [])
     assert.doesNotMatch(stderr, /File descriptor \d+ closed but not opened in unmanaged mode/)
     fs.mkdirSync(output, { recursive: true })
@@ -319,6 +349,7 @@ async function main() {
           performanceExportPassed: true,
           shellPreviewIsolationPassed: true,
           scanErrorDiagnosticsPassed: true,
+          inputSkipNoticePassed: true,
           pageErrors,
           scope:
             'Fresh isolated unpacked startup (agreement accepted when required); excludes full legacy UI matrix, models/GPU and installer upgrades.',

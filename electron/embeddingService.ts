@@ -80,6 +80,11 @@ import {
   type EmbeddingRuntimeResourceDecision,
 } from './embeddingRuntimeResourcePolicy'
 import type { UnifiedResourcePressureSnapshot } from './resourceGovernor'
+import {
+  isEmbeddingInputFailureCandidate,
+  reviewEmbeddingInputFailures,
+} from './embeddingInputFailureReview'
+import { scanErrorRecorder } from './scanErrorLog'
 
 export type EmbeddingProgressCallback = (progress: EmbeddingProgress) => void
 
@@ -99,6 +104,8 @@ interface WorkerTask {
 
 interface WorkerResult {
   imageId: string
+  inputPath?: string
+  inputFailure?: boolean
   ok: boolean
   vector?: number[]
   error?: string
@@ -122,6 +129,8 @@ let progressListeners: EmbeddingProgressCallback[] = []
 let taskQueue: WorkerTask[] = []
 let paused = false
 let stopping = false
+let failedInputReviews: WorkerResult[] = []
+let inputReviewActive = false
 let maxConcurrency = 2
 let providerConcurrencyLimit = 2
 let failureLogPath = ''
@@ -412,7 +421,14 @@ function handleResult(result: WorkerResult): void {
         failedAfter,
       })
     }
-    logEmbeddingFailure(result)
+    if (
+      result.inputPath &&
+      result.inputFailure === true &&
+      isEmbeddingInputFailureCandidate(result.error) &&
+      failedInputReviews.length < 4096
+    )
+      failedInputReviews.push({ ...result, error: result.error?.slice(0, 4096) })
+    else logEmbeddingFailure(result)
     failTaskJob(result)
     updateProgress({ failed: failedAfter, running: progress.running - 1 })
   }
@@ -430,6 +446,65 @@ function checkCompletion(): void {
     !preparationProducerOpen &&
     !stopping
   ) {
+    if (inputReviewActive) return
+    if (failedInputReviews.length > 0) {
+      inputReviewActive = true
+      const candidates = failedInputReviews
+      failedInputReviews = []
+      const reviewRunId = buildRunId
+      const cancelled = () =>
+        reviewRunId !== buildRunId || stopping || !['running', 'paused'].includes(progress.state)
+      updateProgress({
+        currentPath: `Checking headers of ${candidates.length} failed image input(s)...`,
+      })
+      void reviewEmbeddingInputFailures(candidates, cancelled)
+        .then(async (results) => {
+          let skipped = 0
+          for (let index = 0; index < results.length; index++) {
+            if (cancelled()) return
+            const { input, rejection } = results[index]
+            if (rejection) {
+              if (input.jobId !== undefined)
+                jobLedgerSession.current?.skip(input.jobId, rejection.code)
+              scanErrorRecorder.record(
+                'embedding-input',
+                rejection.code,
+                input.imageId,
+                input.error,
+                'skipped',
+                { model: input.modelName, sourceInfo: rejection },
+              )
+              skipped++
+            } else logEmbeddingFailure(input)
+            if ((index + 1) % 64 === 0) await scanErrorRecorder.persist()
+          }
+          if (cancelled()) return
+          updateProgress({
+            failed: progress.failed - skipped,
+            skipped: progress.skipped + skipped,
+            inputSkipped: (progress.inputSkipped ?? 0) + skipped,
+          })
+          await scanErrorRecorder.persist()
+        })
+        .catch((error: unknown) => {
+          if (!cancelled()) {
+            writeDiagnostic('input-review:error', {
+              error: error instanceof Error ? error.message : String(error),
+            })
+            updateProgress({
+              state: 'error',
+              error: `Input header review failed: ${error instanceof Error ? error.message : String(error)}`,
+            })
+            stopAllWorkers()
+          }
+        })
+        .finally(() => {
+          if (reviewRunId !== buildRunId) return
+          inputReviewActive = false
+          if (!cancelled()) checkCompletion()
+        })
+      return
+    }
     const state = 'done'
     writeDiagnostic('build:complete', {
       state,
@@ -796,7 +871,7 @@ function handleClipChildFrame(
   if (!tasks || !task) return
   tasks.delete(msg.id!)
   clipCrashCount = 0
-  handleResult(workerResultFromChildMessage(task, msg, 'CLIP'))
+  handleResult({ ...workerResultFromChildMessage(task, msg, 'CLIP'), inputPath: task.imagePath })
   if (tasks.size === 0 && clipChildren.has(child)) {
     dispatchNextClipTask(child)
     if (embeddingTensorPrefetchRequested()) dispatchNextClipTask(child, true)
@@ -846,7 +921,7 @@ function handleDinoChildFrame(
   if (!tasks || !task) return
   tasks.delete(msg.id!)
   dinoCrashCount = 0
-  handleResult(workerResultFromChildMessage(task, msg, 'DINO'))
+  handleResult({ ...workerResultFromChildMessage(task, msg, 'DINO'), inputPath: task.imagePath })
   if (tasks.size === 0 && dinoChildren.has(child)) dispatchNextDinoTask(child)
 }
 
@@ -1129,6 +1204,7 @@ export function reserveEmbeddingBuild(req: VectorBuildRequest): RuntimeOperation
     completed: 0,
     failed: 0,
     skipped: 0,
+    inputSkipped: 0,
     running: 0,
     pending: req.imageIds?.length ?? 0,
     state: 'queued',
@@ -1180,6 +1256,8 @@ export async function startEmbeddingBuild(
   if (streamRequest.error) return streamRequest.error
   const streamSessionId = streamRequest.sessionId
   buildRunId = `emb-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  failedInputReviews = []
+  inputReviewActive = false
   buildTraceModel = req.modelName
   dispatchedTaskCount = 0
   writeDiagnostic('build:start-request', {
@@ -1272,6 +1350,7 @@ export async function startEmbeddingBuild(
     completed: 0,
     failed: 0,
     skipped: 0,
+    inputSkipped: 0,
     running: 0,
     pending: 0,
     startedAt: Date.now(),

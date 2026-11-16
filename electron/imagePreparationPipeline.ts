@@ -54,6 +54,7 @@ interface CommitFeedChunk {
 
 export interface ImagePreparationPipelineResult {
   activeSetRevision: string
+  hasInputSkips: boolean
   scanIndexed: number
   committedImages: number
   invalidatedImages: number
@@ -252,6 +253,7 @@ export function createImagePreparationPipeline(
     let dinoEmbeddingComplete = false
     let clipEmbeddingComplete = false
     let vectorIndexComplete = false
+    let hasInputSkips = false
     let scanOwned = false
     let embeddingOwned = false
     let downloadOwned = false
@@ -287,6 +289,7 @@ export function createImagePreparationPipeline(
         dinoEmbeddingComplete,
         clipEmbeddingComplete,
         vectorIndexComplete,
+        hasInputSkips,
       })
     }
     const delay = async (milliseconds: number): Promise<void> => {
@@ -424,6 +427,7 @@ export function createImagePreparationPipeline(
       const terminal = await waitForEmbeddingTerminal(modelPhase, floor, span)
       embeddingOwned = false
       throwIfCancelled()
+      hasInputSkips ||= (terminal.inputSkipped ?? 0) > 0
       if (terminal.state === 'error' || terminal.failed > 0) {
         throw new Error(
           terminal.error || `${request.modelName} embedding failed for ${terminal.failed} image(s)`,
@@ -525,6 +529,7 @@ export function createImagePreparationPipeline(
       }
       const terminal = await waitForEmbeddingTerminal('embedding-dino', 20, 30)
       embeddingOwned = false
+      hasInputSkips ||= (terminal.inputSkipped ?? 0) > 0
       if (terminal.state === 'error' || terminal.failed > 0) {
         throw new Error(terminal.error || `DINO stream failed for ${terminal.failed} image(s)`)
       }
@@ -628,14 +633,26 @@ export function createImagePreparationPipeline(
       await submitEmbedding(baseEmbeddingRequest('dinov2_vitb14'), 'finalizing-dino', 50, 10)
       dinoEmbeddingComplete = true
       const dinoReadyMs = performance.now() - startedAt
-      report('finalizing-dino', 'DINO image coverage complete', 60)
+      report(
+        'finalizing-dino',
+        hasInputSkips
+          ? 'DINO preparation complete; some inputs were skipped'
+          : 'DINO image coverage complete',
+        60,
+      )
 
       await clipModelPromise
       report('embedding-clip', 'Building complete CLIP coverage...', 60)
       await submitEmbedding(baseEmbeddingRequest('clip_vit_base_patch32'), 'embedding-clip', 60, 30)
       clipEmbeddingComplete = true
       const clipReadyMs = performance.now() - startedAt
-      report('embedding-clip', 'CLIP image coverage complete', 90)
+      report(
+        'embedding-clip',
+        hasInputSkips
+          ? 'CLIP preparation complete; some inputs were skipped'
+          : 'CLIP image coverage complete',
+        90,
+      )
 
       throwIfCancelled()
       if (dependencies.getCatalogRevision() !== activeSetRevision) {
@@ -649,9 +666,16 @@ export function createImagePreparationPipeline(
         throw new Error('Image active set changed before the ready commit')
       }
       vectorIndexComplete = true
-      report('done', 'Image library ready', 100)
+      report(
+        'done',
+        hasInputSkips
+          ? 'Image library ready. Some input files were skipped; see the scan error log.'
+          : 'Image library ready',
+        100,
+      )
       return {
         activeSetRevision,
+        hasInputSkips,
         scanIndexed,
         committedImages,
         invalidatedImages,
@@ -690,6 +714,7 @@ const IDLE_PROGRESS: ImageSearchPreparationProgress = {
   dinoEmbeddingComplete: false,
   clipEmbeddingComplete: false,
   vectorIndexComplete: false,
+  hasInputSkips: false,
 }
 
 let activeProgress: ImageSearchPreparationProgress = { ...IDLE_PROGRESS }
@@ -792,7 +817,10 @@ export function startImageLibraryPreparation(
         state: 'done',
         phase: 'done',
         percentage: 100,
-        message: `Image library ready. ${result.scanIndexed.toLocaleString()} images indexed.`,
+        message: result.hasInputSkips
+          ? 'Image library ready. Some input files were skipped; see the scan error log.'
+          : `Image library ready. ${result.scanIndexed.toLocaleString()} images indexed.`,
+        hasInputSkips: result.hasInputSkips,
         scanComplete: true,
         dinoEmbeddingComplete: true,
         clipEmbeddingComplete: true,

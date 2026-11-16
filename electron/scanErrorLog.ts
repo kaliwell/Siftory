@@ -158,6 +158,10 @@ export class ScanErrorRecorder {
     this.pending = []
     this.write('file-failures', { items })
   }
+  async persist(): Promise<void> {
+    this.flush()
+    await this.settle()
+  }
   status() {
     return {
       capturedThisSession: this.stored,

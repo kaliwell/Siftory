@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { decodeEmbeddingInput, embeddingWorkerFailure } from '../shared/embeddingInputFailure'
 import { performance } from 'perf_hooks'
 import readline from 'readline'
 import { poolDinoEmbedding } from './dinoEmbeddingMath'
@@ -290,11 +291,12 @@ async function getExtractor(
 async function readDinoImage(imagePath: string): Promise<DinoRawImage> {
   const { RawImage } =
     (await import('@huggingface/transformers')) as unknown as DinoTransformersModule
-  return (
-    dinoFusedShadowEnabled
-      ? readDinoTensorPrefetchImage(imagePath, RawImage)
-      : readDinoImageBounded(imagePath, RawImage)
-  ) as Promise<DinoRawImage>
+  return decodeEmbeddingInput(
+    () =>
+      (dinoFusedShadowEnabled
+        ? readDinoTensorPrefetchImage(imagePath, RawImage)
+        : readDinoImageBounded(imagePath, RawImage)) as Promise<DinoRawImage>,
+  )
 }
 
 function createBatchTimings(): DinoBatchTimings {
@@ -414,8 +416,15 @@ function writeFailure(
   task: Pick<DinoTask, 'id'>,
   error: string,
   metrics?: Record<string, unknown>,
+  inputFailure = false,
 ): void {
-  writeChildMessage({ id: task.id, ok: false, error, ...(metrics ? { metrics } : {}) })
+  writeChildMessage({
+    id: task.id,
+    ok: false,
+    error,
+    ...(inputFailure ? { inputFailure: true } : {}),
+    ...(metrics ? { metrics } : {}),
+  })
 }
 
 function createBatchMetrics(
@@ -472,7 +481,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
   const batchStartedAt = performance.now()
   const memoryBefore = stageMetricsEnabled ? await captureEmbeddingChildMemory() : null
   const timings = createBatchTimings()
-  const outcomes = new Map<number, { vector?: number[]; error?: string }>()
+  const outcomes = new Map<number, { vector?: number[]; error?: string; inputFailure?: boolean }>()
   try {
     if (tasks.length === 1) {
       const task = tasks[0]
@@ -480,7 +489,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
         const vector = await processTask(task, timings)
         outcomes.set(task.id, { vector: requireNormalizedEmbeddingVector(vector, task.dim) })
       } catch (err: unknown) {
-        outcomes.set(task.id, { error: errorMessage(err) })
+        outcomes.set(task.id, embeddingWorkerFailure(err))
       }
     } else {
       const imagePaths = tasks.map((task) => task.imagePath)
@@ -497,7 +506,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
               vector: requireNormalizedEmbeddingVector(vector, task.dim),
             })
           } catch (error: unknown) {
-            outcomes.set(task.id, { error: errorMessage(error) })
+            outcomes.set(task.id, embeddingWorkerFailure(error))
           }
         }
       } else {
@@ -527,7 +536,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
             validTasks.push(tasks[i])
             images.push(result.value)
           } else {
-            outcomes.set(tasks[i].id, { error: errorMessage(result.reason) })
+            outcomes.set(tasks[i].id, embeddingWorkerFailure(result.reason))
           }
         }
         timings.decodedPixelBytes = Math.max(
@@ -560,7 +569,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
                   ),
                 })
               } catch (error: unknown) {
-                outcomes.set(validTasks[i].id, { error: errorMessage(error) })
+                outcomes.set(validTasks[i].id, embeddingWorkerFailure(error))
               }
             }
             timings.postprocessMs += performance.now() - startedAt
@@ -609,7 +618,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
                   ),
                 })
               } catch (error: unknown) {
-                outcomes.set(validTasks[i].id, { error: errorMessage(error) })
+                outcomes.set(validTasks[i].id, embeddingWorkerFailure(error))
               }
             }
             timings.postprocessMs += performance.now() - startedAt
@@ -624,7 +633,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
                   vector: requireNormalizedEmbeddingVector(vector, task.dim),
                 })
               } catch (err: unknown) {
-                outcomes.set(task.id, { error: errorMessage(err) })
+                outcomes.set(task.id, embeddingWorkerFailure(err))
               }
             }
             timings.fallbackMs += performance.now() - fallbackStartedAt
@@ -634,7 +643,7 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
     }
   } catch (err: unknown) {
     for (const task of tasks) {
-      if (!outcomes.has(task.id)) outcomes.set(task.id, { error: errorMessage(err) })
+      if (!outcomes.has(task.id)) outcomes.set(task.id, embeddingWorkerFailure(err))
     }
   } finally {
     for (const task of tasks) {
@@ -670,7 +679,13 @@ async function processBatch(tasks: DinoTask[]): Promise<void> {
           ? metrics
           : undefined
       if (outcome.vector) writeSuccess(task, outcome.vector, resultMetrics)
-      else writeFailure(task, outcome.error || 'DINO batch failed', resultMetrics)
+      else
+        writeFailure(
+          task,
+          outcome.error || 'DINO batch failed',
+          resultMetrics,
+          outcome.inputFailure,
+        )
     }
     batchProcessing = false
   }

@@ -130,6 +130,27 @@ async function main() {
     const toggle = maintenance.locator('button').first()
     if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
     await page.getByText('MODEL_RUNTIME_FAILURE_TEST', { exact: true }).first().waitFor()
+    await page.evaluate(() =>
+      window.__workspaceTest.emit('imageSearch.onPreparationProgress', {
+        taskId: 'skipped-test',
+        state: 'done',
+        phase: 'done',
+        percentage: 100,
+        hasInputSkips: true,
+        scanComplete: true,
+        dinoEmbeddingComplete: true,
+        clipEmbeddingComplete: true,
+        vectorIndexComplete: true,
+        message: 'Image library ready. Some input files were skipped; see the scan error log.',
+      }),
+    )
+    await page
+      .getByText(
+        /素材库准备完成，部分文件已跳过|Image library ready\. Some input files were skipped/,
+      )
+      .first()
+      .waitFor()
+    assert.equal(await page.getByText('MODEL_RUNTIME_FAILURE_TEST', { exact: true }).count(), 0)
     assert.deepEqual(errors, [])
     console.log(
       JSON.stringify({
@@ -137,6 +158,7 @@ async function main() {
         recordedLongTask: true,
         survivesNavigation: true,
         cancelledExportPreservesStoppedState: true,
+        verifiedInputSkipsDisplayed: true,
         scope: 'React controls and Renderer sampling only; no Windows/native scan acceptance',
       }),
     )

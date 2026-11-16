@@ -184,6 +184,7 @@ export interface ImageSearchPreparationProgress {
   dinoEmbeddingComplete: boolean
   clipEmbeddingComplete: boolean
   vectorIndexComplete: boolean
+  hasInputSkips?: boolean
   startedAt?: number
   updatedAt?: number
   finishedAt?: number

@@ -111,6 +111,7 @@ export interface EmbeddingWorkerChildMessage {
   ok?: boolean
   vector?: unknown
   error?: string
+  inputFailure?: boolean
   metrics?: unknown
   model?: unknown
   requestedBackend?: unknown
@@ -415,6 +416,7 @@ export interface EmbeddingWorkerChildResult<TLease = unknown> {
   ok: boolean
   vector?: number[]
   error?: string
+  inputFailure?: boolean
   modelName: string
   modelVersion: string
   dim: number
@@ -448,6 +450,7 @@ export function workerResultFromChildMessage<TLease>(
     return {
       ...base,
       ok: false,
+      ...(message.inputFailure === true ? { inputFailure: true } : {}),
       error:
         typeof message.error === 'string' ? message.error : `${workerName} child returned an error`,
     }

@@ -121,6 +121,8 @@ export interface EmbeddingProgress {
   completed: number
   failed: number
   skipped: number
+  /** Failed decode inputs confirmed unsuitable by the final header review. */
+  inputSkipped?: number
   running: number
   pending: number
   startedAt?: number

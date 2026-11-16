@@ -1,10 +1,11 @@
 import fs from 'fs'
+import { decodeEmbeddingInput, embeddingWorkerFailure } from '../shared/embeddingInputFailure'
 import { performance } from 'perf_hooks'
 import readline from 'readline'
 import { CudaEmbeddingWorkerClient, type CudaTensorInput } from './cudaEmbeddingWorkerClient'
 import {
-  readClipImage,
-  readClipTensorPrefetchImage,
+  readClipImage as readClipImageDecoded,
+  readClipTensorPrefetchImage as readClipTensorPrefetchImageDecoded,
   type ClipRawImageFactory,
 } from './clipImageDecode'
 import { requireNormalizedEmbeddingVector } from './embeddingVectorValidation'
@@ -79,7 +80,7 @@ interface PreparedClipBatch {
   runtime: ClipRuntime
   imageInputs: Record<string, unknown> | null
   textInputs: Record<string, unknown> | null
-  outcomes: Map<number, { vector?: number[]; error?: string }>
+  outcomes: Map<number, { vector?: number[]; error?: string; inputFailure?: boolean }>
   timings: ClipBatchTimings
   tensorBytes: number
   prepareStartedAt: number
@@ -136,6 +137,11 @@ interface ClipRuntime {
 function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
+
+const readClipImage = (imagePath: string, factory: ClipRawImageFactory) =>
+  decodeEmbeddingInput(() => readClipImageDecoded(imagePath, factory))
+const readClipTensorPrefetchImage = (imagePath: string, factory: ClipRawImageFactory) =>
+  decodeEmbeddingInput(() => readClipTensorPrefetchImageDecoded(imagePath, factory))
 
 function normalizeVector(vec: unknown, expectedDim: number): number[] {
   return requireNormalizedEmbeddingVector(vec, expectedDim)
@@ -363,7 +369,7 @@ async function prepareClipTensorBatch(
 ): Promise<PreparedClipBatch> {
   const prepareStartedAt = performance.now()
   const timings = createBatchTimings()
-  const outcomes = new Map<number, { vector?: number[]; error?: string }>()
+  const outcomes = new Map<number, { vector?: number[]; error?: string; inputFailure?: boolean }>()
   const modelPath = tasks[0].modelPath
   if (!fs.existsSync(modelPath)) throw new Error('CLIP model file not found')
 
@@ -400,7 +406,7 @@ async function prepareClipTensorBatch(
       validTasks.push(tasks[index])
       images.push(result.value)
     } else {
-      outcomes.set(tasks[index].id, { error: errorMessage(result.reason) })
+      outcomes.set(tasks[index].id, embeddingWorkerFailure(result.reason))
     }
   }
   timings.decodedPixelBytes = Math.max(timings.decodedPixelBytes, estimateDecodedImageBytes(images))
@@ -622,8 +628,15 @@ function writeFailure(
   task: Pick<ClipTask, 'id'>,
   error: string,
   metrics?: Record<string, unknown>,
+  inputFailure = false,
 ): void {
-  writeChildMessage({ id: task.id, ok: false, error, ...(metrics ? { metrics } : {}) })
+  writeChildMessage({
+    id: task.id,
+    ok: false,
+    error,
+    ...(inputFailure ? { inputFailure: true } : {}),
+    ...(metrics ? { metrics } : {}),
+  })
 }
 
 function createBatchMetrics(
@@ -666,7 +679,7 @@ function createBatchMetrics(
 
 function writeBatchOutcomes(
   tasks: ClipTask[],
-  outcomes: Map<number, { vector?: number[]; error?: string }>,
+  outcomes: Map<number, { vector?: number[]; error?: string; inputFailure?: boolean }>,
   batchStartedAt: number,
   timings: ClipBatchTimings,
   memory: EmbeddingChildMemorySample,
@@ -692,7 +705,8 @@ function writeBatchOutcomes(
     const outcome = outcomes.get(task.id)!
     const resultMetrics = index === 0 ? metrics : undefined
     if (outcome.vector) writeSuccess(task, outcome.vector, resultMetrics)
-    else writeFailure(task, outcome.error || 'CLIP batch failed', resultMetrics)
+    else
+      writeFailure(task, outcome.error || 'CLIP batch failed', resultMetrics, outcome.inputFailure)
   }
 }
 
@@ -715,7 +729,7 @@ async function processTensorPrefetchBatch(
   const batchStartedAt = performance.now()
   const memoryBefore = stageMetricsEnabled ? await captureEmbeddingChildMemory() : null
   let timings = createBatchTimings()
-  const outcomes = new Map<number, { vector?: number[]; error?: string }>()
+  const outcomes = new Map<number, { vector?: number[]; error?: string; inputFailure?: boolean }>()
   let extraMetrics: Record<string, unknown> = {
     tensorPrefetch: Boolean(prefetchedPrepared),
     tensorBytes: 0,
@@ -789,14 +803,14 @@ async function processTensorPrefetchBatch(
           const vector = await processOne(task, timings)
           outcomes.set(task.id, { vector: normalizeVector(vector, task.dim) })
         } catch (error: unknown) {
-          outcomes.set(task.id, { error: errorMessage(error) })
+          outcomes.set(task.id, embeddingWorkerFailure(error))
         }
       }
       timings.fallbackMs += performance.now() - fallbackStartedAt
     }
   } catch (error: unknown) {
     for (const task of tasks) {
-      if (!outcomes.has(task.id)) outcomes.set(task.id, { error: errorMessage(error) })
+      if (!outcomes.has(task.id)) outcomes.set(task.id, embeddingWorkerFailure(error))
     }
   } finally {
     prefetchStarter = null
@@ -824,7 +838,7 @@ async function processBatch(
   const batchStartedAt = performance.now()
   const memoryBefore = stageMetricsEnabled ? await captureEmbeddingChildMemory() : null
   const timings = createBatchTimings()
-  const outcomes = new Map<number, { vector?: number[]; error?: string }>()
+  const outcomes = new Map<number, { vector?: number[]; error?: string; inputFailure?: boolean }>()
   try {
     // Single image → use the fast single path
     if (tasks.length === 1) {
@@ -833,7 +847,7 @@ async function processBatch(
         const vector = await processOne(task, timings)
         outcomes.set(task.id, { vector: normalizeVector(vector, task.dim) })
       } catch (err: unknown) {
-        outcomes.set(task.id, { error: errorMessage(err) })
+        outcomes.set(task.id, embeddingWorkerFailure(err))
       }
     } else {
       const imagePaths = tasks.map((task) => task.imagePath)
@@ -848,7 +862,7 @@ async function processBatch(
             const vector = await processOne(task, timings)
             outcomes.set(task.id, { vector: normalizeVector(vector, task.dim) })
           } catch (error: unknown) {
-            outcomes.set(task.id, { error: errorMessage(error) })
+            outcomes.set(task.id, embeddingWorkerFailure(error))
           }
         }
       } else {
@@ -909,7 +923,7 @@ async function processBatch(
             validTasks.push(tasks[i])
             images.push(result.value)
           } else {
-            outcomes.set(tasks[i].id, { error: errorMessage(result.reason) })
+            outcomes.set(tasks[i].id, embeddingWorkerFailure(result.reason))
           }
         }
         timings.decodedPixelBytes = Math.max(
@@ -1035,7 +1049,7 @@ async function processBatch(
                 const vector = await processOne(task, timings)
                 outcomes.set(task.id, { vector: normalizeVector(vector, task.dim) })
               } catch (error: unknown) {
-                outcomes.set(task.id, { error: errorMessage(error) })
+                outcomes.set(task.id, embeddingWorkerFailure(error))
               }
             }
             timings.fallbackMs += performance.now() - fallbackStartedAt
@@ -1046,7 +1060,7 @@ async function processBatch(
   } catch (err: unknown) {
     // Catastrophic batch failure → report all unfinished tasks as failed.
     for (const task of tasks) {
-      if (!outcomes.has(task.id)) outcomes.set(task.id, { error: errorMessage(err) })
+      if (!outcomes.has(task.id)) outcomes.set(task.id, embeddingWorkerFailure(err))
     }
   } finally {
     const memoryAfter = stageMetricsEnabled ? await captureEmbeddingChildMemory() : null

@@ -179,7 +179,8 @@ const entries = [
     // Browser image import adds one bounded downloader and two shared modules:
     // browser-image IPC and searchProgress. No new packages or renderer/worker
     // edges; retain all other entry and byte budgets.
-    budget: 343,
+    // One bounded failure-header reviewer, using existing filesystem helpers.
+    budget: 344,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },

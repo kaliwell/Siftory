@@ -3,6 +3,12 @@ export type AppLanguage = 'en' | 'zh-CN'
 export type TranslationValues = Record<string, string | number>
 
 const enUS: Record<string, string> = {
+  'Image library ready. Some input files were skipped; see the scan error log.':
+    'Image library ready. Some input files were skipped; see the scan error log.',
+  'DINO preparation complete; some inputs were skipped':
+    'DINO preparation complete; some inputs were skipped',
+  'CLIP preparation complete; some inputs were skipped':
+    'CLIP preparation complete; some inputs were skipped',
   'Index statistics have not been analyzed. Existing search data is preserved.':
     'Index statistics have not been analyzed. Existing search data is preserved.',
   'Ctrl+K': 'Ctrl+K',
@@ -38,6 +44,10 @@ const enUS: Record<string, string> = {
 }
 
 const zhCN: Record<string, string> = {
+  'Image library ready. Some input files were skipped; see the scan error log.':
+    '素材库准备完成，部分文件已跳过，详情见扫描与预览日志。',
+  'DINO preparation complete; some inputs were skipped': 'DINO 准备完成，部分文件已跳过',
+  'CLIP preparation complete; some inputs were skipped': 'CLIP 准备完成，部分文件已跳过',
   'Preparing browser image...': '正在读取网页图片…',
   'Unable to import the browser image. Try copying and pasting the image, or save it locally first.':
     '无法读取网页图片，请尝试复制图片后粘贴，或先保存到本地再拖入。',

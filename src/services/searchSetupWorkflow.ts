@@ -22,6 +22,7 @@ export interface SetupWorkflowSnapshot {
   message?: string
   error?: string
   runtimeError?: RuntimeErrorPayload
+  hasInputSkips?: boolean
 }
 
 export interface SetupStepContext {
@@ -120,6 +121,7 @@ export function setupSnapshotFromImagePreparationProgress(
     stepPercent: state === 'done' ? 100 : Math.min(99, progress.percentage),
     percent: progress.percentage,
     message: progress.message,
+    ...(progress.hasInputSkips ? { hasInputSkips: true } : {}),
     error: progress.error,
   }
 }

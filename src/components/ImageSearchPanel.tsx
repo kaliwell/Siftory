@@ -1394,6 +1394,7 @@ const ImageSearchPanel: React.FC = () => {
               >
                 {(experienceMode === 'simple' ||
                   setupWorkflow.state === 'error' ||
+                  (setupWorkflow.state === 'done' && setupWorkflow.hasInputSkips) ||
                   (setupWorkflow.state === 'idle' && embeddingProgress?.state === 'error')) && (
                   <SearchSetupProgress
                     workflow={setupWorkflow}
