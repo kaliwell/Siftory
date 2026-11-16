@@ -1,3 +1,4 @@
+import { isInteractiveSearchActive, onInteractiveSearchIdle } from './interactiveSearchPriority'
 // Orchestrates isolated embedding workers and persists results through vectorDatabaseService.
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
@@ -997,6 +998,7 @@ function dispatchNextClipTask(
   child?: ChildProcessWithoutNullStreams,
   prefetchRequest = false,
 ): void {
+  if (isInteractiveSearchActive()) return
   if (paused || stopping || taskQueue.length === 0) {
     checkCompletion()
     return
@@ -1088,6 +1090,7 @@ function dispatchNextClipTask(
 }
 
 function dispatchNextDinoTask(child?: ChildProcessWithoutNullStreams): void {
+  if (isInteractiveSearchActive()) return
   if (paused || stopping || taskQueue.length === 0) {
     checkCompletion()
     return
@@ -1903,3 +1906,14 @@ export function seedEmbeddingJobs(
   }
   return seedEmbeddingJobsIntoStore(images, modelName, embeddingType, writeDiagnostic)
 }
+
+// Resume only dispatch; never resume a build explicitly paused by the user.
+onInteractiveSearchIdle(() => {
+  if (paused || stopping || progress.state !== 'running' || taskQueue.length === 0) return
+  try {
+    if (progress.modelName === 'clip_vit_base_patch32') dispatchNextClipTask()
+    else dispatchNextDinoTask()
+  } catch (error) {
+    failActiveEmbeddingBuild(error instanceof Error ? error.message : String(error))
+  }
+})

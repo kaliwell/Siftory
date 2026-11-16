@@ -181,7 +181,8 @@ const entries = [
     // edges; retain all other entry and byte budgets.
     // One bounded failure-header reviewer, using existing filesystem helpers.
     // Shared bounded header parsing is also reused by isolated decoders.
-    budget: 345,
+    // One shared cooperative priority boundary for queries and embedding dispatch.
+    budget: 346,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },

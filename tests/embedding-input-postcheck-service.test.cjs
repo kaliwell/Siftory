@@ -31,6 +31,10 @@ function harness(t, options = {}) {
     flush: async () => {},
   }
   const mocks = {
+    './interactiveSearchPriority': {
+      isInteractiveSearchActive: () => false,
+      onInteractiveSearchIdle: () => () => {},
+    },
     './storagePathResolver': { getConfiguredStorageRoot: () => root },
     './vectorDatabaseService': {
       jobStore: store,

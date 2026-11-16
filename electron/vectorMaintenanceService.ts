@@ -1,3 +1,4 @@
+import { reserveInteractiveSearch } from './interactiveSearchPriority'
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
@@ -53,8 +54,10 @@ export function tryAcquireVectorMutationReservation(
 export function tryAcquireVectorSearchReservation(): (() => void) | null {
   if (exclusiveReservations > 0 || activeMutations > 0) return null
   activeSearches += 1
+  const releasePriority = reserveInteractiveSearch()
   return releaseReservationOnce(() => {
     activeSearches = Math.max(0, activeSearches - 1)
+    releasePriority()
   })
 }
 
