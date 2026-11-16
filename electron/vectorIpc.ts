@@ -1061,17 +1061,15 @@ export function registerVectorIpc(
           searchMode: 'semantic' as const,
         }
       }
-      return {
-        ...response,
-        results: authorizeFileDragResults(
-          event.sender.id,
-          filterPreparedSearchResults(
-            mapProjectLayeredResults(response.results),
-            preparationRevision,
-          ),
-          (result) => result.path,
+      const results = authorizeFileDragResults(
+        event.sender.id,
+        filterPreparedSearchResults(
+          mapProjectLayeredResults(response.results),
+          preparationRevision,
         ),
-      }
+        (result) => result.path,
+      )
+      return { ...response, results, returnedCount: results.length }
     } finally {
       activeVectorSearches = Math.max(0, activeVectorSearches - 1)
       releaseSearch()
