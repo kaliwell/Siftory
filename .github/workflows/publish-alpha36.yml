@@ -7,11 +7,11 @@ on:
       build_run_id:
         description: Successful Windows online installer run
         required: true
-        default: '43842551642'
+        default: '43843926471'
       source_sha:
         description: Exact installer source commit
         required: true
-        default: 3b7c9bc8ec5a9fb74691563c20cc8d744a55a866
+        default: 7056950ecc7417db14595be4856903425c667e7c
 permissions:
   contents: write
   actions: read
@@ -25,8 +25,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      BUILD_RUN_ID: ${{ inputs.build_run_id || '43842551642' }}
-      SOURCE_SHA: ${{ inputs.source_sha || '3b7c9bc8ec5a9fb74691563c20cc8d744a55a866' }}
+      BUILD_RUN_ID: ${{ inputs.build_run_id || '43843926471' }}
+      SOURCE_SHA: ${{ inputs.source_sha || '7056950ecc7417db14595be4856903425c667e7c' }}
     steps:
       - name: Verify the source build succeeded
         shell: bash
