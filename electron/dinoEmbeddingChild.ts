@@ -1,5 +1,6 @@
+import { decodeEmbeddingImageInput } from './embeddingImageDecodeGuard'
 import fs from 'fs'
-import { decodeEmbeddingInput, embeddingWorkerFailure } from '../shared/embeddingInputFailure'
+import { embeddingWorkerFailure } from '../shared/embeddingInputFailure'
 import { performance } from 'perf_hooks'
 import readline from 'readline'
 import { poolDinoEmbedding } from './dinoEmbeddingMath'
@@ -291,7 +292,8 @@ async function getExtractor(
 async function readDinoImage(imagePath: string): Promise<DinoRawImage> {
   const { RawImage } =
     (await import('@huggingface/transformers')) as unknown as DinoTransformersModule
-  return decodeEmbeddingInput(
+  return decodeEmbeddingImageInput(
+    imagePath,
     () =>
       (dinoFusedShadowEnabled
         ? readDinoTensorPrefetchImage(imagePath, RawImage)

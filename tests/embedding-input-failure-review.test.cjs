@@ -172,7 +172,7 @@ test('GPU, model, provider, tensor, worker and storage failures cannot be hidden
   }
 })
 
-test('missing files and incomplete bounded headers do not prove unsuitable inputs', async (t) => {
+test('missing files remain errors; JPEG dimensions are reachable past large APP blocks', async (t) => {
   const missing = await fixture(t, jpeg(), 'Unknown error')
   await fs.unlink(missing.inputPath)
   assert.equal(await recheckEmbeddingInputFailure(missing), null)
@@ -183,7 +183,16 @@ test('missing files and incomplete bounded headers do not prove unsuitable input
     Buffer.concat([app, jpeg({ depth: 12 }).subarray(2)]),
     'Unknown error',
   )
-  assert.equal(await recheckEmbeddingInputFailure(longHeader), null)
+  assert.equal((await recheckEmbeddingInputFailure(longHeader)).code, 'INPUT_NOT_SUPPORTED')
+  const largeImage = await fixture(
+    t,
+    Buffer.concat([app, app.subarray(2), jpeg({ width: 10000, height: 10000 }).subarray(2)]),
+    'Input image exceeds pixel limit',
+  )
+  const result = await recheckEmbeddingInputFailure(largeImage)
+  assert.equal(result.code, 'INPUT_PIXEL_LIMIT')
+  assert.equal(result.width, 10000)
+  assert.equal(result.height, 10000)
 })
 
 test('review is cancellable and preserves input association', async (t) => {
@@ -197,4 +206,83 @@ test('review is cancellable and preserves input association', async (t) => {
   assert.equal(reviewed[0].rejection.code, 'INPUT_NOT_SUPPORTED')
   assert.equal(reviewed[1].input, inputs[1])
   assert.equal(reviewed[1].rejection, null)
+})
+
+test('JPEG inspection seeks metadata with bounded byte reads and yields on hostile headers', async () => {
+  const { readEmbeddingImageHeader } = loadTsModule('electron/embeddingImageHeader.ts')
+  const app = Buffer.alloc(65537)
+  app.set([255, 225, 255, 255])
+  const source = Buffer.concat([
+    Buffer.from([255, 216]),
+    ...Array(20).fill(app),
+    jpeg({ depth: 12 }).subarray(2),
+  ])
+  let bytesRead = 0
+  const fakeHandle = {
+    async read(target, offset, length, position) {
+      const copied = source.copy(target, offset, position, position + length)
+      bytesRead += copied
+      return { bytesRead: copied }
+    },
+  }
+  const result = await readEmbeddingImageHeader(fakeHandle, source.length)
+  assert.equal(result.unsupported, true)
+  assert.equal(result.depth, 12)
+  assert.ok(bytesRead <= 64 * 1024, `read ${bytesRead} bytes`)
+  const fill = Buffer.alloc(100000, 255)
+  fill[0] = 255
+  fill[1] = 216
+  bytesRead = 0
+  const incomplete = await readEmbeddingImageHeader(
+    {
+      async read(target, offset, length, position) {
+        const copied = fill.copy(target, offset, position, position + length)
+        bytesRead += copied
+        return { bytesRead: copied }
+      },
+    },
+    fill.length,
+  )
+  assert.equal(incomplete, null)
+  assert.ok(bytesRead <= 64 * 1024)
+})
+
+test('unsupported JPEG never enters the decoder; runtime failures and baseline JPEG still do', async (t) => {
+  const { decodeEmbeddingImageInput } = loadTsModule('electron/embeddingImageDecodeGuard.ts')
+  const { embeddingWorkerFailure } = loadTsModule('shared/embeddingInputFailure.ts')
+  let calls = 0
+  for (const options of [{ marker: 0xc9 }, { marker: 0xca }, { depth: 12 }, { marker: 0xc3 }]) {
+    const input = await fixture(t, jpeg(options), 'Unknown error')
+    let failure
+    try {
+      await decodeEmbeddingImageInput(input.inputPath, async () => {
+        calls++
+        return 'decoded'
+      })
+    } catch (error) {
+      failure = embeddingWorkerFailure(error)
+    }
+    assert.equal(failure.inputFailure, true)
+    const rejection = await recheckEmbeddingInputFailure({ ...input, ...failure })
+    assert.equal(rejection.code, 'INPUT_NOT_SUPPORTED')
+  }
+  assert.equal(calls, 0)
+  const baseline = await fixture(t, jpeg(), 'Unknown error')
+  assert.equal(
+    await decodeEmbeddingImageInput(baseline.inputPath, async () => {
+      calls++
+      return 'decoded'
+    }),
+    'decoded',
+  )
+  assert.equal(calls, 1)
+  let runtimeFailure
+  try {
+    await decodeEmbeddingImageInput(baseline.inputPath, async () => {
+      throw Error('CUDA execution provider failed')
+    })
+  } catch (error) {
+    runtimeFailure = embeddingWorkerFailure(error)
+  }
+  assert.equal(await recheckEmbeddingInputFailure({ ...baseline, ...runtimeFailure }), null)
 })

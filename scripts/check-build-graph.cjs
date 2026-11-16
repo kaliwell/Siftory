@@ -180,7 +180,8 @@ const entries = [
     // browser-image IPC and searchProgress. No new packages or renderer/worker
     // edges; retain all other entry and byte budgets.
     // One bounded failure-header reviewer, using existing filesystem helpers.
-    budget: 344,
+    // Shared bounded header parsing is also reused by isolated decoders.
+    budget: 345,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },

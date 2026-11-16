@@ -1,3 +1,5 @@
+import { hasSupportedEmbeddingImageSignature } from './embeddingImageHeader'
+export { hasSupportedEmbeddingImageSignature } from './embeddingImageHeader'
 import fs from 'fs'
 import path from 'path'
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
@@ -59,34 +61,6 @@ export interface PrepareEmbeddingScanInputsOptions {
 
 function normalizedPath(filePath: string): string {
   return path.resolve(filePath).replace(/\//g, '\\').toLowerCase()
-}
-
-function hasPrefix(buffer: Uint8Array, values: number[]): boolean {
-  return values.every((value, index) => buffer[index] === value)
-}
-
-export function hasSupportedEmbeddingImageSignature(buffer: Uint8Array): boolean {
-  if (buffer.length < 4) return false
-  if (hasPrefix(buffer, [0xff, 0xd8, 0xff])) return true
-  if (hasPrefix(buffer, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return true
-  if (
-    hasPrefix(buffer, [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]) ||
-    hasPrefix(buffer, [0x47, 0x49, 0x46, 0x38, 0x39, 0x61])
-  ) {
-    return true
-  }
-  if (
-    hasPrefix(buffer, [0x52, 0x49, 0x46, 0x46]) &&
-    buffer.length >= 12 &&
-    hasPrefix(buffer.subarray(8), [0x57, 0x45, 0x42, 0x50])
-  ) {
-    return true
-  }
-  if (hasPrefix(buffer, [0x42, 0x4d])) return true
-  if (hasPrefix(buffer, [0x49, 0x49, 0x2a, 0x00]) || hasPrefix(buffer, [0x4d, 0x4d, 0x00, 0x2a])) {
-    return true
-  }
-  return false
 }
 
 function loadRejectedCache(cachePath: string | undefined): RejectedInputCache {

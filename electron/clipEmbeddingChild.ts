@@ -1,5 +1,6 @@
+import { decodeEmbeddingImageInput } from './embeddingImageDecodeGuard'
 import fs from 'fs'
-import { decodeEmbeddingInput, embeddingWorkerFailure } from '../shared/embeddingInputFailure'
+import { embeddingWorkerFailure } from '../shared/embeddingInputFailure'
 import { performance } from 'perf_hooks'
 import readline from 'readline'
 import { CudaEmbeddingWorkerClient, type CudaTensorInput } from './cudaEmbeddingWorkerClient'
@@ -139,9 +140,9 @@ function errorMessage(err: unknown): string {
 }
 
 const readClipImage = (imagePath: string, factory: ClipRawImageFactory) =>
-  decodeEmbeddingInput(() => readClipImageDecoded(imagePath, factory))
+  decodeEmbeddingImageInput(imagePath, () => readClipImageDecoded(imagePath, factory))
 const readClipTensorPrefetchImage = (imagePath: string, factory: ClipRawImageFactory) =>
-  decodeEmbeddingInput(() => readClipTensorPrefetchImageDecoded(imagePath, factory))
+  decodeEmbeddingImageInput(imagePath, () => readClipTensorPrefetchImageDecoded(imagePath, factory))
 
 function normalizeVector(vec: unknown, expectedDim: number): number[] {
   return requireNormalizedEmbeddingVector(vec, expectedDim)
