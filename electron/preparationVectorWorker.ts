@@ -89,7 +89,7 @@ export async function scanPreparedVectors(input: PreparedSnapshotRequest) {
               const vector = requireNormalizedEmbeddingVector(row.vector, input.dim)
               let dot = 0
               for (let d = 0; d < input.dim; d++) dot += query[d] * vector[d]
-              heap.offer(pathKey, row.imageId, dot, dot, id)
+              heap.offer(pathKey, row.imageId, Math.max(0, Math.min(1, (dot + 1) / 2)), dot, id)
               rows++
             }
           }
@@ -98,7 +98,12 @@ export async function scanPreparedVectors(input: PreparedSnapshotRequest) {
         }
       }
     }
-    return { candidates: heap.values(), scanned: rows }
+    return {
+      candidates: heap
+        .values()
+        .sort((a, b) => b.score - a.score || key(a.path).localeCompare(key(b.path))),
+      scanned: rows,
+    }
   } finally {
     await Promise.all(handles.map((h) => h.close()))
   }

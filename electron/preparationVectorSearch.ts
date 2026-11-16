@@ -14,6 +14,7 @@ export async function searchPreparedVectorSnapshot(
   isCancelled?: () => boolean,
   scope?: readonly string[],
 ): Promise<{ candidates: SemanticClipCandidate[]; scanned: number }> {
+  if (isCancelled?.()) throw Error('Vector search cancelled')
   const revision = getPreparationSearchRevision()
   const sources = getEmbeddingStorePaths(model, 'global').map((file) => {
     const stat = fs.statSync(file)
@@ -46,6 +47,7 @@ export async function searchPreparedVectorSnapshot(
         }, 50)
       },
     )
+    if (isCancelled?.()) throw Error('Vector search cancelled')
     if (getPreparationSearchRevision() !== revision)
       throw Error('Indexed materials changed during search; please retry')
     return result

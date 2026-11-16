@@ -60,7 +60,7 @@ test('latest revision wins, invalid latest rows suppress old vectors and scopes 
   const input = await f.input()
   const result = await scanPreparedVectors(input)
   assert.equal(result.scanned, 2)
-  assert.equal(result.candidates.find((c) => c.path === 'a').score, 0)
+  assert.equal(result.candidates.find((c) => c.path === 'a').score, 0.5)
   assert.equal(
     result.candidates.some((c) => c.path === 'bad'),
     false,
@@ -93,4 +93,20 @@ test('preparation mode spans model-stage gaps and releases exactly once', () => 
   release()
   release()
   assert.equal(mode.isVectorPreparationActive(), false)
+})
+
+test('snapshot scores retain the normal search cosine-to-score scale', async (t) => {
+  const f = await fixture(
+    t,
+    row('same', [1, 0]) + row('orthogonal', [0, 1]) + row('opposite', [-1, 0]),
+  )
+  const found = await scanPreparedVectors(await f.input())
+  assert.deepEqual(
+    found.candidates.map((c) => [c.path, c.score]),
+    [
+      ['same', 1],
+      ['orthogonal', 0.5],
+      ['opposite', 0],
+    ],
+  )
 })
