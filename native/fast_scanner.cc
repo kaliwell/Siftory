@@ -5602,7 +5602,7 @@ static void SearchByImageAsyncComplete(napi_env env,napi_status status,void* dat
     set_int64(env,result,"candidateCount",(int64_t)d->metrics.candidates);
     set_double(env,result,"searchMs",d->searchMs);
     set_string(env,result,"mode",index.mode.c_str());
-    set_string(env,result,"indexType",dctMode?"linear-dct":(d->metrics.indexType?d->metrics.indexType:"linear"));
+    set_string(env,result,"indexType",d->searchMode=="dct"?"linear-dct":(d->metrics.indexType?d->metrics.indexType:"linear"));
     set_int64(env,result,"bucketSize",(int64_t)d->metrics.bucketSize);
     set_int32(env,result,"segmentCount",(int32_t)index.segments.size());
     set_int32(env,result,"searchedSegments",d->metrics.searchedSegments);
