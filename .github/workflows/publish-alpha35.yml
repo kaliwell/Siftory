@@ -1,0 +1,56 @@
+name: Publish verified Alpha35 JPEG header guard installer
+on:
+  push:
+    branches: [release/alpha35]
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful Windows online installer run
+        required: true
+        default: '43813601658'
+      source_sha:
+        description: Exact installer source commit
+        required: true
+        default: a77485e0b099aba5f797c8b82a786bd8c3b0cc66
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-alpha35
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN_ID: ${{ inputs.build_run_id || '43813601658' }}
+      SOURCE_SHA: ${{ inputs.source_sha || 'a77485e0b099aba5f797c8b82a786bd8c3b0cc66' }}
+    steps:
+      - name: Verify the source build succeeded
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN_ID" > build-run.json
+          jq -e --arg sha "$SOURCE_SHA" '.head_sha == $sha and .status == "completed" and .conclusion == "success" and .path == ".github/workflows/package-online.yml"' build-run.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-online-installer
+          path: installer
+          run-id: ${{ env.BUILD_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Verify and publish the matching diagnostic installer
+        working-directory: installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS.txt
+          jq -e '.passed == true and .packaged == true and .nativeAddonLoaded == true and .projectPreviewWorkerPassed == true and .projectPreviewPdfChildPassed == true and .rendererReady == true and .performanceDiagnosticsPassed == true and .performanceExportPassed == true and .shellPreviewIsolationPassed == true and .scanErrorDiagnosticsPassed == true and .psdCompositePreviewPassed == true and .inputSkipNoticePassed == true and .version == "1.0.1-alpha.35"' startup-check.json
+          jq -e '.startupPassed == true and .archivePassed == true' validation-status.json
+          jq -e --arg sha "$SOURCE_SHA" '.sourceCommit == $sha' native-build.json
+          test "$(gh api "repos/$GH_REPO/git/ref/tags/v1.0.1-alpha.35" --jq '.object.sha')" = "$SOURCE_SHA"
+          test -s Siftory-1.0.1-alpha.35-Windows-x64-Setup.exe
+          gh release create v1.0.1-alpha.35 ./* --verify-tag --title 'Siftory 1.0.1-alpha.35 — JPEG 输入保护测试版 Windows x64' --prerelease --notes-file RELEASE_NOTES.md
