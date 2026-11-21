@@ -742,12 +742,15 @@ export function registerImageSearchIpc(
       let createdId: string | undefined
       try {
         if (!source) {
-          const added = service.addSource({
-            type: 'mounted-network',
-            rootLocator: oldRoot,
-            displayName: path.basename(oldRoot) || oldRoot,
-            readOnly: true,
-          })
+          const added = service.addSource(
+            {
+              type: 'mounted-network',
+              rootLocator: oldRoot,
+              displayName: path.basename(oldRoot) || oldRoot,
+              readOnly: true,
+            },
+            { watch: false },
+          )
           if (!added.ok || !added.source) return { ok: false, error: added.error }
           source = { ...added.source, fileCount: 0, totalBytes: 0 }
           createdId = source.id

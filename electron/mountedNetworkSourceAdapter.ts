@@ -64,7 +64,7 @@ function sourceError(error: unknown, operation: string): SourceAdapterError {
   return new SourceAdapterError('SOURCE_OFFLINE', `Network source unavailable during ${operation}.`)
 }
 
-function waitForOperation<T>(
+export function waitForMountedNetworkOperation<T>(
   operation: () => Promise<T>,
   timeoutMs: number,
   signal: AbortSignal,
@@ -145,7 +145,7 @@ export class MountedNetworkSourceAdapter implements SourceAdapter {
   async probe(source: DataSource): Promise<SourceProbeResult> {
     const controller = new AbortController()
     try {
-      const stat = await waitForOperation(
+      const stat = await waitForMountedNetworkOperation(
         () => this.io.stat(source.rootLocator),
         this.operationTimeoutMs,
         controller.signal,
@@ -185,7 +185,7 @@ export class MountedNetworkSourceAdapter implements SourceAdapter {
     try {
       while (directories.length > 0) {
         const directory = directories.shift()!
-        const children = await waitForOperation(
+        const children = await waitForMountedNetworkOperation(
           () => this.io.readdir(directory),
           this.operationTimeoutMs,
           request.signal,
@@ -212,7 +212,7 @@ export class MountedNetworkSourceAdapter implements SourceAdapter {
           const window = files.slice(offset, offset + this.statConcurrency)
           const stats = await Promise.all(
             window.map((filePath) =>
-              waitForOperation(
+              waitForMountedNetworkOperation(
                 () => this.io.stat(filePath),
                 this.operationTimeoutMs,
                 request.signal,

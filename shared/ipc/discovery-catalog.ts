@@ -1,3 +1,4 @@
+import type { LibraryAssetLocation } from './storage-location'
 // Phase 1 unified source & discovery catalog contracts.
 // Design: docs/designs/2026-08-11-local-nas-ai-asset-discovery-architecture.md
 // sections 6 (unified data source), 7 (data model), 9.3 (result contract),
@@ -213,6 +214,7 @@ export interface DiscoveryCatalogResultItem {
   fileEntryId: string
   displayName: string
   displayPath: string
+  location?: LibraryAssetLocation
   /** Main-process-only path alias used to join derived recall with an authoritative item. */
   recallPath?: string
   sizeBytes: number

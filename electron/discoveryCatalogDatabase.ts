@@ -139,12 +139,24 @@ function optionalNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : undefined
 }
 
-function catalogResultFromRow(row: Record<string, unknown>): DiscoveryCatalogResultItem {
+function catalogResultFromRow(
+  row: Record<string, unknown>,
+  libraryId?: string,
+): DiscoveryCatalogResultItem {
   const indexStateList = textValue(row.index_state_list)
   return {
     fileEntryId: String(numberValue(row.id)),
     displayName: textValue(row.name),
     displayPath: textValue(row.path_key),
+    ...(libraryId && row.source_type === 'mounted-network'
+      ? {
+          location: {
+            libraryId,
+            sourceId: textValue(row.source_id),
+            relativePath: textValue(row.relative_path).replace(/\\/g, '/'),
+          },
+        }
+      : {}),
     sizeBytes: numberValue(row.size_bytes),
     modifiedAt: numberValue(row.modified_at),
     source: {
@@ -818,7 +830,10 @@ export class DiscoveryCatalogDatabase {
 
   // ── Catalog query (lexical; works with no AI models) ───
 
-  queryCatalog(request: DiscoveryCatalogQueryRequest): {
+  queryCatalog(
+    request: DiscoveryCatalogQueryRequest,
+    libraryId?: string,
+  ): {
     items: DiscoveryCatalogResultItem[]
     total: number
   } {
@@ -883,7 +898,7 @@ export class DiscoveryCatalogDatabase {
         LIMIT ? OFFSET ?`,
       )
       .all(...parameters, limit, offset)
-    const items = rows.map(catalogResultFromRow)
+    const items = rows.map((row) => catalogResultFromRow(row, libraryId))
     return { items, total }
   }
 
@@ -906,7 +921,7 @@ export class DiscoveryCatalogDatabase {
           WHERE f.availability != 'missing' AND f.path_key IN (${placeholders})`,
         )
         .all(...chunk)
-      results.push(...rows.map(catalogResultFromRow))
+      results.push(...rows.map((row) => catalogResultFromRow(row)))
     }
     return results
   }

@@ -362,7 +362,13 @@ test('mounted-network root repair preserves source and file ids after identity s
     assert.equal(isRetiredMountedSourcePath(oldFile), true)
     assert.equal(isRetiredMountedSourcePath(newFile), false)
     assert.equal(isRetiredMountedSourcePath(path.join(oldRoot + '-other', 'photo.png')), false)
-    const location = { libraryId, sourceId: added.source.id, relativePath: 'nested/photo.png' }
+    const location = after.location
+    assert.deepEqual(location, {
+      libraryId,
+      sourceId: added.source.id,
+      relativePath: 'nested/photo.png',
+    })
+    assert.deepEqual(location, before.location)
     assert.equal(service.resolveMountedAsset(location), newFile)
     assert.equal(service.resolveMountedAsset({ ...location, relativePath: '../photo.png' }), null)
     assert.equal(service.resolveMountedAsset({ ...location, libraryId: 'different' }), null)

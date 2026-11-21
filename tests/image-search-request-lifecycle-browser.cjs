@@ -267,6 +267,33 @@ async function main() {
     await page.getByTestId('image-search-results').filter({ hasText: 'results.png' }).waitFor()
     assert.equal(await imageCalls(), beforeDrops + 2)
     await page.getByTestId('workspace-domain-sources').click()
+    const oldShare = String.raw`\\old-host\assets`
+    const newShare = String.raw`\\new-host\assets`
+    await page.evaluate(
+      ({ oldShare, newShare }) => {
+        const f = window.__workspaceTest
+        let moved = false
+        f.setHandler('imageSearch.selectPaths', () => [oldShare])
+        f.setHandler('imageSearch.resolveScanPaths', (paths) =>
+          paths.map((root) => (moved && root === oldShare ? newShare : root)),
+        )
+        f.setHandler('imageSearch.reconnectScanPath', (oldRoot, newRoot) => {
+          moved = oldRoot === oldShare && newRoot === newShare
+          return { ok: moved, root: moved ? newShare : undefined }
+        })
+      },
+      { oldShare, newShare },
+    )
+    const addFolder = page.getByTestId('image-search-select-folders')
+    await addFolder.click()
+    const lib = page.getByTestId('image-search-library-section')
+    await lib.getByText(oldShare, { exact: true }).waitFor()
+    await lib.getByRole('button', { name: '更换共享路径' }).click()
+    await lib.getByLabel('新的共享路径').fill(newShare)
+    await lib.getByRole('button', { name: '更换共享路径' }).last().click()
+    await lib.getByText(newShare, { exact: true }).waitFor()
+    assert.equal(await lib.getByText(oldShare, { exact: true }).count(), 0)
+    assert.equal(await lib.getByLabel('新的共享路径').count(), 0)
     await dropFile('[data-testid="image-search-library-section"]', 'sources.png')
     await page.getByTestId('image-search-results').filter({ hasText: 'sources.png' }).waitFor()
     assert.equal(await imageCalls(), beforeDrops + 3)

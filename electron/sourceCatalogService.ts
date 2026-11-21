@@ -1,3 +1,4 @@
+import { waitForMountedNetworkOperation } from './mountedNetworkSourceAdapter'
 import { readLibraryId } from './storageLocationService'
 import {
   isMountedUncPath,
@@ -146,6 +147,7 @@ function errorCode(error: unknown): string {
 export class SourceCatalogService {
   private readonly database: DiscoveryCatalogDatabase
   private readonly databasePath: string
+  private readonly libraryId?: string
   private readonly adapterFactory: (source: DataSource) => SourceAdapter
   private readonly now: () => number
   private readonly taskScheduler: SourceCatalogServiceOptions['taskScheduler']
@@ -161,6 +163,11 @@ export class SourceCatalogService {
   constructor(options: SourceCatalogServiceOptions) {
     this.databasePath = path.resolve(options.databasePath)
     this.database = new DiscoveryCatalogDatabase(options.databasePath)
+    try {
+      this.libraryId = readLibraryId(path.dirname(this.databasePath))
+    } catch {
+      // Standalone and isolated catalogs may not be attached to a library.
+    }
     this.adapterFactory =
       options.adapterFactory ??
       ((source) =>
@@ -562,7 +569,10 @@ export class SourceCatalogService {
 
   // ── Sources ────────────────────────────────────────────
 
-  addSource(request: DiscoveryAddSourceRequest): DiscoveryAddSourceResult {
+  addSource(
+    request: DiscoveryAddSourceRequest,
+    options: { watch?: boolean } = {},
+  ): DiscoveryAddSourceResult {
     const type = typeof request.type === 'string' ? request.type : ''
     if (!IMPLEMENTED_SOURCE_TYPES.has(type)) {
       return {
@@ -621,7 +631,7 @@ export class SourceCatalogService {
       scanCapability: sftp ? 'remote-list' : mountedNetwork ? 'directory' : 'usn',
     }
     this.database.insertSource(source, this.now())
-    this.startIncrementalWatcher(source)
+    if (options.watch !== false) this.startIncrementalWatcher(source)
     return {
       ok: true,
       source: sftp
@@ -669,16 +679,10 @@ export class SourceCatalogService {
   }
 
   resolveMountedAsset(location: LibraryAssetLocation): string | null {
-    if (this.closed) return null
-    let libraryId: string
-    try {
-      libraryId = readLibraryId(path.dirname(this.databasePath))
-    } catch {
-      return null
-    }
+    if (this.closed || !this.libraryId) return null
     const source = this.database.getSource(location.sourceId)
     return source?.type === 'mounted-network'
-      ? resolveMountedAssetLocation(location, libraryId, source.rootLocator)
+      ? resolveMountedAssetLocation(location, this.libraryId, source.rootLocator)
       : null
   }
 
@@ -735,9 +739,18 @@ export class SourceCatalogService {
     }
     if (conflict())
       return { ok: false, error: 'Replacement source overlaps another registered path' }
+    const timeoutMs = 8_000
+    const deadline = AbortSignal.timeout(timeoutMs)
     try {
-      const directory = await fs.promises.opendir(newRoot)
-      await directory.close()
+      await waitForMountedNetworkOperation(
+        async () => {
+          const directory = await fs.promises.opendir(newRoot)
+          await directory.close()
+        },
+        timeoutMs,
+        deadline,
+        'replacement path check',
+      )
     } catch {
       return { ok: false, error: 'Replacement source root is not accessible' }
     }
@@ -754,7 +767,12 @@ export class SourceCatalogService {
         ) {
           return { ok: false, error: 'Catalog entry escapes the replacement source root' }
         }
-        const stat = await fs.promises.stat(candidate)
+        const stat = await waitForMountedNetworkOperation(
+          () => fs.promises.stat(candidate),
+          timeoutMs,
+          deadline,
+          'replacement file check',
+        )
         if (
           stat.isFile() &&
           stat.size === sample.sizeBytes &&
@@ -763,6 +781,8 @@ export class SourceCatalogService {
           matchingSamples += 1
         }
       } catch {
+        if (deadline.aborted)
+          return { ok: false, error: 'Replacement source root is not accessible' }
         // A stale sample can be absent; at least one exact match is required below.
       }
     }
@@ -773,6 +793,7 @@ export class SourceCatalogService {
       }
     }
     if (
+      deadline.aborted ||
       this.closed ||
       this.activeScans.has(sourceId) ||
       this.database.getSource(sourceId)?.rootLocator !== source.rootLocator ||
@@ -1001,7 +1022,7 @@ export class SourceCatalogService {
 
   queryCatalog(request: DiscoveryCatalogQueryRequest): DiscoveryCatalogQueryResponse {
     if (this.closed) return { items: [], total: 0 }
-    return this.database.queryCatalog(request)
+    return this.database.queryCatalog(request, this.libraryId)
   }
 
   findFileEntriesByPaths(displayPaths: readonly string[]) {
