@@ -1,3 +1,8 @@
+import {
+  isRetiredMountedSourcePath,
+  mountedSourceRoutingRevision,
+  retiredMountedSourceRoots,
+} from './mountedSourceRouting'
 import { scanErrorRecorder } from './scanErrorLog'
 import type { ScanResponsiveness } from './scanResponsiveness'
 import { resolveStoredDataPath, storedDataPathCandidates } from './storagePathResolver'
@@ -111,6 +116,8 @@ export interface ProjectIndexProgress {
   unavailable: number
   failed: number
   removed: number
+  protectedRoots?: number
+  incompleteRoots?: number
 }
 
 export interface ProjectIndexResult extends Omit<ProjectIndexProgress, 'phase' | 'currentPath'> {
@@ -135,6 +142,8 @@ export function projectIndexStatusPatch(
     projectUnavailable: progress.unavailable,
     projectFailed: progress.failed,
     projectRemoved: progress.removed,
+    projectProtectedRoots: progress.protectedRoots,
+    projectIncompleteRoots: progress.incompleteRoots,
   }
 }
 
@@ -324,6 +333,34 @@ export async function refreshProjectSearchIndex(): Promise<void> {
   entriesBySource = nextBySource
 }
 
+let retiredPreviewSnapshot:
+  | {
+      revision: number
+      entries: typeof entriesByPreview
+      paths: string[]
+    }
+  | undefined
+
+export function retiredMountedPreviewPaths(): string[] {
+  if (!retiredMountedSourceRoots().length) {
+    retiredPreviewSnapshot = undefined
+    return []
+  }
+  const revision = mountedSourceRoutingRevision()
+  if (
+    retiredPreviewSnapshot?.entries === entriesByPreview &&
+    retiredPreviewSnapshot.revision === revision
+  )
+    return retiredPreviewSnapshot.paths
+  const paths: string[] = []
+  for (const entry of entriesByPreview.values()) {
+    if (entry.previewPath && isRetiredMountedSourcePath(entry.sourcePath))
+      paths.push(...storedDataPathCandidates(entry.previewPath))
+  }
+  retiredPreviewSnapshot = { revision, entries: entriesByPreview, paths }
+  return paths
+}
+
 export function isProjectPreviewProxy(filePath: string): boolean {
   if (!previewRoot) return false
   return isWithin(previewRoot, filePath)
@@ -510,9 +547,10 @@ async function enumerateProjectSources(
   roots: readonly string[],
   isCancelled: () => boolean,
   onProgress?: (progress: ProjectIndexProgress) => void,
-): Promise<{ sources: string[]; truncated: boolean }> {
+): Promise<{ sources: string[]; truncated: boolean; unreadableDirectories: string[] }> {
   const stack = [...roots]
   const sources: string[] = []
+  const unreadableDirectories: string[] = []
   const visitedDirectories = new Set<string>()
   const visitedSources = new Set<string>()
   let scannedDirectories = 0
@@ -527,6 +565,7 @@ async function enumerateProjectSources(
     try {
       entries = await fsp.opendir(directory, { bufferSize: 64 })
     } catch (error) {
+      unreadableDirectories.push(directory)
       scanErrorRecorder.record('enumeration', 'DIRECTORY_READ_FAILED', directory, error, 'warning')
       continue
     }
@@ -569,11 +608,12 @@ async function enumerateProjectSources(
           break
         }
       }
-    } catch {
-      /* A directory becoming unavailable must not block other roots. */
+    } catch (error) {
+      unreadableDirectories.push(directory)
+      scanErrorRecorder.record('enumeration', 'DIRECTORY_READ_FAILED', directory, error, 'warning')
     }
   }
-  return { sources, truncated }
+  return { sources, truncated, unreadableDirectories }
 }
 
 export async function indexProjectPreviews(
@@ -582,6 +622,7 @@ export async function indexProjectPreviews(
   options: {
     scanMode?: 'addNew' | 'update' | 'updateAll' | 'full'
     diagnostics?: ScanResponsiveness
+    isVerifiedLocalDrive?: (root: string) => boolean
     isCancelled?: () => boolean
     onProgress?: (progress: ProjectIndexProgress) => void
   } = {},
@@ -626,9 +667,20 @@ export async function indexProjectPreviews(
   }
   const isCancelled = options.isCancelled ?? (() => false)
   const resolvedRoots = roots.map((root) => path.resolve(root))
+  // Only a verified local volume can authorize automatic deletion. UNC roots,
+  // mapped drives and older addons without drive classification fail closed.
+  const protectedRoots = resolvedRoots.filter((root, index) => {
+    if (/^[\\/]{2}/.test(roots[index]) || /^[\\/]{2}/.test(root)) return true
+    if (process.platform !== 'win32') return false
+    const drive = path.win32.parse(root).root
+    return !options.isVerifiedLocalDrive?.(drive)
+  })
   const service = getProjectPreviewService(configuredUserDataPath)
-  const { sources, truncated } = await measure('enumerate', () =>
+  const { sources, truncated, unreadableDirectories } = await measure('enumerate', () =>
     enumerateProjectSources(resolvedRoots, isCancelled, options.onProgress),
+  )
+  const incompleteRoots = resolvedRoots.filter(
+    (root) => truncated || unreadableDirectories.some((directory) => isWithin(root, directory)),
   )
   const state = {
     discovered: sources.length,
@@ -638,6 +690,8 @@ export async function indexProjectPreviews(
     unavailable: 0,
     failed: 0,
     removed: 0,
+    protectedRoots: protectedRoots.length,
+    incompleteRoots: incompleteRoots.length,
   }
 
   service.manifest.beginBatch()
@@ -676,6 +730,7 @@ export async function indexProjectPreviews(
           service.getOrCreate(sourcePath, {
             isCancelled,
             forceRetry: options.scanMode === 'updateAll',
+            preserveReadyOnFailure: isWithinAnyRoot(protectedRoots, sourcePath),
             pdfTimeoutMs: 15_000,
             diagnostics,
           }),
@@ -744,21 +799,15 @@ export async function indexProjectPreviews(
       state.completed += 1
     }
 
-    if (!isCancelled()) {
+    if (!isCancelled() && !truncated) {
       const staleEntries: ProjectPreviewManifestEntry[] = []
-      const accessibleRoots: string[] = []
-      for (const root of resolvedRoots) {
-        if (isCancelled()) break
-        try {
-          const directory = await fsp.opendir(root)
-          await directory.close()
-          accessibleRoots.push(root)
-        } catch {
-          /* Offline roots do not authorize pruning cached entries. */
-        }
-      }
-      const candidates = (await service.manifest.list()).filter((entry) =>
-        isWithinAnyRoot(accessibleRoots, entry.sourcePath),
+      const reliableRoots = resolvedRoots.filter(
+        (root) => !protectedRoots.includes(root) && !incompleteRoots.includes(root),
+      )
+      const candidates = (await service.manifest.list()).filter(
+        (entry) =>
+          isWithinAnyRoot(reliableRoots, entry.sourcePath) &&
+          !isWithinAnyRoot(protectedRoots, entry.sourcePath),
       )
       // Never block Electron on synchronous network filesystem probes. Permission
       // and transient network failures are not proof that a source was deleted.

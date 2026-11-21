@@ -429,6 +429,15 @@ export interface ElectronAPI {
       version: number
     }>
     listDrives: () => Promise<string[]>
+    resolveScanPaths: (paths: string[]) => Promise<string[]>
+    reconnectScanPath: (
+      oldRoot: string,
+      newRoot: string,
+    ) => Promise<{
+      ok: boolean
+      root?: string
+      error?: string
+    }>
     validatePath: (filePath: string) => Promise<{ ok: boolean; error?: string }>
     queryData: (
       query: string,

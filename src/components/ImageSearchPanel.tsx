@@ -889,6 +889,37 @@ const ImageSearchPanel: React.FC = () => {
     [handleManualAdd],
   )
 
+  useEffect(() => {
+    if (!sourcesOnly || scanPaths.length === 0) return
+    let active = true
+    void imageSearchBridge.resolveScanPaths(scanPaths).then((roots) => {
+      if (!active || useStore.getState().imageSearchScanPaths !== scanPaths) return
+      if (roots.length !== scanPaths.length || roots.some((root, i) => root !== scanPaths[i]))
+        useStore.getState().setImageSearchScanPaths(roots)
+    })
+    return () => {
+      active = false
+    }
+  }, [scanPaths, sourcesOnly])
+
+  const handleReconnectPath = useCallback(
+    async (oldRoot: string, newRoot: string): Promise<boolean> => {
+      const result = await imageSearchBridge.reconnectScanPath(oldRoot, newRoot)
+      if (!result.ok || !('root' in result) || !result.root) {
+        showToast(t(result.error || 'The operation failed.'), 'err')
+        return false
+      }
+      const store = useStore.getState()
+      const root = result.root
+      store.setImageSearchScanPaths(
+        store.imageSearchScanPaths.map((item) => (item === oldRoot ? root : item)),
+      )
+      showToast(t('Shared path changed. Prepare Library to index the new address.'), 'ok')
+      return true
+    },
+    [showToast, t],
+  )
+
   const handleRemovePath = useCallback(
     (p: string) => {
       removeScanPath(p)
@@ -1370,6 +1401,7 @@ const ImageSearchPanel: React.FC = () => {
               onManualAdd={handleManualAdd}
               onClearPaths={handleClearPaths}
               onRemovePath={handleRemovePath}
+              onReconnectPath={handleReconnectPath}
               onQueryImage={handleQueryImage}
               onPasteClipboardImage={handlePasteClipboardImage}
               onRefreshSearch={handleRefreshSearch}

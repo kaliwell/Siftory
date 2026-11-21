@@ -1,3 +1,4 @@
+import { isRetiredMountedSourcePath, retiredMountedSourceRoots } from './mountedSourceRouting'
 import crypto from 'node:crypto'
 import { createSearchProgressMetrics, SEARCH_STAGE_LABELS } from '../shared/searchProgress'
 // ── Rerank Service ─────────────────────────────────────────
@@ -102,7 +103,8 @@ export async function resolveVectorPathScopeKeys(
   const indexedCount = delegate.getIndexedCount?.()
   if (indexedCount === 0) return undefined
   const paths = await delegate.listIndexedPaths()
-  return paths.length > 0 ? paths : undefined
+  if (paths.length === 0) return undefined
+  return paths.filter((file) => !isRetiredMountedSourcePath(file))
 }
 
 function errorMessage(err: unknown): string {
@@ -634,7 +636,12 @@ export async function searchLayered(
           message: 'Vector search...',
         })
 
-        const vectorPathFilter = resolveVectorPathFilter(hashDelegate)
+        const scopedPathFilter = resolveVectorPathFilter(hashDelegate)
+        const vectorPathFilter =
+          retiredMountedSourceRoots().length === 0
+            ? scopedPathFilter
+            : (file: string) =>
+                !isRetiredMountedSourcePath(file) && (scopedPathFilter?.(file) ?? true)
         const vectorPathScopeKeys = await resolveVectorPathScopeKeys(hashDelegate)
         const vectorPromise = searchVectorIndex(
           {

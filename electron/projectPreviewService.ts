@@ -31,6 +31,7 @@ export interface ProjectPreviewRequestOptions {
   diagnostics?: ScanResponsiveness
   isCancelled?: () => boolean
   forceRetry?: boolean
+  preserveReadyOnFailure?: boolean
   pdfTimeoutMs?: number
 }
 
@@ -123,8 +124,16 @@ export class ProjectPreviewService {
       return previous
     }
 
+    const recordFailure: ProjectPreviewService['recordFailure'] = (...args) => {
+      if (options.preserveReadyOnFailure && previous?.status === 'ready' && previous.previewPath) {
+        // The previous preview remains searchable until a replacement succeeds.
+        throw Object.assign(new Error(args[2]), { code: args[2] })
+      }
+      return this.recordFailure(...args)
+    }
+
     if (providers.length === 0) {
-      return this.recordFailure(
+      return recordFailure(
         {
           ...common,
           provider: 'provider-chain',
@@ -200,7 +209,7 @@ export class ProjectPreviewService {
         const code = (error as { code?: string }).code
         if (code?.startsWith('PDF_PREVIEW_') || code?.startsWith('SHELL_PREVIEW_')) {
           console.warn('[ProjectPreview]', provider.id, code)
-          return this.recordFailure(
+          return recordFailure(
             { ...common, provider: 'provider-chain', providerVersion: chainVersion },
             'error',
             code,
@@ -227,7 +236,7 @@ export class ProjectPreviewService {
       if (entry) return entry
       decodeFailed = true
     }
-    return this.recordFailure(
+    return recordFailure(
       {
         ...common,
         provider: 'provider-chain',

@@ -214,12 +214,16 @@ test('missing-source cleanup preserves permission failures and removes only conf
       if (file === denied) throw Object.assign(new Error('denied'), { code: 'EACCES' })
       return stat(file, ...args)
     }
-    const result = await indexProjectPreviews([source], {
-      hashImageAsync: async () => ({ ok: false }),
-      upsertIndexRecord: () => ({ ok: true }),
-      deleteIndexPath: () => ({ ok: true }),
-      removeSourceVectorData: (file) => removed.push(file),
-    })
+    const result = await indexProjectPreviews(
+      [source],
+      {
+        hashImageAsync: async () => ({ ok: false }),
+        upsertIndexRecord: () => ({ ok: true }),
+        deleteIndexPath: () => ({ ok: true }),
+        removeSourceVectorData: (file) => removed.push(file),
+      },
+      { isVerifiedLocalDrive: () => true },
+    )
     assert.equal(result.removed, 1)
     assert.deepEqual(removed, [missing])
     const entries = await new ProjectPreviewManifestStore(data).list()
@@ -355,4 +359,101 @@ test('fast previews are indexed before PDF work and async upserts finish before 
   } finally {
     fs.rmSync(root, { recursive: true, force: true })
   }
+})
+
+test(
+  'a scan preserves missing UNC records while pruning a confirmed local absence',
+  {
+    skip: process.platform === 'win32' && 'double-slash local fixture emulates a UNC root on POSIX',
+  },
+  async (t) => {
+    const { initProjectSearchIndex, indexProjectPreviews } = loadTsModule(
+      'electron/projectSearchIndexService.ts',
+    )
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-unc-protection-'))
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+    const data = path.join(root, 'data')
+    const remote = path.join(root, 'remote')
+    const local = path.join(root, 'local')
+    const partial = path.join(root, 'partial')
+    for (const folder of [remote, local, partial]) fs.mkdirSync(folder)
+    fs.mkdirSync(path.join(partial, 'unreadable'))
+    const store = new ProjectPreviewManifestStore(data)
+    for (const sourcePath of [
+      path.join(remote, 'old.psd'),
+      path.join(local, 'old.psd'),
+      path.join(partial, 'unreadable', 'old.psd'),
+    ]) {
+      await store.upsert({
+        sourceId: projectSourceId(sourcePath),
+        sourcePath,
+        sourceExt: 'psd',
+        size: 1,
+        mtimeMs: 1,
+        provider: 'test',
+        providerVersion: '1',
+        keywords: [],
+        status: 'unavailable',
+        updatedAt: 1,
+      })
+    }
+    await initProjectSearchIndex(data)
+    const open = fs.promises.opendir
+    t.after(() => {
+      fs.promises.opendir = open
+    })
+    fs.promises.opendir = async (directory, ...args) => {
+      if (directory === path.join(partial, 'unreadable'))
+        throw Object.assign(new Error('simulated disconnected directory'), { code: 'ENOENT' })
+      return open(directory, ...args)
+    }
+    const removed = []
+    const result = await indexProjectPreviews(
+      ['/' + remote, local, partial],
+      {
+        hashImageAsync: async () => ({ ok: false }),
+        upsertIndexRecord: () => ({ ok: true }),
+        deleteIndexPath: () => ({ ok: true }),
+        removeSourceVectorData: (file) => removed.push(file),
+      },
+      { scanMode: 'updateAll' },
+    )
+    assert.equal(result.protectedRoots, 1)
+    assert.equal(result.removed, 1)
+    assert.deepEqual(removed, [path.join(local, 'old.psd')])
+    assert.equal((await new ProjectPreviewManifestStore(data).list()).length, 2)
+  },
+)
+
+test('a failed preview refresh preserves the ready record and its cached preview', async (t) => {
+  const { ProjectPreviewService } = loadTsModule('electron/projectPreviewService.ts')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-ready-protection-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const sourcePath = path.join(root, 'source.psd')
+  const service = new ProjectPreviewService(root, [])
+  const previewPath = path.join(service.manifest.previewsDir, 'cached.jpg')
+  fs.mkdirSync(service.manifest.previewsDir, { recursive: true })
+  fs.writeFileSync(sourcePath, 'source')
+  fs.writeFileSync(previewPath, 'cached')
+  await service.manifest.upsert({
+    sourceId: projectSourceId(sourcePath),
+    sourcePath,
+    sourceExt: 'psd',
+    size: 1,
+    mtimeMs: 1,
+    provider: 'test',
+    providerVersion: '1',
+    previewPath,
+    keywords: [],
+    status: 'ready',
+    updatedAt: 1,
+  })
+  await assert.rejects(
+    service.getOrCreate(sourcePath, { forceRetry: true, preserveReadyOnFailure: true }),
+    { code: 'NO_PREVIEW_PROVIDER' },
+  )
+  const entry = await service.manifest.get(sourcePath)
+  assert.equal(entry.status, 'ready')
+  assert.equal(entry.previewPath, previewPath)
+  assert.equal(fs.readFileSync(previewPath, 'utf8'), 'cached')
 })

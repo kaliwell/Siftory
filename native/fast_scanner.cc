@@ -955,6 +955,8 @@ struct IndexRuntime{
   std::unordered_map<PathKey,PathIndexEntry,PathKeyHash> pathIndexMap;
   std::unordered_map<std::string,std::pair<int64_t,int64_t>> failedPathMap;
   std::unordered_set<std::string> replacedPaths,deletedPaths;
+  std::vector<std::string> searchExcludedRoots;
+  std::unordered_set<std::string> searchExcludedPaths;
   std::atomic<uint64_t> segmentGeneration{0};
   ScanBackendStatus backendStatus;
   std::mutex statusMutex;
@@ -1262,9 +1264,17 @@ static bool is_path_hidden(IndexRuntime& index,const std::string& normalizedPath
   std::shared_lock<std::shared_mutex> lk(index.mutex);
   return index.deletedPaths.count(normalizedPath)||index.replacedPaths.count(normalizedPath);
 }
+// Per-query visibility only. Never write these exclusions into the manifest.
+static bool search_path_excluded(const IndexRuntime& index,const std::string& normalizedPath){
+  if(index.searchExcludedPaths.count(normalizedPath))return true;
+  for(const auto& root:index.searchExcludedRoots){
+    if(path_matches_prefix(normalizedPath,root))return true;
+  }
+  return false;
+}
 static bool is_segment_path_hidden(IndexRuntime& index,const std::string& normalizedPath,int segmentId,uint64_t rowIndex){
   std::shared_lock<std::shared_mutex> lk(index.mutex);
-  if(index.deletedPaths.count(normalizedPath))return true;
+  if(index.deletedPaths.count(normalizedPath)||search_path_excluded(index,normalizedPath))return true;
   auto current=index.pathIndexMap.find(make_path_key(normalizedPath));
   if(current!=index.pathIndexMap.end()&&current->second.fromSegment&&current->second.owner){
     return current->second.owner!=index.segments[(size_t)segmentId].get()||current->second.ownerRow!=rowIndex;
@@ -2154,7 +2164,9 @@ static void search_memory(IndexRuntime& index,uint64_t qh,int threshold,size_t t
   if(topK==0)return;
   std::vector<ImageRecord> snap;{std::shared_lock<std::shared_mutex> lk(index.mutex);snap=index.records;m.scanned=snap.size();}
   std::priority_queue<RawCandidate,std::vector<RawCandidate>,CompareDist> heap;
-  for(size_t i=0;i<snap.size();i++){int d=hamming64(qh,snap[i].diffHash64);if(d<=threshold){m.candidates++;
+  for(size_t i=0;i<snap.size();i++){int d=hamming64(qh,snap[i].diffHash64);if(d<=threshold){
+    if((!index.searchExcludedRoots.empty()||!index.searchExcludedPaths.empty())&&search_path_excluded(index,normalize_path(snap[i].path)))continue;
+    m.candidates++;
     if(heap.size()<topK)heap.push({(uint64_t)i,d,0,0});else if(d<heap.top().dist){heap.pop();heap.push({(uint64_t)i,d,0,0});}}}
   std::vector<RawCandidate> fin;fin.reserve(heap.size());while(!heap.empty()){fin.push_back(heap.top());heap.pop();}
   std::sort(fin.begin(),fin.end(),[](auto& a,auto& b){return a.dist<b.dist;});out.reserve(fin.size());
@@ -5540,6 +5552,7 @@ struct SearchByImageAsyncData {
   std::shared_ptr<AsyncWorkRegistry> registry;
   std::string filePath;int threshold=10,topK=20;std::string searchMode;
   std::shared_ptr<IndexRuntime> index;
+  std::vector<std::string> excludedRoots,excludedPaths;
   // Output
   bool ok=false;std::string error;
   std::vector<SearchHit> hits;SearchMetrics metrics{};
@@ -5551,6 +5564,8 @@ struct SearchByImageAsyncData {
 static void SearchByImageAsyncExecute(napi_env env,void* data){
   auto* d=static_cast<SearchByImageAsyncData*>(data);
   try{
+    for(const auto& root:d->excludedRoots)d->index->searchExcludedRoots.emplace_back(normalize_path(root));
+    for(const auto& file:d->excludedPaths)d->index->searchExcludedPaths.emplace(normalize_path(file));
     std::vector<uint8_t> fb;
     if(!read_file_bytes(d->filePath,fb)){d->error="Cannot read query";return;}
     if(fb.size()>MAX_QUERY_IMAGE_BYTES){d->error="Image file too large";return;}
@@ -5628,7 +5643,7 @@ static void SearchByImageAsyncComplete(napi_env env,napi_status status,void* dat
 }
 
 static napi_value SearchByImageAsync(napi_env env,napi_callback_info info){
-  size_t argc=4;napi_value argv[4];napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);
+  size_t argc=6;napi_value argv[6];napi_get_cb_info(env,info,&argc,argv,nullptr,nullptr);
   if(argc<2)return reject_missing_args(env,"searchByImageAsync requires filePath and threshold");
   auto* d=new SearchByImageAsyncData();
   auto& context=get_addon_context(env);
@@ -5654,6 +5669,19 @@ static napi_value SearchByImageAsync(napi_env env,napi_callback_info info){
   int topKArg=argc>=3?get_int32(env,argv[2]):0;
   d->topK=topKArg>0?std::min(topKArg,1000):20;
   d->searchMode=argc>=4?get_string(env,argv[3]):"balanced";
+  for(size_t argument=4;argument<argc;argument++){
+    bool array=false;
+    if(napi_is_array(env,argv[argument],&array)!=napi_ok || !array)continue;
+    uint32_t count=0;napi_get_array_length(env,argv[argument],&count);
+    for(uint32_t i=0;i<count;i++){
+      napi_value value;
+      if(napi_get_element(env,argv[argument],i,&value)!=napi_ok)continue;
+      auto path=get_string(env,value);
+      if(path.empty())continue;
+      if(argument==4)d->excludedRoots.push_back(std::move(path));
+      else d->excludedPaths.push_back(std::move(path));
+    }
+  }
   napi_value promise;napi_create_promise(env,&d->deferred,&promise);
   auto status=create_registered_async_work(env,d->registry,"fast_scanner:searchByImageAsync",
                                            SearchByImageAsyncExecute,SearchByImageAsyncComplete,d,&d->work);
@@ -5810,6 +5838,24 @@ static void finalize_addon_context(napi_env,void* data,void*){
   delete context;
 }
 
+// Consult the local DOS device namespace without opening the remote path.
+static napi_value IsVerifiedLocalDrive(napi_env env,napi_callback_info info){
+  size_t argc=1;napi_value arg;
+  napi_get_cb_info(env,info,&argc,&arg,nullptr,nullptr);
+  const auto root=argc?get_string(env,arg):std::string{};
+  bool local=false;
+  if(root.size()==3 && ((root[0]>='A'&&root[0]<='Z')||(root[0]>='a'&&root[0]<='z')) &&
+     root[1]==':' && root[2]=='\\'){
+    const wchar_t name[]={static_cast<wchar_t>(root[0]),L':',L'\0'};
+    wchar_t target[1024]{};
+    if(QueryDosDeviceW(name,target,1024)){
+      const std::wstring device(target);
+      local=device.rfind(L"\\Device\\HarddiskVolume",0)==0;
+    }
+  }
+  napi_value result;napi_get_boolean(env,local,&result);return result;
+}
+
 // ===== Init =====
 static napi_value Init(napi_env env,napi_value exports){
   auto* context=new AddonContext(env,acquire_shared_index_runtime());
@@ -5823,6 +5869,7 @@ static napi_value Init(napi_env env,napi_value exports){
   context->index->attachedEnvs.fetch_add(1);
   napi_value fn;auto xfn=[&](const char* js,napi_callback cf){napi_create_function(env,nullptr,0,cf,nullptr,&fn);napi_set_named_property(env,exports,js,fn);};
   xfn("getNativeVersion",GetNativeVersion);xfn("getNativeStatus",GetNativeStatus);xfn("hashImage",HashImage);
+  xfn("isVerifiedLocalDrive",IsVerifiedLocalDrive);
   xfn("movePathWithoutOverwriteAsync",MovePathWithoutOverwriteAsync);
   xfn("configureScanThumbnails",ConfigureScanThumbnails);
   xfn("configureScanCommitFeed",ConfigureScanCommitFeed);

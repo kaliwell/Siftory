@@ -63,6 +63,7 @@ interface ImageSearchControlsProps {
   onManualAdd: () => void
   onClearPaths: () => void
   onRemovePath: (path: string) => void
+  onReconnectPath: (oldRoot: string, newRoot: string) => Promise<boolean>
   onQueryImage: () => void
   onPasteClipboardImage: () => void
   onRefreshSearch: () => void
@@ -116,6 +117,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   onManualAdd,
   onClearPaths,
   onRemovePath,
+  onReconnectPath,
   onQueryImage,
   onPasteClipboardImage,
   onRefreshSearch,
@@ -127,7 +129,19 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   const { t } = useTranslation()
   const [advancedPreparationOpen, setAdvancedPreparationOpen] = useState(false)
   const advancedPreparationId = useId()
-  const taskBusy = isScanning || workflowRunning
+  const [replacement, setReplacement] = useState<{ oldRoot: string; newRoot: string }>()
+  const [reconnecting, setReconnecting] = useState(false)
+  const taskBusy = isScanning || workflowRunning || reconnecting
+  const submitReplacement = async () => {
+    if (!replacement?.newRoot.trim() || taskBusy || searching) return
+    setReconnecting(true)
+    try {
+      if (await onReconnectPath(replacement.oldRoot, replacement.newRoot.trim()))
+        setReplacement(undefined)
+    } finally {
+      setReconnecting(false)
+    }
+  }
   return (
     <div
       className="image-search-controls"
@@ -282,6 +296,17 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 >
                   {p}
                 </span>
+                {/^(?:\\\\|\/\/)/.test(p) && (
+                  <button
+                    type="button"
+                    disabled={taskBusy || searching}
+                    onClick={() => setReplacement({ oldRoot: p, newRoot: '' })}
+                    title={t('Change shared path')}
+                    aria-label={t('Change shared path')}
+                  >
+                    ↔
+                  </button>
+                )}
                 <button
                   onClick={() => onRemovePath(p)}
                   disabled={taskBusy}
@@ -300,6 +325,38 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               </span>
             ))}
           </div>
+          {replacement && scanPaths.includes(replacement.oldRoot) && (
+            <form
+              className="image-search-scan-controls"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void submitReplacement()
+              }}
+            >
+              <label>
+                {t('New shared path')}
+                <input
+                  value={replacement.newRoot}
+                  disabled={taskBusy}
+                  onChange={(event) =>
+                    setReplacement({ ...replacement, newRoot: event.target.value })
+                  }
+                />
+              </label>
+              <div title={replacement.oldRoot}>{replacement.oldRoot}</div>
+              <p>{t('Keep the old index and prepare the new address after switching.')}</p>
+              <button type="submit" disabled={taskBusy || searching || !replacement.newRoot.trim()}>
+                {t('Change shared path')}
+              </button>
+              <button
+                type="button"
+                disabled={reconnecting}
+                onClick={() => setReplacement(undefined)}
+              >
+                {t('Cancel')}
+              </button>
+            </form>
+          )}
           <div
             id={advancedPreparationId}
             className="image-search-advanced-controls"

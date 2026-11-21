@@ -271,3 +271,55 @@ test('async matching retains its segment snapshot when the live index is cleared
     fs.rmSync(root, { recursive: true, force: true })
   }
 })
+
+test('retired path exclusions apply before topK without changing the live index', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'native-retired-roots-'))
+  try {
+    const image = path.join(root, 'query.png')
+    fs.writeFileSync(
+      image,
+      Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+    )
+    const hash = addon.hashImage(image)
+    assert.equal(hash.ok, true)
+    const oldRoot = path.join(root, 'old')
+    const sibling = path.join(root, 'old-sibling', 'safe.png')
+    const stalePreview = path.join(root, 'local-preview.png')
+    addon.clearIndex()
+    for (const item of [path.join(oldRoot, 'stale.png'), stalePreview, sibling]) {
+      assert.equal(
+        addon.upsertIndexRecord(
+          item,
+          1,
+          1,
+          fs.statSync(image).size,
+          1000,
+          hash.diffHash64,
+          hash.dctHash64,
+        ).ok,
+        true,
+      )
+    }
+    const result = await addon.searchByImageAsync(
+      image,
+      64,
+      1,
+      'balanced',
+      [oldRoot],
+      [stalePreview],
+    )
+    assert.equal(result.ok, true)
+    assert.deepEqual(
+      result.results.map((row) => row.path.toLowerCase()),
+      [sibling.toLowerCase()],
+    )
+    const unfiltered = await addon.searchByImageAsync(image, 64, 10, 'balanced')
+    assert.equal(unfiltered.results.length, 3)
+  } finally {
+    addon.clearIndex()
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})

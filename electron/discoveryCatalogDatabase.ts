@@ -1,3 +1,4 @@
+import type { MountedSourceRoute } from './mountedSourceRouting'
 // ── Discovery Catalog SQLite authority ───────────────────
 // Phase 1 unified discovery catalog (design 7.3/7.4). This database is the
 // authority for DataSource rows, FileEntry rows, ScanSession rows and D1
@@ -72,6 +73,11 @@ CREATE TABLE IF NOT EXISTS sources (
   last_complete_reconcile_at INTEGER,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS mounted_source_previous_roots (
+  root_key TEXT PRIMARY KEY,
+  root_locator TEXT NOT NULL,
+  source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS file_entries (
   id INTEGER PRIMARY KEY,
@@ -318,7 +324,7 @@ export class DiscoveryCatalogDatabase {
       .prepare('SELECT id, relative_path FROM file_entries WHERE source_id = ? ORDER BY id ASC')
       .all(sourceId)
     const updateEntry = database.prepare(
-      `UPDATE file_entries SET path_key = ?, availability = 'online', updated_at = ? WHERE id = ?`,
+      `UPDATE file_entries SET path_key = ?, availability = 'unknown', updated_at = ? WHERE id = ?`,
     )
     database.exec('BEGIN IMMEDIATE')
     try {
@@ -328,6 +334,18 @@ export class DiscoveryCatalogDatabase {
            last_attempt_at = NULL, updated_at = ? WHERE id = ?`,
         )
         .run(newRoot, now, sourceId)
+      const previousKey = discoveryPathKey(source.rootLocator)
+      const nextKey = discoveryPathKey(newRoot)
+      if (previousKey !== nextKey) {
+        database
+          .prepare('DELETE FROM mounted_source_previous_roots WHERE root_key = ? AND source_id = ?')
+          .run(nextKey, sourceId)
+        database
+          .prepare(
+            'INSERT INTO mounted_source_previous_roots (root_key, root_locator, source_id) VALUES (?, ?, ?)',
+          )
+          .run(previousKey, source.rootLocator, sourceId)
+      }
       for (const entry of entries) {
         const target = path.resolve(newRoot, textValue(entry.relative_path))
         const relative = path.relative(newRoot, target)
@@ -346,6 +364,21 @@ export class DiscoveryCatalogDatabase {
       database.exec('ROLLBACK')
       throw error
     }
+  }
+
+  listMountedSourceRoutes(): MountedSourceRoute[] {
+    return this.open()
+      .prepare(
+        `SELECT s.id, s.root_locator, p.root_locator AS previous_root
+       FROM mounted_source_previous_roots p JOIN sources s ON s.id = p.source_id
+       ORDER BY length(p.root_locator) DESC, p.root_key`,
+      )
+      .all()
+      .map((row) => ({
+        sourceId: textValue(row.id),
+        root: textValue(row.root_locator),
+        previousRoot: textValue(row.previous_root),
+      }))
   }
 
   getSourceRepairSamples(

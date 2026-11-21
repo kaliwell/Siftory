@@ -1,3 +1,4 @@
+import { isMountedUncPath, isRetiredMountedSourcePath } from './mountedSourceRouting'
 import { isVectorPreparationActive } from './preparationSearchState'
 import { searchPreparedVectorSnapshot } from './preparationVectorSearch'
 import fs from 'fs'
@@ -69,6 +70,7 @@ interface CandidateCollection {
    * fallback.
    */
   scopeState: NativeScopeState
+  onlyRetiredPaths?: boolean
 }
 
 export interface PreparedClipEmbeddingCache {
@@ -673,9 +675,13 @@ function collectCandidatePaths(limit = MAX_SEMANTIC_CANDIDATES): CandidateCollec
     if (project) return [project.sourcePath]
     return isProjectPreviewProxy(candidatePath) ? [] : [candidatePath]
   })
-  const deduped = [...new Set(mapped)].filter((p) => /^[A-Za-z]:[\\/]/.test(p))
+  const eligible = [...new Set(mapped)].filter(
+    (p) => /^[A-Za-z]:[\\/]/.test(p) || isMountedUncPath(p),
+  )
+  const deduped = eligible.filter((p) => !isRetiredMountedSourcePath(p))
   return {
     paths: deduped.slice(0, limit),
+    onlyRetiredPaths: eligible.length > 0 && deduped.length === 0,
     truncated: collected.truncated || deduped.length > limit,
     scopeState:
       collected.paths.length > 0 && deduped.length === 0 ? 'valid-empty' : collected.scopeState,
@@ -1595,6 +1601,20 @@ export async function searchSemanticImages(
     }
   }
 
+  if (collected.onlyRetiredPaths) {
+    return {
+      results: [],
+      query: text,
+      totalCandidates: 0,
+      matchedCandidates: 0,
+      returnedCount: 0,
+      totalMs: Date.now() - t0,
+      degraded: true,
+      degradationReasons: ['Prepare the library after changing the shared path.'],
+      searchMode: 'semantic',
+    }
+  }
+
   const feedbackContext = await getSemanticFeedbackContext(text, req.feedbackMode || 'auto')
   if (req.isCancelled?.()) throw new Error('Semantic search cancelled')
   try {
@@ -1612,11 +1632,11 @@ export async function searchSemanticImages(
       const scopedClipResults = filterSemanticVectorCandidates(
         clipSearch.results,
         candidatePathKeys,
-      )
+      ).filter((candidate) => !isRetiredMountedSourcePath(candidate.path))
       const results: LayeredSearchResult[] = scopedClipResults.map((candidate) => {
         let stat: fs.Stats | null = null
         try {
-          stat = fs.statSync(candidate.path)
+          if (!isMountedUncPath(candidate.path)) stat = fs.statSync(candidate.path)
         } catch {
           // The file may disappear between candidate collection and result mapping.
         }
@@ -1770,31 +1790,33 @@ export async function searchSemanticImages(
     degradationReasons.push('Using filename/path semantic search.')
   }
 
-  const results: LayeredSearchResult[] = finalScored.map((candidate) => {
-    let stat: fs.Stats | null = null
-    try {
-      stat = fs.statSync(candidate.path)
-    } catch {
-      // The file may disappear between candidate collection and result mapping.
-    }
-    const finalScore = Math.round(candidate.score * 1000) / 1000
-    return {
-      imageId: candidate.path,
-      path: candidate.path,
-      finalScore,
-      hashScore: 0,
-      vectorScore: 0,
-      colorScore: 0,
-      shapeScore: 0,
-      localFeatureScore: 0,
-      ocrScore: 0,
-      matchLevel: determineSemanticMatch(finalScore),
-      reasons: candidate.reasons.length > 0 ? candidate.reasons : ['semantic text matched path'],
-      indexSources: ['semantic_text'],
-      fileSize: stat?.size,
-      modifiedTime: stat?.mtimeMs,
-    }
-  })
+  const results: LayeredSearchResult[] = finalScored
+    .filter((candidate) => !isRetiredMountedSourcePath(candidate.path))
+    .map((candidate) => {
+      let stat: fs.Stats | null = null
+      try {
+        if (!isMountedUncPath(candidate.path)) stat = fs.statSync(candidate.path)
+      } catch {
+        // The file may disappear between candidate collection and result mapping.
+      }
+      const finalScore = Math.round(candidate.score * 1000) / 1000
+      return {
+        imageId: candidate.path,
+        path: candidate.path,
+        finalScore,
+        hashScore: 0,
+        vectorScore: 0,
+        colorScore: 0,
+        shapeScore: 0,
+        localFeatureScore: 0,
+        ocrScore: 0,
+        matchLevel: determineSemanticMatch(finalScore),
+        reasons: candidate.reasons.length > 0 ? candidate.reasons : ['semantic text matched path'],
+        indexSources: ['semantic_text'],
+        fileSize: stat?.size,
+        modifiedTime: stat?.mtimeMs,
+      }
+    })
 
   return {
     results,

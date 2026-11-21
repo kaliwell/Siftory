@@ -4,7 +4,7 @@ export const MAX_SCAN_PATHS = 64
 export const MAX_SEARCH_TOP_K = 500
 export const MAX_FS_PATH_LENGTH = 4096
 
-function hasControlChars(value: string): boolean {
+export function hasControlChars(value: string): boolean {
   for (let i = 0; i < value.length; i++) {
     if (value.charCodeAt(i) < 32) return true
   }

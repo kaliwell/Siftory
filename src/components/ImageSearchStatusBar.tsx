@@ -91,6 +91,19 @@ const ImageSearchStatusBar: React.FC<ImageSearchStatusBarProps> = ({
         {status.durationMs != null && !isScanning && (
           <span style={{ opacity: 0.5 }}>{(status.durationMs / 1000).toFixed(1)}s</span>
         )}
+        {!!status.projectProtectedRoots && (
+          <span
+            style={{ opacity: 0.7 }}
+            title={t('Automatic cleanup is disabled for these directories')}
+          >
+            {t('Protected directories')}: {status.projectProtectedRoots}
+          </span>
+        )}
+        {!!status.projectIncompleteRoots && (
+          <span style={{ color: 'rgb(255,200,100)' }}>
+            {t('Directories not fully scanned')}: {status.projectIncompleteRoots}
+          </span>
+        )}
         {status.lastError && (
           <span style={{ color: 'rgb(255,100,100)' }}>
             {t('Error')}: {status.lastError}

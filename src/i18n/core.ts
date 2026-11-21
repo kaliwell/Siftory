@@ -68,6 +68,15 @@ const zhCN: Record<string, string> = {
   'Searching images...': '正在搜索图片…',
   'Preparing search data or searching. Results will appear when the search finishes.':
     '正在准备搜索数据或检索，完成后将显示搜索结果。',
+  'Change shared path': '更换共享路径',
+  'New shared path': '新的共享路径',
+  'Keep the old index and prepare the new address after switching.':
+    '旧索引会保留。更换后，请对新地址准备素材库。',
+  'Shared path changed. Prepare Library to index the new address.':
+    '已更换共享路径，点击「准备素材库」索引新地址。',
+  'Directories not fully scanned': '未完整扫描的目录',
+  'Protected directories': '保留旧索引的目录',
+  'Automatic cleanup is disabled for these directories': '这些目录的缺失记录仅可手动清理',
   'Some project previews failed. Select the source file to retry.':
     '部分工程预览失败，可选中源文件重试。',
   'Data cleanup': '数据清理',

@@ -64,8 +64,8 @@ test('mounted-network adapter recursively batches metadata with an independent s
   const batches = await collect(adapter, source(root))
   const entries = batches.flatMap((batch) => batch.entries)
   assert.deepEqual(entries.map((entry) => entry.relativePath).sort(), [
-    'nested\\three.psd',
-    'nested\\two.mp4',
+    path.join('nested', 'three.psd'),
+    path.join('nested', 'two.mp4'),
     'one.png',
   ])
   assert.equal(batches.at(-1).final, true)
@@ -318,7 +318,17 @@ test('mounted-network root repair preserves source and file ids after identity s
   const modifiedAt = 1_700_000_000_000
   fs.utimesSync(oldFile, modifiedAt / 1000, modifiedAt / 1000)
   fs.utimesSync(newFile, modifiedAt / 1000, modifiedAt / 1000)
-  const service = new SourceCatalogService({ databasePath: path.join(temp, 'catalog.sqlite') })
+  const { setMountedSourceRoutes, isRetiredMountedSourcePath, resolveMountedScanRoots } =
+    loadTsModule('electron/mountedSourceRouting.ts')
+  const databasePath = path.join(temp, 'catalog.sqlite')
+  const libraryId = '8fb49176-935a-4a14-aec0-a8265880c737'
+  fs.writeFileSync(
+    path.join(temp, '.siftory-library.json'),
+    JSON.stringify({ version: 1, libraryId }),
+  )
+  const options = { databasePath, onMountedSourceRoutes: setMountedSourceRoutes }
+  let service = new SourceCatalogService(options)
+
   try {
     const added = service.addSource({
       type: 'mounted-network',
@@ -332,16 +342,39 @@ test('mounted-network root repair preserves source and file ids after identity s
       await new Promise((resolve) => setTimeout(resolve, 5))
     }
     const before = service.queryCatalog({ query: 'photo.png' }).items[0]
+    fs.renameSync(oldRoot, path.join(temp, 'detached'))
     const repaired = await service.repairMountedSourceRoot(added.source.id, newRoot)
     assert.equal(repaired.ok, true, repaired.error)
     assert.equal(repaired.source.id, added.source.id)
     assert.equal(repaired.repairedEntries, 1)
     const after = service.queryCatalog({ query: 'photo.png' }).items[0]
     assert.equal(after.fileEntryId, before.fileEntryId)
-    assert.equal(after.displayPath, path.resolve(newFile).toLowerCase())
+    assert.equal(
+      after.displayPath,
+      process.platform === 'win32' ? path.resolve(newFile).toLowerCase() : path.resolve(newFile),
+    )
     assert.equal(service.listSources()[0].rootLocator, path.resolve(newRoot))
+    service.close()
+    setMountedSourceRoutes([])
+    service = new SourceCatalogService(options)
+    assert.deepEqual(resolveMountedScanRoots([oldRoot, newRoot]), [newRoot])
+    assert.deepEqual(resolveMountedScanRoots([path.dirname(oldFile)]), [path.dirname(newFile)])
+    assert.equal(isRetiredMountedSourcePath(oldFile), true)
+    assert.equal(isRetiredMountedSourcePath(newFile), false)
+    assert.equal(isRetiredMountedSourcePath(path.join(oldRoot + '-other', 'photo.png')), false)
+    const location = { libraryId, sourceId: added.source.id, relativePath: 'nested/photo.png' }
+    assert.equal(service.resolveMountedAsset(location), newFile)
+    assert.equal(service.resolveMountedAsset({ ...location, relativePath: '../photo.png' }), null)
+    assert.equal(service.resolveMountedAsset({ ...location, libraryId: 'different' }), null)
+    fs.renameSync(path.join(temp, 'detached'), oldRoot)
+    const switchedBack = await service.repairMountedSourceRoot(added.source.id, oldRoot)
+    assert.equal(switchedBack.ok, true, switchedBack.error)
+    assert.deepEqual(resolveMountedScanRoots([newRoot, oldRoot]), [oldRoot])
+    assert.equal(isRetiredMountedSourcePath(oldFile), false)
+    assert.equal(isRetiredMountedSourcePath(newFile), true)
   } finally {
     service.close()
+    setMountedSourceRoutes([])
     fs.rmSync(temp, { recursive: true, force: true })
   }
 })

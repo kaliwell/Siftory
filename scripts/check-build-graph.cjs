@@ -183,7 +183,8 @@ const entries = [
     // Shared bounded header parsing is also reused by isolated decoders.
     // One shared cooperative priority boundary for queries and embedding dispatch.
     // Prepared-vector snapshot host and preparation mode.
-    budget: 348,
+    // Mounted-source routing shares one small module across scan, recall and catalog.
+    budget: 349,
   },
   { name: 'preload', role: 'preload', file: path.join(root, 'electron', 'preload.ts'), budget: 40 },
   { name: 'renderer', role: 'renderer', file: path.join(root, 'src', 'main.tsx'), budget: 220 },

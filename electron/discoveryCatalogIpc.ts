@@ -1,3 +1,5 @@
+import { imageSearchEditBusyError } from './imageSearchIpc'
+import { tryAcquireVectorExclusiveMaintenance } from './vectorMaintenanceService'
 // ── Discovery catalog IPC (Phase 1, design 12.1) ─────────
 // Thin handlers: sender authorization, payload validation and capability
 // declaration are enforced by secureIpcMain; handlers only clamp inputs and
@@ -116,7 +118,15 @@ export function registerDiscoveryCatalogIpc(
       if (!service || typeof rawRoot !== 'string' || rawRoot.length > 4096) {
         return { ok: false, error: 'Invalid replacement source root' }
       }
-      return service.repairMountedSourceRoot(normalizeSourceId(rawId), rawRoot)
+      const busy = imageSearchEditBusyError()
+      if (busy) return { ok: false, error: busy }
+      const release = tryAcquireVectorExclusiveMaintenance()
+      if (!release) return { ok: false, error: 'Vector maintenance is running' }
+      try {
+        return await service.repairMountedSourceRoot(normalizeSourceId(rawId), rawRoot)
+      } finally {
+        release()
+      }
     },
   )
 

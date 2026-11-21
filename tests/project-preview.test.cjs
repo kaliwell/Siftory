@@ -422,7 +422,9 @@ test('project search indexes preview proxies but exposes and removes source iden
   assert.equal(mapped[0].projectDisplayType, 'Photoshop PSD')
 
   fs.unlinkSync(sourcePath)
-  const cleaned = await indexProjectPreviews([sourceRoot], adapter)
+  const cleaned = await indexProjectPreviews([sourceRoot], adapter, {
+    isVerifiedLocalDrive: () => true,
+  })
   assert.equal(cleaned.removed, 1)
   assert.equal(deletes.includes(previewPath), true)
   assert.equal(vectorDeletes.includes(sourcePath), true)

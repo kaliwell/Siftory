@@ -302,6 +302,9 @@ const api: ElectronAPI = {
     repairManifest: (rootDir) => ipcRenderer.invoke('imageSearch:repairManifest', rootDir),
     getIndexMode: () => ipcRenderer.invoke('imageSearch:getIndexMode'),
     listDrives: () => ipcRenderer.invoke('imageSearch:listDrives'),
+    resolveScanPaths: (paths) => ipcRenderer.invoke(IMAGE_SEARCH_IPC.RESOLVE_SCAN_PATHS, paths),
+    reconnectScanPath: (oldRoot, newRoot) =>
+      ipcRenderer.invoke(IMAGE_SEARCH_IPC.RECONNECT_SCAN_PATH, oldRoot, newRoot),
     validatePath: (filePath) => ipcRenderer.invoke('imageSearch:validatePath', filePath),
     queryData: (query, offset, limit) =>
       ipcRenderer.invoke('imageSearch:queryData', query, offset, limit),

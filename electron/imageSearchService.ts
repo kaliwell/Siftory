@@ -1,3 +1,9 @@
+import {
+  isMountedUncPath,
+  isRetiredMountedSourcePath,
+  resolveMountedScanRoots,
+  retiredMountedSourceRoots,
+} from './mountedSourceRouting'
 import { scanErrorRecorder } from './scanErrorLog'
 import { stopShellPreviewCompute } from './projectPreviewShellRuntime'
 import { performanceSession, captureLinkedPreviewWindow } from './performanceDiagnostics'
@@ -28,6 +34,7 @@ import type { NativeScopeState } from './semanticSearchScope'
 import {
   indexProjectPreviews,
   projectIndexStatusPatch,
+  retiredMountedPreviewPaths,
   initProjectSearchIndex,
   mapNativeProjectSearchHits,
   mergeProjectSearchHashFallback,
@@ -71,7 +78,8 @@ interface NativeConnectionState {
 }
 
 function validImageSearchScanPaths(args: ImageSearchStartScanArgs): string[] {
-  return normalizeScanPaths(args?.paths).filter((scanPath) => {
+  return resolveMountedScanRoots(normalizeScanPaths(args?.paths)).filter((scanPath) => {
+    if (isMountedUncPath(scanPath)) return true
     try {
       return fs.statSync(scanPath).isDirectory()
     } catch {
@@ -524,6 +532,7 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
         {
           diagnostics,
           scanMode,
+          isVerifiedLocalDrive: (root) => addon.isVerifiedLocalDrive?.(root) === true,
           isCancelled: () => generation !== scanGeneration,
           onProgress: (projectProgress) => {
             if (generation !== scanGeneration) return
@@ -551,6 +560,8 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
     projectUnavailable: result.unavailable,
     projectFailed: result.failed,
     projectRemoved: result.removed,
+    projectProtectedRoots: result.protectedRoots,
+    projectIncompleteRoots: result.incompleteRoots,
     lastWarning:
       result.failed > 0
         ? 'Some project previews failed. Select the source file to retry.'
@@ -1019,6 +1030,8 @@ export function startImageSearchScan(
     indexedCount: 0,
     pendingCount: 0,
     message: 'Scan started...',
+    projectProtectedRoots: undefined,
+    projectIncompleteRoots: undefined,
     nativeConnected,
     nativeVersion,
   }
@@ -1248,7 +1261,9 @@ export function searchImages(args: ImageSearchSearchArgs): ImageSearchSearchResp
     raw.queryDctHash64,
     threshold,
   )
-  const results = mapNativeProjectSearchHits(mergedHits)
+  const results = mapNativeProjectSearchHits(mergedHits).filter(
+    (result) => !isRetiredMountedSourcePath(result.path),
+  )
 
   status = {
     ...status,
@@ -1692,7 +1707,14 @@ export async function searchImagesAsync(
     }
 
     const startedAt = Date.now()
-    const raw = await nativeAddon.searchByImageAsync(imagePath, threshold, topK, sm)
+    const raw = await nativeAddon.searchByImageAsync(
+      imagePath,
+      threshold,
+      topK,
+      sm,
+      retiredMountedSourceRoots(),
+      retiredMountedPreviewPaths(),
+    )
     if (!raw.ok) {
       terminalStatus = {
         ...status,
@@ -1712,7 +1734,9 @@ export async function searchImagesAsync(
       raw.queryDctHash64,
       threshold,
     )
-    const results = mapNativeProjectSearchHits(mergedHits)
+    const results = mapNativeProjectSearchHits(mergedHits).filter(
+      (result) => !isRetiredMountedSourcePath(result.path),
+    )
     terminalStatus = {
       ...status,
       state: 'idle',

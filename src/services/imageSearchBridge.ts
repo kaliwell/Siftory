@@ -268,6 +268,22 @@ export const imageSearchBridge = {
     }
   },
 
+  async resolveScanPaths(paths: string[]): Promise<string[]> {
+    try {
+      return (await api()?.resolveScanPaths?.(paths)) ?? paths
+    } catch {
+      return paths
+    }
+  },
+
+  async reconnectScanPath(oldRoot: string, newRoot: string) {
+    try {
+      return (await api()?.reconnectScanPath?.(oldRoot, newRoot)) ?? { ok: false }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  },
+
   async validatePath(filePath: string): Promise<{ ok: boolean; error?: string } | null> {
     try {
       const a = api()

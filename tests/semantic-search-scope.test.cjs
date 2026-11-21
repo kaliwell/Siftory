@@ -356,3 +356,44 @@ test('F16 cache search applies acceptPath before the bounded topK heap', async (
     'a scoped topK=1 heap must be filled from in-scope candidates',
   )
 })
+
+test('changing a UNC source keeps retired vectors out of the top results', async (t) => {
+  const root = makeSemanticFixture(t)
+  const { setMountedSourceRoutes } = loadTsModule('electron/mountedSourceRouting.ts')
+  const previousRoot = '\\\\old-host\\share'
+  const currentRoot = '\\\\new-host\\share'
+  const previous = previousRoot + '\\same.png'
+  const current = currentRoot + '\\same.png'
+  setMountedSourceRoutes([{ sourceId: 'share', root: currentRoot, previousRoot }])
+  t.after(() => setMountedSourceRoutes([]))
+  writeNativeScope(root, [previous, current])
+  writeClipEmbeddingStore(root, [
+    [previous, unitVector([[0, 1]])],
+    [
+      current,
+      unitVector([
+        [0, 0.3],
+        [1, 1],
+      ]),
+    ],
+  ])
+  semanticSearch.setSemanticQueryTextEmbeddingProviderForTests(async () => unitVector([[0, 1]]))
+  t.after(() => semanticSearch.setSemanticQueryTextEmbeddingProviderForTests())
+  const result = await semanticSearch.searchSemanticImages({ text: 'fixture query', topK: 1 })
+  assert.deepEqual(
+    result.results.map((row) => row.path.toLowerCase()),
+    [current.toLowerCase()],
+  )
+
+  writeNativeScope(root, [previous])
+  const beforePrepare = await semanticSearch.searchSemanticImages({
+    text: 'fixture query',
+    topK: 1,
+  })
+  assert.equal(beforePrepare.results.length, 0)
+  assert.ok(
+    beforePrepare.degradationReasons.some((message) =>
+      /after changing the shared path/.test(message),
+    ),
+  )
+})

@@ -132,6 +132,10 @@ export function getIpcCapabilityDeclaration(channel: string): IpcCapabilityDecla
   }
   if (channel === 'catalog:remoteDownload/create') capabilities.add('NET')
   if (channel === 'imageSearch:importBrowserImage') capabilities.add('NET')
+  if (channel === 'imageSearch:reconnectScanPath' || channel === 'sources:repairRoot') {
+    capabilities.add('W')
+    capabilities.add('NET')
+  }
   if (channel === 'catalog:remoteVideo/prepare') {
     capabilities.add('W')
     capabilities.add('NET')

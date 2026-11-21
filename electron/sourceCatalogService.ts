@@ -1,3 +1,12 @@
+import { readLibraryId } from './storageLocationService'
+import {
+  isMountedUncPath,
+  mountedRelativePath,
+  mountedSourcePathKey,
+  resolveMountedAssetLocation,
+  setMountedSourceRoutes,
+} from './mountedSourceRouting'
+import type { LibraryAssetLocation } from '../shared/ipc/storage-location'
 // ── Source catalog service ───────────────────────────────
 // Phase 1 application service (design section 5 layer: Application
 // Services). Orchestrates sources, scan sessions and the Discovery Catalog:
@@ -63,6 +72,7 @@ export interface SourceCatalogServiceOptions {
     cancel(id: number): boolean
   }
   now?: () => number
+  onMountedSourceRoutes?: typeof setMountedSourceRoutes
 }
 
 interface ActiveScan {
@@ -142,6 +152,7 @@ export class SourceCatalogService {
   private readonly watcherFactory: SourceCatalogWatcherFactory
   private readonly incrementalWatchEnabled: boolean
   private readonly watchDebounceMs: number
+  private readonly onMountedSourceRoutes?: typeof setMountedSourceRoutes
   private readonly activeScans = new Map<string, ActiveScan>()
   private readonly sourceWatches = new Map<string, ActiveSourceWatch>()
   private statusListeners = new Set<(status: DiscoveryScanStatus) => void>()
@@ -158,6 +169,8 @@ export class SourceCatalogService {
     this.now = options.now ?? (() => Date.now())
     this.watcherFactory = options.watcherFactory ?? defaultWatcherFactory
     this.incrementalWatchEnabled = options.incrementalWatch !== false
+    this.onMountedSourceRoutes = options.onMountedSourceRoutes
+    this.refreshMountedSourceRoutes()
     this.watchDebounceMs = Math.max(50, Math.min(10_000, options.watchDebounceMs ?? 600))
     if (this.incrementalWatchEnabled) {
       for (const source of this.database.listSources()) this.startIncrementalWatcher(source)
@@ -360,7 +373,7 @@ export class SourceCatalogService {
     if (!paths.length) return
     const result = await this.applyIncrementalChanges(sourceId, paths)
     const latest = this.sourceWatches.get(sourceId)
-    if (!latest || latest.status.state !== 'watching') return
+    if (latest !== active || latest.status.state !== 'watching') return
     latest.status = {
       ...latest.status,
       pendingCount: latest.pendingPaths.size,
@@ -420,12 +433,14 @@ export class SourceCatalogService {
       }
     }
     const root = path.resolve(source.rootLocator)
+    const stillCurrent = () =>
+      !this.closed && this.database.getSource(sourceId)?.rootLocator === source.rootLocator
     try {
       if (!(await fs.promises.stat(root)).isDirectory())
         throw new Error('Source root is not a directory')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      this.pauseIncrementalWatcher(sourceId, message)
+      if (stillCurrent()) this.pauseIncrementalWatcher(sourceId, message)
       return { ok: false, upserted: 0, missing: 0, ignored: 0, offline: true, error: message }
     }
 
@@ -486,7 +501,7 @@ export class SourceCatalogService {
       if (!(await fs.promises.stat(root)).isDirectory()) throw new Error('Source root went offline')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      this.pauseIncrementalWatcher(sourceId, message)
+      if (stillCurrent()) this.pauseIncrementalWatcher(sourceId, message)
       return {
         ok: false,
         upserted: 0,
@@ -494,6 +509,17 @@ export class SourceCatalogService {
         ignored,
         offline: true,
         error: message,
+      }
+    }
+
+    if (!stillCurrent()) {
+      return {
+        ok: false,
+        upserted: 0,
+        missing: 0,
+        ignored,
+        offline: false,
+        error: 'The source changed while checking the replacement path',
       }
     }
 
@@ -568,6 +594,13 @@ export class SourceCatalogService {
       }
     }
     const resolvedRoot = sftp ? rootLocator : path.resolve(rootLocator)
+    if (
+      !sftp &&
+      this.database
+        .listMountedSourceRoutes()
+        .some((route) => mountedRelativePath(route.previousRoot, resolvedRoot) !== null)
+    )
+      return { ok: false, error: 'This shared path was replaced by another address' }
     const duplicate = this.database
       .listSources()
       .find((source) =>
@@ -627,7 +660,26 @@ export class SourceCatalogService {
     }
     if (!this.database.removeSource(sourceId)) return { ok: false, error: 'Source not found' }
     this.stopIncrementalWatcher(sourceId)
+    this.refreshMountedSourceRoutes()
     return { ok: true }
+  }
+
+  private refreshMountedSourceRoutes(): void {
+    this.onMountedSourceRoutes?.(this.database.listMountedSourceRoutes())
+  }
+
+  resolveMountedAsset(location: LibraryAssetLocation): string | null {
+    if (this.closed) return null
+    let libraryId: string
+    try {
+      libraryId = readLibraryId(path.dirname(this.databasePath))
+    } catch {
+      return null
+    }
+    const source = this.database.getSource(location.sourceId)
+    return source?.type === 'mounted-network'
+      ? resolveMountedAssetLocation(location, libraryId, source.rootLocator)
+      : null
   }
 
   async repairMountedSourceRoot(
@@ -643,27 +695,51 @@ export class SourceCatalogService {
       return { ok: false, error: 'Only mounted network sources support root repair' }
     }
     const normalized = normalizeFsPath(rawRoot)
-    if (!normalized || !path.isAbsolute(normalized)) {
+    if (
+      !normalized ||
+      !path.isAbsolute(normalized) ||
+      (process.platform === 'win32' &&
+        !/^[a-z]:[\\/]/i.test(normalized) &&
+        !isMountedUncPath(normalized))
+    ) {
       return { ok: false, error: 'An absolute mounted network path is required' }
     }
     const newRoot = path.resolve(normalized)
+    if (mountedSourcePathKey(source.rootLocator) === mountedSourcePathKey(newRoot))
+      return { ok: true, source, repairedEntries: 0 }
+    const overlaps = (left: string, right: string) =>
+      mountedRelativePath(left, right) !== null || mountedRelativePath(right, left) !== null
+    const conflict = () => {
+      if (overlaps(source.rootLocator, newRoot)) return true
+      if (
+        this.database
+          .listSources()
+          .some(
+            (candidate) =>
+              candidate.id !== sourceId &&
+              candidate.type !== 'sftp' &&
+              (overlaps(candidate.rootLocator, newRoot) ||
+                overlaps(candidate.rootLocator, source.rootLocator)),
+          )
+      )
+        return true
+      return this.database
+        .listMountedSourceRoutes()
+        .some(
+          (route) =>
+            (route.sourceId !== sourceId && overlaps(route.previousRoot, source.rootLocator)) ||
+            (overlaps(route.previousRoot, newRoot) &&
+              (route.sourceId !== sourceId ||
+                mountedSourcePathKey(route.previousRoot) !== mountedSourcePathKey(newRoot))),
+        )
+    }
+    if (conflict())
+      return { ok: false, error: 'Replacement source overlaps another registered path' }
     try {
-      if (!fs.statSync(newRoot).isDirectory()) {
-        return { ok: false, error: 'Replacement source root is not a directory' }
-      }
+      const directory = await fs.promises.opendir(newRoot)
+      await directory.close()
     } catch {
       return { ok: false, error: 'Replacement source root is not accessible' }
-    }
-    const duplicate = this.database
-      .listSources()
-      .find(
-        (candidate) =>
-          candidate.id !== sourceId &&
-          candidate.type !== 'sftp' &&
-          path.resolve(candidate.rootLocator) === newRoot,
-      )
-    if (duplicate) {
-      return { ok: false, error: `Source root is already registered as '${duplicate.displayName}'` }
     }
     const samples = this.database.getSourceRepairSamples(sourceId)
     let matchingSamples = 0
@@ -678,7 +754,7 @@ export class SourceCatalogService {
         ) {
           return { ok: false, error: 'Catalog entry escapes the replacement source root' }
         }
-        const stat = fs.statSync(candidate)
+        const stat = await fs.promises.stat(candidate)
         if (
           stat.isFile() &&
           stat.size === sample.sizeBytes &&
@@ -696,7 +772,15 @@ export class SourceCatalogService {
         error: 'Replacement root does not match sampled catalog file identities',
       }
     }
+    if (
+      this.closed ||
+      this.activeScans.has(sourceId) ||
+      this.database.getSource(sourceId)?.rootLocator !== source.rootLocator ||
+      conflict()
+    )
+      return { ok: false, error: 'The source changed while checking the replacement path' }
     const repairedEntries = this.database.repairMountedSourceRoot(sourceId, newRoot, this.now())
+    this.refreshMountedSourceRoutes()
     this.stopIncrementalWatcher(sourceId)
     const repairedSource = this.database.getSource(sourceId)!
     this.startIncrementalWatcher(repairedSource)
@@ -1125,6 +1209,7 @@ export function initSourceCatalogService(
   if (sharedService) return sharedService
   sharedService = new SourceCatalogService({
     databasePath: path.join(userDataPath, DISCOVERY_CATALOG_FILENAME),
+    onMountedSourceRoutes: setMountedSourceRoutes,
     ...options,
   })
   return sharedService
@@ -1137,4 +1222,5 @@ export function getSourceCatalogService(): SourceCatalogService | null {
 export function shutdownSourceCatalogService(): void {
   sharedService?.close()
   sharedService = null
+  setMountedSourceRoutes([])
 }

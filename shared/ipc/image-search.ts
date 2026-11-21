@@ -116,6 +116,8 @@ export interface ImageSearchStatus {
   projectUnavailable?: number
   projectFailed?: number
   projectRemoved?: number
+  projectProtectedRoots?: number
+  projectIncompleteRoots?: number
 }
 
 export interface ImageSearchResult {
@@ -547,6 +549,8 @@ export const IMAGE_SEARCH_IPC = {
   REPAIR_MANIFEST: 'imageSearch:repairManifest',
   GET_INDEX_MODE: 'imageSearch:getIndexMode',
   LIST_DRIVES: 'imageSearch:listDrives',
+  RESOLVE_SCAN_PATHS: 'imageSearch:resolveScanPaths',
+  RECONNECT_SCAN_PATH: 'imageSearch:reconnectScanPath',
   VALIDATE_PATH: 'imageSearch:validatePath',
   QUERY_DATA: 'imageSearch:queryData',
   GET_DATA_STATS: 'imageSearch:getDataStats',

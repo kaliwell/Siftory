@@ -167,6 +167,7 @@ export interface NativeIndexMode {
 
 export interface NativeAddon {
   getNativeVersion(): string
+  isVerifiedLocalDrive?(root: string): boolean
   getNativeStatus(): {
     connected: boolean
     version: string
@@ -418,6 +419,8 @@ export interface NativeAddon {
     threshold: number,
     topK: number,
     searchMode?: string,
+    excludedRoots?: readonly string[],
+    excludedPaths?: readonly string[],
   ): Promise<NativeSearchResult>
   getCompactStatus(): { ok: boolean; segmentCount: number; compactRecommended: boolean }
 }

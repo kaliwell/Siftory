@@ -1,3 +1,5 @@
+import { normalizeScanPaths } from './imageSearchGuards'
+import { isMountedUncPath, resolveMountedScanRoots } from './mountedSourceRouting'
 import { collectPreparedInputPaths, invalidatePreparedVectorPaths } from './preparationVectorSearch'
 import { beginSearchablePreparation } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
@@ -772,11 +774,10 @@ export function isImagePreparationRunning(): boolean {
 function normalizePreparationPaths(values: unknown): string[] {
   if (!Array.isArray(values)) return []
   const selected = new Map<string, string>()
-  for (const value of values.slice(0, 64)) {
-    if (typeof value !== 'string' || value.length === 0 || value.length > 32_768) continue
+  for (const value of resolveMountedScanRoots(normalizeScanPaths(values))) {
     try {
       const resolved = path.resolve(value)
-      if (!fs.statSync(resolved).isDirectory()) continue
+      if (!isMountedUncPath(resolved) && !fs.statSync(resolved).isDirectory()) continue
       selected.set(pathKey(resolved), resolved)
     } catch {
       // Skip inaccessible roots.

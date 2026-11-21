@@ -1,3 +1,10 @@
+import { normalizeScanPaths } from './imageSearchGuards'
+import { getSourceCatalogService } from './sourceCatalogService'
+import {
+  mountedSourcePathKey,
+  isMountedUncPath,
+  resolveMountedScanRoots,
+} from './mountedSourceRouting'
 import { initializeScanErrorDiagnostics, scanErrorSnapshot } from './scanErrorDiagnostics'
 import { importBrowserQueryImage } from './browserQueryImage'
 import { BROWSER_IMAGE_IPC, type BrowserImageImportSource } from '../shared/ipc/browser-image'
@@ -124,7 +131,7 @@ function listWindowsDrives(): string[] {
 
 // Edit operations (single delete/update/repair, folder purge) share the same
 // busy guards as startScan: vector GC and storage cleanup both hold the index.
-function imageSearchEditBusyError(includeDataCatalog = true): string | null {
+export function imageSearchEditBusyError(includeDataCatalog = true): string | null {
   if (isSourceFileSyncRunning()) return 'Source file synchronization is running'
   if (isSourceDerivedDataCleanupRunning()) return 'Source-derived data cleanup is running'
   if (isAssetDerivedRebuildRunning()) return 'A derived index rebuild is running'
@@ -553,11 +560,24 @@ export function registerImageSearchIpc(
     },
   )
 
+  const revealSharedFile = async (filePath: string) => {
+    try {
+      await fs.promises.stat(filePath)
+    } catch {
+      return { ok: false, error: 'Shared file is unavailable' }
+    }
+    return revealSafeShellPath(shell, filePath)
+  }
+
   secureIpcMain.handle('imageSearch:openFile', async (_event, rawPath: unknown) => {
+    const filePath = safeShellPath(rawPath)
+    if (filePath && isMountedUncPath(filePath)) return revealSharedFile(filePath)
     return openSafeShellPath(shell, rawPath, { requireExists: true })
   })
 
   secureIpcMain.handle('imageSearch:openFolder', async (_event, rawPath: unknown) => {
+    const filePath = safeShellPath(rawPath)
+    if (filePath && isMountedUncPath(filePath)) return revealSharedFile(filePath)
     return revealSafeShellPath(shell, rawPath, { requireExists: true })
   })
 
@@ -676,11 +696,85 @@ export function registerImageSearchIpc(
 
   secureIpcMain.handle('imageSearch:listDrives', async () => listWindowsDrives())
 
+  secureIpcMain.handle(IMAGE_SEARCH_IPC.RESOLVE_SCAN_PATHS, (_event, raw: unknown) =>
+    resolveMountedScanRoots(normalizeScanPaths(raw)),
+  )
+
+  secureIpcMain.handle(
+    IMAGE_SEARCH_IPC.RECONNECT_SCAN_PATH,
+    async (_event, rawOld: unknown, rawNew: unknown) => {
+      const busy = imageSearchEditBusyError()
+      if (busy) return { ok: false, error: busy }
+      const oldRoot = safeShellPath(rawOld)
+      const newRoot = safeShellPath(rawNew)
+      const service = getSourceCatalogService()
+      if (
+        !service ||
+        !oldRoot ||
+        !newRoot ||
+        !path.isAbsolute(oldRoot) ||
+        !path.isAbsolute(newRoot)
+      )
+        return { ok: false, error: 'Invalid replacement source root' }
+      const currentRoot = resolveMountedScanRoots([oldRoot])[0]
+      if (mountedSourcePathKey(currentRoot) !== mountedSourcePathKey(oldRoot))
+        return { ok: false, error: 'The source changed while checking the replacement path' }
+      let source = service
+        .listSources()
+        .find(
+          (entry) =>
+            entry.type !== 'sftp' &&
+            entry.type !== 'nas-agent' &&
+            mountedSourcePathKey(entry.rootLocator) === mountedSourcePathKey(oldRoot),
+        )
+      if (source && source.type !== 'mounted-network')
+        return { ok: false, error: 'Only mounted network sources support root repair' }
+      if (
+        !source &&
+        (!isMountedUncPath(oldRoot) ||
+          !configuredImageSearchRoots().some(
+            (entry) => mountedSourcePathKey(entry) === mountedSourcePathKey(oldRoot),
+          ))
+      )
+        return { ok: false, error: 'The old path must be a configured shared scan folder' }
+      const release = tryAcquireVectorExclusiveMaintenance()
+      if (!release) return { ok: false, error: 'Vector maintenance is running' }
+      let createdId: string | undefined
+      try {
+        if (!source) {
+          const added = service.addSource({
+            type: 'mounted-network',
+            rootLocator: oldRoot,
+            displayName: path.basename(oldRoot) || oldRoot,
+            readOnly: true,
+          })
+          if (!added.ok || !added.source) return { ok: false, error: added.error }
+          source = { ...added.source, fileCount: 0, totalBytes: 0 }
+          createdId = source.id
+        }
+        const result = await service.repairMountedSourceRoot(source.id, newRoot)
+        if (result.ok && result.source) {
+          createdId = undefined
+          return { ok: true, root: result.source.rootLocator }
+        }
+        return { ok: false, error: result.error }
+      } catch (error) {
+        return { ok: false, error: errorMessage(error) }
+      } finally {
+        try {
+          if (createdId) service.removeSource(createdId)
+        } finally {
+          release()
+        }
+      }
+    },
+  )
+
   secureIpcMain.handle('imageSearch:validatePath', async (_event, rawPath: unknown) => {
     const filePath = safeShellPath(rawPath)
     if (!filePath) return { ok: false, error: 'Invalid path' }
     try {
-      const stat = fs.statSync(filePath)
+      const stat = await fs.promises.stat(filePath)
       if (stat.isDirectory()) return { ok: true }
       return { ok: false, error: 'Path is not a directory' }
     } catch {
