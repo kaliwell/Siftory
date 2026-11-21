@@ -8,7 +8,7 @@ import type {
 
 export type SearchExperienceMode = 'simple' | 'advanced'
 
-export type SetupWorkflowState = 'idle' | 'running' | 'done' | 'error' | 'cancelled'
+export type SetupWorkflowState = 'idle' | 'running' | 'paused' | 'done' | 'error' | 'cancelled'
 
 export interface SetupWorkflowSnapshot {
   state: SetupWorkflowState
@@ -108,9 +108,7 @@ export function setupSnapshotFromImagePreparationProgress(
         ? 'error'
         : progress.state === 'stopped'
           ? 'cancelled'
-          : progress.state === 'idle'
-            ? 'idle'
-            : 'running'
+          : progress.state
   return {
     state,
     indeterminate: state === 'running' && (!progress.scanComplete || !progress.vectorIndexComplete),

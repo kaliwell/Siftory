@@ -14,7 +14,7 @@ export interface EmbeddingTaskSchedulingDeps {
   reserve: (request: VectorBuildRequest) => RuntimeOperationResult
   start: (
     request: VectorBuildRequest,
-    options: { acceptQueuedReservation: true },
+    options: { acceptQueuedReservation: true; preferCudaForAutoClip?: boolean },
   ) => Promise<RuntimeOperationResult>
   getProgress: () => EmbeddingProgress
   onProgress: (callback: (progress: EmbeddingProgress) => void) => () => void
@@ -23,7 +23,11 @@ export interface EmbeddingTaskSchedulingDeps {
 }
 
 export function createEmbeddingTaskScheduling(deps: EmbeddingTaskSchedulingDeps): {
-  queue: (request: VectorBuildRequest, scheduler: UnifiedTaskSubmitter) => RuntimeOperationResult
+  queue: (
+    request: VectorBuildRequest,
+    scheduler: UnifiedTaskSubmitter,
+    manual?: boolean,
+  ) => RuntimeOperationResult
   cancelQueued: () => boolean
 } {
   let nextReservationId = 1
@@ -49,6 +53,7 @@ export function createEmbeddingTaskScheduling(deps: EmbeddingTaskSchedulingDeps)
   const queue = (
     request: VectorBuildRequest,
     scheduler: UnifiedTaskSubmitter,
+    manual = false,
   ): RuntimeOperationResult => {
     const reserved = deps.reserve(request)
     if (!reserved.ok) return reserved
@@ -57,6 +62,9 @@ export function createEmbeddingTaskScheduling(deps: EmbeddingTaskSchedulingDeps)
     let startedByScheduler = false
     const handle = scheduler.enqueue({
       stage: 'embedding',
+      ...(manual
+        ? { priority: 2, manualEmbedding: request.backend === 'gpu' ? 'gpu' : 'cpu' }
+        : {}),
       paths: request.imageIds ?? request.scanPaths ?? [],
       label: `embedding build: ${request.modelName}`,
       run: async () => {
@@ -65,7 +73,29 @@ export function createEmbeddingTaskScheduling(deps: EmbeddingTaskSchedulingDeps)
         if (activeReservationId !== reservationId || deps.getProgress().state !== 'queued') {
           return
         }
-        const started = await deps.start(request, { acceptQueuedReservation: true })
+        // Sample at admission, since system and video memory may change while queued.
+        const useAutoGpu =
+          manual &&
+          request.backend === 'auto' &&
+          (request.modelName === 'dinov2_vitb14' ||
+            request.modelName === 'clip_vit_base_patch32') &&
+          scheduler.selectAutoDinoBackend?.() === 'gpu'
+        const executionRequest: VectorBuildRequest =
+          useAutoGpu && request.modelName === 'dinov2_vitb14'
+            ? {
+                ...request,
+                backend: 'gpu',
+                maxConcurrentEmbeddings: 1,
+                batchSize:
+                  request.batchSize && request.batchSize < 4 ? request.batchSize : undefined,
+              }
+            : request
+        const started = await deps.start(executionRequest, {
+          acceptQueuedReservation: true,
+          ...(useAutoGpu && request.modelName === 'clip_vit_base_patch32'
+            ? { preferCudaForAutoClip: true }
+            : {}),
+        })
         if (!started.ok) {
           const error = started.error ?? started.runtimeError?.detail ?? 'Embedding build failed'
           deps.finishQueued(error)

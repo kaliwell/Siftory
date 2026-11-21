@@ -4,11 +4,13 @@ export interface UnifiedTaskSubmitter {
   enqueue<T>(request: {
     stage: UnifiedTaskStage
     priority?: UnifiedTaskPriority
+    manualEmbedding?: 'cpu' | 'gpu'
     paths?: readonly string[]
     label?: string
     run: () => Promise<T> | T
   }): { id: number; promise: Promise<T> }
   cancel?(id: number): boolean
+  selectAutoDinoBackend?(): 'cpu' | 'gpu'
 }
 
 /** Run directly outside the composed runtime, otherwise await the real staged task lifetime. */

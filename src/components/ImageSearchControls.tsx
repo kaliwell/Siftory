@@ -24,6 +24,8 @@ interface ImageSearchControlsProps {
   hideLibrary?: boolean
   experienceMode: SearchExperienceMode
   workflowRunning: boolean
+  workflowPaused: boolean
+  preparationControlPending: boolean
   isScanning: boolean
   searching: boolean
   scanPaths: string[]
@@ -56,6 +58,7 @@ interface ImageSearchControlsProps {
   onStopScan: () => void
   onPrepareLibrary: () => void
   onCancelSetup: () => void
+  onTogglePreparationPause: () => void
   onSelectPaths: () => void
   onToggleDrivePicker: () => void
   onAddDrive: (drive: string) => void
@@ -78,6 +81,8 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   hideLibrary = false,
   experienceMode,
   workflowRunning,
+  workflowPaused,
+  preparationControlPending,
   isScanning,
   searching,
   scanPaths,
@@ -110,6 +115,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   onStopScan,
   onPrepareLibrary,
   onCancelSetup,
+  onTogglePreparationPause,
   onSelectPaths,
   onToggleDrivePicker,
   onAddDrive,
@@ -131,7 +137,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   const advancedPreparationId = useId()
   const [replacement, setReplacement] = useState<{ oldRoot: string; newRoot: string }>()
   const [reconnecting, setReconnecting] = useState(false)
-  const taskBusy = isScanning || workflowRunning || reconnecting
+  const taskBusy = isScanning || workflowRunning || workflowPaused || reconnecting
   const submitReplacement = async () => {
     if (!replacement?.newRoot.trim() || taskBusy || searching) return
     setReconnecting(true)
@@ -177,12 +183,22 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               {t('Prepare Library')}
             </button>
             <button
-              onClick={workflowRunning ? onCancelSetup : onStopScan}
-              disabled={!taskBusy}
+              onClick={workflowRunning || workflowPaused ? onCancelSetup : onStopScan}
+              disabled={!taskBusy || preparationControlPending}
               style={{ fontSize: 13, padding: '3px 10px', opacity: taskBusy ? 1 : 0.45 }}
             >
               {t('Stop')}
             </button>
+            {(workflowRunning || workflowPaused) && (
+              <button
+                type="button"
+                data-testid="search-pause-resume-preparation"
+                onClick={onTogglePreparationPause}
+                disabled={preparationControlPending}
+              >
+                {t(workflowPaused ? 'Resume' : 'Pause')}
+              </button>
+            )}
             {experienceMode === 'advanced' && (
               <button
                 type="button"

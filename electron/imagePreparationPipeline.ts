@@ -4,6 +4,7 @@ import { collectPreparedInputPaths, invalidatePreparedVectorPaths } from './prep
 import { beginSearchablePreparation } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
+import { app } from 'electron'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -42,6 +43,7 @@ import { cancelDownload, downloadModel, getModelStatus } from './modelService'
 import { buildVectorIndex } from './vectorIndexService'
 import type { UnifiedTaskSubmitter } from './unifiedTaskSubmission'
 import { PreparationInputSpool } from './preparationInputSpool'
+import { flushVectorDatabaseWrites } from './vectorDatabaseService'
 
 type PreparationModelName = 'dinov2_vitb14' | 'clip_vit_base_patch32'
 
@@ -269,6 +271,8 @@ export function createImagePreparationPipeline(
     let dinoModelReady = false
     let modelFailure: unknown
     let streamSessionId: string | null = null
+    let streamStartMessage: string | undefined
+    let committingScanInputs = false
     let expectedFeedGeneration: number | null = null
     const pendingStreamInputs = new PreparationInputSpool()
     const streamBatchTarget = batchSize && batchSize > 0 ? batchSize : 4
@@ -352,7 +356,9 @@ export function createImagePreparationPipeline(
           scanIndexed = Math.max(scanIndexed, status.indexedCount)
           report(
             phase,
-            status.message || `Scanning images: ${status.indexedCount.toLocaleString()}`,
+            streamStartMessage ||
+              status.message ||
+              `Scanning images: ${status.indexedCount.toLocaleString()}`,
             Math.min(20, status.state === 'idle' ? 20 : Math.max(1, percentage)),
           )
           if (settled) return
@@ -421,7 +427,7 @@ export function createImagePreparationPipeline(
       throwIfCancelled()
       embeddingOwned = true
       const started = options.scheduler
-        ? dependencies.queueEmbedding(request, options.scheduler)
+        ? dependencies.queueEmbedding(request, options.scheduler, true)
         : await dependencies.startEmbedding(request)
       if (!started.ok) {
         embeddingOwned = false
@@ -450,6 +456,8 @@ export function createImagePreparationPipeline(
     })
     const startStream = async (initialPaths: string[]): Promise<void> => {
       streamSessionId = crypto.randomUUID()
+      streamStartMessage = 'Starting DINO embedding build...'
+      report('embedding-dino', streamStartMessage, 20)
       const request: VectorBuildRequest = {
         modelName: 'dinov2_vitb14',
         embeddingType: 'global',
@@ -460,19 +468,29 @@ export function createImagePreparationPipeline(
         ...(batchSize !== undefined ? { batchSize } : {}),
       }
       await submitEmbeddingStartOnly(request)
+      let lastState: EmbeddingProgress['state'] | undefined
       while (!dependencies.isStreamingEmbeddingReady(streamSessionId)) {
         throwIfCancelled()
         const current = dependencies.getEmbeddingProgress()
-        if (current.state === 'error' || current.state === 'done') {
+        if (['error', 'done', 'idle', 'stopping'].includes(current.state)) {
           throw new Error(current.error || 'DINO embedding stream ended before becoming ready')
+        }
+        if (current.state !== lastState) {
+          lastState = current.state
+          streamStartMessage =
+            current.state === 'queued'
+              ? 'DINO is queued and will start when resources are available.'
+              : 'Starting DINO embedding build...'
+          report('embedding-dino', streamStartMessage, 20)
         }
         await delay(25)
       }
+      streamStartMessage = undefined
     }
     const submitEmbeddingStartOnly = async (request: VectorBuildRequest): Promise<void> => {
       embeddingOwned = true
       const started = options.scheduler
-        ? dependencies.queueEmbedding(request, options.scheduler)
+        ? dependencies.queueEmbedding(request, options.scheduler, true)
         : await dependencies.startEmbedding(request)
       if (!started.ok) {
         embeddingOwned = false
@@ -591,7 +609,10 @@ export function createImagePreparationPipeline(
         scanReadyMs = performance.now() - startedAt
         scanFinished = true
         scanOwned = false
-        report('finalizing-scan', 'Image scan and manifest commit complete', 20)
+        if (streamStartMessage) report('embedding-dino', streamStartMessage, 20)
+        else if (committingScanInputs)
+          report('embedding-dino', 'Handing off scanned images to DINO...', 20)
+        else report('finalizing-scan', 'Image scan and manifest commit complete', 20)
         return finalStatus
       })
       .catch((error) => {
@@ -624,7 +645,13 @@ export function createImagePreparationPipeline(
           }
           const freshPaths = pendingStreamInputs.add(candidatePaths)
           if (freshPaths.length > 0) {
-            await dependencies.invalidateCommittedInputs(freshPaths, existingInputs)
+            committingScanInputs = true
+            if (scanFinished) report('embedding-dino', 'Handing off scanned images to DINO...', 20)
+            try {
+              await dependencies.invalidateCommittedInputs(freshPaths, existingInputs)
+            } finally {
+              committingScanInputs = false
+            }
             committedImages += freshPaths.length
             invalidatedImages += freshPaths.length
             if (dinoModelReady && !scanFinished) {
@@ -645,8 +672,14 @@ export function createImagePreparationPipeline(
       await scanPromise
       throwIfCancelled()
       const activeSetRevision = dependencies.getCatalogRevision()
+      if (!dinoModelReady) {
+        report('embedding-dino', 'Waiting for the DINO model...', 20)
+      }
       await dinoModelPromise
-      if (streamSessionId) await flushStreamBuffer(true)
+      if (streamSessionId) {
+        report('embedding-dino', 'Handing off scanned images to DINO...', 20)
+        await flushStreamBuffer(true)
+      }
       await closeStream()
       report('finalizing-dino', 'Verifying complete DINO coverage...', 50)
       await submitEmbedding(baseEmbeddingRequest('dinov2_vitb14'), 'finalizing-dino', 50, 10)
@@ -679,7 +712,8 @@ export function createImagePreparationPipeline(
       }
       const vectorIndexStartedAt = performance.now()
       report('indexing', 'Committing the searchable vector index...', 90)
-      const built = await dependencies.buildVectorIndex('dinov2_vitb14')
+      const built = await dependencies.buildVectorIndex('dinov2_vitb14', 'global', cancelled)
+      throwIfCancelled()
       if (!built.ok) throw new Error(built.error || 'Vector index build failed')
       if (dependencies.getCatalogRevision() !== activeSetRevision) {
         throw new Error('Image active set changed before the ready commit')
@@ -738,9 +772,61 @@ const IDLE_PROGRESS: ImageSearchPreparationProgress = {
 }
 
 let activeProgress: ImageSearchPreparationProgress = { ...IDLE_PROGRESS }
-let cancelRequested = false
+let cancellationState: 'paused' | 'stopped' | null = null
+let activeRun: Promise<void> | null = null
+let interruption: Promise<{ ok: boolean; error?: string }> | null = null
 let activeCancellation: { taskId: string; cancel: () => Promise<void> } | null = null
+let checkpoint: {
+  taskId: string
+  args: ImageSearchPrepareLibraryArgs
+  progress?: ImageSearchPreparationProgress
+} | null = null
+let checkpointLoaded = false
 const progressListeners = new Set<(progress: ImageSearchPreparationProgress) => void>()
+
+function checkpointPath(): string | undefined {
+  const userData = app?.getPath?.('userData')
+  return userData ? path.join(userData, 'image-preparation-checkpoint.json') : undefined
+}
+
+function loadCheckpoint(): void {
+  if (checkpointLoaded) return
+  checkpointLoaded = true
+  const file = checkpointPath()
+  if (!file) return
+  try {
+    if (fs.statSync(file).size > 512 * 1024) return
+    const saved = JSON.parse(fs.readFileSync(file, 'utf8'))
+    if (typeof saved?.taskId !== 'string' || !Array.isArray(saved.args?.paths)) return
+    checkpoint = saved
+    activeProgress = {
+      ...IDLE_PROGRESS,
+      ...saved.progress,
+      taskId: saved.taskId,
+      paths: saved.args.paths,
+      state: 'paused',
+      message: 'Image library preparation paused',
+    }
+  } catch {
+    // A missing or unreadable checkpoint cannot safely be resumed.
+  }
+}
+
+function saveCheckpoint(next: typeof checkpoint): void {
+  const file = checkpointPath()
+  if (file) {
+    if (next) {
+      const temporary = `${file}.${process.pid}.tmp`
+      try {
+        fs.writeFileSync(temporary, JSON.stringify(next), { mode: 0o600 })
+        fs.renameSync(temporary, file)
+      } finally {
+        fs.rmSync(temporary, { force: true })
+      }
+    } else fs.rmSync(file, { force: true })
+  }
+  checkpoint = next
+}
 
 const notifyProgress = createProgressCoalescer(() => {
   for (const listener of progressListeners) {
@@ -764,6 +850,7 @@ export function onImagePreparationProgress(
 }
 
 export function getImagePreparationProgress(): ImageSearchPreparationProgress {
+  loadCheckpoint()
   return { ...activeProgress }
 }
 
@@ -790,47 +877,71 @@ export function startImageLibraryPreparation(
   args: ImageSearchPrepareLibraryArgs,
   scheduler?: UnifiedTaskSubmitter,
 ): ImageSearchPrepareLibraryStartResult {
-  if (isImagePreparationRunning()) {
+  loadCheckpoint()
+  if (activeProgress.state === 'paused') {
+    return { ok: false, error: 'Resume or stop the paused image library preparation first' }
+  }
+  return startPreparation(args, scheduler)
+}
+
+function startPreparation(
+  args: ImageSearchPrepareLibraryArgs,
+  scheduler?: UnifiedTaskSubmitter,
+  taskId: string = crypto.randomUUID(),
+): ImageSearchPrepareLibraryStartResult {
+  if (activeRun || interruption || isImagePreparationRunning()) {
     return { ok: false, error: 'Image library preparation is already running' }
   }
+  if (!args || !Array.isArray(args.paths)) return { ok: false, error: 'No image folders selected' }
   const paths = normalizePreparationPaths(args.paths)
   if (paths.length === 0) return { ok: false, error: 'No accessible image folders selected' }
-  const taskId = crypto.randomUUID()
-  cancelRequested = false
-  activeCancellation = null
-  const startedAt = Date.now()
-  emitProgress({
-    ...IDLE_PROGRESS,
-    taskId,
-    state: 'running',
-    phase: 'scanning',
-    message: 'Starting image library preparation...',
-    startedAt,
-  })
-  void runImagePreparationPipeline({
+  if (checkpoint?.taskId === taskId && paths.length !== checkpoint.args.paths.length) {
+    return { ok: false, error: 'One or more saved image folders are unavailable' }
+  }
+  const request = {
     paths,
     backend:
       args.backend === 'cpu' || args.backend === 'gpu' || args.backend === 'auto'
         ? args.backend
         : 'auto',
     maxConcurrentEmbeddings: boundedConcurrency(args.maxConcurrentEmbeddings ?? 2),
-    ...(boundedBatchSize(args.batchSize) !== undefined
-      ? { batchSize: boundedBatchSize(args.batchSize) }
-      : {}),
+    batchSize: boundedBatchSize(args.batchSize),
+    buildThumbnails: args.buildThumbnails === true,
+  } satisfies ImageSearchPrepareLibraryArgs
+  try {
+    saveCheckpoint({ taskId, args: request })
+  } catch {
+    return { ok: false, error: 'Could not save the image library preparation checkpoint' }
+  }
+  cancellationState = null
+  activeCancellation = null
+  const startedAt = Date.now()
+  emitProgress({
+    ...IDLE_PROGRESS,
+    taskId,
+    paths,
+    state: 'running',
+    phase: 'scanning',
+    message: 'Starting image library preparation...',
+    startedAt,
+  })
+  activeRun = runImagePreparationPipeline({
+    ...request,
     scheduler,
-    isCancelled: () => cancelRequested,
+    isCancelled: () => cancellationState !== null,
     registerCancellation: (handler) => {
       if (activeProgress.taskId !== taskId) return
       activeCancellation = handler ? { taskId, cancel: handler } : null
     },
     onProgress: (progress) => {
-      if (activeProgress.taskId !== taskId || activeProgress.state !== 'running') return
+      if (activeProgress.taskId !== taskId || cancellationState) return
       emitProgress({ ...activeProgress, ...progress, taskId, startedAt })
     },
   })
     .then((result) => {
       if (activeProgress.taskId !== taskId) return
-      if (cancelRequested || activeProgress.state === 'stopped') return
+      if (cancellationState) return
+      saveCheckpoint(null)
       emitProgress({
         ...activeProgress,
         state: 'done',
@@ -848,8 +959,8 @@ export function startImageLibraryPreparation(
       })
     })
     .catch((error: unknown) => {
-      if (activeProgress.taskId !== taskId || activeProgress.state === 'stopped') return
-      const stopped = cancelRequested || (error instanceof Error && error.name === 'AbortError')
+      if (activeProgress.taskId !== taskId || cancellationState) return
+      const stopped = error instanceof Error && error.name === 'AbortError'
       if (!stopped) {
         scanErrorRecorder.record('preparation', 'PREPARATION_FAILED', undefined, error, 'error', {
           phase: activeProgress.phase,
@@ -866,6 +977,7 @@ export function startImageLibraryPreparation(
     })
     .finally(() => {
       if (activeCancellation?.taskId === taskId) activeCancellation = null
+      activeRun = null
     })
   return { ok: true, taskId }
 }
@@ -873,18 +985,73 @@ export function startImageLibraryPreparation(
 export async function stopImageLibraryPreparation(
   taskId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  if (taskId && activeProgress.taskId !== taskId) return { ok: false, error: 'Task not found' }
-  if (!isImagePreparationRunning()) return { ok: true }
-  cancelRequested = true
-  const cancellation = activeCancellation
-  if (cancellation !== null && cancellation.taskId === activeProgress.taskId) {
-    await cancellation.cancel().catch(() => undefined)
+  return interruptPreparation('stopped', taskId)
+}
+
+export function resumeImageLibraryPreparation(
+  taskId: string | undefined,
+  scheduler?: UnifiedTaskSubmitter,
+): ImageSearchPrepareLibraryStartResult {
+  loadCheckpoint()
+  if (
+    !checkpoint ||
+    (taskId && checkpoint.taskId !== taskId) ||
+    activeProgress.state !== 'paused'
+  ) {
+    return { ok: false, error: 'No paused image library preparation to resume' }
   }
-  emitProgress({
-    ...activeProgress,
-    state: 'stopped',
-    message: 'Image library preparation stopped',
-    finishedAt: Date.now(),
-  })
-  return { ok: true }
+  return startPreparation(checkpoint.args, scheduler, checkpoint.taskId)
+}
+
+export async function pauseImageLibraryPreparation(
+  taskId?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  return interruptPreparation('paused', taskId)
+}
+
+async function interruptPreparation(
+  state: 'paused' | 'stopped',
+  taskId?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  loadCheckpoint()
+  if (taskId && activeProgress.taskId !== taskId) return { ok: false, error: 'Task not found' }
+  if (interruption) {
+    const result = await interruption
+    if (!result.ok || activeProgress.state === state) return result
+  }
+  if (!activeRun && (state === 'paused' || activeProgress.state !== 'paused')) return { ok: true }
+  cancellationState = state
+  const run = activeRun
+  const cancellation = activeCancellation
+  interruption = (async () => {
+    try {
+      if (cancellation && cancellation.taskId === activeProgress.taskId) {
+        await cancellation.cancel().catch(() => undefined)
+      }
+      await run
+      await flushVectorDatabaseWrites()
+      const progress: ImageSearchPreparationProgress = {
+        ...activeProgress,
+        state,
+        message:
+          state === 'paused'
+            ? 'Image library preparation paused'
+            : 'Image library preparation stopped',
+        finishedAt: state === 'stopped' ? Date.now() : undefined,
+      }
+      if (state === 'stopped') saveCheckpoint(null)
+      else if (checkpoint) saveCheckpoint({ ...checkpoint, progress })
+      emitProgress(progress)
+      return { ok: true }
+    } catch {
+      const error = 'Could not save image library preparation progress'
+      emitProgress({ ...activeProgress, state: checkpoint ? 'paused' : 'error', error })
+      return { ok: false, error }
+    }
+  })()
+  try {
+    return await interruption
+  } finally {
+    interruption = null
+  }
 }

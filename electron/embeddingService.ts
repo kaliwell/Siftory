@@ -3,6 +3,7 @@ import { isInteractiveSearchActive, onInteractiveSearchIdle } from './interactiv
 // Orchestrates isolated embedding workers and persists results through vectorDatabaseService.
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
+import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import os from 'os'
@@ -298,7 +299,7 @@ function getMemorySnapshot(): Record<string, number> {
 }
 
 function emitProgress(): void {
-  const p = { ...progress }
+  const p = getEmbeddingProgress()
   for (const cb of progressListeners) {
     try {
       cb(p)
@@ -585,16 +586,19 @@ function prepareScanInputsInChild(
   chunkSize?: number,
 ): Promise<PreparedEmbeddingScanResult> {
   const vectorDbDir = getVectorDbDir()
+  const producerRunId = buildRunId
   return prepareEmbeddingScanInputsInChild({
     request: req,
     dim,
     vectorDbDir,
     sourcePaths: getEmbeddingStorePaths(req.modelName, req.embeddingType),
-    isStopping: () => stopping,
+    isStopping: () => stopping || buildRunId !== producerRunId,
     onChildState: (child) => {
-      preparationChild = child
+      if (buildRunId === producerRunId) preparationChild = child
     },
-    onProgress: (message) => updateProgress({ currentPath: message }),
+    onProgress: (message) => {
+      if (!stopping && buildRunId === producerRunId) updateProgress({ currentPath: message })
+    },
     onDiagnostic: (message) => writeDiagnostic('preparation-child:stderr', { message }),
     onChunk,
     chunkSize,
@@ -1197,7 +1201,10 @@ export function onEmbeddingProgress(cb: EmbeddingProgressCallback): () => void {
 }
 
 export function getEmbeddingProgress(): EmbeddingProgress {
-  return { ...progress, inputSetOpen: embeddingStreamController.isOpen() }
+  return {
+    ...progress,
+    inputSetOpen: preparationProducerOpen || embeddingStreamController.isOpen(),
+  }
 }
 
 export function reserveEmbeddingBuild(req: VectorBuildRequest): RuntimeOperationResult {
@@ -1257,7 +1264,7 @@ export function failActiveEmbeddingBuild(error: unknown): boolean {
 
 export async function startEmbeddingBuild(
   req: VectorBuildRequest,
-  options: { acceptQueuedReservation?: boolean } = {},
+  options: { acceptQueuedReservation?: boolean; preferCudaForAutoClip?: boolean } = {},
 ): Promise<RuntimeOperationResult> {
   // Fence a second request before it can replace the active run identity used
   // by asynchronous vector persistence callbacks.
@@ -1313,25 +1320,43 @@ export async function startEmbeddingBuild(
   paused = false
   taskQueue = []
   embeddingStreamController.clear()
+  const preferCudaForAutoClip =
+    options.preferCudaForAutoClip &&
+    req.backend === 'auto' &&
+    req.modelName === 'clip_vit_base_patch32'
   const requestedRuntimeBackend =
-    modelCapability?.defaultBackend === 'gpu' && req.backend === 'gpu' ? 'gpu' : 'cpu'
+    modelCapability?.defaultBackend === 'gpu' && (req.backend === 'gpu' || preferCudaForAutoClip)
+      ? 'gpu'
+      : 'cpu'
   const modelPath = modelStatus.installedPath || ''
   const providerResolution = resolveEmbeddingInferenceProvider({
     backend: requestedRuntimeBackend,
     modelName: req.modelName,
     modelPath,
     cudaRuntimeDir: path.join(path.dirname(getVectorDbDir()), 'cuda-runtime'),
-    cudaRuntimeManifestPath: path.join(process.resourcesPath || '', 'runtime-manifest.json'),
+    cudaRuntimeManifestPath: app?.isPackaged
+      ? path.join(process.resourcesPath, 'runtime-manifest.json')
+      : process.env.FLOATING_CLOCK_CUDA_RUNTIME_MANIFEST ||
+        path.join(
+          app?.getAppPath?.() ?? path.resolve(__dirname, '..'),
+          'resources',
+          'runtime-manifest.json',
+        ),
   })
-  buildTraceProvider = providerResolution.provider
-  const effectiveBackend = providerResolution.provider === 'cuda' ? 'cuda' : requestedRuntimeBackend
+  const effectiveBackend =
+    providerResolution.provider === 'cuda'
+      ? 'cuda'
+      : preferCudaForAutoClip
+        ? 'cpu'
+        : requestedRuntimeBackend
+  buildTraceProvider = effectiveBackend === 'cpu' ? 'cpu' : providerResolution.provider
   writeDiagnostic('build:effective-config', {
     modelInfo,
     modelStatus,
     modelCapability,
     requestedBackend: req.backend || 'cpu',
     effectiveBackend,
-    inferenceProvider: providerResolution.provider,
+    inferenceProvider: buildTraceProvider,
     providerReason: providerResolution.reason,
   })
   providerConcurrencyLimit =
@@ -1351,8 +1376,9 @@ export async function startEmbeddingBuild(
   maxConcurrency = providerConcurrencyLimit
   const videoMemory =
     req.batchSize === 0 && effectiveBackend === 'gpu' ? readNvidiaVideoMemory() : null
+  const autoCudaClipBatch = preferCudaForAutoClip && effectiveBackend === 'cuda' && !req.batchSize
   const batchSelection = selectEmbeddingBatchSize({
-    requestedBatchSize: req.batchSize,
+    requestedBatchSize: autoCudaClipBatch ? 16 : req.batchSize,
     backend: effectiveBackend,
     modelName: req.modelName,
     maxConcurrency,
@@ -1372,8 +1398,8 @@ export async function startEmbeddingBuild(
     startedAt: Date.now(),
     state: 'running',
     effectiveBatchSize: batchSelection.batchSize,
-    batchMode: batchSelection.mode,
-    batchReason: batchSelection.reason,
+    batchMode: autoCudaClipBatch ? 'auto' : batchSelection.mode,
+    batchReason: autoCudaClipBatch ? 'clip-cuda-16' : batchSelection.reason,
     availableMemoryMb: Math.round(batchSelection.memory.freeSystemMemoryBytes / 1024 / 1024),
     availableVideoMemoryMb: batchSelection.memory.freeVideoMemoryBytes
       ? Math.round(batchSelection.memory.freeVideoMemoryBytes / 1024 / 1024)
@@ -1388,6 +1414,8 @@ export async function startEmbeddingBuild(
 
   const usesIsolatedScanPreparation = Boolean(req.scanPaths?.length && !req.imageIds?.length)
   if (usesIsolatedScanPreparation) {
+    const producerRunId = buildRunId
+    const producerStopped = () => stopping || buildRunId !== producerRunId
     const producerChunkSize = Math.max(1, Math.min(256, batchSelection.batchSize * maxConcurrency))
     const queueHighWater = producerChunkSize * 2
     let acceptedTotal = 0
@@ -1411,12 +1439,12 @@ export async function startEmbeddingBuild(
             taskQueue.length + progress.running + pendingPersistence + inputs.length >
             queueHighWater
           ) {
-            if (stopping || progress.state === 'error') {
+            if (producerStopped() || progress.state === 'error') {
               throw new Error(progress.error || 'Embedding build stopped')
             }
             await new Promise<void>((resolve) => setTimeout(resolve, 25))
           }
-          if (stopping || progress.state === 'error') {
+          if (producerStopped() || progress.state === 'error') {
             throw new Error(progress.error || 'Embedding build stopped')
           }
           const tasks = inputs.map<WorkerTask>((input) => ({
@@ -1436,7 +1464,6 @@ export async function startEmbeddingBuild(
           updateProgress({
             total: acceptedTotal,
             pending: taskQueue.length,
-            state: 'running',
             currentPath: `Queued ${acceptedTotal.toLocaleString()} prepared image(s)`,
           })
           startOrDispatchWorkers()
@@ -1451,11 +1478,8 @@ export async function startEmbeddingBuild(
         },
         producerChunkSize,
       )
+      if (producerStopped()) return runtimeFailure('EMBEDDING_BUILD_STOPPED')
       preparationProducerOpen = false
-      if (stopping) {
-        stopAllWorkers()
-        return runtimeFailure('EMBEDDING_BUILD_STOPPED')
-      }
       const skipped = Math.max(0, prepared.discovered - acceptedTotal)
       updateProgress({
         total: prepared.discovered,
@@ -1480,8 +1504,8 @@ export async function startEmbeddingBuild(
       checkCompletion()
       return { ok: true }
     } catch (error) {
+      if (producerStopped()) return runtimeFailure('EMBEDDING_BUILD_STOPPED')
       preparationProducerOpen = false
-      if (stopping) return runtimeFailure('EMBEDDING_BUILD_STOPPED')
       const message = error instanceof Error ? error.message : String(error)
       writeDiagnostic('preparation-child:error', { error: message })
       const preparationError = runtimeError('EMBEDDING_PREPARATION_FAILED', message)
@@ -1614,7 +1638,7 @@ export async function startEmbeddingBuild(
     modelPath,
     maxConcurrency,
     effectiveBackend,
-    inferenceProvider: providerResolution.provider,
+    inferenceProvider: buildTraceProvider,
     providerReason: providerResolution.reason,
     batchSelection,
     memory: getMemorySnapshot(),
@@ -1891,6 +1915,7 @@ export function resumeEmbeddingBuild(): { ok: boolean } {
   if (dinoChildren.size > 0) {
     dispatchNextDinoTask()
   }
+  checkCompletion()
   return { ok: true }
 }
 

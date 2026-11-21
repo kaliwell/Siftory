@@ -135,6 +135,33 @@ test('large-image rejection requires actual header dimensions over the model lim
   )
 })
 
+test('Sharp corrupt header errors are reviewed for truncated PNG and GIF inputs', async (t) => {
+  const truncatedPng = await fixture(
+    t,
+    png().subarray(0, 8),
+    'Input buffer has corrupt header:',
+    '.png',
+  )
+  assert.equal((await recheckEmbeddingInputFailure(truncatedPng)).code, 'INPUT_INVALID_HEADER')
+
+  const gifHeader = Buffer.from([71, 73, 70, 56, 57, 97, 1, 0, 1, 0])
+  const truncatedGif = await fixture(
+    t,
+    gifHeader,
+    'Input buffer has corrupt header: gifload_buffer: Unexpected end of GIF source data',
+    '.gif',
+  )
+  assert.equal((await recheckEmbeddingInputFailure(truncatedGif)).code, 'INPUT_DECODE_REJECTED')
+  assert.equal(await recheckEmbeddingInputFailure({ ...truncatedGif, inputFailure: false }), null)
+  assert.equal(
+    await recheckEmbeddingInputFailure({
+      ...truncatedGif,
+      error: 'Input buffer has corrupt header:\nCUDA allocation failed',
+    }),
+    null,
+  )
+})
+
 test('unsupported BMP and AppleDouble sources are skipped using content rather than extension', async (t) => {
   const b = Buffer.alloc(54)
   b.write('BM')

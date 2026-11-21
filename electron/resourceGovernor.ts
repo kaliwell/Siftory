@@ -269,6 +269,39 @@ export class UnifiedResourceGovernor {
     return priority <= 2 || this.pressureReasons().length === 0
   }
 
+  selectAutoDinoBackend(): 'cpu' | 'gpu' {
+    const systemFloor = Math.max(2.5 * GIB, (this.pressure.totalSystemMemoryBytes ?? 0) * 0.16)
+    return this.profile !== 'power-saver' &&
+      this.rawPressureReasons().length === 0 &&
+      (this.pressure.freeSystemMemoryBytes ?? 0) >= systemFloor &&
+      (this.pressure.freeVideoMemoryBytes ?? 0) >= 2.5 * GIB
+      ? 'gpu'
+      : 'cpu'
+  }
+
+  manualEmbeddingPressure(backend: 'cpu' | 'gpu'): UnifiedResourcePressureReason[] {
+    if (backend === 'gpu') return this.pressureReasons()
+    // Manual CPU preparation uses one worker and does not need video memory.
+    const free = this.pressure.freeSystemMemoryBytes
+    const floor = Math.max(1.25 * GIB, (this.pressure.totalSystemMemoryBytes ?? 0) * 0.08)
+    const processBytes =
+      this.pressure.processTreePrivateBytes ??
+      this.pressure.electronPrivateBytes ??
+      this.pressure.processTreeWorkingSetBytes ??
+      this.pressure.electronWorkingSetBytes ??
+      this.pressure.processWorkingSetBytes
+    const reasons: UnifiedResourcePressureReason[] = this.rawPressureReasons().filter(
+      (reason) => reason !== 'vram' && reason !== 'memory',
+    )
+    if (
+      (free !== undefined && free < floor) ||
+      (processBytes !== undefined &&
+        processBytes > RESOURCE_POLICIES[this.profile].maxWorkingSetBytes)
+    )
+      reasons.push('memory')
+    return reasons
+  }
+
   maximumQueuedTasks(): number {
     return RESOURCE_POLICIES[this.profile].maxQueued
   }

@@ -26,7 +26,7 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
   if (displayedWorkflow.state === 'idle') return null
   const displayMessage = displayedWorkflow.runtimeError
     ? translateRuntimeError(displayedWorkflow.runtimeError, t)
-    : displayedWorkflow.error || t(displayedWorkflow.message || displayedWorkflow.stepLabel || '')
+    : t(displayedWorkflow.error || displayedWorkflow.message || displayedWorkflow.stepLabel || '')
   const modelStep = displayedWorkflow.stepId
   const expectedModel =
     modelStep === 'dino-embeddings'
@@ -48,14 +48,25 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
   const processed = modelProgress
     ? modelProgress.completed + modelProgress.failed + modelProgress.skipped
     : 0
+  const modelFinishing =
+    modelProgress?.state === 'running' &&
+    !modelProgress.running &&
+    !modelProgress.pending &&
+    processed >= modelProgress.total
   const modelPercent =
     modelProgress && modelProgress.total > 0
-      ? Math.max(0, Math.min(100, Math.round((processed / modelProgress.total) * 100)))
+      ? Math.max(
+          0,
+          Math.min(
+            modelProgress.state === 'done' ? 100 : 99,
+            Math.round((processed / modelProgress.total) * 100),
+          ),
+        )
       : undefined
   const tone =
     displayedWorkflow.state === 'error'
       ? 'rgb(255,95,95)'
-      : displayedWorkflow.state === 'cancelled'
+      : displayedWorkflow.state === 'cancelled' || displayedWorkflow.state === 'paused'
         ? 'rgb(255,190,90)'
         : 'rgb(70,235,155)'
   return (
@@ -85,9 +96,11 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
         {displayedWorkflow.stepIndex > 0 && displayedWorkflow.totalSteps > 0
           ? `${displayedWorkflow.stepIndex}/${displayedWorkflow.totalSteps} `
           : ''}
-        {displayedWorkflow.indeterminate
-          ? t(displayedWorkflow.stepLabel || 'Preparing...')
-          : `${displayedWorkflow.percent}%`}
+        {displayedWorkflow.state === 'paused'
+          ? t('Paused')
+          : displayedWorkflow.indeterminate
+            ? t(displayedWorkflow.stepLabel || 'Preparing...')
+            : `${displayedWorkflow.percent}%`}
       </span>
       {modelProgress && (
         <div
@@ -107,8 +120,19 @@ const SearchSetupProgress: React.FC<SearchSetupProgressProps> = ({
                 ? 'CLIP'
                 : t('Build embeddings')}
             {': '}
-            {processed.toLocaleString()}/{modelProgress.total.toLocaleString()}
-            {modelPercent != null ? ` (${modelPercent}%)` : ''}
+            {modelProgress.inputSetOpen
+              ? t('{count} inputs processed', { count: processed.toLocaleString() })
+              : `${processed.toLocaleString()}/${modelProgress.total.toLocaleString()}`}
+            {modelPercent != null && !modelFinishing && !modelProgress.inputSetOpen
+              ? ` (${modelPercent}%)`
+              : ''}
+            {modelFinishing && (
+              <>
+                {' '}
+                ·{' '}
+                {t(modelProgress.inputSetOpen ? 'Preparing more inputs' : 'Finalizing embeddings')}
+              </>
+            )}
           </span>
           <span>{t('Succeeded {count}', { count: modelProgress.completed.toLocaleString() })}</span>
           <span>

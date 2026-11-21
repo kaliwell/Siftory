@@ -9,6 +9,7 @@ const CACHE_VERSION = 1
 const HEADER_BYTES = 16
 const DEFAULT_CONCURRENCY = 48
 const MAX_CACHE_ENTRIES = 50_000
+const PREPARATION_IDLE_TIMEOUT_MS = 120_000
 const MAX_PREPARATION_CHILD_BUFFER_BYTES = 8 * 1024 * 1024
 
 interface RejectedInputFingerprint {
@@ -107,7 +108,38 @@ export async function filterSupportedEmbeddingInputs<T extends EmbeddingInputCan
   candidates: readonly T[],
   options: FilterEmbeddingInputsOptions = {},
 ): Promise<{ accepted: T[]; rejected: number; cachedRejected: number }> {
-  const cache = loadRejectedCache(options.cachePath)
+  const validator = createEmbeddingInputValidator(options.cachePath)
+  const result = await validator.filter(candidates, options)
+  validator.flush()
+  return result
+}
+
+export function createEmbeddingInputValidator(cachePath?: string) {
+  const cache = loadRejectedCache(cachePath)
+  let dirty = false
+  return {
+    async filter<T extends EmbeddingInputCandidate>(
+      candidates: readonly T[],
+      options: Omit<FilterEmbeddingInputsOptions, 'cachePath'> = {},
+    ) {
+      return filterEmbeddingInputBatch(candidates, options, cache, () => {
+        dirty = true
+      })
+    },
+    flush() {
+      if (!dirty) return
+      saveRejectedCache(cachePath, cache)
+      dirty = false
+    },
+  }
+}
+
+async function filterEmbeddingInputBatch<T extends EmbeddingInputCandidate>(
+  candidates: readonly T[],
+  options: Omit<FilterEmbeddingInputsOptions, 'cachePath'>,
+  cache: RejectedInputCache,
+  markDirty: () => void,
+): Promise<{ accepted: T[]; rejected: number; cachedRejected: number }> {
   const accepted = new Array<T | undefined>(candidates.length)
   const concurrency = Math.max(
     1,
@@ -117,7 +149,6 @@ export async function filterSupportedEmbeddingInputs<T extends EmbeddingInputCan
   let checked = 0
   let rejected = 0
   let cachedRejected = 0
-  let cacheChanged = false
 
   const worker = async (): Promise<void> => {
     for (;;) {
@@ -139,7 +170,7 @@ export async function filterSupportedEmbeddingInputs<T extends EmbeddingInputCan
             accepted[index] = candidate
             if (cached) {
               delete cache.entries[key]
-              cacheChanged = true
+              markDirty()
             }
           } else {
             cache.entries[key] = {
@@ -148,7 +179,7 @@ export async function filterSupportedEmbeddingInputs<T extends EmbeddingInputCan
               updatedAt: Date.now(),
             }
             rejected++
-            cacheChanged = true
+            markDirty()
           }
         }
       } catch {
@@ -162,7 +193,6 @@ export async function filterSupportedEmbeddingInputs<T extends EmbeddingInputCan
   }
 
   await Promise.all(Array.from({ length: Math.min(concurrency, candidates.length) }, worker))
-  if (cacheChanged) saveRejectedCache(options.cachePath, cache)
   return {
     accepted: accepted.filter((candidate): candidate is T => candidate !== undefined),
     rejected,
@@ -198,10 +228,20 @@ export function prepareEmbeddingScanInputsInChild(
     options.onChildState(child)
     const inputs: PreparedEmbeddingScanResult['inputs'] = []
     let settled = false
+    let awaitingChunkAck = false
     let stdoutBuffer = ''
+    let idleTimer: ReturnType<typeof setTimeout> | undefined
+    const armIdleTimer = () => {
+      clearTimeout(idleTimer)
+      idleTimer = setTimeout(() => {
+        fail('Embedding input preparation stopped responding')
+      }, PREPARATION_IDLE_TIMEOUT_MS)
+    }
     const fail = (error: string): void => {
       if (settled) return
       settled = true
+      clearTimeout(idleTimer)
+      child.kill()
       options.onChildState(null)
       reject(new Error(error))
     }
@@ -211,7 +251,6 @@ export function prepareEmbeddingScanInputsInChild(
       stdoutBuffer += chunk
       if (Buffer.byteLength(stdoutBuffer, 'utf8') > MAX_PREPARATION_CHILD_BUFFER_BYTES) {
         fail('Embedding preparation process output exceeded its byte limit')
-        child.kill()
         return
       }
       let index = stdoutBuffer.indexOf('\n')
@@ -232,14 +271,16 @@ export function prepareEmbeddingScanInputsInChild(
             rejected?: number
           }
           if (message.type === 'progress' && message.message) {
+            armIdleTimer()
             options.onProgress(message.message)
           } else if (message.type === 'chunk' && Array.isArray(message.items)) {
             const sequence = Number(message.sequence)
             if (!Number.isSafeInteger(sequence) || sequence <= 0 || message.items.length > 256) {
               fail('Embedding preparation process emitted an invalid chunk')
-              child.kill()
               return
             }
+            clearTimeout(idleTimer)
+            awaitingChunkAck = true
             child.stdout.pause()
             void (
               options.onChunk
@@ -247,18 +288,24 @@ export function prepareEmbeddingScanInputsInChild(
                 : Promise.resolve().then(() => inputs.push(...message.items!))
             )
               .then(() => {
-                if (settled || !child.stdin.writable) return
+                if (settled) return
+                if (!child.stdin.writable) {
+                  fail('Embedding preparation acknowledgement pipe closed')
+                  return
+                }
+                awaitingChunkAck = false
+                armIdleTimer()
                 child.stdin.write(`${JSON.stringify({ type: 'ack', sequence })}\n`)
                 child.stdout.resume()
               })
               .catch((error: unknown) => {
                 fail(error instanceof Error ? error.message : String(error))
-                child.kill()
               })
           } else if (message.type === 'error') {
             fail(message.error || 'Embedding preparation failed')
           } else if (message.type === 'done' && !settled) {
             settled = true
+            clearTimeout(idleTimer)
             options.onChildState(null)
             child.stdin.end()
             resolve({
@@ -277,7 +324,12 @@ export function prepareEmbeddingScanInputsInChild(
       options.onDiagnostic(chunk.trim().slice(0, 1000))
     })
     child.on('error', (error) => fail(error.message))
-    child.on('exit', (code, signal) => {
+    child.stdin.on('error', (error) => fail(error.message))
+    child.on('exit', () => {
+      if (awaitingChunkAck)
+        fail('Embedding preparation process exited before acknowledging its chunk')
+    })
+    child.on('close', (code, signal) => {
       if (!settled) {
         fail(
           options.isStopping()
@@ -286,6 +338,7 @@ export function prepareEmbeddingScanInputsInChild(
         )
       }
     })
+    armIdleTimer()
     child.stdin.write(
       `${JSON.stringify({
         scanPaths: options.request.scanPaths,

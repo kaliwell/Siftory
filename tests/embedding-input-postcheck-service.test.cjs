@@ -31,6 +31,7 @@ function harness(t, options = {}) {
     flush: async () => {},
   }
   const mocks = {
+    './embeddingTensorPrefetchPolicy': { embeddingTensorPrefetchRequested: () => false },
     './preparationSearchState': { setVectorPreparationActive: () => {} },
     './interactiveSearchPriority': {
       isInteractiveSearchActive: () => false,
@@ -83,7 +84,8 @@ function harness(t, options = {}) {
         jobLedgerSession.start(jobs, run);
         return jobs.map(j => ({ imageId:j.imageId, modelName:j.modelName, modelVersion:'1.0.0', dim:2, jobId:j.id, jobLease:jobLedgerSession.claim(j.id), ok:false, error:'Unknown error', inputFailure:true }));
       },
-      handle:handleResult, progress:()=>({...progress}), stop:stopEmbeddingBuild
+      handle:handleResult, progress:()=>({...progress}), stop:stopEmbeddingBuild,
+      pause:pauseEmbeddingBuild, resume:resumeEmbeddingBuild
     };
   `
   mod._compile(
@@ -118,6 +120,22 @@ async function done(h) {
     await new Promise((resolve) => setTimeout(resolve, 5))
   }
 }
+
+test('resuming after the final input review finishes releases an empty build', async (t) => {
+  const h = harness(t)
+  const [task] = h.start(1, 'paused-review')
+  h.handle({ ...task, inputPath: h.source })
+  assert.equal(h.pause().ok, true)
+  const deadline = Date.now() + 3000
+  while (h.progress().skipped !== 1) {
+    assert.ok(Date.now() < deadline, 'the header review must finish while paused')
+    await new Promise((resolve) => setTimeout(resolve, 5))
+  }
+  assert.equal(h.progress().state, 'paused')
+  assert.equal(h.resume().ok, true)
+  await done(h)
+  assert.equal(h.progress().state, 'done')
+})
 
 test('real service final review preserves successful vectors and records rejected files as skipped', async (t) => {
   const h = harness(t)

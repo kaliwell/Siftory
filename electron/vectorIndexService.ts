@@ -370,36 +370,41 @@ function saveManifest(m: VectorIndexManifest): void {
 async function countEmbeddingsStreaming(
   modelName: string,
   embeddingType: EmbeddingType,
-): Promise<{ count: number; dim: number; modelVersion: string }> {
+  isCancelled?: () => boolean,
+): Promise<{ count: number; dim: number; modelVersion: string } | null> {
   const filePaths = getEmbeddingFilePaths(modelName, embeddingType)
   if (filePaths.length === 0) return { count: 0, dim: 0, modelVersion: 'unknown' }
   const expectedDim = expectedModelDim(modelName)
   const latest = new Map<string, string>()
 
   for (const filePath of filePaths) {
-    const rl = readline.createInterface({
-      input: fs.createReadStream(filePath, { encoding: 'utf8' }),
-      crlfDelay: Infinity,
-    })
+    const input = fs.createReadStream(filePath, { encoding: 'utf8' })
+    const rl = readline.createInterface({ input, crlfDelay: Infinity })
 
-    for await (const line of rl) {
-      try {
-        const row = JSON.parse(line) as Partial<EmbeddingEntry>
-        if (
-          row.modelName !== modelName ||
-          row.embeddingType !== embeddingType ||
-          typeof row.imageId !== 'string'
-        ) {
-          continue
+    try {
+      for await (const line of rl) {
+        if (isCancelled?.()) return null
+        try {
+          const row = JSON.parse(line) as Partial<EmbeddingEntry>
+          if (
+            row.modelName !== modelName ||
+            row.embeddingType !== embeddingType ||
+            typeof row.imageId !== 'string'
+          ) {
+            continue
+          }
+          const key = embeddingCachePathKey(row.imageId)
+          latest.delete(key)
+          if (row.dim !== expectedDim || !validateEmbeddingVector(row.vector, expectedDim).ok)
+            continue
+          latest.set(key, typeof row.modelVersion === 'string' ? row.modelVersion : 'unknown')
+        } catch {
+          /* Skip malformed rows without changing an unrelated path state. */
         }
-        const key = embeddingCachePathKey(row.imageId)
-        latest.delete(key)
-        if (row.dim !== expectedDim || !validateEmbeddingVector(row.vector, expectedDim).ok)
-          continue
-        latest.set(key, typeof row.modelVersion === 'string' ? row.modelVersion : 'unknown')
-      } catch {
-        /* Skip malformed rows without changing an unrelated path state. */
       }
+    } finally {
+      rl.close()
+      input.destroy()
     }
   }
 
@@ -419,13 +424,16 @@ export function getVectorIndex(): VectorIndexProvider | null {
 export async function buildVectorIndex(
   modelName: string,
   embeddingType: EmbeddingType = 'global',
+  isCancelled?: () => boolean,
 ): Promise<{ ok: boolean; error?: string; warning?: string }> {
   const buildEpoch = vectorIndexLifecycleEpoch
   vectorIndexBuildsInFlight += 1
   try {
+    if (isCancelled?.()) return { ok: false, error: 'Vector index build cancelled' }
     if (isLargeEmbeddingFile(modelName, embeddingType)) {
       const previous = loadManifest()
-      const counted = await countEmbeddingsStreaming(modelName, embeddingType)
+      const counted = await countEmbeddingsStreaming(modelName, embeddingType, isCancelled)
+      if (!counted || isCancelled?.()) return { ok: false, error: 'Vector index build cancelled' }
       if (buildEpoch !== vectorIndexLifecycleEpoch) {
         return { ok: false, error: 'Vector index build was invalidated by index maintenance' }
       }
@@ -466,6 +474,7 @@ export async function buildVectorIndex(
 
     const idx = new MemoryVectorIndex()
     await idx.build(entries)
+    if (isCancelled?.()) return { ok: false, error: 'Vector index build cancelled' }
     if (buildEpoch !== vectorIndexLifecycleEpoch) {
       return { ok: false, error: 'Vector index build was invalidated by index maintenance' }
     }
@@ -867,11 +876,17 @@ async function searchVectorIndexImpl(
     (req.embeddingType || 'global') === 'global'
   ) {
     onProgress?.({ workStage: 'vector_search', scanned: 0 })
+    // Without a scope snapshot, reserve additional bounded candidates for the
+    // Native membership check. A stale vector must never enter the result list.
+    const candidateLimit =
+      req.acceptPath && !req.acceptPathKeys
+        ? Math.min(MAX_VECTOR_SEARCH_TOP_K, Math.max(req.topK * 4, req.topK + 100))
+        : req.topK
     const found = await searchPreparedVectorSnapshot(
       req.modelName,
       expectedModelDim(req.modelName),
       req.queryVector,
-      req.topK,
+      candidateLimit,
       req.isCancelled,
       req.acceptPathKeys,
     )
@@ -883,6 +898,7 @@ async function searchVectorIndexImpl(
     })
     return found.candidates
       .filter((c) => !req.acceptPath || req.acceptPath(c.path))
+      .slice(0, req.topK)
       .map((c) => ({
         imageId: c.path,
         path: c.path,

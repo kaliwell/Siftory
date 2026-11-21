@@ -77,6 +77,22 @@ test('corrupt Native scope fails the vector resolvers closed', async () => {
   assert.deepEqual(await rerank.resolveVectorPathScopeKeys(delegate), [])
 })
 
+test('oversized Native scope export falls back to candidate-level membership checks', async () => {
+  const delegate = {
+    searchByImageAsync: async () => ({ results: [] }),
+    hashImageAsync: async () => ({}),
+    getIndexedCount: () => 360564,
+    isIndexedPath: (file) => file === 'C:\\indexed\\a.jpg',
+    listIndexedPaths: async () => {
+      throw new Error('Index snapshot exceeds the 128 MiB export safety limit')
+    },
+  }
+  assert.equal(await rerank.resolveVectorPathScopeKeys(delegate), undefined)
+  const filter = rerank.resolveVectorPathFilter(delegate)
+  assert.equal(filter('C:\\indexed\\a.jpg'), true)
+  assert.equal(filter('C:\\removed\\a.jpg'), false)
+})
+
 test('absent and valid-empty Native scopes keep the legacy widening resolvers', () => {
   const isIndexedPath = () => false
   for (const scopeState of ['absent', 'valid-empty']) {

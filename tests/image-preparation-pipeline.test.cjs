@@ -268,6 +268,38 @@ test('image preparation overlaps committed scan chunks with DINO and gates ready
   assert.ok(snapshots.slice(0, -1).every((snapshot) => !snapshot.vectorIndexComplete))
 })
 
+test(
+  'scan completion preserves the queued DINO phase until it is admitted',
+  { timeout: 3000 },
+  async (t) => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-queued-'))
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+    const harness = createPipelineHarness(root)
+    const getProgress = harness.dependencies.getEmbeddingProgress
+    const isReady = harness.dependencies.isStreamingEmbeddingReady
+    let waiting = true
+    harness.dependencies.isStreamingEmbeddingReady = (id) => !waiting && isReady(id)
+    harness.dependencies.getEmbeddingProgress = () =>
+      waiting ? embeddingProgress('queued') : getProgress()
+    const result = await createImagePreparationPipeline(harness.dependencies)({
+      paths: [root],
+      backend: 'cpu',
+      maxConcurrentEmbeddings: 1,
+      batchSize: 2,
+      onProgress: (snapshot) => {
+        if (snapshot.message?.startsWith('DINO is queued')) {
+          assert.equal(snapshot.phase, 'embedding-dino')
+          if (snapshot.scanComplete) waiting = false
+          else setImmediate(() => harness.finishScan())
+        }
+      },
+    })
+    assert.equal(waiting, false)
+    assert.equal(result.scanIndexed, 4)
+    assert.equal(harness.calls.indexes, 1)
+  },
+)
+
 test('warm image preparation performs no streaming or duplicate inference when scan commits no changes', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-warm-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))

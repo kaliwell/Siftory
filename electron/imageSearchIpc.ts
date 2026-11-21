@@ -101,6 +101,8 @@ import {
   onImagePreparationProgress,
   startImageLibraryPreparation,
   stopImageLibraryPreparation,
+  pauseImageLibraryPreparation,
+  resumeImageLibraryPreparation,
 } from './imagePreparationPipeline'
 import { getSourceFileSyncMutationEpoch, isSourceFileSyncRunning } from './sourceFileSyncService'
 import { isSourceDerivedDataCleanupRunning } from './sourceDerivedDataCleanupService'
@@ -237,6 +239,17 @@ export function registerImageSearchIpc(
   secureIpcMain.handle(IMAGE_SEARCH_IPC.STOP_PREPARATION, async (_event, taskId: unknown) =>
     stopImageLibraryPreparation(typeof taskId === 'string' ? taskId : undefined),
   )
+  secureIpcMain.handle(IMAGE_SEARCH_IPC.PAUSE_PREPARATION, async (_event, taskId: unknown) =>
+    pauseImageLibraryPreparation(typeof taskId === 'string' ? taskId : undefined),
+  )
+  secureIpcMain.handle(IMAGE_SEARCH_IPC.RESUME_PREPARATION, async (_event, taskId: unknown) => {
+    const busy = imageSearchEditBusyError()
+    if (busy) return { ok: false, error: busy }
+    return resumeImageLibraryPreparation(
+      typeof taskId === 'string' ? taskId : undefined,
+      taskScheduler,
+    )
+  })
 
   initializeScanErrorDiagnostics()
   secureIpcMain.handle(

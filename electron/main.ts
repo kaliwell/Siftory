@@ -4,6 +4,7 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { initImageSearchService, shutdownImageSearchForQuit } from './imageSearchService'
+import { pauseImageLibraryPreparation } from './imagePreparationPipeline'
 import { shutdownImageSearchDataCatalogForQuit } from './imageSearchDataCatalogService'
 import { initAppStorageService } from './appStorageService'
 import { StorageLocationService, readStoragePathAliases } from './storageLocationService'
@@ -1052,6 +1053,7 @@ app.on('will-quit', (event) => {
     void shutdownAutomaticMaintenance()
       .then(() => shutdownSourceFileSync())
       .then(() => shutdownVectorGc())
+      .then(() => pauseImageLibraryPreparation())
       .then(() =>
         Promise.all([
           shutdownImageSearchForQuit(),

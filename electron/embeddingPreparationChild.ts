@@ -3,7 +3,7 @@ import path from 'path'
 import readline from 'readline'
 import { classifyProjectFile } from '../shared/projectFileTypes'
 import { populateExistingEmbeddingIdsFromFastIndex } from './embeddingExistingIndex'
-import { filterSupportedEmbeddingInputs } from './embeddingInputValidation'
+import { createEmbeddingInputValidator } from './embeddingInputValidation'
 import { ProjectPreviewManifestStore } from './projectPreviewManifest'
 import { validateEmbeddingVector } from './embeddingVectorValidation'
 import { embeddingCachePathKey } from './embeddingF16Cache'
@@ -56,6 +56,43 @@ const IMAGE_EXTENSIONS = new Set([
   '.indd',
 ])
 
+// Keep descendants aligned with should_skip_dir_name in native/fast_scanner.cc.
+// An explicitly selected scan root is still traversed, even if its name matches.
+const SKIPPED_DIRECTORIES = new Set([
+  'node_modules',
+  '$recycle.bin',
+  'system volume information',
+  '__pycache__',
+  'venv',
+  'dist',
+  'build',
+  'target',
+  'obj',
+  'bin',
+  'debug',
+  'release',
+  'x64',
+  'x86',
+  'cppbackup',
+  'demobackup',
+  'backup',
+  'cache',
+  'caches',
+  'code cache',
+  'gpucache',
+  'shadercache',
+  'thumbcache',
+  'crashpad',
+  'logs',
+  'log',
+  'temp',
+  'tmp',
+  'windows',
+  'program files',
+  'program files (x86)',
+  'programdata',
+])
+
 function send(message: unknown): void {
   process.stdout.write(`${JSON.stringify(message)}\n`)
 }
@@ -94,6 +131,7 @@ async function collectExisting(
     return spool.size
   }
 
+  let rowsRead = 0
   for (const filePath of request.sourcePaths) {
     const lines = readline.createInterface({
       input: fs.createReadStream(filePath, { encoding: 'utf8' }),
@@ -101,6 +139,12 @@ async function collectExisting(
     })
     for await (const line of lines) {
       if (!line) continue
+      if (++rowsRead % 4096 === 0) {
+        send({
+          type: 'progress',
+          message: `Reading existing vectors: ${rowsRead.toLocaleString()}`,
+        })
+      }
       try {
         const row = JSON.parse(line) as {
           imageId?: unknown
@@ -165,7 +209,10 @@ async function run(
         if (entry.isSymbolicLink()) continue
         const fullPath = path.join(directory, entry.name)
         if (entry.isDirectory()) {
-          stack.push(fullPath)
+          const directoryName = entry.name.toLowerCase()
+          if (!directoryName.startsWith('.') && !SKIPPED_DIRECTORIES.has(directoryName)) {
+            stack.push(fullPath)
+          }
         } else if (entry.isFile() && IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
           discovered++
           if (spool.hasExisting(embeddingCachePathKey(fullPath))) {
@@ -184,12 +231,15 @@ async function run(
     let rejected = 0
     let accepted = 0
     let sequence = 1
+    let lastValidationUpdate = 0
     const chunkSize = Math.max(1, Math.min(256, Math.floor(request.chunkSize || 256)))
-    while (spool.candidateCount() > 0) {
+    const candidateCount = spool.candidateCount()
+    const validator = createEmbeddingInputValidator(
+      path.join(request.vectorDbDir, 'embedding-input-rejections.json'),
+    )
+    while (checked < candidateCount) {
       const window = spool.peekCandidates(chunkSize)
-      const validation = await filterSupportedEmbeddingInputs(window.items, {
-        cachePath: path.join(request.vectorDbDir, 'embedding-input-rejections.json'),
-      })
+      const validation = await validator.filter(window.items)
       checked += window.items.length
       rejected += validation.rejected
       accepted += validation.accepted.length
@@ -204,13 +254,15 @@ async function run(
         sequence++
       }
       spool.acknowledgeCandidates(window.ids)
-      if (checked === window.items.length || checked % 4096 < window.items.length) {
+      if (checked === candidateCount || Date.now() - lastValidationUpdate >= 1000) {
+        lastValidationUpdate = Date.now()
         send({
           type: 'progress',
-          message: `Validating in data process: ${checked.toLocaleString()} / ${(checked + spool.candidateCount()).toLocaleString()} (${rejected.toLocaleString()} rejected)`,
+          message: `Validating in data process: ${checked.toLocaleString()} / ${candidateCount.toLocaleString()} (${rejected.toLocaleString()} rejected)`,
         })
       }
     }
+    validator.flush()
     send({
       type: 'done',
       discovered,

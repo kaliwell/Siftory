@@ -182,3 +182,70 @@ test('cancel rejects a queued task and frees its slot', async () => {
   assert.equal(stats.lanes.local.cancelled, 1)
   assert.equal(stats.lanes.local.completed, 1)
 })
+
+test('manual CPU preparation resumes under moderate RAM pressure even when VRAM is low', async () => {
+  const scheduler = new UnifiedTaskScheduler()
+  const GiB = 1024 ** 3
+  scheduler.updateResourcePressure({
+    totalSystemMemoryBytes: 16 * GiB,
+    freeSystemMemoryBytes: 1.06 * GiB,
+    freeVideoMemoryBytes: 0,
+  })
+  const background = scheduler.enqueue({ stage: 'embedding', run: () => 'background' })
+  const gpu = scheduler.enqueue({ stage: 'embedding', manualEmbedding: 'gpu', run: () => 'gpu' })
+  const manual = scheduler.enqueue({ stage: 'embedding', manualEmbedding: 'cpu', run: () => 'cpu' })
+  assert.equal(scheduler.stats().lanes.gpu.queued, 3)
+  scheduler.updateResourcePressure({ freeSystemMemoryBytes: 1.75 * GiB })
+  assert.equal(await manual.promise, 'cpu')
+  assert.equal(scheduler.stats().lanes.gpu.queued, 2)
+  scheduler.updateResourcePressure({
+    freeSystemMemoryBytes: 4 * GiB,
+    freeVideoMemoryBytes: 2 * GiB,
+  })
+  assert.deepEqual(await Promise.all([background.promise, gpu.promise]), ['background', 'gpu'])
+})
+
+test('manual preparation reports low memory and releases its queue slot after one minute', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const scheduler = new UnifiedTaskScheduler()
+  scheduler.updateResourcePressure({ freeSystemMemoryBytes: 512 * 1024 ** 2 })
+  const task = scheduler.enqueue({
+    stage: 'embedding',
+    manualEmbedding: 'cpu',
+    run: () => assert.fail('unsafe start'),
+  })
+  const rejected = assert.rejects(task.promise, /Not enough memory/)
+  t.mock.timers.tick(59_999)
+  assert.equal(scheduler.stats().lanes.gpu.queued, 1)
+  t.mock.timers.tick(1)
+  await rejected
+  assert.equal(scheduler.stats().lanes.gpu.queued, 0)
+  scheduler.updateResourcePressure({ freeSystemMemoryBytes: 2 * 1024 ** 3 })
+  assert.equal(
+    await scheduler.enqueue({ stage: 'embedding', manualEmbedding: 'cpu', run: () => 'ready' })
+      .promise,
+    'ready',
+  )
+})
+
+test('auto DINO requires both measured system and video memory headroom', () => {
+  const scheduler = new UnifiedTaskScheduler()
+  const GiB = 1024 ** 3
+  assert.equal(scheduler.selectAutoDinoBackend(), 'cpu')
+  scheduler.updateResourcePressure({
+    totalSystemMemoryBytes: 16 * GiB,
+    freeSystemMemoryBytes: 3.5 * GiB,
+    freeVideoMemoryBytes: 2.7 * GiB,
+  })
+  assert.equal(scheduler.selectAutoDinoBackend(), 'gpu')
+  scheduler.updateResourcePressure({ freeVideoMemoryBytes: 2.4 * GiB })
+  assert.equal(scheduler.selectAutoDinoBackend(), 'cpu')
+  scheduler.updateResourcePressure({
+    freeVideoMemoryBytes: 3 * GiB,
+    freeSystemMemoryBytes: 1.75 * GiB,
+  })
+  assert.equal(scheduler.selectAutoDinoBackend(), 'cpu')
+  scheduler.updateResourcePressure({ freeSystemMemoryBytes: 4 * GiB })
+  scheduler.setResourceProfile('power-saver')
+  assert.equal(scheduler.selectAutoDinoBackend(), 'cpu')
+})

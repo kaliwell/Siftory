@@ -3,6 +3,9 @@ import { readEmbeddingImageHeader } from './embeddingImageHeader'
 
 const DINO_MAX_PIXELS = Math.floor((256 * 1024 * 1024) / 3)
 const DEFAULT_MAX_PIXELS = 268_402_689
+const HEADER_REVIEW_TIMEOUT_MS = 30_000
+const DECODER_REJECTION =
+  /^(?:Input (?:buffer|file) contains unsupported image format$|Input buffer has corrupt header:(?:\s|$))|(?:^|\n)(?:VipsJpeg:|jpegload(?:_buffer)?:|vipspng:|pngload(?:_buffer)?:|gifload:|webpload:|tiffload:)/i
 
 export interface FailedEmbeddingInput {
   inputPath?: string
@@ -37,12 +40,10 @@ export function isEmbeddingInputFailureCandidate(error?: string): boolean {
   )
     return false
   return (
-    /^(?:Unknown error|Input buffer is empty|Input (?:buffer|file) contains unsupported image format|Input image exceeds pixel limit)$/i.test(
+    /^(?:Unknown error|Input buffer is empty|Input image exceeds pixel limit)$/i.test(
       error.trim(),
     ) ||
-    /(?:^|\n)(?:VipsJpeg:|jpegload(?:_buffer)?:|vipspng:|pngload(?:_buffer)?:|gifload:|webpload:|tiffload:)/i.test(
-      error,
-    )
+    DECODER_REJECTION.test(error.trim())
   )
 }
 
@@ -84,12 +85,7 @@ export async function recheckEmbeddingInputFailure(
         (input.modelName.startsWith('dino') ? DINO_MAX_PIXELS : DEFAULT_MAX_PIXELS)
     )
       code = 'INPUT_PIXEL_LIMIT'
-    else if (
-      /(?:^|\n)(?:VipsJpeg:|jpegload(?:_buffer)?:|vipspng:|pngload(?:_buffer)?:|gifload:|webpload:|tiffload:)/i.test(
-        input.error!,
-      ) ||
-      /^Input (?:buffer|file) contains unsupported image format$/i.test(input.error!)
-    )
+    else if (DECODER_REJECTION.test(input.error!.trim()))
       code = 'INPUT_DECODE_REJECTED'
     if (!code) return null
     return {
@@ -120,9 +116,21 @@ export async function reviewEmbeddingInputFailures<T extends FailedEmbeddingInpu
       while (!isCancelled()) {
         const index = cursor++
         if (index >= inputs.length) return
-        results[index] = {
-          input: inputs[index],
-          rejection: await recheckEmbeddingInputFailure(inputs[index]),
+        const input = inputs[index]
+        let timeout: ReturnType<typeof setTimeout> | undefined
+        try {
+          const rejection = await Promise.race([
+            recheckEmbeddingInputFailure(input),
+            new Promise<never>((_, reject) => {
+              timeout = setTimeout(
+                () => reject(new Error('Timed out reading a failed image header')),
+                HEADER_REVIEW_TIMEOUT_MS,
+              )
+            }),
+          ])
+          results[index] = { input, rejection }
+        } finally {
+          clearTimeout(timeout)
         }
       }
     }),

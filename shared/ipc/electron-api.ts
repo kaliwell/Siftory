@@ -401,6 +401,8 @@ export interface ElectronAPI {
     ) => Promise<ImageSearchPrepareLibraryStartResult>
     getPreparationProgress: () => Promise<ImageSearchPreparationProgress>
     stopPreparation: (taskId?: string) => Promise<{ ok: boolean; error?: string }>
+    pausePreparation: (taskId?: string) => Promise<{ ok: boolean; error?: string }>
+    resumePreparation: (taskId?: string) => Promise<ImageSearchPrepareLibraryStartResult>
     onPreparationProgress: (cb: (progress: ImageSearchPreparationProgress) => void) => () => void
     search: (args: ImageSearchSearchArgs) => Promise<ImageSearchSearchResponse>
     selectPaths: () => Promise<string[] | null>

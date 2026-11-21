@@ -173,7 +173,8 @@ export interface ImageSearchPrepareLibraryArgs {
 
 export interface ImageSearchPreparationProgress {
   taskId?: string
-  state: 'idle' | 'running' | 'done' | 'stopped' | 'error'
+  paths?: string[]
+  state: 'idle' | 'running' | 'paused' | 'done' | 'stopped' | 'error'
   phase?: ImageSearchPreparationPhase
   percentage: number
   message?: string
@@ -534,6 +535,8 @@ export const IMAGE_SEARCH_IPC = {
   PREPARE_LIBRARY: 'imageSearch:prepareLibrary',
   GET_PREPARATION_PROGRESS: 'imageSearch:getPreparationProgress',
   STOP_PREPARATION: 'imageSearch:stopPreparation',
+  PAUSE_PREPARATION: 'imageSearch:pausePreparation',
+  RESUME_PREPARATION: 'imageSearch:resumePreparation',
   ON_PREPARATION_PROGRESS: 'imageSearch:onPreparationProgress',
   SEARCH: 'imageSearch:search',
   SELECT_PATHS: 'imageSearch:selectPaths',

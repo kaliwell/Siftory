@@ -34,6 +34,7 @@ const STAGE_RANK: Record<UnifiedTaskStage, number> = {
 }
 
 const GPU_STAGES = new Set<UnifiedTaskStage>(['embedding', 'video-deep'])
+const MANUAL_EMBEDDING_QUEUE_TIMEOUT_MS = 60_000
 
 export function unifiedTaskLaneForStage(stage: UnifiedTaskStage): UnifiedTaskLane {
   return GPU_STAGES.has(stage) ? 'gpu' : 'local'
@@ -42,6 +43,7 @@ export function unifiedTaskLaneForStage(stage: UnifiedTaskStage): UnifiedTaskLan
 export interface UnifiedTaskRequest<T> {
   stage: UnifiedTaskStage
   priority?: UnifiedTaskPriority
+  manualEmbedding?: 'cpu' | 'gpu'
   /** Paths this task works on; used by setVisiblePaths for P0 bumping. */
   paths?: readonly string[]
   label?: string
@@ -59,6 +61,8 @@ interface QueuedTask {
   lane: UnifiedTaskLane
   stage: UnifiedTaskStage
   priority: UnifiedTaskPriority
+  manualEmbedding?: 'cpu' | 'gpu'
+  waitTimer?: ReturnType<typeof setTimeout>
   pathKeys: string[]
   label?: string
   run: () => Promise<unknown> | unknown
@@ -126,6 +130,7 @@ export class UnifiedTaskScheduler {
       lane,
       stage: request.stage,
       priority,
+      manualEmbedding: request.stage === 'embedding' ? request.manualEmbedding : undefined,
       pathKeys: (request.paths ?? []).map(normalizePathKey),
       ...(request.label !== undefined ? { label: request.label } : {}),
       run: request.run as () => Promise<unknown> | unknown,
@@ -136,6 +141,17 @@ export class UnifiedTaskScheduler {
     this.tasks.set(id, task)
     this.queues[lane].push(task)
     this.counters[lane].queued += 1
+    if (task.manualEmbedding) {
+      const backend = task.manualEmbedding
+      task.waitTimer = setTimeout(() => {
+        const reasons = this.resourceGovernor.manualEmbeddingPressure(backend)
+        const message = reasons.includes('memory')
+          ? 'Not enough memory to start image feature building. Close unused apps and try again.'
+          : 'Image feature building could not start within one minute. Try again when system resources are available.'
+        this.cancelPendingTask(task.id, new Error(message))
+      }, MANUAL_EMBEDDING_QUEUE_TIMEOUT_MS)
+      task.waitTimer.unref?.()
+    }
     this.sortQueue(lane)
     this.pump(lane)
     return { id, promise }
@@ -143,17 +159,22 @@ export class UnifiedTaskScheduler {
 
   /** Cancel a still-queued task. Returns false when already running/done. */
   cancel(id: number): boolean {
+    return this.cancelPendingTask(id, new Error('Unified task cancelled'))
+  }
+
+  private cancelPendingTask(id: number, error: Error): boolean {
     const task = this.tasks.get(id)
     if (!task || task.cancelled) return false
     const queue = this.queues[task.lane]
     const index = queue.indexOf(task)
     if (index === -1) return false
     queue.splice(index, 1)
+    clearTimeout(task.waitTimer)
     task.cancelled = true
     this.tasks.delete(id)
     this.counters[task.lane].queued -= 1
     this.counters[task.lane].cancelled += 1
-    task.reject(new Error('Unified task cancelled'))
+    task.reject(error)
     return true
   }
 
@@ -186,6 +207,10 @@ export class UnifiedTaskScheduler {
     this.pump('local')
     this.pump('gpu')
     return this.stats()
+  }
+
+  selectAutoDinoBackend(): 'cpu' | 'gpu' {
+    return this.resourceGovernor.selectAutoDinoBackend()
   }
 
   updateResourcePressure(
@@ -245,10 +270,13 @@ export class UnifiedTaskScheduler {
   private pump(lane: UnifiedTaskLane): void {
     while (this.runningCount[lane] < this.laneConcurrency(lane) && this.queues[lane].length > 0) {
       const nextIndex = this.queues[lane].findIndex((task) =>
-        this.resourceGovernor.canRun(task.priority),
+        task.manualEmbedding
+          ? this.resourceGovernor.manualEmbeddingPressure(task.manualEmbedding).length === 0
+          : this.resourceGovernor.canRun(task.priority),
       )
       if (nextIndex < 0) return
       const [task] = this.queues[lane].splice(nextIndex, 1)
+      clearTimeout(task.waitTimer)
       this.counters[lane].queued -= 1
       this.runningCount[lane] += 1
       this.counters[lane].running += 1

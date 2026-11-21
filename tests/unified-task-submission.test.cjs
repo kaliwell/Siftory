@@ -99,6 +99,50 @@ test('D5 reservation returns immediately and holds the GPU task until terminal p
   assert.equal(listener, null)
 })
 
+test('auto CLIP probes CUDA only for manual preparation with measured GPU headroom', async () => {
+  for (const [backend, manual, admitted, expectCuda] of [
+    ['auto', true, 'gpu', true],
+    ['auto', true, 'cpu', false],
+    ['auto', false, 'gpu', false],
+    ['cpu', true, 'gpu', false],
+    ['gpu', true, 'gpu', false],
+  ]) {
+    let progress = embeddingProgress('idle')
+    let scheduled
+    let started
+    const coordinator = createEmbeddingTaskScheduling({
+      reserve: () => {
+        progress = embeddingProgress('queued')
+        return { ok: true }
+      },
+      start: async (request, options) => {
+        started = { request, options }
+        progress = embeddingProgress('done')
+        return { ok: true }
+      },
+      getProgress: () => progress,
+      onProgress: () => () => {},
+      finishQueued: () => false,
+      failActive: () => false,
+    })
+    const request = { modelName: 'clip_vit_base_patch32', embeddingType: 'global', backend }
+    coordinator.queue(
+      request,
+      {
+        selectAutoDinoBackend: () => admitted,
+        enqueue: (job) => {
+          scheduled = job
+          return { id: 1, promise: Promise.resolve() }
+        },
+      },
+      manual,
+    )
+    await scheduled.run()
+    assert.deepEqual(started.request, request)
+    assert.equal(started.options.preferCudaForAutoClip === true, expectCuda)
+  }
+})
+
 test('D5 queued cancellation removes the scheduler task before inference starts', () => {
   let progress = embeddingProgress('idle')
   let cancelledId = null
@@ -395,7 +439,10 @@ test('production staged handlers submit previews, frame extraction, and explicit
   assert.match(mediaIpcSource, /if \(!result\.ok\) clearMediaFrameEmbeddingBuildActive\(\)/)
   assert.match(vectorSource, /queueEmbeddingBuild\(buildRequest, taskScheduler\)/)
   assert.match(mainSource, /registerVectorIpc\([\s\S]*?getUnifiedTaskScheduler\(\)\)/)
-  assert.match(embeddingSource, /deps\.start\(request, \{ acceptQueuedReservation: true \}\)/)
+  assert.match(
+    embeddingSource,
+    /deps\.start\(executionRequest, \{\s*acceptQueuedReservation: true,/,
+  )
   assert.match(embeddingSource, /await waitForTerminal\(\)/)
   assert.match(imageSearchSource, /queueImageSearchScan\(args, taskScheduler\)/)
   assert.match(imageTaskSource, /stage: 'hash',[\s\S]*?priority: 1/)

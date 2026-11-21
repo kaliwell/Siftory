@@ -118,6 +118,20 @@ export const imageSearchBridge = {
     }
   },
 
+  async setPreparationPaused(
+    paused: boolean,
+    taskId?: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const a = api()
+      if (!a) throw new Error('electronAPI not available')
+      return await (paused ? a.pausePreparation(taskId) : a.resumePreparation(taskId))
+    } catch (e) {
+      logError('setPreparationPaused', e)
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  },
+
   onPreparationProgress(
     cb: (progress: ImageSearchPreparationProgress) => void,
   ): (() => void) | undefined {

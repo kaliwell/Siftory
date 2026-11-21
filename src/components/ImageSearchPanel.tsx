@@ -196,6 +196,7 @@ const ImageSearchPanel: React.FC = () => {
     }
   }, [setImageSearchUiPreferences])
   const [setupWorkflow, setSetupWorkflow] = useState(IDLE_SETUP_WORKFLOW)
+  const [preparationControlPending, setPreparationControlPending] = useState(false)
   const lastStatusStateRef = useRef<string | undefined>(undefined)
   const lastPreparationKeyRef = useRef('')
   const setupTaskIdRef = useRef<string | null>(null)
@@ -1097,11 +1098,13 @@ const ImageSearchPanel: React.FC = () => {
         React.startTransition(update)
       else update()
       lastPreparationKeyRef.current = progress.state === 'running' ? key : ''
-      if (progress.state === 'running') {
+      if (progress.state === 'running' || progress.state === 'paused') {
         if (progress.taskId && progress.taskId !== setupTaskIdRef.current) {
           setupTaskIdRef.current = progress.taskId
           handledPreparationTaskRef.current = null
-          if (setupPathsRef.current.length === 0) setupPathsRef.current = [...scanPaths]
+          if (progress.paths || setupPathsRef.current.length === 0) {
+            setupPathsRef.current = [...(progress.paths ?? scanPaths)]
+          }
         }
         return
       }
@@ -1149,11 +1152,13 @@ const ImageSearchPanel: React.FC = () => {
     void imageSearchBridge.getPreparationProgress().then((progress) => {
       if (disposed) return
       setSetupWorkflow(setupSnapshotFromImagePreparationProgress(progress))
-      if (progress.state !== 'running' || !progress.taskId) return
+      if (!['running', 'paused'].includes(progress.state) || !progress.taskId) return
       const discovered = setupTaskIdRef.current !== progress.taskId
       setupTaskIdRef.current = progress.taskId
       handledPreparationTaskRef.current = null
-      if (discovered || setupPathsRef.current.length === 0) setupPathsRef.current = [...scanPaths]
+      if (discovered || setupPathsRef.current.length === 0) {
+        setupPathsRef.current = [...(progress.paths ?? scanPaths)]
+      }
     })
     return () => {
       disposed = true
@@ -1225,6 +1230,21 @@ const ImageSearchPanel: React.FC = () => {
     if (!stopped.ok) showToast(stopped.error || t('Setup stopped'), 'err')
   }, [showToast, t])
 
+  const handleTogglePreparationPause = useCallback(async () => {
+    const taskId = setupTaskIdRef.current
+    if (!taskId || preparationControlPending) return
+    setPreparationControlPending(true)
+    try {
+      const result = await imageSearchBridge.setPreparationPaused(
+        setupWorkflow.state === 'running',
+        taskId,
+      )
+      if (!result.ok) showToast(t(result.error || 'Image library preparation failed'), 'err')
+    } finally {
+      setPreparationControlPending(false)
+    }
+  }, [preparationControlPending, setupWorkflow.state, showToast, t])
+
   const handleExperienceModeChange = useCallback(
     (mode: SearchExperienceMode) => setExperienceMode(mode),
     [setExperienceMode],
@@ -1295,7 +1315,7 @@ const ImageSearchPanel: React.FC = () => {
             <ScanErrorDiagnosticsControls />
             <PerformanceDiagnosticsControls />
             <SearchDiagnosticsControls traceId={sourcesOnly ? undefined : diagnosticId} />
-            {searchWarning && (
+            {!sourcesOnly && searchWarning && (
               <div className="search-degradation-notice" role="status">
                 {searchWarning}
               </div>
@@ -1344,6 +1364,8 @@ const ImageSearchPanel: React.FC = () => {
               hideLibrary={!sourcesOnly}
               experienceMode={experienceMode}
               workflowRunning={setupRunning}
+              workflowPaused={setupWorkflow.state === 'paused'}
+              preparationControlPending={preparationControlPending}
               isScanning={isScanning}
               searching={searching}
               scanPaths={scanPaths}
@@ -1394,6 +1416,7 @@ const ImageSearchPanel: React.FC = () => {
               onStopScan={handleStopScan}
               onPrepareLibrary={handlePrepareLibrary}
               onCancelSetup={() => void handleCancelSetup()}
+              onTogglePreparationPause={() => void handleTogglePreparationPause()}
               onSelectPaths={handleSelectPaths}
               onToggleDrivePicker={handleToggleDrivePicker}
               onAddDrive={handleAddDrive}

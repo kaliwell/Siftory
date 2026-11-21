@@ -91,8 +91,8 @@ export function resolveVectorPathFilter(
  * Scope snapshot for the ANN worker, drawn from the same delegate as
  * resolveVectorPathFilter. Undefined when the index is empty or the delegate
  * has no enumeration capability; ANN then keeps the legacy post-filter behavior.
- * An implemented export that fails rejects this promise, so searchLayered
- * records the failure and retains Hash-only results instead of widening scope.
+ * Oversized exports use the bounded candidate path check. Other export failures
+ * reject so searchLayered can retain Hash-only results.
  * A corrupted scope fails closed with an empty snapshot (VAL-036).
  */
 export async function resolveVectorPathScopeKeys(
@@ -102,7 +102,17 @@ export async function resolveVectorPathScopeKeys(
   if (delegate.getScopeState?.() === 'corrupt') return []
   const indexedCount = delegate.getIndexedCount?.()
   if (indexedCount === 0) return undefined
-  const paths = await delegate.listIndexedPaths()
+  let paths: string[]
+  try {
+    paths = await delegate.listIndexedPaths()
+  } catch (error) {
+    if (
+      delegate.getScopeState?.() !== 'corrupt' &&
+      errorMessage(error) === 'Index snapshot exceeds the 128 MiB export safety limit'
+    )
+      return undefined
+    throw error
+  }
   if (paths.length === 0) return undefined
   return paths.filter((file) => !isRetiredMountedSourcePath(file))
 }

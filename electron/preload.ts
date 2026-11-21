@@ -275,6 +275,8 @@ const api: ElectronAPI = {
     prepareLibrary: (args) => ipcRenderer.invoke(IMAGE_SEARCH_IPC.PREPARE_LIBRARY, args),
     getPreparationProgress: () => ipcRenderer.invoke(IMAGE_SEARCH_IPC.GET_PREPARATION_PROGRESS),
     stopPreparation: (taskId) => ipcRenderer.invoke(IMAGE_SEARCH_IPC.STOP_PREPARATION, taskId),
+    pausePreparation: (taskId) => ipcRenderer.invoke(IMAGE_SEARCH_IPC.PAUSE_PREPARATION, taskId),
+    resumePreparation: (taskId) => ipcRenderer.invoke(IMAGE_SEARCH_IPC.RESUME_PREPARATION, taskId),
     onPreparationProgress: (cb) => {
       const handler = (_event: IpcRendererEvent, progress: ImageSearchPreparationProgress) =>
         cb(progress)
