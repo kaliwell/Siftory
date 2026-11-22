@@ -31,6 +31,7 @@ import type {
   DiscoveryCatalogStats,
   DiscoveryIncrementalWatchStatus,
   DiscoveryProbeResult,
+  DiscoveryRepairSourceRootResult,
   DiscoveryScanStartResult,
   DiscoveryScanStatus,
   DiscoverySourceListItem,
@@ -74,6 +75,12 @@ export interface SourceCatalogServiceOptions {
   }
   now?: () => number
   onMountedSourceRoutes?: typeof setMountedSourceRoutes
+}
+
+export interface MountedSourceRepairSample {
+  relativePath: string
+  sizeBytes: number
+  modifiedAt: number
 }
 
 interface ActiveScan {
@@ -689,7 +696,8 @@ export class SourceCatalogService {
   async repairMountedSourceRoot(
     sourceId: string,
     rawRoot: string,
-  ): Promise<{ ok: boolean; source?: DataSource; repairedEntries?: number; error?: string }> {
+    getIndexSamples?: (root: string, signal: AbortSignal) => Promise<MountedSourceRepairSample[]>,
+  ): Promise<DiscoveryRepairSourceRootResult> {
     if (this.activeScans.has(sourceId)) {
       return { ok: false, error: 'Cancel the running scan before repairing the source' }
     }
@@ -751,10 +759,34 @@ export class SourceCatalogService {
         deadline,
         'replacement path check',
       )
-    } catch {
-      return { ok: false, error: 'Replacement source root is not accessible' }
+    } catch (error) {
+      if (error instanceof SourceAdapterError && error.code === 'PERMISSION_DENIED') {
+        return { ok: false, error: 'Access to the new shared path was denied' }
+      }
+      return {
+        ok: false,
+        error: deadline.aborted
+          ? 'The new shared path check timed out'
+          : 'Replacement source root is not accessible',
+      }
     }
-    const samples = this.database.getSourceRepairSamples(sourceId)
+    let samples = this.database.getSourceRepairSamples(sourceId)
+    if (samples.length === 0 && getIndexSamples && !deadline.aborted) {
+      try {
+        samples = await waitForMountedNetworkOperation(
+          () => getIndexSamples(source.rootLocator, deadline),
+          timeoutMs,
+          deadline,
+          'existing image index check',
+        )
+      } catch {
+        return { ok: false, error: 'Could not verify the original shared path from its index' }
+      }
+    }
+    if (!samples.length) {
+      return { ok: false, error: 'The original shared path has no indexed files to verify a move' }
+    }
+    const requiredMatches = Math.min(2, samples.length)
     let matchingSamples = 0
     for (const sample of samples) {
       try {
@@ -779,14 +811,14 @@ export class SourceCatalogService {
           Math.floor(stat.mtimeMs / 1000) === Math.floor(sample.modifiedAt / 1000)
         ) {
           matchingSamples += 1
+          if (matchingSamples >= requiredMatches) break
         }
       } catch {
-        if (deadline.aborted)
-          return { ok: false, error: 'Replacement source root is not accessible' }
-        // A stale sample can be absent; at least one exact match is required below.
+        if (deadline.aborted) return { ok: false, error: 'The new shared path check timed out' }
+        // A stale sample can be absent. Confirm the move using the remaining samples.
       }
     }
-    if (samples.length > 0 && matchingSamples === 0) {
+    if (matchingSamples < requiredMatches) {
       return {
         ok: false,
         error: 'Replacement root does not match sampled catalog file identities',
@@ -825,6 +857,9 @@ export class SourceCatalogService {
     }
     try {
       const result = await this.adapterFactory(source).probe(source)
+      if (this.closed || this.database.getSource(sourceId)?.rootLocator !== source.rootLocator) {
+        return { ...result, ok: false, error: 'The source changed while checking its connection' }
+      }
       this.database.updateSourceScanMeta(sourceId, {
         availability: result.availability,
         scanCapability: result.scanCapability,

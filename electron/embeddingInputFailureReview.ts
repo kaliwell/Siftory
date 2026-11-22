@@ -42,8 +42,7 @@ export function isEmbeddingInputFailureCandidate(error?: string): boolean {
   return (
     /^(?:Unknown error|Input buffer is empty|Input image exceeds pixel limit)$/i.test(
       error.trim(),
-    ) ||
-    DECODER_REJECTION.test(error.trim())
+    ) || DECODER_REJECTION.test(error.trim())
   )
 }
 
@@ -85,8 +84,7 @@ export async function recheckEmbeddingInputFailure(
         (input.modelName.startsWith('dino') ? DINO_MAX_PIXELS : DEFAULT_MAX_PIXELS)
     )
       code = 'INPUT_PIXEL_LIMIT'
-    else if (DECODER_REJECTION.test(input.error!.trim()))
-      code = 'INPUT_DECODE_REJECTED'
+    else if (DECODER_REJECTION.test(input.error!.trim())) code = 'INPUT_DECODE_REJECTED'
     if (!code) return null
     return {
       code,

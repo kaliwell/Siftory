@@ -400,7 +400,8 @@ export class DiscoveryCatalogDatabase {
     return this.open()
       .prepare(
         `SELECT relative_path, size_bytes, modified_at FROM file_entries
-         WHERE source_id = ? ORDER BY updated_at DESC, id ASC LIMIT ?`,
+         WHERE source_id = ? AND availability != 'missing' AND size_bytes > 0 AND modified_at > 0
+         ORDER BY updated_at DESC, id ASC LIMIT ?`,
       )
       .all(sourceId, Math.max(1, Math.min(32, Math.floor(limit))))
       .map((row) => ({

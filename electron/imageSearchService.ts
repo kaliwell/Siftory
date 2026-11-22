@@ -1,6 +1,7 @@
 import {
   isMountedUncPath,
   isRetiredMountedSourcePath,
+  mountedRelativePath,
   resolveMountedScanRoots,
   retiredMountedSourceRoots,
 } from './mountedSourceRouting'
@@ -448,7 +449,6 @@ function autosaveDirtyIndex(): void {
     })
     .then(async ({ identityBefore, result }) => {
       if (result?.ok) {
-        autosaveState = 'saved'
         lastSaveTime = Date.now()
         status.segmentPath = savePath
         status.indexMode = 'segment_mmap'
@@ -465,7 +465,8 @@ function autosaveDirtyIndex(): void {
             compactStatus.segmentCount,
             'segments',
           )
-          addon.compactManifestAsync(savePath).then((compacted) => {
+          try {
+            const compacted = await addon.compactManifestAsync(savePath)
             if (compacted?.ok) {
               console.log(
                 '[ImageSearch] Auto-compact done:',
@@ -477,8 +478,11 @@ function autosaveDirtyIndex(): void {
             } else {
               console.log('[ImageSearch] Auto-compact failed:', compacted?.error)
             }
-          })
+          } catch (error) {
+            console.warn('[ImageSearch] Auto-compact failed:', error)
+          }
         }
+        autosaveState = 'saved'
       } else {
         autosaveState = 'failed'
       }
@@ -570,8 +574,8 @@ async function finishProjectScan(scan: NonNullable<typeof pendingProjectScan>): 
           : status.lastWarning,
   }
   _cachedIndexMode = null
-  emit()
   autosaveDirtyIndex()
+  emit()
 }
 
 function startPollingScan(): void {
@@ -696,9 +700,10 @@ function startPollingScan(): void {
       nativeVersion,
       nativePath,
     }
-    emit()
     // Stop polling when scan finishes
-    if (prog.state !== 'scanning' && prog.state !== 'paused') {
+    if (prog.state === 'scanning' || prog.state === 'paused') {
+      emit()
+    } else {
       clearPollTimer()
       if (prog.state === 'idle') {
         const projectScan = pendingProjectScan
@@ -713,11 +718,12 @@ function startPollingScan(): void {
               lastError: error instanceof Error ? error.message : 'Project preview indexing failed',
               message: 'Project preview indexing failed.',
             }
-            emit()
             autosaveDirtyIndex()
+            emit()
           })
         } else {
           autosaveDirtyIndex()
+          emit()
         }
       } else {
         pendingProjectScan = null
@@ -1419,6 +1425,27 @@ export function snapshotImageSearchData(isCancelled?: () => boolean): Promise<{
   error?: string
 }> {
   return imageSearchDataService.snapshotImageSearchData(isCancelled)
+}
+
+export async function getIndexedSharedPathSamples(root: string, signal: AbortSignal) {
+  const response = await imageSearchDataService.snapshotImageSearchData(
+    () => signal.aborted,
+    false,
+    {
+      matches: (record) =>
+        record.fileSize > 0 &&
+        record.modifiedTime > 0 &&
+        Boolean(mountedRelativePath(root, record.path)),
+      limit: 16,
+    },
+  )
+  if (!response.ok || !response.records)
+    throw new Error(response.error || 'Image index unavailable')
+  return response.records.map((record) => ({
+    relativePath: path.relative(root, record.path),
+    sizeBytes: record.fileSize,
+    modifiedAt: record.modifiedTime,
+  }))
 }
 
 export function getImageSearchCatalogRevision(): string {

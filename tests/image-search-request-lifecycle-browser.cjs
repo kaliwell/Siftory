@@ -273,13 +273,17 @@ async function main() {
       ({ oldShare, newShare }) => {
         const f = window.__workspaceTest
         let moved = false
-        f.setHandler('imageSearch.selectPaths', () => [oldShare])
+        f.setHandler('imageSearch.selectPaths', () => [oldShare, 'C:\\unrelated-photos'])
         f.setHandler('imageSearch.resolveScanPaths', (paths) =>
           paths.map((root) => (moved && root === oldShare ? newShare : root)),
         )
         f.setHandler('imageSearch.reconnectScanPath', (oldRoot, newRoot) => {
           moved = oldRoot === oldShare && newRoot === newShare
           return { ok: moved, root: moved ? newShare : undefined }
+        })
+        f.setHandler('imageSearch.prepareLibrary', (args) => {
+          window.__reconnectedPreparationPaths = args.paths
+          return { ok: true, taskId: 'prepare-reconnected-share' }
         })
       },
       { oldShare, newShare },
@@ -290,8 +294,10 @@ async function main() {
     await lib.getByText(oldShare, { exact: true }).waitFor()
     await lib.getByRole('button', { name: '更换共享路径' }).click()
     await lib.getByLabel('新的共享路径').fill(newShare)
-    await lib.getByRole('button', { name: '更换共享路径' }).last().click()
+    await lib.getByRole('button', { name: '更换并准备此目录' }).click()
     await lib.getByText(newShare, { exact: true }).waitFor()
+    await page.waitForFunction(() => Array.isArray(window.__reconnectedPreparationPaths))
+    assert.deepEqual(await page.evaluate(() => window.__reconnectedPreparationPaths), [newShare])
     assert.equal(await lib.getByText(oldShare, { exact: true }).count(), 0)
     assert.equal(await lib.getByLabel('新的共享路径').count(), 0)
     await dropFile('[data-testid="image-search-library-section"]', 'sources.png')
@@ -494,6 +500,26 @@ async function main() {
     const expansion = card.locator('button').first()
     if ((await expansion.getAttribute('aria-expanded')) === 'false') await expansion.click()
     await card.getByText('CONCURRENT_PREPARATION_TEST', { exact: true }).waitFor()
+    await page.evaluate(() => {
+      const f = window.__workspaceTest
+      f.setHandler('vector.getVectorIndexStatus', () => ({
+        built: true,
+        count: 477898,
+        modelName: 'dinov2_vitb14',
+        dim: 768,
+      }))
+      f.emit('imageSearch.onPreparationProgress', {
+        taskId: 'concurrent',
+        state: 'done',
+        phase: 'done',
+        percentage: 100,
+        scanComplete: true,
+        dinoEmbeddingComplete: true,
+        clipEmbeddingComplete: true,
+        vectorIndexComplete: true,
+      })
+    })
+    await card.getByText(/477,898/).waitFor()
     assert.deepEqual(errors, [])
     const report = {
       passed: true,
@@ -513,6 +539,7 @@ async function main() {
       browserImageFailureFeedback: true,
       searchDuringPreparation: true,
       preparationSurvivesSearch: true,
+      vectorCountRefreshedAfterPreparation: true,
       rendererErrors: [],
     }
     const evidence = path.join(root, 'artifacts/search-request-lifecycle')

@@ -2,13 +2,13 @@
 
 **本地优先的图片、视频检索与素材管理桌面软件。** 将参考图片拖入窗口，在已建立索引的素材库中寻找相似候选，再打开原文件或所在文件夹。
 
-**Windows x64 · v1.0.1-alpha.33 · Apache-2.0**
+**Windows x64 · Alpha 测试版 · Apache-2.0**
 
-[下载安装包](https://github.com/kaliwell/Siftory/releases/tag/v1.0.1-alpha.33) · [更新记录](docs/current/2026-11-14-alpha33-image-search-workflow.md) · [反馈问题](https://github.com/kaliwell/Siftory/issues) · [开发文档](docs/README.md)
+[下载安装包](https://github.com/kaliwell/Siftory/releases) · [更新记录](docs/current/2026-11-16-search-during-preparation.md) · [反馈问题](https://github.com/kaliwell/Siftory/issues) · [开发文档](docs/README.md)
 
 ## 界面预览
 
-以下截图来自 Alpha33 当前源码界面，使用独立演示配置。图库、图片、相似度分数与耗时均为示例，不代表真实检索质量或性能；不包含私人素材或路径。
+以下截图来自 Alpha33 的演示配置。图库、图片、相似度分数与耗时均为示例。
 
 **图片搜索：参考图片、语义搜索、缩略图结果与文件操作。**
 
@@ -31,11 +31,11 @@
 
 ## 下载与安装
 
-当前发布版本为 **[1.0.1-alpha.33 预发布](https://github.com/kaliwell/Siftory/releases/tag/v1.0.1-alpha.33)**。
+Windows 安装包与校验文件见 [GitHub Releases](https://github.com/kaliwell/Siftory/releases)。已验证的预发布安装包为 **[1.0.1-alpha.36](https://github.com/kaliwell/Siftory/releases/tag/v1.0.1-alpha.36)**。
 
-1. 下载 [Windows x64 Online 安装包](https://github.com/kaliwell/Siftory/releases/download/v1.0.1-alpha.33/Siftory-1.0.1-alpha.33-Windows-x64-Setup.exe)，或到 Release 页面查看更新说明与验证报告。
+1. 在 Release 的 Assets 中下载 Windows x64 Online 安装包，并查看更新说明与验证报告。
 2. 升级前正常退出旧版，并按 [Alpha 数据备份与恢复规则](BACKUP_SAFETY.md) 备份应用数据及原始素材，再运行安装向导。
-3. 如需核验下载文件，使用 Release 附带的 [SHA256SUMS.txt](https://github.com/kaliwell/Siftory/releases/download/v1.0.1-alpha.33/SHA256SUMS.txt)。
+3. 如需核验下载文件，使用同一 Release 附带的 `SHA256SUMS.txt`。
 
 **Online 包不捆绑 AI 模型。** 模型需自行下载、安装或在软件中配置；已有模型与数据是否可复用，以当前配置及文件校验结果为准。
 
@@ -51,21 +51,18 @@
 
 项目处于 Alpha 阶段，功能、界面、索引格式和兼容性仍可能调整。当前版本的本地安装包归档、运行资源和隔离启动检查已通过；完整覆盖安装、不同浏览器的原生跨窗口拖动及真实素材检索效果仍需测试。
 
-Alpha33 的 GitHub CI 原生索引检查通过；源码质量任务在旧界面测试等待已撤下的入口时失败。详情和验证附件见 [Release 说明](https://github.com/kaliwell/Siftory/releases/tag/v1.0.1-alpha.33)。首次搜索缓慢的诊断进展见 [Issue #1](https://github.com/kaliwell/Siftory/issues/1)，尚未确认原始约 19 秒等待的根因。
+各版本的验证范围和附件见 [发布记录](https://github.com/kaliwell/Siftory/releases)。首次搜索缓慢的诊断进展见 [Issue #1](https://github.com/kaliwell/Siftory/issues/1)。
 
 ## 开发运行
 
 需要 Windows x64、Git、Node.js **24.22.1**、npm **11.19.1**，以及编译原生模块所需的 Python 和 Visual Studio C++ 构建工具。
 
-以下命令检出与安装包对应的 Alpha33 标签，避免默认分支仍处于较早版本：
+从 GitHub 克隆后可直接运行源码。`npm run dev` 会在启动前检查原生扫描模块，并在需要时重编。
 
 ```powershell
-git clone --branch v1.0.1-alpha.33 https://github.com/kaliwell/Siftory.git
+git clone https://github.com/kaliwell/Siftory.git
 cd Siftory
-git switch -c dev/local-alpha33
 npm ci
-npm run build:native
-npm run build:native:electron
 npm run dev
 ```
 

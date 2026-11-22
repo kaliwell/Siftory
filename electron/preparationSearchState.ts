@@ -84,6 +84,10 @@ export function markPreparedSearchCommitted(): void {
   snapshotRequired = false
 }
 
+export function requirePreparedSearchSnapshot(): void {
+  snapshotRequired = true
+}
+
 export async function invalidatePreparedInputs(
   remove: () => number,
   flush: () => Promise<unknown>,

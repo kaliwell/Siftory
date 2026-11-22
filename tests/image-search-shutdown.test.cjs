@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const ts = require('typescript')
 
 const repo = path.resolve(__dirname, '..')
 
@@ -123,10 +124,28 @@ test('no worker or child process loads the fast_scanner addon directly', () => {
   assert.ok(workers.length > 0)
   for (const name of workers) {
     const content = fs.readFileSync(path.join(electronDir, name), 'utf8')
-    assert.ok(
-      !/fast_scanner|fast_scanner\.node/.test(content),
-      `${name} must not load the fast_scanner addon without a shutdown handshake`,
+    const scanner = ts.createScanner(
+      ts.ScriptTarget.Latest,
+      true,
+      ts.LanguageVariant.Standard,
+      content,
     )
+    for (
+      let token = scanner.scan();
+      token !== ts.SyntaxKind.EndOfFileToken;
+      token = scanner.scan()
+    ) {
+      if (
+        token !== ts.SyntaxKind.StringLiteral &&
+        token !== ts.SyntaxKind.NoSubstitutionTemplateLiteral
+      )
+        continue
+      assert.doesNotMatch(
+        scanner.getTokenValue(),
+        /fast_scanner/,
+        `${name} must not load the fast_scanner addon without a shutdown handshake`,
+      )
+    }
   }
   const service = source('electron/imageSearchService.ts')
   assert.match(service, /fast_scanner\.node/)

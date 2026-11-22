@@ -183,7 +183,7 @@ test('CI workflows separate fixture PR checks from controlled release resources'
     'utf8',
   )
   assert.match(ci, /windows-latest/)
-  assert.match(ci, /npm run ci:verify/)
+  assert.match(ci, /npm run verify:ci/)
   assert.doesNotMatch(ci, /resources:fetch/)
   assert.match(controlled, /workflow_dispatch/)
   assert.match(controlled, /self-hosted/)

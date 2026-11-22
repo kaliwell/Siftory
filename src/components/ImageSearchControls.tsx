@@ -27,6 +27,7 @@ interface ImageSearchControlsProps {
   workflowPaused: boolean
   preparationControlPending: boolean
   isScanning: boolean
+  buildDisabled: boolean
   searching: boolean
   scanPaths: string[]
   manualPath: string
@@ -66,7 +67,8 @@ interface ImageSearchControlsProps {
   onManualAdd: () => void
   onClearPaths: () => void
   onRemovePath: (path: string) => void
-  onReconnectPath: (oldRoot: string, newRoot: string) => Promise<boolean>
+  onReconnectPath: (oldRoot: string, newRoot: string) => Promise<string | null>
+  onPrepareSharedPath: (root: string) => void
   onQueryImage: () => void
   onPasteClipboardImage: () => void
   onRefreshSearch: () => void
@@ -84,6 +86,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   workflowPaused,
   preparationControlPending,
   isScanning,
+  buildDisabled,
   searching,
   scanPaths,
   manualPath,
@@ -124,6 +127,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   onClearPaths,
   onRemovePath,
   onReconnectPath,
+  onPrepareSharedPath,
   onQueryImage,
   onPasteClipboardImage,
   onRefreshSearch,
@@ -138,12 +142,14 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   const [replacement, setReplacement] = useState<{ oldRoot: string; newRoot: string }>()
   const [reconnecting, setReconnecting] = useState(false)
   const taskBusy = isScanning || workflowRunning || workflowPaused || reconnecting
-  const submitReplacement = async () => {
+  const submitReplacement = async (prepare = false) => {
     if (!replacement?.newRoot.trim() || taskBusy || searching) return
     setReconnecting(true)
     try {
-      if (await onReconnectPath(replacement.oldRoot, replacement.newRoot.trim()))
-        setReplacement(undefined)
+      const root = await onReconnectPath(replacement.oldRoot, replacement.newRoot.trim())
+      if (!root) return
+      setReplacement(undefined)
+      if (prepare) onPrepareSharedPath(root)
     } finally {
       setReconnecting(false)
     }
@@ -174,7 +180,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               data-testid="search-prepare-library"
               data-onboarding-action="image-prepare-library"
               onClick={onPrepareLibrary}
-              disabled={taskBusy || scanPaths.length === 0}
+              disabled={taskBusy || buildDisabled || scanPaths.length === 0}
               style={{ fontSize: 13, padding: '3px 12px' }}
               title={t(
                 'Scan images, build missing DINO and CLIP embeddings, then build the vector index',
@@ -363,6 +369,13 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               <p>{t('Keep the old index and prepare the new address after switching.')}</p>
               <button type="submit" disabled={taskBusy || searching || !replacement.newRoot.trim()}>
                 {t('Change shared path')}
+              </button>
+              <button
+                type="button"
+                disabled={taskBusy || searching || buildDisabled || !replacement.newRoot.trim()}
+                onClick={() => void submitReplacement(true)}
+              >
+                {t('Change path and prepare this folder')}
               </button>
               <button
                 type="button"

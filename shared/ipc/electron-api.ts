@@ -67,21 +67,7 @@ import type {
   AssetTag,
 } from './asset-library'
 import type { AssetFeedbackModelStatus } from './asset-feedback'
-import type {
-  DiscoveryAddSourceRequest,
-  DiscoveryAddSourceResult,
-  DiscoveryCatalogQueryRequest,
-  DiscoveryCatalogQueryResponse,
-  DiscoveryCatalogStats,
-  DiscoveryRemoteDownloadGrant,
-  DiscoveryRemoteVideoPrepareResult,
-  DiscoveryRemotePreviewResult,
-  DiscoveryRepairSourceRootResult,
-  DiscoveryProbeResult,
-  DiscoveryScanStartResult,
-  DiscoveryScanStatus,
-  DiscoverySourceListItem,
-} from './discovery-catalog'
+import type { DiscoveryCatalogApi } from './discovery-catalog'
 import type {
   AssetFileActionResult,
   AssetDerivedRebuildPreviewResult,
@@ -316,31 +302,7 @@ export interface ElectronAPI {
   fmUnwatchDir: (dirPath: string) => Promise<void>
   onDirChanged: (cb: (dirPath: string) => void) => () => void
   fmAbortOperation: () => Promise<void>
-  discoveryCatalog: {
-    listSources: () => Promise<DiscoverySourceListItem[]>
-    addSource: (request: DiscoveryAddSourceRequest) => Promise<DiscoveryAddSourceResult>
-    removeSource: (sourceId: string) => Promise<{ ok: boolean; error?: string }>
-    repairSourceRoot: (
-      sourceId: string,
-      newRoot: string,
-    ) => Promise<DiscoveryRepairSourceRootResult>
-    probeSource: (sourceId: string) => Promise<DiscoveryProbeResult>
-    startScan: (sourceId: string) => Promise<DiscoveryScanStartResult>
-    cancelScan: (sourceId: string) => Promise<{ ok: boolean; error?: string }>
-    getScanStatus: (sourceId?: string) => Promise<DiscoveryScanStatus[]>
-    onScanStatusChanged: (cb: (status: DiscoveryScanStatus) => void) => () => void
-    query: (request: DiscoveryCatalogQueryRequest) => Promise<DiscoveryCatalogQueryResponse>
-    getStats: () => Promise<DiscoveryCatalogStats>
-    createRemoteDownloadGrant: (fileEntryId: string) => Promise<DiscoveryRemoteDownloadGrant>
-    prepareRemoteVideo: (
-      actionToken: string,
-      timestampMs?: number,
-    ) => Promise<DiscoveryRemoteVideoPrepareResult>
-    getRemotePreview: (
-      fileEntryId: string,
-      maxDim?: number,
-    ) => Promise<DiscoveryRemotePreviewResult>
-  }
+  discoveryCatalog: DiscoveryCatalogApi
   assetIdentity: {
     resolve: (filePath: string) => Promise<AssetIdentityResolveResult>
     getShadowReport: () => Promise<AssetShadowReport>

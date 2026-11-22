@@ -43,6 +43,17 @@ function collectInterfaceApiPaths() {
       if (ts.isTypeLiteralNode(member.type)) {
         collectTypeLiteral(nextPrefix, member.type.members)
       } else if (
+        ts.isTypeReferenceNode(member.type) &&
+        member.type.typeName.getText(source) === 'DiscoveryCatalogApi'
+      ) {
+        const domain = readSource('shared/ipc/discovery-catalog.ts')
+        const declaration = domain.statements.find(
+          (statement) =>
+            ts.isInterfaceDeclaration(statement) && statement.name.text === 'DiscoveryCatalogApi',
+        )
+        assert.ok(declaration, 'DiscoveryCatalogApi contract must exist')
+        collectTypeLiteral(nextPrefix, declaration.members)
+      } else if (
         ts.isIntersectionTypeNode(member.type) &&
         member.type.types.some(
           (type) => ts.isImportTypeNode(type) && type.qualifier?.getText() === 'MediaSearchApi',

@@ -109,7 +109,7 @@ test('image search controls are grouped into four readable workflow sections', (
   assert.match(panel, /refreshManagedModels\(\)/)
   assert.match(panel, /isManagedSearchModelReady\(latestModels\?\.clip_vit_base_patch32\)/)
   assert.match(controls, /semanticModelReady: boolean/)
-  assert.match(controls, /disabled=\{searching \|\| workflowRunning \|\| !semanticModelReady\}/)
+  assert.match(controls, /disabled=\{searching \|\| !semanticModelReady\}/)
   const maintenance = source('src/components/AppStoragePanel.tsx')
   const imageSourcesStart = maintenance.indexOf('id="maintenance-sources-section"')
   const imageSourcesEnd = maintenance.indexOf('</CollapsibleSearchSection>', imageSourcesStart)

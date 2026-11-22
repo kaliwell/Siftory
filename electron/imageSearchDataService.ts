@@ -334,6 +334,7 @@ export function createImageSearchDataService(context: ImageSearchDataServiceCont
   async function snapshotImageSearchData(
     isCancelled?: () => boolean,
     mapProjects = true,
+    selection?: { matches: (record: ImageSearchDataSnapshotRecord) => boolean; limit: number },
   ): Promise<{
     ok: boolean
     records?: ImageSearchDataSnapshotRecord[]
@@ -351,9 +352,8 @@ export function createImageSearchDataService(context: ImageSearchDataServiceCont
       }
       const response = addon.snapshotIndexRecords()
       if (!response.ok || !response.records) return response
-      const records = mapProjects
-        ? mapProjectSearchIndexRecords(response.records)
-        : response.records
+      let records = mapProjects ? mapProjectSearchIndexRecords(response.records) : response.records
+      if (selection) records = records.filter(selection.matches).slice(0, selection.limit)
       return { ...response, records, recordCount: records.length }
     }
     let cursor: string | undefined
@@ -370,7 +370,12 @@ export function createImageSearchDataService(context: ImageSearchDataServiceCont
         if (!page.ok || !page.records || page.nextOffset !== offset + page.records.length) {
           throw new Error(page.error || 'Invalid Native index export page')
         }
-        records.push(...(mapProjects ? mapProjectSearchIndexRecords(page.records) : page.records))
+        const pageRecords = mapProjects ? mapProjectSearchIndexRecords(page.records) : page.records
+        records.push(...(selection ? pageRecords.filter(selection.matches) : pageRecords))
+        if (selection && records.length >= selection.limit) {
+          records.length = selection.limit
+          return { ok: true, records, recordCount: records.length, scanned: snapshot.scanned }
+        }
         offset = page.nextOffset
         if (!page.hasMore) break
         if (!page.records.length) throw new Error('Native index export made no progress')

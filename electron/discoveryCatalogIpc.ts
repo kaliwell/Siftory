@@ -1,4 +1,5 @@
 import { imageSearchEditBusyError } from './imageSearchIpc'
+import { getIndexedSharedPathSamples } from './imageSearchService'
 import { tryAcquireVectorExclusiveMaintenance } from './vectorMaintenanceService'
 // ── Discovery catalog IPC (Phase 1, design 12.1) ─────────
 // Thin handlers: sender authorization, payload validation and capability
@@ -123,7 +124,11 @@ export function registerDiscoveryCatalogIpc(
       const release = tryAcquireVectorExclusiveMaintenance()
       if (!release) return { ok: false, error: 'Vector maintenance is running' }
       try {
-        return await service.repairMountedSourceRoot(normalizeSourceId(rawId), rawRoot)
+        return await service.repairMountedSourceRoot(
+          normalizeSourceId(rawId),
+          rawRoot,
+          getIndexedSharedPathSamples,
+        )
       } finally {
         release()
       }

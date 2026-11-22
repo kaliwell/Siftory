@@ -13,6 +13,7 @@ import { SourceAdapterError } from './sourceAdapterErrors'
 const DEFAULT_BATCH_SIZE = 256
 const DEFAULT_STAT_CONCURRENCY = 4
 const DEFAULT_OPERATION_TIMEOUT_MS = 15_000
+const PROBE_TIMEOUT_MS = 5_000
 const MAX_DISCOVERED_ENTRIES = 2_000_000
 
 interface NetworkDirent {
@@ -147,7 +148,7 @@ export class MountedNetworkSourceAdapter implements SourceAdapter {
     try {
       const stat = await waitForMountedNetworkOperation(
         () => this.io.stat(source.rootLocator),
-        this.operationTimeoutMs,
+        Math.min(this.operationTimeoutMs, PROBE_TIMEOUT_MS),
         controller.signal,
         'probe',
       )

@@ -157,7 +157,9 @@ test('post-audit automation wires full tests, coverage, checked builds, and UI s
   assert.match(packageJson.scripts['todo:post-audit-auto'], /docs:check/)
   assert.match(packageJson.scripts['build:renderer:checked'], /clean-build-outputs/)
   assert.match(packageJson.scripts['build:renderer:checked'], /check:post-audit-build/)
-  assert.match(packageJson.scripts.verify, /build:renderer:checked/)
+  assert.match(packageJson.scripts.verify, /npm test/)
+  assert.match(packageJson.scripts.test, /npm run test:compiled-worker/)
+  assert.match(packageJson.scripts['test:compiled-worker'], /npm run build:renderer:checked/)
   assert.match(
     fs.readFileSync(path.join(repoRoot, 'scripts', 'build.cjs'), 'utf8'),
     /build:renderer:checked/,

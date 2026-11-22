@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { createHash } = require('node:crypto')
 const { spawnSync } = require('child_process')
 
 const projectRoot = path.resolve(__dirname, '..')
@@ -13,6 +14,40 @@ const buildReleaseDir = path.join(nativeDir, 'build', 'Release')
 const buildArtifact = path.join(buildReleaseDir, 'fast_scanner.node')
 const nodeReleaseDir = path.join(nativeDir, 'build-node', 'Release')
 const electronReleaseDir = path.join(nativeDir, 'build-electron', 'Release')
+const nodeArtifact = path.join(nodeReleaseDir, 'fast_scanner.node')
+const nodeBuildStamp = path.join(nodeReleaseDir, 'provenance.json')
+
+function fileHash(file) {
+  return createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+}
+
+function nodeBuildInputs() {
+  const sources = fs
+    .readdirSync(nativeDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.(cc|h|gyp)$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort()
+  return JSON.stringify({
+    node: process.version,
+    platform: process.platform,
+    arch: process.arch,
+    buildScript: fileHash(__filename),
+    files: sources.map((name) => [name, fileHash(path.join(nativeDir, name))]),
+  })
+}
+
+function nodeBuildIsCurrent(inputs) {
+  try {
+    const stamp = JSON.parse(fs.readFileSync(nodeBuildStamp, 'utf8'))
+    return (
+      stamp.inputs === inputs &&
+      stamp.binaryHash === fileHash(nodeArtifact) &&
+      stamp.binaryHash === fileHash(buildArtifact)
+    )
+  } catch {
+    return false
+  }
+}
 
 function run(args) {
   const result = spawnSync(process.execPath, [nodeGyp, ...args], {
@@ -42,7 +77,6 @@ function copyArtifact(targetDir) {
 }
 
 function restoreNodeArtifact() {
-  const nodeArtifact = path.join(nodeReleaseDir, 'fast_scanner.node')
   if (fs.existsSync(nodeArtifact)) {
     fs.mkdirSync(buildReleaseDir, { recursive: true })
     fs.copyFileSync(nodeArtifact, buildArtifact)
@@ -50,8 +84,17 @@ function restoreNodeArtifact() {
 }
 
 if (mode === 'node') {
-  run(['rebuild'])
-  copyArtifact(nodeReleaseDir)
+  const inputs = nodeBuildInputs()
+  if (process.argv.includes('--if-stale') && nodeBuildIsCurrent(inputs)) {
+    console.log('[native] Development scanner matches the current source.')
+  } else {
+    run(['rebuild'])
+    if (nodeBuildInputs() !== inputs) {
+      throw new Error('Native sources changed during the build. Run the build again.')
+    }
+    copyArtifact(nodeReleaseDir)
+    fs.writeFileSync(nodeBuildStamp, JSON.stringify({ inputs, binaryHash: fileHash(nodeArtifact) }))
+  }
 } else if (mode === 'electron') {
   run([
     'rebuild',

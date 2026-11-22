@@ -328,7 +328,7 @@ test('warm image preparation performs no streaming or duplicate inference when s
   assert.equal(harness.calls.indexes, 1)
 })
 
-test('image preparation refuses ready when the committed active-set revision changes', async (t) => {
+test('image preparation rechecks once when the committed active set changes', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-revision-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   let revisionRead = 0
@@ -341,10 +341,75 @@ test('image preparation refuses ready when the committed active-set revision cha
   setImmediate(() => harness.finishScan(4))
   const pipeline = createImagePreparationPipeline(harness.dependencies)
 
+  const progress = []
+  const result = await pipeline({
+    paths: [root],
+    backend: 'cpu',
+    maxConcurrentEmbeddings: 1,
+    onProgress: (status) => progress.push(status),
+  })
+  assert.equal(result.activeSetRevision, 'revision-b')
+  assert.equal(harness.calls.indexes, 1)
+  assert.equal(progress.filter((entry) => /Rechecking files/.test(entry.message)).length, 1)
+})
+
+test('image preparation waits for the final scan save before reading the active set', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-save-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  let settleSave
+  const finalSave = new Promise((resolve) => {
+    settleSave = resolve
+  })
+  let markWaiting
+  const waitingForSave = new Promise((resolve) => {
+    markWaiting = resolve
+  })
+  let waits = 0
+  let reads = 0
+  const harness = createPipelineHarness(root, {
+    feed: [{ paths: [], generation: 9, pending: 0, dropped: 0 }],
+    dependencies: {
+      waitScanPersistence: async () => {
+        if (++waits === 1) return
+        markWaiting()
+        await finalSave
+      },
+      getCatalogRevision: () => {
+        reads++
+        return 'saved'
+      },
+    },
+  })
+  setImmediate(() => harness.finishScan(4))
+  const preparation = createImagePreparationPipeline(harness.dependencies)({
+    paths: [root],
+    backend: 'cpu',
+    maxConcurrentEmbeddings: 1,
+  })
+  await waitingForSave
+  assert.equal(reads, 0)
+  settleSave()
+  assert.equal((await preparation).activeSetRevision, 'saved')
+})
+
+test('image preparation only retries a continually changing active set once', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'image-preparation-changing-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  let revision = 0
+  const harness = createPipelineHarness(root, {
+    feed: [{ paths: [], generation: 9, pending: 0, dropped: 0 }],
+    dependencies: { getCatalogRevision: () => String(++revision) },
+  })
+  setImmediate(() => harness.finishScan(4))
   await assert.rejects(
-    pipeline({ paths: [root], backend: 'cpu', maxConcurrentEmbeddings: 1 }),
+    createImagePreparationPipeline(harness.dependencies)({
+      paths: [root],
+      backend: 'cpu',
+      maxConcurrentEmbeddings: 1,
+    }),
     /active set changed during preparation/,
   )
+  assert.equal(revision, 4)
   assert.equal(harness.calls.indexes, 0)
 })
 

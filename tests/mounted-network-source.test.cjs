@@ -416,6 +416,56 @@ test('mounted-network root repair rejects a different share before changing cata
   }
 })
 
+test('mounted-network repair requires evidence and accepts matching legacy image index samples', async () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'mounted-legacy-repair-'))
+  const oldRoot = path.join(temp, 'old-share')
+  const newRoot = path.join(temp, 'new-share')
+  const firstFile = path.join(newRoot, 'first.png')
+  const secondFile = path.join(newRoot, 'second.png')
+  fs.mkdirSync(newRoot)
+  fs.writeFileSync(firstFile, 'first saved image')
+  const first = fs.statSync(firstFile)
+  const samples = [
+    { relativePath: 'first.png', sizeBytes: first.size, modifiedAt: first.mtimeMs },
+    { relativePath: 'second.png', sizeBytes: 17, modifiedAt: first.mtimeMs },
+  ]
+  const service = new SourceCatalogService({
+    databasePath: path.join(temp, 'catalog.sqlite'),
+    incrementalWatch: false,
+  })
+  try {
+    const added = service.addSource({
+      type: 'mounted-network',
+      displayName: 'Legacy shared images',
+      rootLocator: oldRoot,
+    })
+    assert.equal(added.ok, true, added.error)
+    const id = added.source.id
+    const unverified = await service.repairMountedSourceRoot(id, newRoot)
+    assert.equal(unverified.ok, false)
+    assert.match(unverified.error, /no indexed files/i)
+    const getSamples = async (root, signal) => {
+      assert.equal(root, oldRoot)
+      assert.equal(signal.aborted, false)
+      return samples
+    }
+    const partial = await service.repairMountedSourceRoot(id, newRoot, getSamples)
+    assert.equal(partial.ok, false)
+    assert.match(partial.error, /does not match/i)
+    assert.equal(service.listSources()[0].rootLocator, oldRoot)
+    fs.writeFileSync(secondFile, 'second saved file')
+    samples[1].sizeBytes = fs.statSync(secondFile).size
+    samples[1].modifiedAt = fs.statSync(secondFile).mtimeMs
+    const moved = await service.repairMountedSourceRoot(id, newRoot, getSamples)
+    assert.equal(moved.ok, true, moved.error)
+    assert.equal(moved.source.id, id)
+    assert.equal(moved.source.rootLocator, newRoot)
+  } finally {
+    service.close()
+    fs.rmSync(temp, { recursive: true, force: true })
+  }
+})
+
 test('Sources UI repairs mounted-network roots through folder selection and source id', () => {
   const ui = fs.readFileSync('src/components/DiscoverySourcesSection.tsx', 'utf8')
   assert.match(ui, /source\.canRepairRoot/)

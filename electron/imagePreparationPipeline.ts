@@ -1,7 +1,7 @@
 import { normalizeScanPaths } from './imageSearchGuards'
 import { isMountedUncPath, resolveMountedScanRoots } from './mountedSourceRouting'
 import { collectPreparedInputPaths, invalidatePreparedVectorPaths } from './preparationVectorSearch'
-import { beginSearchablePreparation } from './preparationSearchState'
+import { beginSearchablePreparation, requirePreparedSearchSnapshot } from './preparationSearchState'
 import { scanErrorRecorder } from './scanErrorLog'
 import { createProgressCoalescer } from './progressCoalescer'
 import { app } from 'electron'
@@ -238,12 +238,17 @@ function embeddingPercent(progress: EmbeddingProgress): number {
   )
 }
 
+class ImagePreparationRevisionChangedError extends Error {}
+
 export function createImagePreparationPipeline(
   dependencyOverrides: Partial<ImagePreparationPipelineDependencies> = {},
 ): (options: ImagePreparationPipelineOptions) => Promise<ImagePreparationPipelineResult> {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...dependencyOverrides }
 
-  return async (options) => {
+  const runAttempt = async (
+    options: ImagePreparationPipelineOptions,
+    rechecking = false,
+  ): Promise<ImagePreparationPipelineResult> => {
     const startedAt = performance.now()
     const roots = [
       ...new Map(options.paths.map((item) => [pathKey(item), path.resolve(item)])).values(),
@@ -572,7 +577,13 @@ export function createImagePreparationPipeline(
     options.registerCancellation?.(cancelOwnedWork)
 
     const feedConfigured = dependencies.configureCommitFeed(true, 4096).ok
-    report('scanning', 'Checking existing searchable materials...', 0)
+    report(
+      'scanning',
+      rechecking
+        ? 'Image sources changed. Rechecking files and reusing completed embeddings...'
+        : 'Checking existing searchable materials...',
+      0,
+    )
     let existingInputs: ReadonlySet<string> | undefined
     try {
       existingInputs = await dependencies.getExistingInputPaths?.(cancelled)
@@ -670,6 +681,7 @@ export function createImagePreparationPipeline(
       }
 
       await scanPromise
+      await dependencies.waitScanPersistence()
       throwIfCancelled()
       const activeSetRevision = dependencies.getCatalogRevision()
       if (!dinoModelReady) {
@@ -708,7 +720,9 @@ export function createImagePreparationPipeline(
 
       throwIfCancelled()
       if (dependencies.getCatalogRevision() !== activeSetRevision) {
-        throw new Error('Image active set changed during preparation; run preparation again')
+        throw new ImagePreparationRevisionChangedError(
+          'Image active set changed during preparation; run preparation again',
+        )
       }
       const vectorIndexStartedAt = performance.now()
       report('indexing', 'Committing the searchable vector index...', 90)
@@ -716,7 +730,10 @@ export function createImagePreparationPipeline(
       throwIfCancelled()
       if (!built.ok) throw new Error(built.error || 'Vector index build failed')
       if (dependencies.getCatalogRevision() !== activeSetRevision) {
-        throw new Error('Image active set changed before the ready commit')
+        requirePreparedSearchSnapshot()
+        throw new ImagePreparationRevisionChangedError(
+          'Image active set changed before the ready commit',
+        )
       }
       vectorIndexComplete = true
       report(
@@ -751,6 +768,16 @@ export function createImagePreparationPipeline(
       dependencies.configureCommitFeed(false, 4096)
       options.registerCancellation?.(null)
       pendingStreamInputs.dispose()
+    }
+  }
+
+  return async (options) => {
+    try {
+      return await runAttempt(options)
+    } catch (error) {
+      if (!(error instanceof ImagePreparationRevisionChangedError)) throw error
+      if (options.isCancelled?.()) throw cancellationError()
+      return runAttempt(options, true)
     }
   }
 }

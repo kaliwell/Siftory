@@ -19,10 +19,12 @@ function versionAtLeast(actual, minimum) {
 }
 
 test('CI audits include development-classified shipped runtime and build dependencies', () => {
-  for (const script of ['ci:verify', 'ci:verify:source']) {
-    assert.match(packageJson.scripts[script], /npm audit --audit-level=high/)
-    assert.doesNotMatch(packageJson.scripts[script], /audit --omit=dev/)
-  }
+  assert.match(packageJson.scripts['ci:verify'], /npm audit --audit-level=high/)
+  assert.doesNotMatch(packageJson.scripts['ci:verify'], /audit --omit=dev/)
+  assert.equal(packageJson.scripts['ci:verify:source'], 'npm run verify:ci')
+  assert.equal(packageJson.scripts['verify:ci'], 'node scripts/verify.cjs ci')
+  const verifier = fs.readFileSync(path.join(root, 'scripts', 'verify.cjs'), 'utf8')
+  assert.match(verifier, /\[process\.env\.npm_execpath, 'audit', '--audit-level=high'\]/)
 })
 
 test('production and build dependency remediations stay locked above advisory floors', () => {

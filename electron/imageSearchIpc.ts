@@ -34,6 +34,7 @@ import {
   getImageSearchDataStats,
   getImageSearchDirNameStats,
   getImageSearchStatus,
+  getIndexedSharedPathSamples,
   hashImageFileAsync,
   isImageSearchIndexMutationRunning,
   isImageSearchScanPaused,
@@ -768,7 +769,11 @@ export function registerImageSearchIpc(
           source = { ...added.source, fileCount: 0, totalBytes: 0 }
           createdId = source.id
         }
-        const result = await service.repairMountedSourceRoot(source.id, newRoot)
+        const result = await service.repairMountedSourceRoot(
+          source.id,
+          newRoot,
+          getIndexedSharedPathSamples,
+        )
         if (result.ok && result.source) {
           createdId = undefined
           return { ok: true, root: result.source.rootLocator }

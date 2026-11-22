@@ -207,7 +207,7 @@ async function run() {
       await page.locator('[data-panel="clock"],[data-panel="remote-terminal"]').count(),
       0,
     )
-    for (const id of ['sources', 'library', 'settings', 'search']) {
+    for (const id of ['sources', 'maintenance', 'settings', 'search']) {
       await page.getByTestId('workspace-domain-' + id).click()
       await page.waitForFunction(
         () =>
@@ -434,9 +434,10 @@ async function run() {
       assert.equal(await page.getByTestId('workspace-tab-all-search').count(), 0)
       assert.equal(await page.getByTestId('workspace-domain-duplicate-finder').count(), 0)
       await page.getByTestId('search-mode-advanced').click()
+      // The shifted reference can fall outside Fast's fingerprint buckets.
       await page
         .locator('[data-panel="image-search"] select:has(option[value="fast"])')
-        .selectOption('fast')
+        .selectOption('standard')
       await page.getByTestId('image-search-query-image').click()
       try {
         await page.getByTestId('image-search-results').waitFor({ timeout: 15000 })

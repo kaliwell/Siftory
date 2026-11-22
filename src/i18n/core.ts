@@ -69,11 +69,32 @@ const zhCN: Record<string, string> = {
   'Preparing search data or searching. Results will appear when the search finishes.':
     '正在准备搜索数据或检索，完成后将显示搜索结果。',
   'Change shared path': '更换共享路径',
+  'Change path and prepare this folder': '更换并准备此目录',
   'New shared path': '新的共享路径',
   'Keep the old index and prepare the new address after switching.':
     '旧索引会保留。更换后，请对新地址准备素材库。',
-  'Shared path changed. Prepare Library to index the new address.':
-    '已更换共享路径，点击「准备素材库」索引新地址。',
+  'Shared path changed': '已更换共享路径',
+  'Replacement source root is not accessible':
+    '无法访问新的共享路径。请检查主机名或 IP 地址、共享名称和网络连接。',
+  'Access to the new shared path was denied':
+    '没有访问新共享的权限。请先在资源管理器中打开共享并登录。',
+  'The new shared path check timed out': '检查新共享路径超时。请确认虚拟机或共享服务器在线。',
+  'Could not verify the original shared path from its index':
+    '读取旧共享索引失败，请在索引加载完成后重试。',
+  'The original shared path has no indexed files to verify a move':
+    '旧共享没有可用于校验的索引记录。请先扫描原目录，或将新路径作为新的数据源添加。',
+  'Replacement root does not match sampled catalog file identities':
+    '新目录中的文件与旧共享的抽样记录不匹配。请确认选中了同一共享目录。',
+  'Replacement source overlaps another registered path': '新路径与已登记的目录或其上级目录重叠。',
+  'Invalid replacement source root': '新的共享路径无效。',
+  'The source changed while checking its connection': '检查连接期间数据源发生了变化，请重试。',
+  'The source changed while checking the replacement path':
+    '检查新路径期间数据源发生了变化，请重试。',
+  'Network source timed out during probe.': '连接检查超时，请检查共享服务器和网络。',
+  'Network source unavailable during probe.': '共享目录不可访问，请检查网络和共享地址。',
+  'Network source permission denied during probe.':
+    '共享目录访问被拒绝，请检查登录凭据和共享权限。',
+  'Network source root is not a directory.': '共享路径所指向的位置不是目录。',
   'Directories not fully scanned': '未完整扫描的目录',
   'Protected directories': '保留旧索引的目录',
   'Automatic cleanup is disabled for these directories': '这些目录的缺失记录仅可手动清理',
@@ -291,6 +312,7 @@ const zhCN: Record<string, string> = {
     '等待系统资源超过 1 分钟，图片特征构建尚未启动。资源可用后请重试。',
   'Scan images': '扫描图片',
   'Build DINO embeddings': '构建 DINO 图片特征',
+  'Build embeddings': '构建向量特征',
   'Build CLIP embeddings': '构建 CLIP 语义特征',
   'Build vector index': '构建向量索引',
   'Image scan and manifest commit complete': '图片扫描和索引清单保存完成',
@@ -904,6 +926,12 @@ const zhCN: Record<string, string> = {
   'Watching for changes': '正在监听变更',
   'Paused while source is offline': '来源离线，已暂停',
   'Image library preparation paused': '素材库准备已暂停',
+  'Image sources changed. Rechecking files and reusing completed embeddings...':
+    '检测到素材变化，正在复核文件并复用已生成的特征…',
+  'Image active set changed during preparation; run preparation again':
+    '素材集合在准备期间持续变化，请再次准备素材库',
+  'Image active set changed before the ready commit':
+    '素材集合在提交索引前再次变化，请再次准备素材库',
   'Resume or stop the paused image library preparation first': '请先继续或停止已暂停的素材库准备',
   'One or more saved image folders are unavailable': '有已保存的素材目录暂时无法访问',
   'Could not save the image library preparation checkpoint': '无法保存素材库准备进度',

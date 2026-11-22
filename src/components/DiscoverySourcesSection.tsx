@@ -450,7 +450,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
       try {
         const response = await window.electronAPI.discoveryCatalog.probeSource(sourceId)
         setProbes((previous) => ({ ...previous, [sourceId]: response }))
-        if (!response.ok) setError(response.error || t('The operation failed.'))
+        if (!response.ok) setError(t(response.error || 'The operation failed.'))
         await refresh()
       } catch (probeError) {
         setError(probeError instanceof Error ? probeError.message : t('The operation failed.'))
@@ -477,7 +477,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
       const newRoot = await window.electronAPI.browseFolder()
       if (!newRoot) return
       const response = await window.electronAPI.discoveryCatalog.repairSourceRoot(sourceId, newRoot)
-      if (!response.ok) setError(response.error || t('The operation failed.'))
+      if (!response.ok) setError(t(response.error || 'The operation failed.'))
       await refresh()
     },
     [refresh, t],
@@ -1065,7 +1065,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
                           data-testid={`source-health-detail-${source.id}`}
                           style={{ fontSize: 12, color: '#e0a260', wordBreak: 'break-word' }}
                         >
-                          {t('Connection detail: {detail}', { detail: source.detail })}
+                          {t('Connection detail: {detail}', { detail: t(source.detail) })}
                         </div>
                       )}
                       {session && (

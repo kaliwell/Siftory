@@ -268,6 +268,26 @@ export interface DiscoveryRemotePreviewResult {
   error?: string
 }
 
+export interface DiscoveryCatalogApi {
+  listSources: () => Promise<DiscoverySourceListItem[]>
+  addSource: (request: DiscoveryAddSourceRequest) => Promise<DiscoveryAddSourceResult>
+  removeSource: (sourceId: string) => Promise<{ ok: boolean; error?: string }>
+  repairSourceRoot: (sourceId: string, newRoot: string) => Promise<DiscoveryRepairSourceRootResult>
+  probeSource: (sourceId: string) => Promise<DiscoveryProbeResult>
+  startScan: (sourceId: string) => Promise<DiscoveryScanStartResult>
+  cancelScan: (sourceId: string) => Promise<{ ok: boolean; error?: string }>
+  getScanStatus: (sourceId?: string) => Promise<DiscoveryScanStatus[]>
+  onScanStatusChanged: (cb: (status: DiscoveryScanStatus) => void) => () => void
+  query: (request: DiscoveryCatalogQueryRequest) => Promise<DiscoveryCatalogQueryResponse>
+  getStats: () => Promise<DiscoveryCatalogStats>
+  createRemoteDownloadGrant: (fileEntryId: string) => Promise<DiscoveryRemoteDownloadGrant>
+  prepareRemoteVideo: (
+    actionToken: string,
+    timestampMs?: number,
+  ) => Promise<DiscoveryRemoteVideoPrepareResult>
+  getRemotePreview: (fileEntryId: string, maxDim?: number) => Promise<DiscoveryRemotePreviewResult>
+}
+
 export const DISCOVERY_CATALOG_IPC = {
   LIST_SOURCES: 'sources:list',
   ADD_SOURCE: 'sources:add',

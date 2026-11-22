@@ -303,6 +303,23 @@ const ImageSearchPanel: React.FC = () => {
   }, [fetchStatus])
 
   useEffect(() => {
+    const vector = window.electronAPI?.vector
+    if (setupWorkflow.state !== 'done' || !vector?.getVectorIndexStatus) return
+    let disposed = false
+    void vector
+      .getVectorIndexStatus()
+      .then((indexStatus) => {
+        if (!disposed) setVectorIndexStatus(indexStatus)
+      })
+      .catch(() => {
+        // The preparation result remains visible if this status read fails.
+      })
+    return () => {
+      disposed = true
+    }
+  }, [setupWorkflow.state])
+
+  useEffect(() => {
     return window.electronAPI.fileDrag.onError((message) => showToast(t(message), 'err'))
   }, [showToast, t])
 
@@ -904,19 +921,19 @@ const ImageSearchPanel: React.FC = () => {
   }, [scanPaths, sourcesOnly])
 
   const handleReconnectPath = useCallback(
-    async (oldRoot: string, newRoot: string): Promise<boolean> => {
+    async (oldRoot: string, newRoot: string): Promise<string | null> => {
       const result = await imageSearchBridge.reconnectScanPath(oldRoot, newRoot)
       if (!result.ok || !('root' in result) || !result.root) {
         showToast(t(result.error || 'The operation failed.'), 'err')
-        return false
+        return null
       }
       const store = useStore.getState()
       const root = result.root
       store.setImageSearchScanPaths(
         store.imageSearchScanPaths.map((item) => (item === oldRoot ? root : item)),
       )
-      showToast(t('Shared path changed. Prepare Library to index the new address.'), 'ok')
-      return true
+      showToast(t('Shared path changed'), 'ok')
+      return root
     },
     [showToast, t],
   )
@@ -1166,41 +1183,44 @@ const ImageSearchPanel: React.FC = () => {
     }
   }, [handlePreparationProgress, scanPaths])
 
-  const runSimpleSetupNow = useCallback(async () => {
-    if (setupTaskIdRef.current || scanPaths.length === 0) return
-    if (isScanning || buildDisabled) {
-      showToast(t('Wait for the current scan or embedding task to finish'), 'err')
-      return
-    }
+  const runSimpleSetupNow = useCallback(
+    async (selectedPaths = scanPaths) => {
+      if (setupTaskIdRef.current || selectedPaths.length === 0) return
+      if (isScanning || buildDisabled) {
+        showToast(t('Wait for the current scan or embedding task to finish'), 'err')
+        return
+      }
 
-    const paths = [...scanPaths]
-    const started = await imageSearchBridge.prepareLibrary({
-      paths,
-      backend: 'auto',
-      maxConcurrentEmbeddings: gpuJobs,
+      const paths = [...selectedPaths]
+      const started = await imageSearchBridge.prepareLibrary({
+        paths,
+        backend: 'auto',
+        maxConcurrentEmbeddings: gpuJobs,
+        batchSize,
+        buildThumbnails: false,
+      })
+      if (!started.ok || !started.taskId) {
+        showToast(started.error || t('Image scan failed to start'), 'err')
+        return
+      }
+      if (handledPreparationTaskRef.current === started.taskId) return
+      setupTaskIdRef.current = started.taskId
+      handledPreparationTaskRef.current = null
+      setupPathsRef.current = paths
+      const progress = await imageSearchBridge.getPreparationProgress()
+      if (progress.taskId === started.taskId) handlePreparationProgress(progress)
+    },
+    [
       batchSize,
-      buildThumbnails: false,
-    })
-    if (!started.ok || !started.taskId) {
-      showToast(started.error || t('Image scan failed to start'), 'err')
-      return
-    }
-    if (handledPreparationTaskRef.current === started.taskId) return
-    setupTaskIdRef.current = started.taskId
-    handledPreparationTaskRef.current = null
-    setupPathsRef.current = paths
-    const progress = await imageSearchBridge.getPreparationProgress()
-    if (progress.taskId === started.taskId) handlePreparationProgress(progress)
-  }, [
-    batchSize,
-    buildDisabled,
-    gpuJobs,
-    handlePreparationProgress,
-    isScanning,
-    scanPaths,
-    showToast,
-    t,
-  ])
+      buildDisabled,
+      gpuJobs,
+      handlePreparationProgress,
+      isScanning,
+      scanPaths,
+      showToast,
+      t,
+    ],
+  )
 
   useEffect(() => {
     simpleSetupStartRef.current = () => void runSimpleSetupNow()
@@ -1367,6 +1387,7 @@ const ImageSearchPanel: React.FC = () => {
               workflowPaused={setupWorkflow.state === 'paused'}
               preparationControlPending={preparationControlPending}
               isScanning={isScanning}
+              buildDisabled={buildDisabled}
               searching={searching}
               scanPaths={scanPaths}
               manualPath={manualPath}
@@ -1425,6 +1446,7 @@ const ImageSearchPanel: React.FC = () => {
               onClearPaths={handleClearPaths}
               onRemovePath={handleRemovePath}
               onReconnectPath={handleReconnectPath}
+              onPrepareSharedPath={(root) => void runSimpleSetupNow([root])}
               onQueryImage={handleQueryImage}
               onPasteClipboardImage={handlePasteClipboardImage}
               onRefreshSearch={handleRefreshSearch}
