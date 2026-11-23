@@ -268,7 +268,7 @@ async function main() {
     assert.equal(await imageCalls(), beforeDrops + 2)
     await page.getByTestId('workspace-domain-sources').click()
     const oldShare = String.raw`\\old-host\assets`
-    const newShare = String.raw`\\new-host\assets`
+    const newShare = '\\\\DESKTOP-ISJ91JF\\assets'
     await page.evaluate(
       ({ oldShare, newShare }) => {
         const f = window.__workspaceTest
@@ -293,6 +293,7 @@ async function main() {
     const lib = page.getByTestId('image-search-library-section')
     await lib.getByText(oldShare, { exact: true }).waitFor()
     await lib.getByRole('button', { name: '更换共享路径' }).click()
+    await lib.getByText(/例如/).filter({ hasText: '\\\\DESKTOP-ISJ91JF\\SiftoryTest' }).waitFor()
     await lib.getByLabel('新的共享路径').fill(newShare)
     await lib.getByRole('button', { name: '更换并准备此目录' }).click()
     await lib.getByText(newShare, { exact: true }).waitFor()

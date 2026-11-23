@@ -173,6 +173,7 @@ export type WindowVisibilityState = 'visible' | 'preparing-hide' | 'hidden' | 'p
 export type WindowVisibilityReason =
   | 'hotkey'
   | 'settings'
+  | 'tray'
   | 'second-instance'
   | 'ai-control'
   | 'recovery'
@@ -203,7 +204,11 @@ export interface GlobalHotkeyStatus {
   error?: string
   active: boolean
   entries: GlobalHotkeyEntry[]
+  quitShortcutEnabled: boolean
+  closeToTray: boolean
 }
+
+export type DesktopBehaviorSetting = 'quitShortcutEnabled' | 'closeToTray'
 
 export type AiControlScope = 'read' | 'window' | 'search' | 'control'
 

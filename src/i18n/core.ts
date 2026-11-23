@@ -71,6 +71,10 @@ const zhCN: Record<string, string> = {
   'Change shared path': '更换共享路径',
   'Change path and prepare this folder': '更换并准备此目录',
   'New shared path': '新的共享路径',
+  'If the IP address does not work, try the computer name, for example \\\\DESKTOP-ISJ91JF\\SiftoryTest.':
+    '如果 IP 地址无法连接，可以试用电脑名，例如 \\\\DESKTOP-ISJ91JF\\SiftoryTest。',
+  'On the Windows computer sharing the folder, find Device name under Settings → System → About. Test the path in File Explorer first.':
+    '在提供共享的 Windows 电脑上，打开「设置 → 系统 → 关于」查看设备名称。先在资源管理器中测试该路径。',
   'Keep the old index and prepare the new address after switching.':
     '旧索引会保留。更换后，请对新地址准备素材库。',
   'Shared path changed': '已更换共享路径',
@@ -2161,6 +2165,11 @@ const zhCN: Record<string, string> = {
   Subject: '主体',
   'Register Hotkeys': '注册快捷键',
   'Unregister Hotkeys': '注销快捷键',
+  'Enable Shift+Esc to quit': '启用 Shift+Esc 退出应用',
+  'Keep running in the background when the window is closed': '关闭窗口后在后台运行',
+  'Open Siftory from the system tray or use its menu to quit.':
+    '可从系统托盘重新打开寻藏，也可通过托盘菜单退出。',
+  'Could not save settings': '无法保存设置',
   'Toggle visibility': '切换显示/隐藏',
   Legacy: '兼容',
   'Shortcut conflicts': '快捷键冲突',

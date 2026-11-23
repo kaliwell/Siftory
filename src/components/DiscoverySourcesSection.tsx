@@ -2,7 +2,7 @@
 // Source registration and scan status over the unified Discovery Catalog.
 // Unified querying now lives in the first-class UnifiedSearchPanel.
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type {
   DiscoveryScanStatus,
   DiscoveryProbeResult,
@@ -134,6 +134,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
   enabled = true,
 }) => {
   const { t } = useTranslation()
+  const sharedPathHelpId = useId()
   const isVisible = useStore(
     (state) =>
       enabled &&
@@ -760,6 +761,7 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               value={rootPath}
               onChange={(event) => setRootPath(event.target.value)}
               placeholder={sourceType === 'sftp' ? t('Remote root') : t('Root path')}
+              aria-describedby={sourceType === 'mounted-network' ? sharedPathHelpId : undefined}
               style={{ flex: 1, fontSize: 13, padding: '2px 6px' }}
             />
             <button
@@ -773,6 +775,17 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
               {t('Add source')}
             </button>
           </div>
+          {sourceType === 'mounted-network' && (
+            <p id={sharedPathHelpId} className="shared-path-help">
+              {t(
+                'If the IP address does not work, try the computer name, for example \\\\DESKTOP-ISJ91JF\\SiftoryTest.',
+              )}
+              <br />
+              {t(
+                'On the Windows computer sharing the folder, find Device name under Settings → System → About. Test the path in File Explorer first.',
+              )}
+            </p>
+          )}
         </details>
         {error && <div style={{ fontSize: 13, color: '#e07070' }}>{error}</div>}
         {notice && <div style={{ fontSize: 13, color: '#62b47a' }}>{notice}</div>}

@@ -49,6 +49,7 @@ import {
   resumeGlobalWindowVisibility,
 } from './appCoreIpc'
 import { registerThumbnailIpc } from './thumbnailIpc'
+import { attachWorkspaceCloseBehavior } from './workspaceCloseBehavior'
 import {
   scheduleThumbCacheMaintenance,
   type ThumbCacheMaintenanceHandle,
@@ -794,6 +795,7 @@ function createWindow() {
 
   mainWindow.setIgnoreMouseEvents(uiSmokeMode, { forward: true })
   if (!uiSmokeMode) {
+    if (appCoreOptions) attachWorkspaceCloseBehavior(mainWindow, appCoreOptions, windowIconPath)
     mainWindow.setMenuBarVisibility(false)
     mainWindow.on('resize', () => {
       mainWindow?.webContents.send('work-area-changed', clientWorkArea())

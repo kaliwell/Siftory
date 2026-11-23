@@ -139,6 +139,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   const { t } = useTranslation()
   const [advancedPreparationOpen, setAdvancedPreparationOpen] = useState(false)
   const advancedPreparationId = useId()
+  const sharedPathHelpId = useId()
   const [replacement, setReplacement] = useState<{ oldRoot: string; newRoot: string }>()
   const [reconnecting, setReconnecting] = useState(false)
   const taskBusy = isScanning || workflowRunning || workflowPaused || reconnecting
@@ -359,6 +360,7 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 {t('New shared path')}
                 <input
                   value={replacement.newRoot}
+                  aria-describedby={sharedPathHelpId}
                   disabled={taskBusy}
                   onChange={(event) =>
                     setReplacement({ ...replacement, newRoot: event.target.value })
@@ -366,6 +368,15 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 />
               </label>
               <div title={replacement.oldRoot}>{replacement.oldRoot}</div>
+              <p id={sharedPathHelpId} className="shared-path-help">
+                {t(
+                  'If the IP address does not work, try the computer name, for example \\\\DESKTOP-ISJ91JF\\SiftoryTest.',
+                )}
+                <br />
+                {t(
+                  'On the Windows computer sharing the folder, find Device name under Settings → System → About. Test the path in File Explorer first.',
+                )}
+              </p>
               <p>{t('Keep the old index and prepare the new address after switching.')}</p>
               <button type="submit" disabled={taskBusy || searching || !replacement.newRoot.trim()}>
                 {t('Change shared path')}

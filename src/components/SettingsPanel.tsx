@@ -14,6 +14,7 @@ import type {
   AiControlConfirmation,
   AiControlScope,
   AiControlSettings,
+  DesktopBehaviorSetting,
   DisplayScope,
   GlobalHotkeyStatus,
   ProcessedImageDataPreview,
@@ -737,8 +738,14 @@ const SettingsPanel: React.FC = () => {
   const [hotkeyStatus, setHotkeyStatus] = useState<GlobalHotkeyStatus>({
     active: false,
     entries: [],
+    quitShortcutEnabled: false,
+    closeToTray: false,
   })
-  const hotkeyRegistered = hotkeyStatus.entries.some((entry) => entry.status === 'registered')
+  const [desktopBehaviorBusy, setDesktopBehaviorBusy] = useState(false)
+  const [desktopBehaviorError, setDesktopBehaviorError] = useState('')
+  const hotkeyRegistered = hotkeyStatus.entries.some(
+    (entry) => entry.id !== 'quit' && entry.status === 'registered',
+  )
   const hotkeyConflicts = hotkeyStatus.entries.filter((entry) => entry.status === 'conflicted')
   const [showReset, setShowReset] = useState(false)
   const [showClearData, setShowClearData] = useState(false)
@@ -912,11 +919,28 @@ const SettingsPanel: React.FC = () => {
     if (hotkeyRegistered) {
       await window.electronAPI.unregisterHotkey()
       setHotkeyStatus((current) => ({
+        ...current,
         active: false,
-        entries: current.entries.map((entry) => ({ ...entry, status: 'disabled' })),
+        entries: current.entries.map((entry) =>
+          entry.id === 'quit' ? entry : { ...entry, status: 'disabled' },
+        ),
       }))
     } else {
       setHotkeyStatus(await window.electronAPI.registerHotkey())
+    }
+  }
+
+  const updateDesktopBehavior = async (setting: DesktopBehaviorSetting, enabled: boolean) => {
+    setDesktopBehaviorBusy(true)
+    setDesktopBehaviorError('')
+    try {
+      const result = await window.electronAPI.setDesktopBehavior(setting, enabled)
+      setHotkeyStatus(result)
+      if (result.error) setDesktopBehaviorError(t(result.error))
+    } catch {
+      setDesktopBehaviorError(t('Could not save settings'))
+    } finally {
+      setDesktopBehaviorBusy(false)
     }
   }
 
@@ -1497,23 +1521,19 @@ const SettingsPanel: React.FC = () => {
             onToggle={() => toggleSection('system')}
           >
             <GlobalHotkeyEditor status={hotkeyStatus} onStatusChange={setHotkeyStatus} />
-            <div className="settings-shortcut-list">
-              {legacyLayout && (
-                <>
-                  {t('Ctrl+Shift+Alt+P —')} {t('Snap panels')}
-                  <br />
-                  Ctrl+Shift+Alt+S — {t('Show all panels')}
-                  <br />
-                  Shift+Alt+Q — {t('Arrange in a row')}
-                  <br />
-                  Shift+Alt+W — {t('Arrange in a grid')}
-                  <br />
-                  Shift+Alt+E — {t('Arrange in a column')}
-                  <br />
-                </>
-              )}
-              Shift+Escape — {t('Quit')}
-            </div>
+            {legacyLayout && (
+              <div className="settings-shortcut-list">
+                {t('Ctrl+Shift+Alt+P —')} {t('Snap panels')}
+                <br />
+                Ctrl+Shift+Alt+S — {t('Show all panels')}
+                <br />
+                Shift+Alt+Q — {t('Arrange in a row')}
+                <br />
+                Shift+Alt+W — {t('Arrange in a grid')}
+                <br />
+                Shift+Alt+E — {t('Arrange in a column')}
+              </div>
+            )}
             {hotkeyConflicts.length > 0 && (
               <div style={{ margin: '4px 0', color: 'var(--warning, #f0b45b)', fontSize: 12 }}>
                 {t('Shortcut conflicts')}:{' '}
@@ -1524,9 +1544,38 @@ const SettingsPanel: React.FC = () => {
               t(hotkeyRegistered ? 'Unregister Hotkeys' : 'Register Hotkeys'),
               handleHotkeyToggle,
             )}
+            <div className="settings-shortcut-list">
+              <label className="settings-desktop-checkbox">
+                <input
+                  type="checkbox"
+                  checked={hotkeyStatus.quitShortcutEnabled}
+                  disabled={desktopBehaviorBusy}
+                  onChange={(event) =>
+                    void updateDesktopBehavior('quitShortcutEnabled', event.currentTarget.checked)
+                  }
+                />
+                {t('Enable Shift+Esc to quit')}
+              </label>
+              <label className="settings-desktop-checkbox">
+                <input
+                  type="checkbox"
+                  checked={hotkeyStatus.closeToTray}
+                  disabled={desktopBehaviorBusy}
+                  aria-describedby="close-to-tray-help"
+                  onChange={(event) =>
+                    void updateDesktopBehavior('closeToTray', event.currentTarget.checked)
+                  }
+                />
+                {t('Keep running in the background when the window is closed')}
+              </label>
+              <div id="close-to-tray-help">
+                {t('Open Siftory from the system tray or use its menu to quit.')}
+              </div>
+              {desktopBehaviorError && <div role="alert">{desktopBehaviorError}</div>}
+            </div>
             <ThirdPartyLicensesButton />
             <EndUserTermsButton />
-            {btn(t('Quit'), () => window.close(), {
+            {btn(t('Quit'), () => void window.electronAPI.quitApp(), {
               background: 'rgba(255, 80, 80, 0.2)',
               marginTop: 4,
             })}

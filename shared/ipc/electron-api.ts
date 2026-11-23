@@ -157,6 +157,7 @@ import type {
   AiControlSettings,
   AiControlSettingsResult,
   GlobalHotkeyStatus,
+  DesktopBehaviorSetting,
   WindowVisibilityEvent,
 } from './app-core'
 import type {
@@ -215,6 +216,11 @@ export interface ElectronAPI {
   setHotkeyRecording: (active: boolean) => Promise<boolean>
   onHotkeyRecorded: (callback: (accelerator: string) => void) => () => void
   getHotkeyStatus: () => Promise<GlobalHotkeyStatus>
+  setDesktopBehavior: (
+    setting: DesktopBehaviorSetting,
+    enabled: boolean,
+  ) => Promise<GlobalHotkeyStatus>
+  quitApp: () => Promise<void>
   registerHotkey: (accelerator?: string) => Promise<GlobalHotkeyStatus>
   unregisterHotkey: () => Promise<void>
   loadSettings: () => Promise<AppSettingsData | null>

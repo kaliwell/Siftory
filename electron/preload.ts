@@ -66,6 +66,9 @@ const api: ElectronAPI = {
     return () => ipcRenderer.removeListener('hotkey-recorded', handler)
   },
   getHotkeyStatus: () => ipcRenderer.invoke('get-hotkey-status'),
+  setDesktopBehavior: (setting, enabled) =>
+    ipcRenderer.invoke('set-desktop-behavior', setting, enabled),
+  quitApp: () => ipcRenderer.invoke('quit-app'),
   registerHotkey: (accelerator?: string) => ipcRenderer.invoke('register-hotkey', accelerator),
   unregisterHotkey: () => ipcRenderer.invoke('unregister-hotkey'),
   loadSettings: () => ipcRenderer.invoke('load-settings'),

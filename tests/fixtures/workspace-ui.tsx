@@ -117,6 +117,7 @@ let persistedSettings: any = {
     firstSearchCompleted: false,
   },
 }
+const desktopBehavior = { quitShortcutEnabled: false, closeToTray: false }
 const handlers: Record<string, (...args: any[]) => any> = {
   'storageLocation.getStatus': () => ({
     backend: 'local',
@@ -153,7 +154,15 @@ const handlers: Record<string, (...args: any[]) => any> = {
   setWindowAlwaysOnTop: (value: boolean) => value,
   setHotkeyRecording: () => true,
   onHotkeyRecorded: () => () => {},
-  getHotkeyStatus: () => ({ active: false, entries: [] }),
+  getHotkeyStatus: () => ({
+    active: false,
+    entries: [],
+    ...desktopBehavior,
+  }),
+  setDesktopBehavior: (key: keyof typeof desktopBehavior, enabled: boolean) => {
+    desktopBehavior[key] = enabled
+    return { active: false, entries: [], ...desktopBehavior }
+  },
   getAiControlSettings: () => ({
     enabled: false,
     running: false,

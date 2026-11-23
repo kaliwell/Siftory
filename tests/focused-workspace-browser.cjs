@@ -76,6 +76,20 @@ async function run() {
     await page.waitForFunction(
       () => window.__workspaceTest.getSettings().displayScope?.mode === 'primary',
     )
+    await page.getByTestId('settings-nav-system').click()
+    const quitShortcut = page.getByRole('checkbox', { name: '启用 Shift+Esc 退出应用' })
+    const closeToTray = page.getByRole('checkbox', { name: '关闭窗口后在后台运行' })
+    for (const option of [quitShortcut, closeToTray]) {
+      assert.equal(await option.isChecked(), false)
+      await option.check()
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll('.settings-desktop-checkbox input')].every(
+          (input) => !input.disabled,
+        ),
+      )
+      assert.equal(await option.isChecked(), true)
+      await option.uncheck()
+    }
     await page.getByTestId('workspace-domain-search').click()
     const search = page.locator('.image-search-semantic-controls input')
     await search.fill('A')
@@ -159,6 +173,7 @@ async function run() {
           'canonical startup persistence',
           'legacy display scope migration',
           'single-display settings',
+          'desktop shortcut and tray preferences',
           'single foreground',
           'retired entries absent',
           'legacy route migration',

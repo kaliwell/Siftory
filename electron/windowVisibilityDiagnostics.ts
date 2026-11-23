@@ -37,7 +37,7 @@ const HOTKEY_IDS = [
   'quit',
 ] as const
 const STATES = ['visible', 'preparing-hide', 'hidden', 'preparing-show'] as const
-const REASONS = ['hotkey', 'settings', 'second-instance', 'ai-control', 'recovery'] as const
+const REASONS = ['hotkey', 'settings', 'tray', 'second-instance', 'ai-control', 'recovery'] as const
 
 interface DiagnosticDetails {
   hotkey?: GlobalHotkeyEntry['id']

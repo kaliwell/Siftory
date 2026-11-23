@@ -1,11 +1,4 @@
-export type WindowVisibilityState = 'visible' | 'preparing-hide' | 'hidden' | 'preparing-show'
-
-export type WindowVisibilityReason =
-  | 'hotkey'
-  | 'settings'
-  | 'second-instance'
-  | 'ai-control'
-  | 'recovery'
+import type { WindowVisibilityReason, WindowVisibilityState } from '../shared/ipc/app-core'
 
 export interface WindowVisibilitySnapshot {
   state: WindowVisibilityState

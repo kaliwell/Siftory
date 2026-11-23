@@ -1,6 +1,6 @@
 {
   "name": "siftory-desktop",
-  "version": "1.0.1-alpha.39",
+  "version": "1.0.1-alpha.41",
   "private": true,
   "license": "Apache-2.0",
   "author": "kaliwell",
@@ -366,6 +366,7 @@
       "output": "release"
     },
     "files": [
+      "build/icon.ico",
       "dist/**/*",
       "dist-electron/**/*",
       "!node_modules/**/build/**/obj/**/*",

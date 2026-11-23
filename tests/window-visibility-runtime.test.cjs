@@ -3,6 +3,7 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const Module = require('node:module')
+const { EventEmitter } = require('node:events')
 const test = require('node:test')
 const ts = require('typescript')
 const { loadTsModule } = require('./guard-utils.cjs')
@@ -12,7 +13,7 @@ function fixture(t, shortcutOverrides = {}) {
   const handlers = new Map()
   const calls = []
   const callbacks = new Map()
-  const window = {
+  const window = Object.assign(new EventEmitter(), {
     isDestroyed: () => false,
     isFocused: () => true,
     isVisible: () => true,
@@ -26,9 +27,32 @@ function fixture(t, shortcutOverrides = {}) {
       setBackgroundThrottling: () => {},
       send: (channel, data) => calls.push([channel, data]),
     },
-  }
+  })
+  const trays = []
+  const app = Object.assign(new EventEmitter(), {
+    getLocale: () => 'en',
+    quit: () => {
+      app.emit('before-quit')
+      calls.push(['quit'])
+    },
+  })
   const electron = {
-    app: { quit: () => calls.push(['quit']) },
+    app,
+    nativeImage: { createFromPath: () => ({ isEmpty: () => false }) },
+    Menu: { buildFromTemplate: (items) => items },
+    Tray: class extends EventEmitter {
+      constructor() {
+        super()
+        trays.push(this)
+      }
+      setToolTip() {}
+      setContextMenu(items) {
+        this.menu = items
+      }
+      destroy() {
+        this.destroyed = true
+      }
+    },
     globalShortcut: {
       isRegistered: (key) => callbacks.has(key),
       register: (key, callback) => {
@@ -39,27 +63,31 @@ function fixture(t, shortcutOverrides = {}) {
       ...shortcutOverrides,
     },
   }
-  const filename = path.resolve(__dirname, '../electron/appCoreIpc.ts')
-  const compiled = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-      esModuleInterop: true,
-    },
-  }).outputText
-  const mod = new Module(filename, module)
-  mod.filename = filename
-  mod.paths = Module._nodeModulePaths(path.dirname(filename))
-  mod.require = (id) => {
-    if (id === 'electron') return electron
-    if (id === '../shared/globalHotkey') return loadTsModule('shared/globalHotkey.ts')
-    if (id === './ipcAuthorization')
-      return { secureIpcMain: { handle: (key, fn) => handlers.set(key, fn) } }
-    if (id.startsWith('./')) return loadTsModule(`electron/${id.slice(2)}.ts`)
-    return require(id)
+  const loadRuntime = (name, overrides = {}) => {
+    const filename = path.resolve(__dirname, '../electron', name + '.ts')
+    const compiled = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        esModuleInterop: true,
+      },
+    }).outputText
+    const mod = new Module(filename, module)
+    mod.filename = filename
+    mod.paths = Module._nodeModulePaths(path.dirname(filename))
+    mod.require = (id) => {
+      if (Object.hasOwn(overrides, id)) return overrides[id]
+      if (id === 'electron') return electron
+      if (id === '../shared/globalHotkey') return loadTsModule('shared/globalHotkey.ts')
+      if (id === './ipcAuthorization')
+        return { secureIpcMain: { handle: (key, fn) => handlers.set(key, fn) } }
+      if (id.startsWith('./')) return loadTsModule(`electron/${id.slice(2)}.ts`)
+      return require(id)
+    }
+    mod._compile(compiled, filename)
+    return mod.exports
   }
-  mod._compile(compiled, filename)
-  const core = mod.exports
+  const core = loadRuntime('appCoreIpc')
   const options = {
     userDataPath: dir,
     getMainWindow: () => window,
@@ -78,7 +106,23 @@ function fixture(t, shortcutOverrides = {}) {
     await core.flushWindowVisibilityDiagnostics()
     return JSON.parse(fs.readFileSync(path.join(dir, 'diagnostics/window-visibility.json'), 'utf8'))
   }
-  return { core, options, calls, callbacks, invoke, snapshot, window }
+  const attachCloseBehavior = () =>
+    loadRuntime('workspaceCloseBehavior', {
+      './appCoreIpc': core,
+      './startupSecurity': { PRODUCT_DISPLAY_NAME: 'Siftory' },
+    }).attachWorkspaceCloseBehavior(window, options, 'icon.ico')
+  return {
+    core,
+    options,
+    calls,
+    callbacks,
+    invoke,
+    snapshot,
+    window,
+    trays,
+    app,
+    attachCloseBehavior,
+  }
 }
 
 test('custom visibility shortcut preserves the old binding on internal and external conflicts', (t) => {
@@ -117,8 +161,8 @@ test('failed persistence rolls back the candidate and startup restores a saved s
   assert.equal(callbacks.has('CommandOrControl+F11'), false)
 })
 
-test('startup rejects saved reserved keys without stealing the quit callback', (t) => {
-  const { core, options, callbacks, calls } = fixture(t)
+test('startup rejects saved reserved keys and leaves the quit shortcut disabled by default', (t) => {
+  const { core, options, callbacks } = fixture(t)
   fs.writeFileSync(
     path.join(options.userDataPath, 'global_hotkeys.json'),
     JSON.stringify({ visibility: 'Shift+Escape' }),
@@ -126,17 +170,87 @@ test('startup rejects saved reserved keys without stealing the quit callback', (
   const status = core.registerGlobalHotkeys(options)
   assert.ok(status.error)
   assert.equal(status.entries[0].accelerator, 'CommandOrControl+Shift+Alt+Q')
-  callbacks.get('Shift+Escape')()
-  assert.ok(calls.some(([event]) => event === 'quit'))
+  assert.equal(status.quitShortcutEnabled, false)
+  assert.equal(status.closeToTray, false)
+  assert.equal(callbacks.has('Shift+Escape'), false)
+})
+
+test('explicit desktop preferences survive restart and the quit shortcut can be disabled', (t) => {
+  const { core, options, callbacks, invoke } = fixture(t)
+  fs.writeFileSync(
+    path.join(options.userDataPath, 'global_hotkeys.json'),
+    JSON.stringify({ visibility: 'Ctrl+F10', quitShortcutEnabled: true, closeToTray: true }),
+  )
+  const status = core.registerGlobalHotkeys(options)
+  assert.equal(status.closeToTray, true)
+  assert.equal(status.quitShortcutEnabled, true)
+  assert.equal(callbacks.has('Shift+Escape'), true)
+  invoke('unregister-hotkey')
+  assert.equal(callbacks.has('Shift+Escape'), true)
   assert.equal(
-    calls.some(([event]) => event === 'opacity'),
+    invoke('set-desktop-behavior', 'quitShortcutEnabled', false).quitShortcutEnabled,
     false,
   )
+  assert.equal(callbacks.has('Shift+Escape'), false)
+  assert.deepEqual(
+    JSON.parse(fs.readFileSync(path.join(options.userDataPath, 'global_hotkeys.json'), 'utf8')),
+    { visibility: 'CommandOrControl+F10', quitShortcutEnabled: false, closeToTray: true },
+  )
+})
+
+test('closing the workspace exits by default even if additional windows are open', async (t) => {
+  const { attachCloseBehavior, window, calls, trays } = fixture(t)
+  attachCloseBehavior()
+  const event = { preventDefault: t.mock.fn() }
+  window.emit('close', event)
+  assert.equal(event.preventDefault.mock.callCount(), 1)
+  await new Promise(setImmediate)
+  assert.equal(trays.length, 0)
+  assert.ok(calls.some(([name]) => name === 'quit'))
+  const appClosing = { preventDefault: t.mock.fn() }
+  window.emit('close', appClosing)
+  assert.equal(appClosing.preventDefault.mock.callCount(), 0)
+})
+
+test('opt-in close hides the workspace, tray click restores it, and tray quit exits', (t) => {
+  const { attachCloseBehavior, options, window, calls, trays, invoke } = fixture(t)
+  options.standardWindow = true
+  let visible = true
+  window.isVisible = () => visible
+  window.isMinimized = () => false
+  window.hide = () => {
+    visible = false
+  }
+  window.show = () => {
+    visible = true
+    window.emit('show')
+  }
+  window.focus = () => {}
+  attachCloseBehavior()
+  assert.equal(invoke('set-desktop-behavior', 'closeToTray', true).closeToTray, true)
+  const event = { preventDefault: t.mock.fn() }
+  window.emit('close', event)
+  assert.equal(visible, false)
+  assert.equal(
+    calls.some(([name]) => name === 'quit'),
+    false,
+  )
+  trays[0].emit('click')
+  assert.equal(visible, true)
+  assert.equal(trays[0].destroyed, true)
+  window.emit('close', event)
+  trays[1].menu.find((entry) => entry.label === 'Quit').click()
+  assert.equal(trays[1].destroyed, true)
+  assert.ok(calls.some(([name]) => name === 'quit'))
 })
 
 test('recording suppresses native visibility and quit actions without releasing their registrations', (t) => {
   const { core, options, callbacks, calls, invoke, window } = fixture(t)
   core.registerGlobalHotkeys(options)
+  assert.equal(
+    invoke('set-desktop-behavior', 'quitShortcutEnabled', true).quitShortcutEnabled,
+    true,
+  )
   assert.equal(invoke('set-hotkey-recording', true), true)
   callbacks.get('CommandOrControl+Shift+Alt+Q')()
   callbacks.get('Shift+Escape')()
@@ -160,6 +274,7 @@ test('recording suppresses native visibility and quit actions without releasing 
 test('recording lease expires if renderer cleanup never arrives', (t) => {
   const { core, options, callbacks, calls, invoke } = fixture(t)
   core.registerGlobalHotkeys(options)
+  invoke('set-desktop-behavior', 'quitShortcutEnabled', true)
   invoke('set-hotkey-recording', true)
   const future = Date.now() + 31000
   t.mock.method(Date, 'now', () => future)

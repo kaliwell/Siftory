@@ -621,6 +621,11 @@
   width: 100% !important;
   min-width: 0;
 }
+.shared-path-help {
+  color: rgb(var(--color-text-muted));
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
 .workspace-maintenance-page .asset-collection-toolbar {
   display: grid !important;
   grid-template-columns: minmax(130px, 1fr) minmax(160px, 1.2fr) repeat(5, auto);

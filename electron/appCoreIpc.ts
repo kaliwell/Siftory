@@ -13,6 +13,7 @@ import { readJSON, writeJSON } from './settingsStore'
 import { WindowVisibilityMachine, type WindowVisibilitySnapshot } from './windowVisibilityState'
 import { WindowVisibilityDiagnostics } from './windowVisibilityDiagnostics'
 import type {
+  DesktopBehaviorSetting,
   DisplayScope,
   GlobalHotkeyEntry,
   GlobalHotkeyId,
@@ -91,6 +92,11 @@ export async function flushWindowVisibilityDiagnostics(): Promise<void> {
   await visibilityDiagnostics?.close()
 }
 
+const quitHotkey: GlobalHotkeyEntry = {
+  id: 'quit',
+  accelerator: 'Shift+Escape',
+  status: 'disabled',
+}
 const hotkeyEntries: GlobalHotkeyEntry[] = [
   { id: 'toggle-primary', accelerator: 'CommandOrControl+Shift+Alt+Q', status: 'disabled' },
   { id: 'snap-panels', accelerator: 'CommandOrControl+Shift+Alt+P', status: 'disabled' },
@@ -98,15 +104,20 @@ const hotkeyEntries: GlobalHotkeyEntry[] = [
   { id: 'arrange-row', accelerator: 'Shift+Alt+Q', status: 'disabled' },
   { id: 'arrange-grid', accelerator: 'Shift+Alt+W', status: 'disabled' },
   { id: 'arrange-column', accelerator: 'Shift+Alt+E', status: 'disabled' },
-  { id: 'quit', accelerator: 'Shift+Escape', status: 'disabled' },
+  quitHotkey,
 ]
 
 let hotkeyConfigurationError: string | undefined
+let desktopBehavior: Record<DesktopBehaviorSetting, boolean> = {
+  quitShortcutEnabled: false,
+  closeToTray: false,
+}
 function hotkeyStatus(): GlobalHotkeyStatus {
   const entries = hotkeyEntries.map((entry) => ({ ...entry }))
   return {
     active: entries.some((entry) => entry.id === 'toggle-primary' && entry.status === 'registered'),
     entries,
+    ...desktopBehavior,
     ...(hotkeyConfigurationError ? { error: hotkeyConfigurationError } : {}),
   }
 }
@@ -405,6 +416,35 @@ let hotkeyConfigLoaded = false
 let hotkeyRecordingUntil = 0
 const reservedHotkeys = () =>
   hotkeyEntries.filter((entry) => entry.id !== 'toggle-primary').map((entry) => entry.accelerator)
+
+function hotkeySettingsPath(options: AppCoreIpcOptions): string {
+  return path.join(options.userDataPath, 'global_hotkeys.json')
+}
+
+function loadHotkeySettings(options: AppCoreIpcOptions): void {
+  if (hotkeyConfigLoaded) return
+  hotkeyConfigLoaded = true
+  const saved = readJSON(hotkeySettingsPath(options)) as {
+    visibility?: unknown
+    quitShortcutEnabled?: unknown
+    closeToTray?: unknown
+  } | null
+  desktopBehavior = {
+    quitShortcutEnabled: saved?.quitShortcutEnabled === true,
+    closeToTray: saved?.closeToTray === true,
+  }
+  if (saved?.visibility !== undefined) {
+    const result = validateVisibilityHotkey(saved.visibility, reservedHotkeys())
+    if (result.accelerator) hotkeyEntries[0].accelerator = result.accelerator
+    else hotkeyConfigurationError = 'Saved shortcut was reset because it is invalid or conflicts.'
+  }
+}
+
+export function shouldCloseToTray(options: AppCoreIpcOptions): boolean {
+  loadHotkeySettings(options)
+  return desktopBehavior.closeToTray
+}
+
 function guardedHotkey(options: AppCoreIpcOptions, accelerator: string, action: () => void) {
   return () => {
     const window = options.getMainWindow()
@@ -436,22 +476,41 @@ function createVisibilityHotkey(options: AppCoreIpcOptions) {
   }
 }
 
-export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyStatus {
-  if (!hotkeyConfigLoaded) {
-    hotkeyConfigLoaded = true
-    const saved = readJSON(path.join(options.userDataPath, 'global_hotkeys.json')) as {
-      visibility?: unknown
-    } | null
-    if (saved?.visibility !== undefined) {
-      const result = validateVisibilityHotkey(saved.visibility, reservedHotkeys())
-      if (result.accelerator) hotkeyEntries[0].accelerator = result.accelerator
-      else hotkeyConfigurationError = 'Saved shortcut was reset because it is invalid or conflicts.'
+function registerQuitHotkey(options: AppCoreIpcOptions): boolean {
+  const { accelerator } = quitHotkey
+  if (quitHotkey.status === 'registered' && globalShortcut.isRegistered(accelerator)) return true
+  try {
+    if (
+      !globalShortcut.isRegistered(accelerator) &&
+      globalShortcut.register(
+        accelerator,
+        guardedHotkey(options, accelerator, () => app.quit()),
+      )
+    ) {
+      quitHotkey.status = 'registered'
+      recordVisibility('hotkey-registered', { hotkey: 'quit' })
+      return true
     }
+  } catch {
+    recordVisibility('hotkey-failed', { hotkey: 'quit' })
   }
+  quitHotkey.status = 'conflicted'
+  recordVisibility('hotkey-conflicted', { hotkey: 'quit' })
+  return false
+}
+
+function unregisterQuitHotkey(): void {
+  if (quitHotkey.status === 'registered') globalShortcut.unregister(quitHotkey.accelerator)
+  quitHotkey.status = 'disabled'
+  recordVisibility('hotkey-disabled', { hotkey: 'quit' })
+}
+
+export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyStatus {
+  loadHotkeySettings(options)
   const failures: string[] = []
   const { getMainWindow, getWorkArea } = options
   const toggleWindow = createVisibilityHotkey(options)
-  const callbacks: Record<GlobalHotkeyId, () => void> = {
+  const callbacks: Record<Exclude<GlobalHotkeyId, 'quit'>, () => void> = {
     'toggle-primary': toggleWindow,
     'toggle-legacy': toggleWindow,
     'snap-panels': () => {
@@ -471,12 +530,15 @@ export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyS
     'arrange-column': () => {
       getMainWindow()?.webContents.send('arrange-vertical')
     },
-    quit: () => {
-      app.quit()
-    },
   }
 
   for (const entry of hotkeyEntries) {
+    if (entry.id === 'quit') {
+      if (desktopBehavior.quitShortcutEnabled && !registerQuitHotkey(options)) {
+        failures.push(`${entry.accelerator} (${entry.id})`)
+      }
+      continue
+    }
     if (globalShortcut.isRegistered(entry.accelerator)) {
       if (entry.status !== 'registered') {
         entry.status = 'conflicted'
@@ -513,7 +575,8 @@ export function registerGlobalHotkeys(options: AppCoreIpcOptions): GlobalHotkeyS
 
 function unregisterGlobalHotkeys(): void {
   for (const entry of hotkeyEntries) {
-    globalShortcut.unregister(entry.accelerator)
+    if (entry.id === 'quit') continue
+    if (entry.status === 'registered') globalShortcut.unregister(entry.accelerator)
     entry.status = 'disabled'
     recordVisibility('hotkey-disabled', { hotkey: entry.id })
   }
@@ -717,7 +780,36 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
   )
 
   secureIpcMain.handle('get-hotkey-status', () => {
+    loadHotkeySettings(options)
     return hotkeyStatus()
+  })
+
+  secureIpcMain.handle('set-desktop-behavior', (_event, setting: unknown, enabled: unknown) => {
+    loadHotkeySettings(options)
+    if (
+      (setting !== 'quitShortcutEnabled' && setting !== 'closeToTray') ||
+      typeof enabled !== 'boolean'
+    ) {
+      return hotkeyStatus()
+    }
+    const wasRegistered = quitHotkey.status === 'registered'
+    if (setting === 'quitShortcutEnabled' && enabled && !registerQuitHotkey(options)) {
+      return { ...hotkeyStatus(), error: 'Shortcut conflicts' }
+    }
+    const next = { ...desktopBehavior, [setting]: enabled }
+    if (
+      !writeJSON(hotkeySettingsPath(options), { visibility: hotkeyEntries[0].accelerator, ...next })
+    ) {
+      if (setting === 'quitShortcutEnabled' && enabled && !wasRegistered) unregisterQuitHotkey()
+      return { ...hotkeyStatus(), error: 'Could not save settings' }
+    }
+    desktopBehavior = next
+    if (setting === 'quitShortcutEnabled' && !enabled) unregisterQuitHotkey()
+    return hotkeyStatus()
+  })
+
+  secureIpcMain.handle('quit-app', () => {
+    setImmediate(() => app.quit())
   })
 
   secureIpcMain.handle('set-hotkey-recording', (event, active: unknown) => {
@@ -735,6 +827,7 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
 
   secureIpcMain.handle('register-hotkey', (_event, rawAccelerator?: unknown) => {
     if (rawAccelerator === undefined) return registerGlobalHotkeys(options)
+    loadHotkeySettings(options)
     const validation = validateVisibilityHotkey(rawAccelerator, reservedHotkeys())
     if (!validation.accelerator) return { ...hotkeyStatus(), error: validation.error }
     const next = validation.accelerator
@@ -755,7 +848,7 @@ export function registerAppCoreIpc(options: AppCoreIpcOptions): void {
         return { ...hotkeyStatus(), error: 'Invalid shortcut' }
       }
     }
-    if (!writeJSON(path.join(options.userDataPath, 'global_hotkeys.json'), { visibility: next })) {
+    if (!writeJSON(hotkeySettingsPath(options), { visibility: next, ...desktopBehavior })) {
       if (!alreadyActive) globalShortcut.unregister(next)
       return { ...hotkeyStatus(), error: 'Could not save shortcut' }
     }

@@ -116,6 +116,11 @@
   background: var(--ui-surface-subtle);
   border-radius: 10px;
 }
+.settings-desktop-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .focused-workspace .settings-category__subheading {
   border: 0;
   padding-bottom: 0;
