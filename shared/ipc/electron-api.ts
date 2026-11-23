@@ -67,7 +67,11 @@ import type {
   AssetTag,
 } from './asset-library'
 import type { AssetFeedbackModelStatus } from './asset-feedback'
-import type { DiscoveryCatalogApi } from './discovery-catalog'
+import type {
+  DiscoveryCatalogApi,
+  SharedPathReconnectMode,
+  SharedPathReconnectResult,
+} from './discovery-catalog'
 import type {
   AssetFileActionResult,
   AssetDerivedRebuildPreviewResult,
@@ -403,11 +407,8 @@ export interface ElectronAPI {
     reconnectScanPath: (
       oldRoot: string,
       newRoot: string,
-    ) => Promise<{
-      ok: boolean
-      root?: string
-      error?: string
-    }>
+      mode?: SharedPathReconnectMode,
+    ) => Promise<SharedPathReconnectResult>
     validatePath: (filePath: string) => Promise<{ ok: boolean; error?: string }>
     queryData: (
       query: string,

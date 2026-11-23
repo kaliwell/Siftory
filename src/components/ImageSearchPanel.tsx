@@ -35,6 +35,10 @@ import { subjectSearchBridge } from '../services/subjectSearchBridge'
 import SubjectPickerModal, { type SubjectPickerData } from './SubjectPickerModal'
 import { useTranslation } from '../i18n/useTranslation'
 import type { SubjectBBox } from '../../shared/ipc-contract'
+import type {
+  SharedPathReconnectMode,
+  SharedPathReconnectResult,
+} from '../../shared/ipc/discovery-catalog'
 import {
   IDLE_SETUP_WORKFLOW,
   setupSnapshotFromImagePreparationProgress,
@@ -921,19 +925,29 @@ const ImageSearchPanel: React.FC = () => {
   }, [scanPaths, sourcesOnly])
 
   const handleReconnectPath = useCallback(
-    async (oldRoot: string, newRoot: string): Promise<string | null> => {
-      const result = await imageSearchBridge.reconnectScanPath(oldRoot, newRoot)
-      if (!result.ok || !('root' in result) || !result.root) {
-        showToast(t(result.error || 'The operation failed.'), 'err')
-        return null
+    async (
+      oldRoot: string,
+      newRoot: string,
+      mode?: SharedPathReconnectMode,
+    ): Promise<SharedPathReconnectResult> => {
+      const result = await imageSearchBridge.reconnectScanPath(oldRoot, newRoot, mode)
+      if (!result.ok) {
+        const key = result.error || 'The operation failed.'
+        const conflictPath = result.conflictPath
+        const error =
+          conflictPath && !key.includes('{path}')
+            ? t('{reason} ({path})', { reason: t(key), path: conflictPath })
+            : t(key, conflictPath ? { path: conflictPath } : undefined)
+        return { ok: false, error }
       }
+      if (!result.root) return result
       const store = useStore.getState()
       const root = result.root
       store.setImageSearchScanPaths(
         store.imageSearchScanPaths.map((item) => (item === oldRoot ? root : item)),
       )
       showToast(t('Shared path changed'), 'ok')
-      return root
+      return result
     },
     [showToast, t],
   )

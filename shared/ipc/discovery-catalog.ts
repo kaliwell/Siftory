@@ -174,6 +174,22 @@ export interface DiscoveryRepairSourceRootResult {
   source?: DataSource
   repairedEntries?: number
   error?: string
+  conflictPath?: string
+}
+
+export type SharedPathReconnectMode = { kind: 'preview' } | { kind: 'batch'; planToken: string }
+
+export interface SharedPathBatchPlan {
+  planToken: string
+  moves: Array<{ oldRoot: string; newRoot: string }>
+}
+
+export interface SharedPathReconnectResult {
+  ok: boolean
+  root?: string
+  error?: string
+  conflictPath?: string
+  plan?: SharedPathBatchPlan
 }
 
 export interface DiscoveryProbeResult extends SourceProbeResult {

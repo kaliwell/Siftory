@@ -478,7 +478,14 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
       const newRoot = await window.electronAPI.browseFolder()
       if (!newRoot) return
       const response = await window.electronAPI.discoveryCatalog.repairSourceRoot(sourceId, newRoot)
-      if (!response.ok) setError(t(response.error || 'The operation failed.'))
+      if (!response.ok) {
+        setError(
+          t(
+            response.error || 'The operation failed.',
+            response.conflictPath ? { path: response.conflictPath } : undefined,
+          ),
+        )
+      }
       await refresh()
     },
     [refresh, t],
@@ -787,7 +794,11 @@ const DiscoverySourcesSection: React.FC<DiscoverySourcesSectionProps> = ({
             </p>
           )}
         </details>
-        {error && <div style={{ fontSize: 13, color: '#e07070' }}>{error}</div>}
+        {error && (
+          <div role="alert" style={{ fontSize: 13, color: '#e07070', overflowWrap: 'anywhere' }}>
+            {error}
+          </div>
+        )}
         {notice && <div style={{ fontSize: 13, color: '#62b47a' }}>{notice}</div>}
 
         <details

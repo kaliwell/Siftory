@@ -372,6 +372,13 @@ test('mounted-network root repair preserves source and file ids after identity s
     assert.equal(service.resolveMountedAsset(location), newFile)
     assert.equal(service.resolveMountedAsset({ ...location, relativePath: '../photo.png' }), null)
     assert.equal(service.resolveMountedAsset({ ...location, libraryId: 'different' }), null)
+    const previousRootConflict = await service.repairMountedSourceRoot(
+      added.source.id,
+      path.join(oldRoot, 'nested'),
+    )
+    assert.equal(previousRootConflict.ok, false)
+    assert.match(previousRootConflict.error, /previously replaced shared path/)
+    assert.equal(previousRootConflict.conflictPath, oldRoot)
     fs.renameSync(path.join(temp, 'detached'), oldRoot)
     const switchedBack = await service.repairMountedSourceRoot(added.source.id, oldRoot)
     assert.equal(switchedBack.ok, true, switchedBack.error)
@@ -384,6 +391,51 @@ test('mounted-network root repair preserves source and file ids after identity s
     fs.rmSync(temp, { recursive: true, force: true })
   }
 })
+
+test(
+  'SMB hostname repair identifies the registered folder blocking an IP-to-name change',
+  {
+    skip: process.platform !== 'win32',
+  },
+  async (t) => {
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'mounted-conflict-'))
+    const service = new SourceCatalogService({
+      databasePath: path.join(temp, 'catalog.sqlite'),
+      incrementalWatch: false,
+    })
+    t.after(() => {
+      service.close()
+      fs.rmSync(temp, { recursive: true, force: true })
+    })
+    const register = (rootLocator) => {
+      const result = service.addSource({
+        type: 'mounted-network',
+        displayName: rootLocator,
+        rootLocator,
+      })
+      assert.equal(result.ok, true, result.error)
+      return result.source
+    }
+    const original = register(String.raw`\\192.0.2.14\素材`)
+    const newRoot = String.raw`\\DESKTOP-LAB\素材`
+    const registered = register(path.join(newRoot, '分组'))
+    const sameShareConflict = await service.repairMountedSourceRoot(
+      original.id,
+      path.join(original.rootLocator, '分组'),
+    )
+    assert.equal(sameShareConflict.ok, false)
+    assert.equal(sameShareConflict.conflictPath, original.rootLocator)
+    assert.match(sameShareConflict.error, /original shared path/)
+    const conflict = await service.repairMountedSourceRoot(original.id, newRoot)
+    assert.equal(conflict.ok, false)
+    assert.match(conflict.error, /registered folder/)
+    assert.equal(conflict.conflictPath, registered.rootLocator)
+    assert.equal(
+      service.listSources().find((entry) => entry.id === original.id).rootLocator,
+      original.rootLocator,
+    )
+  },
+)
 
 test('mounted-network root repair rejects a different share before changing catalog paths', async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'mounted-repair-reject-'))
@@ -456,6 +508,22 @@ test('mounted-network repair requires evidence and accepts matching legacy image
     fs.writeFileSync(secondFile, 'second saved file')
     samples[1].sizeBytes = fs.statSync(secondFile).size
     samples[1].modifiedAt = fs.statSync(secondFile).mtimeMs
+    const conflictingRoot = path.join(newRoot, 'other')
+    const concurrent = await service.repairMountedSourceRoot(id, newRoot, async () => {
+      const added = service.addSource({
+        type: 'mounted-network',
+        displayName: 'Registered during verification',
+        rootLocator: conflictingRoot,
+      })
+      assert.equal(added.ok, true, added.error)
+      return samples
+    })
+    assert.equal(concurrent.ok, false)
+    assert.equal(concurrent.conflictPath, conflictingRoot)
+    assert.equal(service.listSources().find((entry) => entry.id === id).rootLocator, oldRoot)
+    service.removeSource(
+      service.listSources().find((entry) => entry.rootLocator === conflictingRoot).id,
+    )
     const moved = await service.repairMountedSourceRoot(id, newRoot, getSamples)
     assert.equal(moved.ok, true, moved.error)
     assert.equal(moved.source.id, id)
@@ -465,6 +533,169 @@ test('mounted-network repair requires evidence and accepts matching legacy image
     fs.rmSync(temp, { recursive: true, force: true })
   }
 })
+
+test(
+  'batch SMB repair previews offline and atomically moves legacy child registrations',
+  {
+    skip: process.platform !== 'win32',
+  },
+  async (t) => {
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'mounted-batch-'))
+    const databasePath = path.join(temp, 'catalog.sqlite')
+    const { DiscoveryCatalogDatabase } = loadTsModule('electron/discoveryCatalogDatabase.ts')
+    const routing = loadTsModule('electron/mountedSourceRouting.ts')
+    const seed = new DiscoveryCatalogDatabase(databasePath)
+    const oldRoot = '\\\\192.0.2.14\\Design\\'
+    const newRoot = '\\\\SMB-LAB.invalid\\Design\\'
+    const children = ['Projects', 'Projects\\Drawings', 'References']
+    const stamp = 1700000000000
+    for (const [index, subPath] of children.entries()) {
+      const id = 'source-' + index
+      const rootLocator = path.join(oldRoot, subPath)
+      seed.insertSource(
+        {
+          id,
+          rootLocator,
+          displayName: subPath,
+          type: 'local-generic',
+          readOnly: true,
+          availability: 'online',
+          scanCapability: 'directory',
+        },
+        stamp,
+      )
+      seed.upsertDiscoveredBatch(
+        id,
+        null,
+        [
+          {
+            absolutePath: path.join(rootLocator, 'photo.png'),
+            relativePath: 'photo.png',
+            name: 'photo.png',
+            extension: 'png',
+            sizeBytes: index + 1,
+            modifiedAt: stamp,
+          },
+        ],
+        stamp,
+      )
+    }
+    const first = seed.getSource('source-0')
+    const second = seed.getSource('source-1')
+    assert.throws(
+      () =>
+        seed.repairMountedSourceRoots(
+          [
+            { source: first, newRoot: path.join(newRoot, children[0]) },
+            {
+              source: { ...second, rootLocator: path.join(oldRoot, 'stale-snapshot') },
+              newRoot: path.join(newRoot, children[1]),
+            },
+          ],
+          stamp,
+        ),
+      /source changed/,
+    )
+    assert.equal(seed.getSource(first.id).rootLocator, first.rootLocator)
+    assert.deepEqual(seed.listMountedSourceRoutes(), [])
+    seed.close()
+
+    const beforeOpened = []
+    let invalidChild = true
+    t.mock.method(fs.promises, 'opendir', async (candidate) => {
+      beforeOpened.push(candidate)
+      assert.ok(
+        candidate.toLowerCase().startsWith(newRoot.toLowerCase()) ||
+          candidate.toLowerCase().startsWith(oldRoot.toLowerCase()),
+      )
+      return { close: async () => {} }
+    })
+    t.mock.method(fs.promises, 'stat', async (candidate) => {
+      const root = candidate.toLowerCase().startsWith(newRoot.toLowerCase()) ? newRoot : oldRoot
+      const relative = path.relative(root, path.dirname(candidate))
+      const index = children.indexOf(relative)
+      assert.ok(index >= 0)
+      return {
+        isFile: () => true,
+        size: invalidChild && index === 1 ? 999 : index + 1,
+        mtimeMs: stamp,
+      }
+    })
+    const service = new SourceCatalogService({
+      databasePath,
+      incrementalWatch: false,
+      onMountedSourceRoutes: routing.setMountedSourceRoutes,
+    })
+    t.after(() => {
+      service.close()
+      routing.setMountedSourceRoutes([])
+      fs.rmSync(temp, { recursive: true, force: true })
+    })
+    const before = service.queryCatalog({}).items
+    const preview = await service.reconnectMountedSourceBatch(oldRoot, newRoot, { kind: 'preview' })
+    assert.equal(preview.ok, true, preview.error)
+    assert.equal(preview.plan.moves.length, 4)
+    assert.deepEqual(preview.plan.moves[0], { oldRoot, newRoot })
+    assert.deepEqual(beforeOpened, [])
+    assert.equal(service.listSources().length, 3)
+    const mode = { kind: 'batch', planToken: preview.plan.planToken }
+
+    const newChild = service.addSource(
+      {
+        type: 'mounted-network',
+        displayName: 'Added after preview',
+        rootLocator: path.join(oldRoot, 'unreviewed'),
+      },
+      { watch: false },
+    )
+    assert.equal(newChild.ok, true, newChild.error)
+    const stale = await service.reconnectMountedSourceBatch(oldRoot, newRoot, mode)
+    assert.equal(stale.ok, false)
+    assert.match(stale.error, /list changed/)
+    assert.deepEqual(beforeOpened, [])
+    service.removeSource(newChild.source.id)
+
+    const failed = await service.reconnectMountedSourceBatch(oldRoot, newRoot, mode)
+    assert.equal(failed.ok, false)
+    assert.equal(failed.conflictPath, path.join(newRoot, children[1]))
+    assert.equal(service.listSources().length, 3)
+    assert.deepEqual(service.queryCatalog({}).items, before)
+    assert.deepEqual(routing.retiredMountedSourceRoots(), [])
+
+    invalidChild = false
+    const moved = await service.reconnectMountedSourceBatch(oldRoot, newRoot, mode)
+    assert.equal(moved.ok, true, moved.error)
+    assert.equal(moved.root, newRoot)
+    const after = service.queryCatalog({}).items
+    for (const [index, subPath] of children.entries()) {
+      const id = 'source-' + index
+      assert.equal(
+        service.listSources().find((s) => s.id === id).rootLocator,
+        path.join(newRoot, subPath),
+      )
+      const oldEntry = before.find((row) => row.source.id === id)
+      const newEntry = after.find((row) => row.source.id === id)
+      assert.equal(newEntry.fileEntryId, oldEntry.fileEntryId)
+      assert.equal(newEntry.displayPath, path.join(newRoot, subPath, 'photo.png').toLowerCase())
+    }
+    assert.deepEqual(routing.resolveMountedScanRoots([oldRoot, path.join(oldRoot, children[1])]), [
+      newRoot,
+      path.join(newRoot, children[1]),
+    ])
+
+    const reverse = await service.reconnectMountedSourceBatch(newRoot, oldRoot, { kind: 'preview' })
+    assert.equal(reverse.ok, true, reverse.error)
+    const restored = await service.reconnectMountedSourceBatch(newRoot, oldRoot, {
+      kind: 'batch',
+      planToken: reverse.plan.planToken,
+    })
+    assert.equal(restored.ok, true, restored.error)
+    assert.deepEqual(routing.resolveMountedScanRoots([newRoot, path.join(newRoot, children[1])]), [
+      oldRoot,
+      path.join(oldRoot, children[1]),
+    ])
+  },
+)
 
 test('Sources UI repairs mounted-network roots through folder selection and source id', () => {
   const ui = fs.readFileSync('src/components/DiscoverySourcesSection.tsx', 'utf8')

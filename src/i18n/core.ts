@@ -90,6 +90,22 @@ const zhCN: Record<string, string> = {
   'Replacement root does not match sampled catalog file identities':
     '新目录中的文件与旧共享的抽样记录不匹配。请确认选中了同一共享目录。',
   'Replacement source overlaps another registered path': '新路径与已登记的目录或其上级目录重叠。',
+  'The new path overlaps the original shared path: {path}': '新路径与原共享目录重叠：{path}',
+  'The original or new path overlaps this registered folder: {path}':
+    '原路径或新路径与此已登记目录重叠：{path}',
+  'The original or new path overlaps a previously replaced shared path: {path}':
+    '原路径或新路径与此历史共享路径重叠：{path}',
+  'Batch replacement requires two Windows shared paths': '批量换址需要两个 Windows 共享路径。',
+  'The shared folder list changed. Check the batch again.':
+    '共享目录列表已变化，请重新检查批量换址。',
+  'Folders to move: {count}': '将换址的目录：{count}',
+  'Confirm when the new share is online. If verification fails, all original paths are kept.':
+    '请在新共享在线时确认。核验失败会保留全部原路径。',
+  'Destination: {path}': '目标路径：{path}',
+  'Preview batch path change': '检查批量换址',
+  'Confirm batch path change': '确认批量换址',
+  'Change paths and prepare the shared folder': '批量换址并准备共享目录',
+  '{reason} ({path})': '{reason}（{path}）',
   'Invalid replacement source root': '新的共享路径无效。',
   'The source changed while checking its connection': '检查连接期间数据源发生了变化，请重试。',
   'The source changed while checking the replacement path':

@@ -5,6 +5,10 @@
 // Falls back gracefully when electronAPI is unavailable (e.g. browser dev).
 
 import type {
+  SharedPathReconnectMode,
+  SharedPathReconnectResult,
+} from '../../shared/ipc/discovery-catalog'
+import type {
   ImageSearchStatus,
   ImageSearchStartScanArgs,
   ImageSearchPrepareLibraryArgs,
@@ -290,9 +294,13 @@ export const imageSearchBridge = {
     }
   },
 
-  async reconnectScanPath(oldRoot: string, newRoot: string) {
+  async reconnectScanPath(
+    oldRoot: string,
+    newRoot: string,
+    mode?: SharedPathReconnectMode,
+  ): Promise<SharedPathReconnectResult> {
     try {
-      return (await api()?.reconnectScanPath?.(oldRoot, newRoot)) ?? { ok: false }
+      return (await api()?.reconnectScanPath?.(oldRoot, newRoot, mode)) ?? { ok: false }
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) }
     }

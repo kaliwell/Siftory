@@ -18,7 +18,7 @@ import type { LibraryAssetLocation } from '../shared/ipc/storage-location'
 // successful scan — missing-file reconcile is intentionally out of Phase 1
 // scope (design 6.2 constraint 3).
 
-import { randomBytes } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import type {
@@ -36,6 +36,8 @@ import type {
   DiscoveryScanStatus,
   DiscoverySourceListItem,
   ScanSession,
+  SharedPathReconnectMode,
+  SharedPathReconnectResult,
   SourceAdapter,
   SourceScanCapability,
 } from '../shared/ipc/discovery-catalog'
@@ -81,6 +83,17 @@ export interface MountedSourceRepairSample {
   relativePath: string
   sizeBytes: number
   modifiedAt: number
+}
+
+type GetMountedRepairSamples = (
+  root: string,
+  signal: AbortSignal,
+) => Promise<MountedSourceRepairSample[]>
+
+interface MountedSourceMove {
+  source: DataSource
+  newRoot: string
+  insert?: boolean
 }
 
 interface ActiveScan {
@@ -693,10 +706,140 @@ export class SourceCatalogService {
       : null
   }
 
+  private planMountedSourceBatch(oldRoot: string, newRoot: string) {
+    const overlaps = (left: string, right: string) =>
+      mountedRelativePath(left, right) !== null || mountedRelativePath(right, left) !== null
+    const conflict = (error: string, conflictPath: string) =>
+      ({ ok: false, error, conflictPath }) as const
+    if (!isMountedUncPath(oldRoot) || !isMountedUncPath(newRoot)) {
+      return { ok: false, error: 'Batch replacement requires two Windows shared paths' } as const
+    }
+    if (overlaps(oldRoot, newRoot))
+      return conflict('The new path overlaps the original shared path: {path}', oldRoot)
+
+    const moves: MountedSourceMove[] = []
+    const destinationKeys = new Set<string>()
+    for (const source of this.database.listSources()) {
+      if (source.type === 'sftp') continue
+      const existingConflict = () =>
+        conflict(
+          'The original or new path overlaps this registered folder: {path}',
+          source.rootLocator,
+        )
+      const relative = mountedRelativePath(oldRoot, source.rootLocator)
+      if (
+        overlaps(newRoot, source.rootLocator) ||
+        (relative === null && overlaps(oldRoot, source.rootLocator))
+      ) {
+        return existingConflict()
+      }
+      if (relative === null) continue
+      if (source.type !== 'mounted-network' && source.type !== 'local-generic')
+        return existingConflict()
+      const destination = path.resolve(newRoot, relative)
+      const key = mountedSourcePathKey(destination)
+      if (destinationKeys.has(key)) return existingConflict()
+      destinationKeys.add(key)
+      moves.push({ source, newRoot: destination })
+    }
+    if (!destinationKeys.has(mountedSourcePathKey(newRoot))) {
+      moves.push({
+        insert: true,
+        source: {
+          id: newId('src'),
+          type: 'mounted-network',
+          rootLocator: oldRoot,
+          displayName: path.basename(oldRoot) || oldRoot,
+          readOnly: true,
+          availability: 'unknown',
+          scanCapability: 'directory',
+        },
+        newRoot,
+      })
+    }
+    const byId = new Map(moves.filter((move) => !move.insert).map((move) => [move.source.id, move]))
+    for (const route of this.database.listMountedSourceRoutes()) {
+      if (!overlaps(oldRoot, route.previousRoot) && !overlaps(newRoot, route.previousRoot)) continue
+      const destination = byId.get(route.sourceId)?.newRoot
+      if (
+        destination &&
+        mountedSourcePathKey(destination) === mountedSourcePathKey(route.previousRoot)
+      )
+        continue
+      return conflict(
+        'The original or new path overlaps a previously replaced shared path: {path}',
+        route.previousRoot,
+      )
+    }
+
+    moves.sort((a, b) => a.source.rootLocator.localeCompare(b.source.rootLocator))
+    const planToken = createHash('sha256')
+      .update(
+        JSON.stringify(
+          moves.map(({ source, newRoot, insert }) => [
+            insert ? null : source.id,
+            source.type,
+            source.rootLocator,
+            newRoot,
+          ]),
+        ),
+      )
+      .digest('hex')
+    return {
+      ok: true,
+      moves,
+      plan: {
+        planToken,
+        moves: moves.map((move) => ({ oldRoot: move.source.rootLocator, newRoot: move.newRoot })),
+      },
+    } as const
+  }
+
+  async reconnectMountedSourceBatch(
+    oldRoot: string,
+    newRoot: string,
+    mode: SharedPathReconnectMode,
+    getIndexSamples?: GetMountedRepairSamples,
+  ): Promise<SharedPathReconnectResult> {
+    const planned = this.planMountedSourceBatch(oldRoot, newRoot)
+    if (!planned.ok) return planned
+    if (mode.kind === 'preview') return { ok: true, plan: planned.plan }
+
+    const changed = { ok: false, error: 'The shared folder list changed. Check the batch again.' }
+    if (planned.plan.planToken !== mode.planToken) return changed
+    const hasActiveScan = () => planned.moves.some(({ source }) => this.activeScans.has(source.id))
+    const busy = { ok: false, error: 'Cancel the running scan before repairing the source' }
+    if (hasActiveScan()) return busy
+    const rootKey = mountedSourcePathKey(oldRoot)
+    for (const move of planned.moves) {
+      const isParent = mountedSourcePathKey(move.source.rootLocator) === rootKey
+      const verified = await this.verifyMountedReplacement(
+        move.source,
+        move.newRoot,
+        getIndexSamples,
+        isParent && planned.moves.length > 1,
+        move.insert,
+      )
+      if (!verified.ok) return { ...verified, conflictPath: move.newRoot }
+      if (this.closed) return changed
+    }
+    if (hasActiveScan()) return busy
+    const current = this.planMountedSourceBatch(oldRoot, newRoot)
+    if (!current.ok) return current
+    if (current.plan.planToken !== mode.planToken) return changed
+
+    this.database.repairMountedSourceRoots(planned.moves, this.now())
+    this.refreshMountedSourceRoutes()
+    for (const { source, newRoot } of planned.moves) {
+      this.startIncrementalWatcher({ ...source, rootLocator: newRoot })
+    }
+    return { ok: true, root: newRoot }
+  }
+
   async repairMountedSourceRoot(
     sourceId: string,
     rawRoot: string,
-    getIndexSamples?: (root: string, signal: AbortSignal) => Promise<MountedSourceRepairSample[]>,
+    getIndexSamples?: GetMountedRepairSamples,
   ): Promise<DiscoveryRepairSourceRootResult> {
     if (this.activeScans.has(sourceId)) {
       return { ok: false, error: 'Cancel the running scan before repairing the source' }
@@ -721,32 +864,73 @@ export class SourceCatalogService {
       return { ok: true, source, repairedEntries: 0 }
     const overlaps = (left: string, right: string) =>
       mountedRelativePath(left, right) !== null || mountedRelativePath(right, left) !== null
-    const conflict = () => {
-      if (overlaps(source.rootLocator, newRoot)) return true
-      if (
-        this.database
-          .listSources()
-          .some(
-            (candidate) =>
-              candidate.id !== sourceId &&
-              candidate.type !== 'sftp' &&
-              (overlaps(candidate.rootLocator, newRoot) ||
-                overlaps(candidate.rootLocator, source.rootLocator)),
-          )
-      )
-        return true
-      return this.database
+    const findConflict = (): DiscoveryRepairSourceRootResult | undefined => {
+      if (overlaps(source.rootLocator, newRoot)) {
+        return {
+          ok: false,
+          error: 'The new path overlaps the original shared path: {path}',
+          conflictPath: source.rootLocator,
+        }
+      }
+      const registered = this.database
+        .listSources()
+        .find(
+          (candidate) =>
+            candidate.id !== sourceId &&
+            candidate.type !== 'sftp' &&
+            (overlaps(candidate.rootLocator, newRoot) ||
+              overlaps(candidate.rootLocator, source.rootLocator)),
+        )
+      if (registered) {
+        return {
+          ok: false,
+          error: 'The original or new path overlaps this registered folder: {path}',
+          conflictPath: registered.rootLocator,
+        }
+      }
+      const previous = this.database
         .listMountedSourceRoutes()
-        .some(
+        .find(
           (route) =>
             (route.sourceId !== sourceId && overlaps(route.previousRoot, source.rootLocator)) ||
             (overlaps(route.previousRoot, newRoot) &&
               (route.sourceId !== sourceId ||
                 mountedSourcePathKey(route.previousRoot) !== mountedSourcePathKey(newRoot))),
         )
+      if (previous) {
+        return {
+          ok: false,
+          error: 'The original or new path overlaps a previously replaced shared path: {path}',
+          conflictPath: previous.previousRoot,
+        }
+      }
     }
-    if (conflict())
-      return { ok: false, error: 'Replacement source overlaps another registered path' }
+    const initialConflict = findConflict()
+    if (initialConflict) return initialConflict
+    const verified = await this.verifyMountedReplacement(source, newRoot, getIndexSamples)
+    if (!verified.ok) return verified
+    if (
+      this.closed ||
+      this.activeScans.has(sourceId) ||
+      this.database.getSource(sourceId)?.rootLocator !== source.rootLocator
+    )
+      return { ok: false, error: 'The source changed while checking the replacement path' }
+    const currentConflict = findConflict()
+    if (currentConflict) return currentConflict
+    const repairedEntries = this.database.repairMountedSourceRoot(sourceId, newRoot, this.now())
+    this.refreshMountedSourceRoutes()
+    const repairedSource = this.database.getSource(sourceId)!
+    this.startIncrementalWatcher(repairedSource)
+    return { ok: true, source: repairedSource, repairedEntries }
+  }
+
+  private async verifyMountedReplacement(
+    source: DataSource,
+    newRoot: string,
+    getIndexSamples?: GetMountedRepairSamples,
+    allowEmptySamples = false,
+    insert = false,
+  ): Promise<{ ok: boolean; error?: string }> {
     const timeoutMs = 8_000
     const deadline = AbortSignal.timeout(timeoutMs)
     try {
@@ -770,7 +954,9 @@ export class SourceCatalogService {
           : 'Replacement source root is not accessible',
       }
     }
-    let samples = this.database.getSourceRepairSamples(sourceId)
+    if (this.closed)
+      return { ok: false, error: 'The source changed while checking the replacement path' }
+    let samples = insert ? [] : this.database.getSourceRepairSamples(source.id)
     if (samples.length === 0 && getIndexSamples && !deadline.aborted) {
       try {
         samples = await waitForMountedNetworkOperation(
@@ -783,8 +969,11 @@ export class SourceCatalogService {
         return { ok: false, error: 'Could not verify the original shared path from its index' }
       }
     }
+    if (deadline.aborted) return { ok: false, error: 'The new shared path check timed out' }
     if (!samples.length) {
-      return { ok: false, error: 'The original shared path has no indexed files to verify a move' }
+      return allowEmptySamples
+        ? { ok: true }
+        : { ok: false, error: 'The original shared path has no indexed files to verify a move' }
     }
     const requiredMatches = Math.min(2, samples.length)
     let matchingSamples = 0
@@ -824,24 +1013,9 @@ export class SourceCatalogService {
         error: 'Replacement root does not match sampled catalog file identities',
       }
     }
-    if (
-      deadline.aborted ||
-      this.closed ||
-      this.activeScans.has(sourceId) ||
-      this.database.getSource(sourceId)?.rootLocator !== source.rootLocator ||
-      conflict()
-    )
-      return { ok: false, error: 'The source changed while checking the replacement path' }
-    const repairedEntries = this.database.repairMountedSourceRoot(sourceId, newRoot, this.now())
-    this.refreshMountedSourceRoutes()
-    this.stopIncrementalWatcher(sourceId)
-    const repairedSource = this.database.getSource(sourceId)!
-    this.startIncrementalWatcher(repairedSource)
-    return {
-      ok: true,
-      source: repairedSource,
-      repairedEntries,
-    }
+    return deadline.aborted
+      ? { ok: false, error: 'The new shared path check timed out' }
+      : { ok: true }
   }
 
   async probeSource(sourceId: string): Promise<DiscoveryProbeResult> {

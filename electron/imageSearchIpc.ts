@@ -716,8 +716,19 @@ export function registerImageSearchIpc(
 
   secureIpcMain.handle(
     IMAGE_SEARCH_IPC.RECONNECT_SCAN_PATH,
-    async (_event, rawOld: unknown, rawNew: unknown) => {
-      const busy = imageSearchEditBusyError()
+    async (_event, rawOld: unknown, rawNew: unknown, rawMode?: unknown) => {
+      const requested = rawMode as { kind?: unknown; planToken?: unknown } | null | undefined
+      const mode =
+        requested?.kind === 'preview'
+          ? { kind: 'preview' as const }
+          : requested?.kind === 'batch' &&
+              typeof requested.planToken === 'string' &&
+              /^[a-f0-9]{64}$/.test(requested.planToken)
+            ? { kind: 'batch' as const, planToken: requested.planToken }
+            : undefined
+      if (rawMode !== undefined && !mode)
+        return { ok: false, error: 'Invalid replacement source root' }
+      const busy = mode?.kind === 'preview' ? null : imageSearchEditBusyError()
       if (busy) return { ok: false, error: busy }
       const oldRoot = safeShellPath(rawOld)
       const newRoot = safeShellPath(rawNew)
@@ -741,7 +752,7 @@ export function registerImageSearchIpc(
             entry.type !== 'nas-agent' &&
             mountedSourcePathKey(entry.rootLocator) === mountedSourcePathKey(oldRoot),
         )
-      if (source && source.type !== 'mounted-network')
+      if (!mode && source && source.type !== 'mounted-network')
         return { ok: false, error: 'Only mounted network sources support root repair' }
       if (
         !source &&
@@ -751,10 +762,20 @@ export function registerImageSearchIpc(
           ))
       )
         return { ok: false, error: 'The old path must be a configured shared scan folder' }
+      if (mode?.kind === 'preview')
+        return service.reconnectMountedSourceBatch(oldRoot, newRoot, mode)
       const release = tryAcquireVectorExclusiveMaintenance()
       if (!release) return { ok: false, error: 'Vector maintenance is running' }
       let createdId: string | undefined
       try {
+        if (mode) {
+          return await service.reconnectMountedSourceBatch(
+            oldRoot,
+            newRoot,
+            mode,
+            getIndexedSharedPathSamples,
+          )
+        }
         if (!source) {
           const added = service.addSource(
             {
@@ -778,7 +799,7 @@ export function registerImageSearchIpc(
           createdId = undefined
           return { ok: true, root: result.source.rootLocator }
         }
-        return { ok: false, error: result.error }
+        return { ok: false, error: result.error, conflictPath: result.conflictPath }
       } catch (error) {
         return { ok: false, error: errorMessage(error) }
       } finally {

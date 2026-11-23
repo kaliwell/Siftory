@@ -1,6 +1,11 @@
 import RegisteredSourcePicker from './RegisteredSourcePicker'
 import React, { useId, useState } from 'react'
 import type { SearchMode } from '../../shared/vectorTypes'
+import type {
+  SharedPathBatchPlan,
+  SharedPathReconnectMode,
+  SharedPathReconnectResult,
+} from '../../shared/ipc/discovery-catalog'
 import type { SearchExperienceMode } from '../services/searchSetupWorkflow'
 import { productSearchCoreActionIds } from '../services/productInformationArchitecture'
 import { useTranslation } from '../i18n/useTranslation'
@@ -67,7 +72,11 @@ interface ImageSearchControlsProps {
   onManualAdd: () => void
   onClearPaths: () => void
   onRemovePath: (path: string) => void
-  onReconnectPath: (oldRoot: string, newRoot: string) => Promise<string | null>
+  onReconnectPath: (
+    oldRoot: string,
+    newRoot: string,
+    mode?: SharedPathReconnectMode,
+  ) => Promise<SharedPathReconnectResult>
   onPrepareSharedPath: (root: string) => void
   onQueryImage: () => void
   onPasteClipboardImage: () => void
@@ -140,17 +149,38 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
   const [advancedPreparationOpen, setAdvancedPreparationOpen] = useState(false)
   const advancedPreparationId = useId()
   const sharedPathHelpId = useId()
-  const [replacement, setReplacement] = useState<{ oldRoot: string; newRoot: string }>()
+  const sharedPathErrorId = `${sharedPathHelpId}-error`
+  const [replacement, setReplacement] = useState<{
+    oldRoot: string
+    newRoot: string
+    error?: string
+    plan?: SharedPathBatchPlan
+  }>()
   const [reconnecting, setReconnecting] = useState(false)
   const taskBusy = isScanning || workflowRunning || workflowPaused || reconnecting
-  const submitReplacement = async (prepare = false) => {
+  const submitReplacement = async (action: 'preview' | 'replace' | 'prepare') => {
     if (!replacement?.newRoot.trim() || taskBusy || searching) return
     setReconnecting(true)
     try {
-      const root = await onReconnectPath(replacement.oldRoot, replacement.newRoot.trim())
-      if (!root) return
+      const mode =
+        action === 'preview'
+          ? { kind: 'preview' as const }
+          : replacement.plan && { kind: 'batch' as const, planToken: replacement.plan.planToken }
+      const result = await onReconnectPath(replacement.oldRoot, replacement.newRoot.trim(), mode)
+      if (action === 'preview' && result.ok && result.plan) {
+        setReplacement({ ...replacement, error: undefined, plan: result.plan })
+        return
+      }
+      if (!result.ok || !result.root) {
+        setReplacement({
+          ...replacement,
+          error: result.error || t('The operation failed.'),
+          ...(action === 'preview' ? { plan: undefined } : {}),
+        })
+        return
+      }
       setReplacement(undefined)
-      if (prepare) onPrepareSharedPath(root)
+      if (action === 'prepare') onPrepareSharedPath(result.root)
     } finally {
       setReconnecting(false)
     }
@@ -353,20 +383,30 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
               className="image-search-scan-controls"
               onSubmit={(event) => {
                 event.preventDefault()
-                void submitReplacement()
+                void submitReplacement('replace')
               }}
             >
               <label>
                 {t('New shared path')}
                 <input
                   value={replacement.newRoot}
-                  aria-describedby={sharedPathHelpId}
+                  aria-describedby={
+                    replacement.error
+                      ? `${sharedPathHelpId} ${sharedPathErrorId}`
+                      : sharedPathHelpId
+                  }
+                  aria-invalid={replacement.error ? true : undefined}
                   disabled={taskBusy}
                   onChange={(event) =>
-                    setReplacement({ ...replacement, newRoot: event.target.value })
+                    setReplacement({ oldRoot: replacement.oldRoot, newRoot: event.target.value })
                   }
                 />
               </label>
+              {replacement.error && (
+                <p role="alert" id={sharedPathErrorId} className="shared-path-error">
+                  {replacement.error}
+                </p>
+              )}
               <div title={replacement.oldRoot}>{replacement.oldRoot}</div>
               <p id={sharedPathHelpId} className="shared-path-help">
                 {t(
@@ -378,15 +418,44 @@ const ImageSearchControls: React.FC<ImageSearchControlsProps> = ({
                 )}
               </p>
               <p>{t('Keep the old index and prepare the new address after switching.')}</p>
+              {replacement.plan && (
+                <div className="shared-path-batch-plan" aria-live="polite">
+                  <strong>
+                    {t('Folders to move: {count}', { count: replacement.plan.moves.length })}
+                  </strong>
+                  <p>
+                    {t(
+                      'Confirm when the new share is online. If verification fails, all original paths are kept.',
+                    )}
+                  </p>
+                  <ol>
+                    {replacement.plan.moves.map((move) => (
+                      <li key={move.oldRoot}>
+                        <code>{move.oldRoot}</code>
+                        <code>{t('Destination: {path}', { path: move.newRoot })}</code>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={taskBusy || searching || !replacement.newRoot.trim()}
+                onClick={() => void submitReplacement('preview')}
+              >
+                {t('Preview batch path change')}
+              </button>
               <button type="submit" disabled={taskBusy || searching || !replacement.newRoot.trim()}>
-                {t('Change shared path')}
+                {replacement.plan ? t('Confirm batch path change') : t('Change shared path')}
               </button>
               <button
                 type="button"
                 disabled={taskBusy || searching || buildDisabled || !replacement.newRoot.trim()}
-                onClick={() => void submitReplacement(true)}
+                onClick={() => void submitReplacement('prepare')}
               >
-                {t('Change path and prepare this folder')}
+                {replacement.plan
+                  ? t('Change paths and prepare the shared folder')
+                  : t('Change path and prepare this folder')}
               </button>
               <button
                 type="button"

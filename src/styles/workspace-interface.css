@@ -626,6 +626,25 @@
   font-size: 12px;
   overflow-wrap: anywhere;
 }
+.shared-path-error {
+  color: var(--danger, #e07070);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.shared-path-batch-plan {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.shared-path-batch-plan ol {
+  max-height: 240px;
+  overflow: auto;
+  padding-inline-start: 24px;
+}
+.shared-path-batch-plan code {
+  display: block;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
 .workspace-maintenance-page .asset-collection-toolbar {
   display: grid !important;
   grid-template-columns: minmax(130px, 1fr) minmax(160px, 1.2fr) repeat(5, auto);

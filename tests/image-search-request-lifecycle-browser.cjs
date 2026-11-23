@@ -277,8 +277,32 @@ async function main() {
         f.setHandler('imageSearch.resolveScanPaths', (paths) =>
           paths.map((root) => (moved && root === oldShare ? newShare : root)),
         )
-        f.setHandler('imageSearch.reconnectScanPath', (oldRoot, newRoot) => {
-          moved = oldRoot === oldShare && newRoot === newShare
+        f.setHandler('imageSearch.reconnectScanPath', (oldRoot, newRoot, mode) => {
+          const planToken = 'a'.repeat(64)
+          if (mode?.kind === 'preview') {
+            return {
+              ok: true,
+              plan: {
+                planToken,
+                moves: [
+                  { oldRoot, newRoot },
+                  { oldRoot: oldRoot + '\\nested', newRoot: newRoot + '\\nested' },
+                ],
+              },
+            }
+          }
+          moved =
+            oldRoot === oldShare &&
+            newRoot === newShare &&
+            mode?.kind === 'batch' &&
+            mode.planToken === planToken
+          if (!moved) {
+            return {
+              ok: false,
+              error: 'The original or new path overlaps this registered folder: {path}',
+              conflictPath: newShare,
+            }
+          }
           return { ok: moved, root: moved ? newShare : undefined }
         })
         f.setHandler('imageSearch.prepareLibrary', (args) => {
@@ -294,8 +318,19 @@ async function main() {
     await lib.getByText(oldShare, { exact: true }).waitFor()
     await lib.getByRole('button', { name: '更换共享路径' }).click()
     await lib.getByText(/例如/).filter({ hasText: '\\\\DESKTOP-ISJ91JF\\SiftoryTest' }).waitFor()
-    await lib.getByLabel('新的共享路径').fill(newShare)
+    const newPathInput = lib.getByLabel('新的共享路径')
+    await newPathInput.fill(newShare + '\\nested')
     await lib.getByRole('button', { name: '更换并准备此目录' }).click()
+    await lib.getByRole('alert').filter({ hasText: newShare }).waitFor()
+    assert.equal(await newPathInput.getAttribute('aria-invalid'), 'true')
+    assert.equal(await page.evaluate(() => window.__reconnectedPreparationPaths), undefined)
+    await newPathInput.fill(newShare)
+    assert.equal(await lib.getByRole('alert').count(), 0)
+    await lib.getByRole('button', { name: '检查批量换址' }).click()
+    await lib.getByText('将换址的目录：2').waitFor()
+    await lib.getByText('目标路径：' + newShare + '\\nested', { exact: true }).waitFor()
+    assert.equal(await page.evaluate(() => window.__reconnectedPreparationPaths), undefined)
+    await lib.getByRole('button', { name: '批量换址并准备共享目录' }).click()
     await lib.getByText(newShare, { exact: true }).waitFor()
     await page.waitForFunction(() => Array.isArray(window.__reconnectedPreparationPaths))
     assert.deepEqual(await page.evaluate(() => window.__reconnectedPreparationPaths), [newShare])

@@ -329,49 +329,67 @@ export class DiscoveryCatalogDatabase {
   }
 
   repairMountedSourceRoot(sourceId: string, newRoot: string, now: number): number {
-    const database = this.open()
     const source = this.getSource(sourceId)
     if (!source || source.type !== 'mounted-network') return -1
-    const entries = database
-      .prepare('SELECT id, relative_path FROM file_entries WHERE source_id = ? ORDER BY id ASC')
-      .all(sourceId)
+    return this.repairMountedSourceRoots([{ source, newRoot }], now)
+  }
+
+  repairMountedSourceRoots(
+    moves: readonly { source: DataSource; newRoot: string; insert?: boolean }[],
+    now: number,
+  ): number {
+    const database = this.open()
+    const listEntries = database.prepare(
+      'SELECT id, relative_path FROM file_entries WHERE source_id = ? ORDER BY id ASC',
+    )
     const updateEntry = database.prepare(
       `UPDATE file_entries SET path_key = ?, availability = 'unknown', updated_at = ? WHERE id = ?`,
     )
+    const updateRoot = database.prepare(
+      `UPDATE sources SET root_locator = ?, availability = 'unknown',
+       last_attempt_at = NULL, updated_at = ? WHERE id = ?`,
+    )
+    const removeRoute = database.prepare(
+      'DELETE FROM mounted_source_previous_roots WHERE root_key = ? AND source_id = ?',
+    )
+    const addRoute = database.prepare(
+      'INSERT INTO mounted_source_previous_roots (root_key, root_locator, source_id) VALUES (?, ?, ?)',
+    )
     database.exec('BEGIN IMMEDIATE')
     try {
-      database
-        .prepare(
-          `UPDATE sources SET root_locator = ?, availability = 'unknown',
-           last_attempt_at = NULL, updated_at = ? WHERE id = ?`,
-        )
-        .run(newRoot, now, sourceId)
-      const previousKey = discoveryPathKey(source.rootLocator)
-      const nextKey = discoveryPathKey(newRoot)
-      if (previousKey !== nextKey) {
-        database
-          .prepare('DELETE FROM mounted_source_previous_roots WHERE root_key = ? AND source_id = ?')
-          .run(nextKey, sourceId)
-        database
-          .prepare(
-            'INSERT INTO mounted_source_previous_roots (root_key, root_locator, source_id) VALUES (?, ?, ?)',
-          )
-          .run(previousKey, source.rootLocator, sourceId)
-      }
-      for (const entry of entries) {
-        const target = path.resolve(newRoot, textValue(entry.relative_path))
-        const relative = path.relative(newRoot, target)
-        if (
-          relative === '..' ||
-          relative.startsWith(`..${path.sep}`) ||
-          path.isAbsolute(relative)
-        ) {
-          throw new Error('Catalog entry escapes the repaired source root')
+      let repairedEntries = 0
+      for (const { source, newRoot, insert } of moves) {
+        if (insert) {
+          this.insertSource({ ...source, rootLocator: newRoot }, now)
+        } else {
+          const current = this.getSource(source.id)
+          if (current?.rootLocator !== source.rootLocator || current.type !== source.type) {
+            throw new Error('The source changed while checking the replacement path')
+          }
+          updateRoot.run(newRoot, now, source.id)
         }
-        updateEntry.run(discoveryPathKey(target), now, numberValue(entry.id))
+        const previousKey = discoveryPathKey(source.rootLocator)
+        const nextKey = discoveryPathKey(newRoot)
+        if (previousKey !== nextKey) {
+          removeRoute.run(nextKey, source.id)
+          addRoute.run(previousKey, source.rootLocator, source.id)
+        }
+        for (const entry of listEntries.all(source.id)) {
+          const target = path.resolve(newRoot, textValue(entry.relative_path))
+          const relative = path.relative(newRoot, target)
+          if (
+            relative === '..' ||
+            relative.startsWith(`..${path.sep}`) ||
+            path.isAbsolute(relative)
+          ) {
+            throw new Error('Catalog entry escapes the repaired source root')
+          }
+          updateEntry.run(discoveryPathKey(target), now, numberValue(entry.id))
+          repairedEntries += 1
+        }
       }
       database.exec('COMMIT')
-      return entries.length
+      return repairedEntries
     } catch (error) {
       database.exec('ROLLBACK')
       throw error
